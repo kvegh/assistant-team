@@ -1,0 +1,148 @@
+# Assistant team usage
+
+## Enter the runtime account
+
+From the VM's automation account:
+
+```bash
+sudo -iu {{ containers.runtime_user }}
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+```
+
+All following commands run as this account on the VM. The exports fix access to
+its systemd user bus after a sudo login; they are not provider credentials.
+
+## Authenticate once in each account/provider directory
+
+```bash
+cd ~/claude-work && ./login
+cd ~/claude-priv && ./login
+cd ~/gemini && ./login
+cd ~/codex && ./login
+cd ~/mistral && ./login
+```
+
+Claude work/private use separate native `claude auth login` flows. Gemini opens
+its native Sign in with Google flow with a remote browser link; it does not
+require gcloud. Codex uses native device authentication and a local file store.
+Mistral opens Vibe's native setup wizard; choose the intended subscription/account
+rather than introducing a paid API fallback. Complete login yourself; no login,
+model request, or account terms were accepted during installation.
+
+Actual native executables are available as `./claude`, `./gemini`, `./codex` and
+`./vibe` in their respective directories. They run directly on Linux, not through
+login containers. Program artifacts, HOME, provider settings, credentials, caches,
+state and temporary files are scoped inside each directory. Work/private Claude
+share only immutable program files, never credentials or configuration. Update
+pinned program versions through Ansible.
+
+On explicit role launch, only missing provider credential files are seeded into
+the role's isolated home. Other settings, hooks, sessions and workspaces are not
+shared. Existing role credentials retain their native refresh state. Actual
+provider authentication/refresh behavior is verified only after your login;
+subscription exhaustion must not switch automatically to paid API usage.
+
+## Start, stop, restart and inspect the group
+
+```bash
+systemctl --user start assistant-connector.target
+systemctl --user stop assistant-connector.target
+systemctl --user restart assistant-connector.target
+systemctl --user status assistant-connector.target
+systemctl --user status assistant-connector-broker.service assistant-connector-gateway.service assistant-connector-containers.service
+```
+
+Only the target is enabled for startup. It controls the broker, filtered IPC
+gateway and all eight role containers. Stop/restart deliberately interrupts native
+sessions; homes, authentication state, workspaces and SQLite are preserved. Stop
+may return while child stop jobs finish; inspect member states for complete stop.
+Start restores idle tmux shells. It does not automatically launch models or resume
+conversations.
+
+## Launch a role and attach its native session
+
+```bash
+cd ~
+./team launch orchestrator
+./team attach orchestrator
+```
+
+Use `builder`, `investigator`, `challenger`, `summarizer`, `observer`,
+`private-connector` or `corporate-connector` in place of `orchestrator`. Authenticate
+first. Claude roles use claude-work except the Private Connector, which uses
+claude-priv. Builder uses Codex; challenger uses Gemini. Mistral is installed for
+native use but has no assigned team role yet.
+
+Launch is explicit and can invoke the provider; no launch occurred during setup.
+An already active role must be attached rather than launched again. Detach tmux
+with Ctrl-b then d; the container remains running. Talk to the orchestrator through
+its native CLI. Codex's `/hooks` approval remains an explicit native requirement.
+Native tool and permission prompts remain enabled; builder starts read-only.
+
+## Watch discussions
+
+```bash
+./team watch
+```
+
+This human viewer subscribes to the stock broker's live worker message stream.
+It does not poll inboxes or invoke models. Ctrl-C closes only the viewer. It shows
+new worker messages after attachment; it does not expose private observer reports
+or connector account contexts. The model-driven orchestration loop is not yet
+implemented merely by starting these containers.
+
+## Edit all role prompts in one file
+
+```bash
+${EDITOR:-vi} ~/assistant-prompts.md
+./team apply-prompts
+```
+
+Keep exactly one `# Role: name` header for each of the eight roles. Each role gets
+only its own section and the permitted collaboration roster. The source file is
+outside all five provider directories and is never mounted into containers.
+Ansible seeds it without overwriting your edits. Launch applies the latest prompts;
+existing conversations pick up changes on their next explicit launch. The observer
+section and identity are excluded from worker instructions. Do not copy private
+reports into worker-readable threads. Store sensitive lasting prompt additions in
+Vault when explicitly importing them into reproducible repository configuration.
+
+## Private observer snapshot and report
+
+```bash
+./team refresh-observer
+./team launch observer
+./team attach observer
+./team deliver-observer-report
+```
+
+Refresh exports permitted worker discussion to the observer's read-only context
+mount. It does not mount the broker database or corporate/private account data.
+Ask the observer to write its quality/design/stop recommendation to `report.md`
+in its own workspace. Delivery copies that report only to the orchestrator's
+`private-review.md`; tell the orchestrator to read it. This is a manual scoped
+bridge, not an automatic continuous evaluator. Reports do not trigger automatic
+reassignment, design changes or discussion cancellation.
+
+The connector containers have native tools disabled and no external connector
+plugins/account credentials configured. Their provider login is distinct from
+mail/calendar credentials. They cannot perform connector actions until scoped
+tools, independent approval and actual execution audit are implemented.
+
+## Parallel projects
+
+Not implemented yet: there is no create-project command. The current project
+uses one workers broker and SQLite database. A future project command should
+create separate project databases, role workspaces and containers while reusing
+only the appropriate provider login boundary. Do not simulate this by mixing
+multiple projects into the current broker.
+
+## Reproduce and verify
+
+The private repository's `src/configure_agents_connector.yml` calls separate roles
+for the Podman host, connector setup and native local authentication installations.
+`--tags native_auth,auth_sources` updates local installations and prompt/auth sources
+without restarting the service group. Offline model-free checks cover native
+versions/help, constrained containers, hooks, message delivery and event wake.
+Lifecycle stop/start checks are opt-in and refuse active native work.

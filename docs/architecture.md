@@ -120,7 +120,7 @@ no polling timer is deployed.
 ## Selected first setup: Agents Connector with isolated native sessions
 
 The user selected Agents Connector for an initial usable setup with native Claude
-Code, Codex and Gemini, omitting Vibe. The dedicated account, home-local binary,
+Code, Codex and Gemini, omitting Vibe from assigned team roles. The dedicated account, home-local binary,
 prompts, SQLite broker and enabled user services are reproduced by a separate role
 called from the connector playbook. Existing images are extended with tmux rather
 than replacing native harnesses. Idle tmux shells become native sessions only when
@@ -131,9 +131,9 @@ instead launches tmux inside each isolated container. A restricted host tmux ada
 routes the stock broker's fixed wake notification to that container; message bodies
 remain in MCP/hook delivery. No polling timer or new orchestration platform is built.
 Stock broker administrative IPC is kept private, with a per-instance filtered socket
-for native MCP shims and hooks. Observer and connector profiles remain inactive and
-unregistered, preserving hidden/private boundaries while their access bridges and
-tools are still undesigned. Provider accounts, native hook approval and live model
+for native MCP shims and hooks. Observer and connector profiles now have separate available containers but remain
+unregistered in the worker broker. The observer uses a manual read-only snapshot
+and private report bridge; external connector tools are still unconfigured. Provider accounts, native hook approval and live model
 session behavior require operator setup and later verification.
 
 ## Group lifecycle through a user target
@@ -142,7 +142,33 @@ The user selected `assistant-connector.target` as the single start/stop/restart
 control. It requires the three existing services; service ordering starts broker,
 gateway and containers in that order. `PartOf` propagates target stop/restart,
 while only the target is enabled for user-manager startup. No synthetic master
-service is introduced. The availability service explicitly stops the five named
+service is introduced. The availability service explicitly stops all eight named
 containers; persistent homes, provider state and SQLite survive. Group start
 restores idle tmux shells and does not automatically launch or resume model
 sessions. Routing-service refresh remains independent of container lifetime.
+
+## Native login directories, editable prompts and human controls
+
+The user requested actual home-local native installations in claude-work,
+claude-priv, gemini, codex and mistral, with all configuration/cache/state/temp
+inside each directory. A separate native_auth role reuses pinned native artifacts,
+uses a compatible portable Python for Vibe, and provides simple ./login commands.
+Work/private Claude account boundaries remain separate. Explicit role launch seeds
+only missing credentials and minimal account metadata, preserving independent
+role hooks/configuration and existing credential refresh state. Authentication and
+provider refresh remain unverified until the operator signs in.
+
+A single editable assistant-prompts.md outside those directories supplies all
+eight role sections. It is seeded without overwriting user edits and never mounted
+whole into containers. Apply/launch renders only each role's permitted context.
+All eight containers are available, while only the five collaboration roles join
+the worker broker. Observer evaluation/report context remains private.
+
+The home-local team utility supports native launch/attachment, live stock-broker
+subscription, prompt application, scoped observer snapshot and private report
+delivery. Observer source context is mounted read-only; reports reach only the
+orchestrator's private workspace. Connector profiles disable native tools and
+have no external tools/account credentials. Continuous orchestration/evaluation
+and tool-audit integrations remain future work. The home README.md documents every existing
+operator command and explicitly states that parallel project creation is not yet
+implemented. No new multi-project framework is introduced by this change.

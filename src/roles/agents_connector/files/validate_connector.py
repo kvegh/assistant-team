@@ -8,13 +8,13 @@ def request(name,obj,auth=True):
         s.settimeout(5);s.connect(str(root/'profiles'/name/'ipc/agent.sock'))
         if auth:assert team.frame(s,{'kind':'authenticate','agent_token':team.token(name)})['kind']=='agent_info'
         return team.frame(s,obj)
-assert not any((root/'profiles'/n/'launched').exists() for n in team.VISIBLE), 'Run offline validation before launching native sessions'
-for name in team.VISIBLE:
+assert not any((root/'profiles'/n/'launched').exists() for n in team.ALL), 'Run offline validation before launching native sessions'
+for name in team.ALL:
     p=root/'profiles'/name
-    assert request(name,{'kind':'list_agents'})['kind']=='agents'
+    if name in team.VISIBLE:assert request(name,{'kind':'list_agents'})['kind']=='agents'
     for denied in [{'kind':'shutdown'},{'kind':'get_agent','name':'builder'},{'kind':'register_agent','name':'illegal','cli_kind':'claude','workdir':None,'extra_args':[]},{'kind':'read_messages','agent':'other','since':0},{'kind':'tell','from':'other','to':'builder','text':'forged','urgent':False}]:
-        assert request(name,denied)['kind']=='error'
-    assert request(name,{'kind':'authenticate','agent_token':'wrong'},False)['kind']=='error'
+        if name in team.VISIBLE:assert request(name,denied)['kind']=='error'
+    if name in team.VISIBLE:assert request(name,{'kind':'authenticate','agent_token':'wrong'},False)['kind']=='error'
     cfg=json.loads((p/'profile.json').read_text());f=cfg['flavour'];c=team.container(name)
     got=subprocess.check_output(['podman','exec',c,f,'--version'],text=True);assert team.VERSIONS[f] in got
     subprocess.run(['podman','exec',c,f,'--help'],check=True,stdout=subprocess.DEVNULL)
@@ -28,8 +28,9 @@ for name in team.VISIBLE:
     proc=subprocess.check_output(['podman','exec',c,'cat','/proc/1/status'],text=True)
     assert 'CapEff:\t0000000000000000' in proc and 'NoNewPrivs:\t1' in proc
     text=(p/'workspace'/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[f]).read_text()
-    assert 'observer' not in text.lower() and 'evaluator' not in text.lower()
-    print(name+': native CLI/tmux/isolation/IPC deny checks passed')
+    if name in team.VISIBLE:assert 'observer' not in text.lower() and 'evaluator' not in text.lower()
+    if name not in team.VISIBLE:assert not (p/'home/mcp.json').exists() and not (p/'ipc/agent.sock').exists()
+    print(name+': native CLI/tmux/isolation and applicable IPC checks passed')
 # Verify stock native hook delivery through the filter and SQLite persistence.
 message='OFFLINE_FIXTURE_CONTENT_NOT_A_WAKE_PROMPT'
 r=request('builder',{'kind':'tell','from':'builder','to':'investigator','text':message,'urgent':False});assert r['kind']=='tell_ack'

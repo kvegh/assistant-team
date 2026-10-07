@@ -1,0 +1,133 @@
+---
+- name: Create each installation and all mutable state directories
+  ansible.builtin.file:
+    path: "{{ assistant_native_home }}/{{ native.directory }}/{{ item }}"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  loop: [.install, .config, .cache, .local/share, .local/state, tmp, .claude, .codex, .gemini, .vibe]
+- name: Inspect pinned local installation
+  ansible.builtin.stat:
+    path: "{{ assistant_native_home }}/{{ native.directory }}/.native-install.json"
+  register: native_existing
+- name: Require filesystem reserve before new local installations
+  when: not native_existing.stat.exists
+  block:
+    - ansible.builtin.command:
+        argv: [df, -B1, --output=avail, /]
+      register: native_free
+      changed_when: false
+    - ansible.builtin.assert:
+        that: native_free.stdout_lines[-1] | trim | int > 1073741824
+        fail_msg: Native installation requires more free space; preserve the guest filesystem reserve.
+- name: Export the real native package into its home-local prefix
+  when: not native_existing.stat.exists and native.flavour != 'vibe' and native.directory != 'claude-priv'
+  ansible.builtin.shell: |
+    set -o pipefail
+    runuser -u {{ containers.runtime_user | quote }} -- env HOME={{ assistant_native_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ assistant_native_uid }} podman run --rm --network=none localhost/assistant-connector-{{ native.flavour }}:{{ native.version }} tar -C /usr/local -cf - lib/node_modules/{{ native.package }} {{ (native.flavour == 'codex') | ternary('bin/node', '') }} |
+    runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (assistant_native_home + '/' + native.directory + '/.install') | quote }} -xf -
+  args:
+    executable: /bin/bash
+    chdir: /tmp
+  async: 600
+  poll: 20
+- name: Share only immutable duplicate Claude program files through hard links
+  when: not native_existing.stat.exists and native.directory == 'claude-priv'
+  ansible.builtin.command:
+    argv: [cp, -al, "{{ assistant_native_home }}/claude-work/.install/.", "{{ assistant_native_home }}/claude-priv/.install/"]
+- name: Share only immutable Node executable through a hard link
+  when: native.flavour == 'gemini'
+  block:
+    - ansible.builtin.file:
+        path: "{{ assistant_native_home }}/gemini/.install/bin"
+        state: directory
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+        mode: '0700'
+    - ansible.builtin.file:
+        src: "{{ assistant_native_home }}/codex/.install/bin/node"
+        dest: "{{ assistant_native_home }}/gemini/.install/bin/node"
+        state: hard
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+- name: Export the installed Vibe Python runtime and packages from the original native image
+  when: not native_existing.stat.exists and native.flavour == 'vibe'
+  ansible.builtin.shell: |
+    set -o pipefail
+    source_uid=$(id -u {{ assistant_source_user | quote }})
+    runuser -u {{ assistant_source_user | quote }} -- env HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid podman run --rm --network=none localhost/assistant-team-vibe:{{ native.version }} tar -C /usr/local -cf - bin lib |
+    runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (assistant_native_home + '/' + native.directory + '/.install') | quote }} -xf -
+  args:
+    executable: /bin/bash
+    chdir: /tmp
+  async: 600
+  poll: 20
+- name: Inspect compatible Python runtime installation
+  when: native.flavour == 'vibe'
+  ansible.builtin.stat:
+    path: "{{ assistant_native_home }}/mistral/.install/.portable-python-version"
+  register: native_python_runtime
+- name: Install a RHEL-compatible pinned Python runtime for Vibe
+  when: native.flavour == 'vibe' and not native_python_runtime.stat.exists
+  block:
+    - name: Download official portable Python
+      ansible.builtin.get_url:
+        url: https://github.com/astral-sh/python-build-standalone/releases/download/20261003/cpython-3.12.15%2B20261003-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz
+        checksum: sha256:731af898886c5f821890dc901eca3c651cca8e51fa7308c159d12a1194aeac91
+        dest: "{{ assistant_native_home }}/mistral/.install/python-runtime.tar.gz"
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+        mode: '0600'
+    - name: Extract compatible runtime while retaining Vibe packages
+      ansible.builtin.unarchive:
+        src: "{{ assistant_native_home }}/mistral/.install/python-runtime.tar.gz"
+        dest: "{{ assistant_native_home }}/mistral/.install"
+        remote_src: true
+        extra_opts: [--strip-components=1]
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+- name: Record the compatible portable runtime
+  when: native.flavour == 'vibe'
+  ansible.builtin.copy:
+    dest: "{{ assistant_native_home }}/mistral/.install/.portable-python-version"
+    content: "3.12.15+20261003\n"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Install directory-scoped native CLI launcher
+  ansible.builtin.copy:
+    src: native-cli.py
+    dest: "{{ assistant_native_home }}/{{ native.directory }}/.native-cli.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Publish native installation metadata
+  ansible.builtin.copy:
+    dest: "{{ assistant_native_home }}/{{ native.directory }}/.native-install.json"
+    content: "{{ native | to_nice_json }}\n"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Provide the simple native CLI and login commands
+  ansible.builtin.file:
+    src: .native-cli.py
+    dest: "{{ assistant_native_home }}/{{ native.directory }}/{{ item }}"
+    state: link
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+  loop: ["{{ native.flavour }}", login]
+- name: Verify actual host-native CLI version without credentials or inference
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv: ["{{ assistant_native_home }}/{{ native.directory }}/{{ native.flavour }}", --version]
+    chdir: "{{ assistant_native_home }}/{{ native.directory }}"
+  register: native_version_check
+  changed_when: false
+  failed_when: native_version_check.rc != 0 or native.version not in native_version_check.stdout + native_version_check.stderr
+- name: Verify local native help without credentials or inference
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv: ["{{ assistant_native_home }}/{{ native.directory }}/{{ native.flavour }}", --help]
+    chdir: "{{ assistant_native_home }}/{{ native.directory }}"
+  changed_when: false

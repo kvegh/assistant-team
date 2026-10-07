@@ -1,0 +1,14 @@
+---
+- name: Resolve the dedicated native installation account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Define dedicated local installation paths
+  ansible.builtin.set_fact:
+    assistant_native_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    assistant_native_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Install real native packages and scoped launchers sequentially
+  ansible.builtin.include_tasks: install.yml
+  loop: "{{ assistant_native_auth_dirs }}"
+  loop_control:
+    loop_var: native

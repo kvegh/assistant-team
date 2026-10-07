@@ -49,6 +49,62 @@ class ConnectorPolicyTests(unittest.TestCase):
         self.assertTrue(team.authorize('investigator', {'kind': 'post_reply', 'ask_id': 1, 'from': 'investigator', 'text': 'result'}))
         self.assertFalse(team.authorize('builder', {'kind': 'post_reply', 'ask_id': 1, 'from': 'builder', 'text': 'forged'}))
 
+    def test_prompt_sections_exclude_hidden_roles_and_preserve_source(self):
+        root = pathlib.Path(self.directory.name) / 'agents-connector'
+        root.mkdir()
+        for name in team.ALL:
+            path = self.profiles / name
+            (path / 'workspace').mkdir(parents=True, exist_ok=True)
+            (path / 'profile.json').write_text(__import__('json').dumps({'flavour': 'claude'}))
+        source = root.parent / 'assistant-prompts.md'
+        original = '\n'.join('# Role: ' + n + '\n' + ('hidden-secret' if n not in team.VISIBLE else 'own-' + n) for n in team.ALL)
+        source.write_text(original)
+        with mock.patch.object(team, 'ROOT', root):
+            team.apply_prompts()
+        self.assertEqual(source.read_text(), original)
+        for name in team.VISIBLE:
+            text = (self.profiles / name / 'workspace/CLAUDE.md').read_text()
+            self.assertIn('own-' + name, text)
+            self.assertNotIn('hidden-secret', text)
+
+    def test_credentials_seed_only_the_selected_boundary_and_preserve_refresh(self):
+        import json
+        root = pathlib.Path(self.directory.name) / 'agents-connector'
+        root.mkdir()
+        for boundary, value in [('claude-work', 'work-fixture'), ('claude-priv', 'private-fixture')]:
+            directory = root.parent / boundary / '.claude'
+            directory.mkdir(parents=True)
+            (directory / '.credentials.json').write_text(value)
+            (directory / '.claude.json').write_text(json.dumps({'oauthAccount': {'fixture': True}, 'mcpServers': {'forbidden': {}}}))
+        for name, boundary in [('investigator', 'claude-work'), ('private-connector', 'claude-priv')]:
+            path = self.profiles / name
+            (path / 'home').mkdir(parents=True, exist_ok=True)
+            (path / 'profile.json').write_text(json.dumps({'flavour': 'claude', 'auth_directory': boundary}))
+        with mock.patch.object(team, 'ROOT', root):
+            team.seed_auth('investigator')
+            team.seed_auth('private-connector')
+            saved = self.profiles / 'investigator/home/.claude/.credentials.json'
+            self.assertEqual(saved.read_text(), 'work-fixture')
+            saved.write_text('refreshed-fixture')
+            team.seed_auth('investigator')
+            self.assertEqual(saved.read_text(), 'refreshed-fixture')
+        self.assertEqual((self.profiles / 'private-connector/home/.claude/.credentials.json').read_text(), 'private-fixture')
+        metadata = json.loads((self.profiles / 'investigator/home/.claude.json').read_text())
+        self.assertNotIn('mcpServers', metadata)
+
+    def test_group_stop_targets_all_eight_named_containers_only(self):
+        import sys
+        for name in team.ALL:
+            path = self.profiles / name
+            path.mkdir(exist_ok=True)
+            (path / 'launched').touch()
+        with mock.patch.object(sys, 'argv', ['connector-team.py', 'stop']), mock.patch.object(team.subprocess, 'run') as exists, mock.patch.object(team, 'run') as execute:
+            exists.return_value.returncode = 0
+            team.main()
+            command = execute.call_args.args[0]
+        self.assertEqual(command, ['podman', 'stop', '--time', '10', *['ac-' + n for n in team.ALL]])
+        self.assertFalse(any((self.profiles / n / 'launched').exists() for n in team.ALL))
+
     def test_arbitrary_text_and_unsupported_tmux_operations_are_rejected(self):
         with mock.patch.object(team, 'run') as execute:
             with self.assertRaises(ValueError):

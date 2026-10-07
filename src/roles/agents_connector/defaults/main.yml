@@ -3,12 +3,12 @@ assistant_connector_version: '0.1.0'
 assistant_connector_sha256: cb9e0d92e55a3896e51e326d630330bde32b43fbb33b42d5498ef62613bdeacc
 assistant_connector_source_revision: 44c195a6ed9e4df608d9fde30e3d8759fc92b900
 assistant_connector_profiles:
-  - {name: orchestrator, flavour: claude, visible: true}
+  - {name: orchestrator, flavour: claude, visible: true, auth_directory: claude-work}
   - {name: builder, flavour: codex, visible: true}
-  - {name: investigator, flavour: claude, visible: true}
+  - {name: investigator, flavour: claude, visible: true, auth_directory: claude-work}
   - {name: challenger, flavour: gemini, visible: true}
-  - {name: summarizer, flavour: claude, visible: true}
-  - {name: observer, flavour: claude, visible: false}
-  - {name: private-connector, flavour: claude, visible: false}
-  - {name: corporate-connector, flavour: claude, visible: false}
+  - {name: summarizer, flavour: claude, visible: true, auth_directory: claude-work}
+  - {name: observer, flavour: claude, visible: false, auth_directory: claude-work}
+  - {name: private-connector, flavour: claude, visible: false, auth_directory: claude-priv}
+  - {name: corporate-connector, flavour: claude, visible: false, auth_directory: claude-work}
 assistant_connector_validate_lifecycle: false

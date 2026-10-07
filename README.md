@@ -320,96 +320,116 @@ inbox polling is rejected. The selected integration uses stock event-driven wake
 and fixed tmux notices, with content delivered through authenticated MCP/hooks.
 Generic native inbound transport across all harnesses remains unverified.
 
-## Agents Connector setup
+## Current assistant team setup
 
-`src/configure_agents_connector.yml` creates the dedicated password-locked,
-unprivileged account recorded in Vault and calls the existing `podman_host` role
-plus the separate `agents_connector` role. Its home contains the upstream binary,
-rough role prompts, isolated native homes/workspaces, private SQLite broker state,
-and constrained routing utilities. Upstream release 0.1.0 is checksum pinned.
-The existing Claude/Codex/Gemini images are streamed into this account's rootless
-store and extended with tmux; Mistral Vibe is excluded from this setup.
+`src/configure_agents_connector.yml` calls separate `podman_host`,
+`agents_connector` and `native_auth` roles. Run the container foundation first,
+then this playbook; it reuses the existing pinned native images. Guest/account
+details stay in Vault. The complete operator guide is installed as `~/README.md`
+in the dedicated account's home, from
+[its template](src/roles/agents_connector/templates/README.md.j2).
 
 ```bash
 ansible-playbook --syntax-check -i 'localhost,' src/configure_agents_connector.yml
 ansible-playbook -i 'localhost,' src/configure_agents_connector.yml
 ```
 
-Use the same certified collection and protected SSH configuration as the container
-foundation. The account and guest details stay encrypted in Vault. The stock broker
-and instance-specific IPC gateway run as user services grouped by the enabled
-`assistant-connector.target`. Only the target is enabled for user-manager startup. Five continuously
-running rootless containers contain tmux sessions for the visible orchestrator,
-builder, investigator, challenger and summarizer profiles. Initially those tmux
-panes contain idle shells, not authenticated model sessions. Provider login and
-native hook approval remain operator actions.
+Use the same certified collection and protected SSH configuration as the foundation.
+`--tags native_auth,auth_sources` updates native login installations, prompt sources
+and home-local controls without restarting the service group.
 
-As the dedicated runtime account, use its home-local utility:
+### Native installations and account login
+
+The dedicated home contains five real local installations: `claude-work`,
+`claude-priv`, `gemini`, `codex` and `mistral`. Each provides `./login` and its
+native `./claude`, `./gemini`, `./codex` or `./vibe`. Program artifacts are reused
+from the pinned images; duplicated Claude code and Node runtime use hard links.
+Vibe uses checksum-pinned Astral Python Build Standalone 3.12.15 to support the
+guest's libc. No global CLI, npm, pip, gcloud or libc shim is installed.
 
 ```bash
-python3 "$HOME/agents-connector/routing/connector-team.py" check
-python3 "$HOME/agents-connector/routing/connector-team.py" login builder
-python3 "$HOME/agents-connector/routing/connector-team.py" launch builder
-python3 "$HOME/agents-connector/routing/connector-team.py" attach builder
+cd ~/claude-work && ./login
+cd ~/claude-priv && ./login
+cd ~/gemini && ./login
+cd ~/codex && ./login
+cd ~/mistral && ./login
 ```
 
-Select another visible profile name for its own login, launch and attachment.
-Claude uses native authentication, Codex uses device login, and Gemini opens its
-native authentication flow. No credentials are inherited. Codex hooks require the
-operator's explicit native `/hooks` approval; this setup does not bypass it.
-Launcher arguments retain native permission prompts. The builder starts in the
-native read-only sandbox; broader write permissions require an intentional later
-configuration change. Native workspace instruction files load the rough prompts.
-Do not launch a role twice while its session is active; attach instead. An exited
-session can be launched again. Containers stay available after a CLI exits.
+Claude work/private authenticate separately. Gemini uses native Sign in with Google
+with a remote browser flow; gcloud is unnecessary. Codex uses device login and a
+file credential store. Mistral opens Vibe's native setup wizard. All five wrappers
+scope HOME, provider configuration, credentials, caches, state and temporary files
+to their respective directory. Provider authentication is performed by the operator,
+never inherited from this development session. No login, terms acceptance or model
+request occurred during setup. Choose the intended account/subscription; there is
+no automatic paid API fallback.
 
-Only each instance's own home, workspace and filtered IPC directory are writable
-mounts; the connector binary is read-only. There are no host engine/tmux sockets,
-shared provider credentials, sudo, published ports, or host-loopback access inside
-workers. CPU, memory, process, capability and read-only root restrictions remain.
-The stock administrative socket and SQLite database are not mounted into workers.
-The gateway restricts authentication and message identity to the assigned instance
-and rejects administrative operations. Visible workers communicate within one
-collaboration broker; this is not a general multitenant service.
+On explicit role launch, only missing credential files are seeded into that role's
+isolated home. Claude copies only optional OAuth account metadata, not global MCP
+or other settings. Existing role credentials retain their own native refresh state.
+Work/private account sources are separate. Native hooks, prompts, workspaces and
+sessions remain per role. Actual provider login/refresh behavior awaits operator
+authentication; initial seeding does not promise automatic cross-role refresh sync.
 
-Stock urgent messages/questions trigger the broker's busy-aware, debounced tmux
-wake. The host adapter routes only fixed wake notices and Enter into the named
-container's tmux session. Actual message content arrives through authenticated MCP
-and native hook context. There is no timed inbox polling. No wake is sent to a
-profile before the operator launches its native session. Stock state/cooldown
-handling is retained; this does not implement a guaranteed delivery scheduler.
+Official references: [Gemini authentication](https://geminicli.com/docs/get-started/authentication/),
+[Codex authentication](https://learn.chatgpt.com/docs/auth),
+[Vibe setup](https://docs.mistral.ai/vibe/code/cli/install-setup), and
+[portable Python](https://github.com/astral-sh/python-build-standalone/blob/main/docs/running.rst).
 
-Observer/evaluator, Private Connector and Corporate Connector prompts are prepared
-in separate inactive profiles. They are not registered in the worker broker or
-mounted into worker containers. Observer transcript access/private reporting,
-connector scoped tools/credentials, actual tool audit adapters, automated routing,
-discussion budgets and stop enforcement remain pending. Prompt text alone does not
-implement those controls. No external connector actions are performed.
+### Eight available roles and user controls
 
-The role includes offline validation of native version/help, real inside-container
-tmux, enforced isolation, gateway policy, SQLite messages, all three stock hook
-formats, and a fixed-only wake into a harmless test pane. These checks use no
-provider login or model inference. For a repeatable operator check before launching
-model sessions, run the home-local `routing/validate_connector.py`; it refuses the
-wake fixture if that native session is already launched.
-
-Setup is installed and offline verified: the enabled lifecycle target and its three user services are
-active, five tmux containers are running, and native versions match the foundation.
-All nineteen local tests pass. Live tests passed for all three stock hook formats,
-SQLite persistence, IPC identity/admin restrictions, actual fixed-only urgent
-message/question wake, and busy-state wake suppression after cooldown expiry.
-Fixture messages are removed after successful validation. Routing-service refresh
-does not stop the independent containers. Guest free space remained about 2.4 GiB.
-Provider authentication and live native model sessions remain unconfigured.
-
-### Start, stop and restart the group
-
-Enter the dedicated runtime account from the guest's automation login, using its
-Vault-recorded account name. Set the user-bus environment if the sudo login does
-not populate it:
+Eight isolated containers are running with inside-container tmux: orchestrator,
+builder, investigator, challenger, summarizer, observer, private-connector and
+corporate-connector. They initially contain idle shells. Native model sessions
+require explicit authentication and launch. Mistral is installed locally but has
+no assigned connector-team role. The builder uses Codex, challenger uses Gemini,
+and the current rough other profiles use Claude.
 
 ```bash
-sudo -iu <runtime-account>
+cd ~
+./team launch orchestrator
+./team attach orchestrator
+./team watch
+./team apply-prompts
+```
+
+The source `~/assistant-prompts.md` sits outside the five provider directories and
+contains one `# Role: name` section per role. Ansible seeds it without overwriting
+operator edits. Application extracts only each role's section, adding the permitted
+collaboration roster to visible workers. The whole source file is never mounted
+into containers. Launch applies the current prompts; active conversations receive
+changes on their next launch. Runtime edits are not copied into plaintext Git;
+import sensitive lasting additions explicitly through Vault when needed.
+
+`watch` subscribes to the stock broker's live worker stream without inbox polling
+or model calls. `attach` connects to the native tmux UI; Ctrl-b then d detaches.
+An already active role is attached rather than relaunched. Codex's `/hooks` approval
+remains an operator requirement. Native permission prompts remain; builder starts
+read-only. No permission-bypass flags or broad host mounts are introduced.
+
+Only five collaboration roles are registered in the worker broker. Its stock
+administrative socket and SQLite remain host-private; per-instance IPC filtering
+checks authentication, message identity and ask/reply ownership and denies admin
+requests. All containers retain rootless resource/capability/rootfs restrictions,
+own persistent homes/workspaces, no sudo/engine/tmux host sockets or host-loopback
+access. Credentials are reused only from the chosen provider boundary, without
+sharing complete mutable provider state.
+
+The observer has a read-only permitted discussion snapshot mount, independent
+workspace and private report. `./team refresh-observer` updates that snapshot;
+`./team deliver-observer-report` copies its `report.md` only into the orchestrator's
+`private-review.md`. Workers cannot access the observer's identity/source section
+or reports. This is a manual bridge, not continuous automatic evaluation. The
+private/corporate connector containers have native tools disabled and no external
+connector plugins/account credentials; permission enforcement and tool-action
+auditing must precede actual connector use. Starting containers alone does not
+implement model-driven orchestration or automatic discussion-stop behavior.
+
+### Group lifecycle
+
+As the dedicated runtime account, set the user-bus environment if needed:
+
+```bash
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
 systemctl --user start assistant-connector.target
@@ -418,26 +438,39 @@ systemctl --user restart assistant-connector.target
 systemctl --user status assistant-connector.target
 ```
 
-The target requires broker, gateway and container availability in dependency
-order. Their `PartOf` relationship propagates group stop/restart. Only the target
-is enabled at boot through the lingering user manager; individual services are
-disabled for independent boot startup. Stopping the group explicitly stops only
-the five managed containers and clears native-session launch markers. Persistent
-homes, authentication state, workspaces and SQLite remain intact. Starting it
-restores inside-container tmux shells. Model sessions are not automatically
-relaunched or resumed; authenticate and explicitly launch them when appropriate.
-A group stop/restart interrupts any active native sessions and should be deliberate.
+Only the target is enabled. It requires the broker, gateway and container services;
+`PartOf` propagates group stop/restart. Stop explicitly controls all eight named
+containers, preserves homes/SQLite and clears launch markers. Start restores idle
+tmux shells, without automatic model launch/resume. Target stop can return while
+child stop jobs finish; inspect member service states for complete shutdown.
+Routing-service refresh remains independent of container lifetime.
 
-The lifecycle validation utility refuses active native work, verifies stop/start/
-restart, and leaves the group running. It is opt-in, because it stops containers:
+The opt-in lifecycle check refuses active native work:
 
 ```bash
 ansible-playbook -i 'localhost,' src/configure_agents_connector.yml \
   --tags connector_services -e assistant_connector_validate_lifecycle=true
 ```
 
-Group lifecycle checks passed in the deployed Ansible run: stop reached all
-services inactive and all five containers stopped; start/restart restored all
-services and tmux sessions. SQLite contents and persistent homes/workspaces were
-unchanged. The group is left running. Stop may return before child stop jobs finish;
-inspect the three service states when waiting for complete shutdown.
+Parallel project creation is not implemented; there is no create-project command.
+The current project has one worker broker/SQLite database. Future projects should
+have separate databases, role workspaces and containers with the appropriate login
+boundary. The usage guide records this limitation explicitly.
+
+### Validation and current limits
+
+All five local installations pass host-native version/help checks. All eight
+containers are available; native authentication and model sessions remain pending.
+Twenty-five local tests passed, including scoped login paths, work/private credential
+seeding, retained refresh state, hidden prompt extraction and named-eight-container
+stop. Live checks verify a read-only observer context and no provider configuration
+at the account's global home paths. The earlier target stop/start/restart check
+preserved SQLite and persistent state; lifecycle checks are not repeated during
+possible operator authentication. New control checks cover the stock live viewer
+and private report routing without invoking models.
+
+The VM remains at its approved allocation. Idle containers use little memory;
+concurrent native/model/build workloads remain unmeasured. The guest root filesystem
+has about 1.3 GiB free after the local installs, so review storage before further
+image builds or substantial workspace growth. No memory or filesystem expansion
+was performed.

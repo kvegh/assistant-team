@@ -1,16 +1,16 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services]
+  tags: [connector_services, auth_sources]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
-  tags: [connector_services]
+  tags: [connector_services, auth_sources]
   ansible.builtin.set_fact:
     assistant_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     assistant_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
-  tags: [connector_services]
+  tags: [connector_services, auth_sources]
   ansible.builtin.set_fact:
     assistant_connector_root: "{{ assistant_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -50,7 +50,7 @@
     argv: ["{{ assistant_connector_root }}/bin/agents-connector", --version]
   changed_when: false
 - name: Install constrained lifecycle and IPC routing utility
-  tags: [connector_services]
+  tags: [connector_services, auth_sources]
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ assistant_connector_root }}/routing/connector-team.py"
@@ -74,6 +74,7 @@
     mode: '0700'
   loop: "{{ assistant_connector_profiles | product(['home', 'workspace', 'ipc', 'reports']) | list }}"
 - name: Write generic profile specifications
+  tags: [auth_sources]
   ansible.builtin.copy:
     dest: "{{ assistant_connector_root }}/profiles/{{ item.name }}/profile.json"
     content: "{{ item | to_nice_json }}\n"
@@ -89,6 +90,51 @@
     group: "{{ containers.runtime_user }}"
     mode: '0600'
   loop: "{{ assistant_connector_profiles }}"
+- name: Seed the single editable prompt file without overwriting operator edits
+  tags: [auth_sources, connector_services]
+  ansible.builtin.copy:
+    dest: "{{ assistant_runtime_home }}/assistant-prompts.md"
+    content: |
+      # Assistant role prompts
+
+      Edit the body under each exact Role header. Apply with ./team apply-prompts.
+      Working containers receive only their own extracted section.
+
+      {% for role in assistant_connector_profiles %}
+      # Role: {{ role.name }}
+
+      {{ lookup('ansible.builtin.file', role_path + '/prompts/' + role.name + '.md') }}
+
+      {% endfor %}
+    force: false
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Provide the simple home-local team command
+  tags: [auth_sources, connector_services]
+  ansible.builtin.file:
+    src: "{{ assistant_connector_root }}/routing/connector-team.py"
+    dest: "{{ assistant_runtime_home }}/team"
+    state: link
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+- name: Apply only individual prompt sections
+  tags: [auth_sources, connector_services]
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv: [python3, "{{ assistant_connector_root }}/routing/connector-team.py", apply-prompts]
+    chdir: /tmp
+  changed_when: false
+- name: Ensure every role has an isolated available container
+  tags: [auth_sources]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+  ansible.builtin.command:
+    argv: [python3, "{{ assistant_connector_root }}/routing/connector-team.py", prepare]
+    chdir: /tmp
+  changed_when: false
 - name: Add collaboration roster to visible worker instructions only
   ansible.builtin.blockinfile:
     path: "{{ assistant_connector_root }}/profiles/{{ item.name }}/workspace/{{ {'claude':'CLAUDE.md', 'codex':'AGENTS.md', 'gemini':'GEMINI.md'}[item.flavour] }}"
@@ -231,7 +277,7 @@
     state: started
     daemon_reload: true
 - name: Install offline integration validation
-  tags: [connector_services]
+  tags: [connector_services, auth_sources]
   ansible.builtin.copy:
     src: validate_connector.py
     dest: "{{ assistant_connector_root }}/routing/validate_connector.py"
@@ -267,3 +313,19 @@
     argv: [python3, "{{ assistant_connector_root }}/routing/validate_lifecycle.py"]
   changed_when: false
   when: assistant_connector_validate_lifecycle | bool
+- name: Publish the complete home-local usage guide
+  tags: [auth_sources, connector_services]
+  ansible.builtin.template:
+    src: README.md.j2
+    dest: "{{ assistant_runtime_home }}/README.md"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Install model-free user-control validation
+  tags: [auth_sources, connector_services]
+  ansible.builtin.copy:
+    src: validate_user_controls.py
+    dest: "{{ assistant_connector_root }}/routing/validate_user_controls.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
