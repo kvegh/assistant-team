@@ -109,3 +109,13 @@ so a stale local copy was ruled out; the exact reason for rejection is unresolve
 Job-template creation remains unconfirmed and no VM deployment has been launched.
 The README and encrypted controller references record this state without exposing
 secrets. Authentication must be restored before controller work can continue.
+
+## Keep the current GitHub token lifetime
+
+Related configuration commit: `f122084131c012bd325c4e9f7ac889f487f095e9`.
+
+The user decided to leave the repository-scoped GitHub token and its current
+expiration unchanged. Renew or replace it on demand when repository access
+requires it, and update the corresponding AAP Source Control credential at that
+time. No token rotation or expiration change is being made now. This decision
+does not resolve the separate AAP MCP authentication failure.
