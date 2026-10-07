@@ -1,0 +1,14 @@
+# Password files and local decrypted material
+vpf
+**/vpf
+.vault-password*
+vault-password*
+*.decrypted.*
+.env
+.env.*
+!.env.example
+*.retry
+*.log
+local/
+output/
+__pycache__/
