@@ -79,6 +79,13 @@ guest through libvirt and resumes guest configuration without cloning or replaci
 its disk. The template must allow job tags at launch and must not use a hypervisor-only
 host limit, because the later play runs against a dynamically added guest.
 
+If offline customization failed before a VM was defined, use the `offline_recovery`
+job tag to resume customization and boot from the existing disk without repeating
+the copy or cleanup. Recovery refuses to customize a disk associated with a defined
+VM. For that identity task alone, `vm_identity_diagnostics: true` reveals its command
+result temporarily; other task output and guest credentials remain protected.
+The diagnostic default remains off.
+
 The golden image supplies the guest access configuration. Provisioning resets
 the cloned machine identity and host keys. Logs are protected with `no_log`;
 verified VM details are stored in AAP job artifacts. Keep controller access

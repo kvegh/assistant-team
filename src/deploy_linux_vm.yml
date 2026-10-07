@@ -16,6 +16,7 @@
 
   tasks:
     - name: Validate deployment inputs
+      tags: [offline_recovery]
       ansible.builtin.assert:
         that:
           - ansible_play_hosts_all | length == 1
@@ -31,15 +32,25 @@
         fail_msg: Invalid deployment inputs; check the Vault configuration and launch variables.
 
     - name: Inspect existing VM names
+      tags: [offline_recovery]
       ansible.builtin.command:
         argv: [virsh, list, --all, --name]
       register: existing_vms
       changed_when: false
 
     - name: Inspect target disk
+      tags: [offline_recovery]
       ansible.builtin.stat:
         path: "{{ deployment_disk }}"
       register: existing_disk
+
+    - name: Validate offline recovery safety
+      tags: [never, offline_recovery]
+      ansible.builtin.assert:
+        that:
+          - deployment_name not in existing_vms.stdout_lines
+          - existing_disk.stat.exists
+        fail_msg: Offline recovery requires an existing disk with no defined VM.
 
     - name: Refuse to overwrite an existing VM or disk
       ansible.builtin.assert:
@@ -90,6 +101,8 @@
       changed_when: true
 
     - name: Customize hostname and unique guest identity
+      tags: [offline_recovery]
+      no_log: "{{ not (vm_identity_diagnostics | default(false) | bool) }}"
       ansible.builtin.command:
         argv:
           - virt-customize
@@ -103,6 +116,7 @@
       changed_when: true
 
     - name: Import and start the VM
+      tags: [offline_recovery]
       ansible.builtin.command:
         argv:
           - virt-install
@@ -125,26 +139,26 @@
       changed_when: true
 
     - name: Read the VM network interface
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.command:
         argv: [virsh, domiflist, "{{ deployment_name }}"]
       register: vm_interfaces
       changed_when: false
 
     - name: Extract the VM MAC address
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.set_fact:
         deployment_mac: "{{ vm_interfaces.stdout | regex_search('(?i)(?:[0-9a-f]{2}:){5}[0-9a-f]{2}') }}"
 
     - name: Validate the VM MAC address
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.assert:
         that:
           - deployment_mac is string
           - deployment_mac | length == 17
 
     - name: Wait for a DHCP lease matching the VM MAC address
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.command:
         argv: [virsh, net-dhcp-leases, "{{ provisioning.vm_network }}", --mac, "{{ deployment_mac }}"]
       register: vm_lease
@@ -154,12 +168,12 @@
       delay: 5
 
     - name: Extract the IPv4 address
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.set_fact:
         deployment_ip: "{{ vm_lease.stdout | regex_search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?=/)') }}"
 
     - name: Add the new guest for connection verification
-      tags: [guest_config]
+      tags: [guest_config, offline_recovery]
       ansible.builtin.add_host:
         name: "{{ deployment_name }}"
         groups: provisioned_linux_guest
@@ -179,7 +193,7 @@
   gather_facts: false
   become: true
   no_log: true
-  tags: [guest_config]
+  tags: [guest_config, offline_recovery]
   vars_files:
     - ../vars/environment.vault.yml
   tasks:
