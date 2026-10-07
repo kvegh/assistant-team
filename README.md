@@ -84,6 +84,15 @@ the cloned machine identity and host keys. Logs are protected with `no_log`;
 verified VM details are stored in AAP job artifacts. Keep controller access
 restricted, and record deployment details in the encrypted configuration file.
 
+## Deployment status
+
+The private repository has synchronized successfully to its AAP project using a
+repository-scoped GitHub credential. Local syntax checks and all seven tests pass.
+Live deployment has not started: the AAP MCP connection currently rejects its
+configured authentication token. Job-template creation still needs confirmation
+after controller access is restored. Environment-specific controller references
+and the approved VM hostname remain in the encrypted configuration.
+
 ## Validation
 
 Check that encrypted configuration decrypts without displaying its contents:
