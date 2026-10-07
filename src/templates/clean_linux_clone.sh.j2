@@ -1,0 +1,54 @@
+#!/bin/sh
+set -eu
+
+# This script runs inside the cloned disk through virt-customize.
+aap_user={{ provisioning.aap_service_user | quote }}
+automation_user={{ provisioning.guest_ssh_user | quote }}
+
+case "$aap_user" in
+    ''|root|*[!a-zA-Z0-9_-]*)
+        echo 'Invalid service account cleanup input' >&2
+        exit 1
+        ;;
+esac
+if [ "$aap_user" = "$automation_user" ]; then
+    echo 'Refusing to remove the automation access account' >&2
+    exit 1
+fi
+
+remove_account=false
+if getent passwd "$aap_user" >/dev/null; then
+    if [ "$(id -u "$aap_user")" -eq 0 ]; then
+        echo 'Refusing to remove a privileged system identity' >&2
+        exit 1
+    fi
+    account_home=$(getent passwd "$aap_user" | cut -d: -f6)
+    if [ "$account_home" != "/home/$aap_user" ]; then
+        echo 'Unexpected service account home; inspect before cleanup' >&2
+        exit 1
+    fi
+    remove_account=true
+fi
+
+# Match installer artifacts only, preserving unrelated files in the directory.
+if [ -d /opt/sources ]; then
+    find /opt/sources -mindepth 1 -maxdepth 1 \
+        -name 'ansible-automation-platform-*' -exec rm -rf -- {} +
+fi
+
+if [ "$remove_account" = true ]; then
+    rm -f -- "/var/lib/systemd/linger/$aap_user" "/etc/sudoers.d/$aap_user"
+    userdel --remove "$aap_user"
+fi
+
+if command -v dnf >/dev/null 2>&1; then
+    dnf clean all
+fi
+
+find /root /home -xdev -type f \
+    \( -name '.bash_history' -o -name '.zsh_history' -o -name '.python_history' \) \
+    -delete
+if [ -d /var/log/journal ]; then
+    find /var/log/journal -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+fi
+find /var/log -xdev -type f -exec truncate -s 0 -- {} +

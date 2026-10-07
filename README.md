@@ -29,7 +29,9 @@ The last command displays plaintext locally; do not capture or commit its output
 
 - `vars/environment.vault.yml`: encrypted environment configuration.
 - `src/deploy_linux_vm.yml`: generic golden-image Linux VM provisioning.
+- `src/templates/clean_linux_clone.sh.j2`: cleanup inside the cloned image.
 - `tests/test_deployment.py`: launch-validation tests without VM changes.
+- `tests/test_clone_cleanup.py`: checks that cleanup preserves protected accounts.
 - `ansible.cfg`: local Vault password-file configuration.
 - `design_decisions_history.md`: decisions and implementation commit references.
 
@@ -57,6 +59,14 @@ automatically delete or overwrite them. Increase `vm_disk_gb` if the golden
 image is larger than the requested disk. Disk resizing changes the virtual disk
 capacity; guest partition and filesystem growth are not performed by this playbook.
 
+Before booting, provisioning removes AAP installer artifacts under `/opt/sources`,
+the unused AAP service account and its home, associated lingering and sudo entry,
+package caches, inherited shell histories, and logs from the cloned disk. The
+automation access account is preserved. Configure `provisioning.aap_service_user`
+in Vault; cleanup refuses to remove root, the automation account, or an account
+with an unexpected home directory. The shared source image is never customized.
+Guest verification checks that installer artifacts and the AAP account are absent.
+
 The golden image supplies the guest access configuration. Provisioning resets
 the cloned machine identity and host keys. Logs are protected with `no_log`;
 verified VM details are stored in AAP job artifacts. Keep controller access
@@ -74,6 +84,7 @@ python3 -m unittest discover -s tests -v
 ```
 
 The tests reject unsafe names, invalid sizing, and multiple hypervisor targets
-before remote work. Python's standard library runs the suite; Ansible must already
+before remote work, and verify cleanup account guards without deleting files.
+Python's standard library runs the suite; Ansible must already
 be installed. Use `ansible-lint src/deploy_linux_vm.yml` when a working installation
 is available. No additional dependencies are installed automatically.
