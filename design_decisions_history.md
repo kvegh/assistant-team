@@ -297,3 +297,22 @@ preserves its history rather than deleting it.
 These central services, listeners, observer reports, connectors, audit adapters,
 and allowance controls are documented design agreements awaiting implementation.
 The container foundation does not deploy them.
+
+## Require attachable native sessions and event-driven delivery
+
+Design documentation: `d2c60126cbe38bd4e550c226424271c97d016a0a`.
+
+The user requires native harness sessions in tmux inside continuously running
+rootless Podman containers, so the operator can attach. This is a TODO rather
+than deployed functionality: current foundation commands remain short-lived.
+
+Prefer existing messaging/listener software over developing a new service. Timed
+inbox polling is rejected. Addressed events must reach the existing running
+harness through a supported inbound interface; being an MCP tool client alone
+does not prove idle-session input support. Validate native capabilities for all
+four harnesses before selecting a transport. If tmux wake is used, submit only a
+fixed notification and keep message content in authenticated MCP delivery.
+
+No messaging candidate, persistent session deployment, or polling implementation
+is selected by this decision. Instance isolation and existing access boundaries
+remain requirements.
