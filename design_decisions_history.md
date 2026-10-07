@@ -427,3 +427,51 @@ and the private observer/report boundary without model calls. A plaintext
 repository audit found no environment identifiers or access secrets; native
 credentials and operator-edited prompts remain outside Git, and environment
 metadata remains Vault-encrypted. VM resources were not changed.
+
+## Create and operate isolated assistant projects
+
+Implementation: `61d1709b0b028db42cede35dfcceeeaa72c128e7`.
+
+The user approved a reusable project framework, with each named project under
+the runtime home projects directory. The create-project command invokes the
+existing stock broker to create its actual SQLite schema and five-worker registry;
+it also prepares eight role homes/workspaces and the singular editable
+assistant-prompt.md containing the project goal and all role sections. Creation
+does not start containers or models, and existing project contents are preserved.
+Conservative project-name validation prevents path traversal and symlink projects.
+
+Each project has a separate database, broker, identity-filtered IPC, native homes,
+workspaces and container names. Only the selected role prompt plus goal and
+permitted collaboration roster enter each container. Vendor installations and
+login directories remain outside projects; only missing matching authentication
+files are seeded into role homes. Native refresh state is not overwritten.
+
+Start requires saved subscription/OAuth credential format for Claude work/private,
+Codex and Gemini before activating any project service, then launches all eight
+native harnesses without initial task prompts. This local check does not verify
+remote token validity. Native trust/onboarding and hook approvals remain explicit,
+and no paid API fallback or security bypass is introduced. Mistral remains
+installed but unassigned to a team role.
+
+Per-project systemd targets order broker, gateway and container services. Stop
+and restart affect only the named project's processes, preserving its database,
+credentials, workspaces and native session files. Restart starts new CLI sessions;
+automatic conversation resume is not claimed. Project targets are not enabled
+at boot. Legacy default commands remain available, and project names matching
+role names cannot accidentally route a stop to the default group.
+
+The hidden observer and private/corporate connector roles remain outside worker
+brokers. Observer transcript refresh/private report delivery remain manual.
+Connector general tools remain disabled; external tools, automated orchestration
+and continuous evaluation are not implemented by this framework. The home
+README and repository documentation describe actual project commands and limits.
+
+Thirty-one local tests, Ansible syntax and the final deployment passed. Live
+validation created two disposable stock-schema projects, checked missing-auth
+refusal in an isolated home, started eight explicitly dummy harnesses per project,
+verified event-stream delivery, project-specific stop/restart and retained SQLite,
+and removed only its own fixtures. No provider authentication or model request
+was performed; authenticated native-session startup remains to be exercised by
+the operator. The original eight containers remained running. An audit of
+sixty-three plaintext repository files found no environment identifiers/access
+secrets; environment metadata remains Vault-encrypted. VM resources were unchanged.
