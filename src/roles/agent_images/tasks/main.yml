@@ -1,0 +1,86 @@
+---
+- name: Copy build contexts
+  ansible.builtin.copy:
+    src: containers/
+    dest: "{{ assistant_runtime_home }}/.local/share/assistant-team/build/"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+
+- name: Define native harness builds
+  ansible.builtin.set_fact:
+    assistant_harnesses:
+      - flavour: claude
+        package: '@anthropic-ai/claude-code'
+        version: "{{ assistant_claude_version }}"
+        base: "{{ assistant_node_base }}"
+        containerfile: Containerfile.node
+        command: claude
+      - flavour: codex
+        package: '@openai/codex'
+        version: "{{ assistant_codex_version }}"
+        base: "{{ assistant_node_base }}"
+        containerfile: Containerfile.node
+        command: codex
+      - flavour: gemini
+        package: '@google/gemini-cli'
+        version: "{{ assistant_gemini_version }}"
+        base: "{{ assistant_node_base }}"
+        containerfile: Containerfile.node
+        command: gemini
+      - flavour: vibe
+        package: mistral-vibe
+        version: "{{ assistant_vibe_version }}"
+        base: "{{ assistant_python_base }}"
+        containerfile: Containerfile.vibe
+        command: vibe
+
+- name: Build and validate each native harness sequentially
+  ansible.builtin.include_tasks: build.yml
+  loop: "{{ assistant_harnesses }}"
+  loop_control:
+    loop_var: harness
+
+- name: Install the constrained instance launcher
+  ansible.builtin.copy:
+    src: assistant-instance.py
+    dest: /usr/local/bin/assistant-instance
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create launcher configuration directory
+  ansible.builtin.file:
+    path: /etc/assistant-team
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Publish verified local image versions
+  ansible.builtin.copy:
+    dest: /etc/assistant-team/images.json
+    content: "{{ dict(assistant_harnesses | map(attribute='flavour') | zip(assistant_harnesses | map(attribute='version'))) | to_nice_json }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy offline instance validation utility
+  tags: [instance_validation]
+  ansible.builtin.copy:
+    src: validate_instances.py
+    dest: "{{ assistant_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+
+- name: Verify native harness instances and isolation without model calls
+  tags: [instance_validation]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv: [python3, "{{ assistant_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"]
+  changed_when: false

@@ -33,6 +33,10 @@ The last command displays plaintext locally; do not capture or commit its output
 - `src/roles/linux_guest/`: guest access, identity, resource, and cleanup verification.
 - `src/roles/linux_updates/`: RHEL registration, full updates, reboot, and result publication.
 - `AGENTS.md`: project access and reproducible-change requirements.
+- `src/configure_assistant_containers.yml`: certified rootless Podman foundation and four native images.
+- `src/inspect_container_host.yml`: optional read-only controller preflight.
+- `collections/requirements.yml`: pinned certified collection dependency.
+- `docs/architecture.md`: accepted application design awaiting implementation.
 - `tests/test_deployment.py`: launch-validation tests without VM changes.
 - `tests/test_clone_cleanup.py`: checks that cleanup preserves protected accounts.
 - `tests/test_identity_reset.py`: identity reset with a missing legacy D-Bus directory.
@@ -156,8 +160,18 @@ monitoring, and approval requirements apply to background work.
 `src/configure_assistant_containers.yml` calls separate `podman_host` and
 `agent_images` roles for the deployed guest. The foundation prepares reusable
 rootless Podman images for Claude Code, Codex CLI, Mistral Vibe, and Gemini CLI.
+Certified `redhat.rhel_system_roles` 1.120.5 supplies the Podman host role and
+`redhat.rhel_system_roles.podman_image` image builds. Obtain this collection from
+the existing certified Automation Hub distribution; no community substitution
+is configured. `collections/requirements.yml` pins the certified version.
 CLI versions and base image digests are pinned in the image role defaults;
-upgrades require an explicit version change and rebuild. Each image contains the
+upgrades require an explicit version change and rebuild. For a Containerfile or
+base change that keeps the same CLI version, set `assistant_rebuild_images: true`
+for that deployment. The role preserves existing images on ordinary reruns and
+checks free space before new builds. Rootless user lingering keeps the user
+manager available for engine cgroups. A service override scoped to that account
+delegates CPU, memory, and process controllers so container limits are enforced;
+no model agents run as background services. Each image contains the
 provider's native harness, rather than a custom replacement for its agent loop.
 
 A dedicated password-locked runtime account, configured in Vault as
@@ -172,11 +186,20 @@ is available for provider authentication and model calls; this is not a network
 allowlist. No inbound ports or host loopback access are configured.
 
 The launcher accepts role instructions and a participant roster supplied by the
-operator. The roster is a JSON list of objects containing only `role` and
-`responsibility`. Every role sees that roster in its native instructions, but the
-roster grants no shared data, credentials, or communication capability. Keep real
-role assignments and sensitive instructions in encrypted repository inputs or
-protected runtime files. No role roster is hardcoded.
+operator. The operator roster is a JSON list of objects containing `role`,
+`responsibility`, and boolean `worker_visible`. Every working role sees all
+collaboration roles whose visibility is true. Observer/evaluator entries must
+have visibility false: their identities and responsibilities are omitted from
+worker instructions, and the source roster is not mounted into containers.
+The roster grants no shared data, credentials, or communication capability.
+Keep real role assignments and sensitive instructions in encrypted repository
+inputs or protected operator files. No role roster is hardcoded.
+
+Observer/evaluator access and reports will be separate from worker-readable
+communications. Working agents receive no evaluation instructions or evaluation
+reports. Company/private context and access boundaries remain in force. This
+foundation implements instruction visibility only; a central discussion service,
+observer runtime, report storage, and automated reassignment are not implemented.
 
 Run these commands as the configured runtime account; use generic names locally:
 
@@ -197,6 +220,32 @@ explicitly selects a custom read-tool agent in both interactive and programmatic
 mode, and Gemini uses a read-tool allowlist. Interactive Claude retains its native
 approval prompts. Permission bypass flags and arbitrary container flags are not
 accepted by the launcher. Role text does not replace permission enforcement.
+
+### Reproduce the foundation
+
+Use Ansible 2.15 or later with the pinned certified collection installed through
+an authenticated certified Automation Hub source. The collection has no additional
+collection dependencies. Keep Hub endpoints and tokens in protected local
+configuration or controller credentials. Configure the SSH connection to preserve
+existing crypto policy and verify the guest host key; do not disable host checking.
+
+```bash
+ansible-galaxy collection install -r collections/requirements.yml
+ansible-playbook --syntax-check -i 'localhost,' src/configure_assistant_containers.yml
+ansible-playbook -i 'localhost,' src/configure_assistant_containers.yml
+```
+
+The first command assumes the approved certified Hub source is already configured;
+its default community source is not a substitute. Set `ANSIBLE_COLLECTIONS_PATH`
+when using a task-specific installed collection directory. The playbook loads
+connection and runtime account details from Vault and creates its guest inventory
+in memory. Local SSH control sockets use `/tmp`, keeping agent-managed home
+configuration untouched.
+
+The foundation verifies the native version, offline help, process UID, image
+filesystem protections, absence of sudo, and persistence/isolation across two
+instances per flavour. Validation containers use no network and no credentials;
+temporary validation data is removed after the checks.
 
 ### Native role and authentication mechanisms
 
@@ -226,13 +275,34 @@ Official references: [Claude CLI](https://code.claude.com/docs/en/cli-reference)
 
 ### Foundation implementation status
 
-Container content is being prepared; live builds and verification remain pending.
-Certified collection access and SSH host trust must be verified before deployment.
-The existing VM deployment remains verified. No integrations, orchestration, or
-inter-agent communications are configured by this foundation.
+All four images are built on the guest: Claude Code 2.1.292, Codex CLI 0.160.1,
+Gemini CLI 0.63.0, and Mistral Vibe 2.26.0. Native offline version/help checks and
+isolated-instance persistence checks passed. Kernel-enforced CPU, memory, and
+process limits, zero effective capabilities, no-new-privileges, and read-only root
+mounts also passed live checks. All fifteen local tests pass. Rootless engine verification passed;
+ordinary reruns reuse the existing images. Filesystem capacity was sufficient,
+so no partition or filesystem expansion was needed. Host trust was established
+with the user's explicit approval for this fresh demo guest and subsequent SSH
+connections require that recorded key.
+
+Provider authentication and model sessions remain pending operator setup. No
+credentials were inherited and no model inference, paid API call, integration,
+or external messaging was performed. The existing VM deployment remains verified.
+No orchestrator, discussion service, observer, or persistent agent listener is
+configured by this foundation.
 
 `src/inspect_container_host.yml` calls a read-only preflight role through AAP.
 It publishes the guest's SSH public key, root filesystem capacity, storage layout,
 and installed container/system-role packages in protected controller artifacts.
 Use this trusted controller result to establish agent-side SSH trust, and check
 capacity before builds. The preflight does not update or install packages.
+
+## Next design agreements
+
+[Architecture agreements](docs/architecture.md) record the accepted SQLite
+persistence direction, separate summarizer/orchestrator responsibilities, and one
+observer producing distinct output and design evaluations. Observer access and
+reports remain outside worker-readable communications. These application
+components are agreed design work awaiting implementation; the container
+foundation does not deploy them. Subscription exhaustion must pause work without
+automatically switching to paid API usage.

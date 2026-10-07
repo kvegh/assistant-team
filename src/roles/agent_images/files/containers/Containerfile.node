@@ -1,0 +1,12 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ARG PACKAGE
+ARG PACKAGE_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends git ripgrep ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g "${PACKAGE}@${PACKAGE_VERSION}" \
+    && npm cache clean --force \
+    && usermod -l agent -d /home/agent -m node
+ENV HOME=/home/agent DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+USER 1000:1000
+WORKDIR /workspace

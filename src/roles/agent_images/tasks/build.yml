@@ -1,0 +1,71 @@
+---
+- name: Inspect whether this image is already available
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv: [podman, image, exists, "localhost/assistant-team-{{ harness.flavour }}:{{ harness.version }}"]
+  changed_when: false
+  failed_when: available_harness_image.rc not in [0, 1]
+  register: available_harness_image
+
+- name: Check capacity for a new image build
+  ansible.builtin.command:
+    argv: [df, -B1, --output=avail, /]
+  changed_when: false
+  register: image_build_free
+  when: available_harness_image.rc == 1 or assistant_rebuild_images | bool
+
+- name: Preserve filesystem reserve during builds
+  ansible.builtin.assert:
+    that:
+      - image_build_free.stdout_lines[-1] | trim | int >= assistant_new_build_free_bytes | int
+    fail_msg: Review container storage capacity before starting another image build.
+  when: available_harness_image.rc == 1 or assistant_rebuild_images | bool
+
+- name: Build the pinned native CLI image using certified Podman content
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  redhat.rhel_system_roles.podman_image:
+    name: "localhost/assistant-team-{{ harness.flavour }}"
+    tag: "{{ harness.version }}"
+    state: build
+    force: "{{ assistant_rebuild_images | bool }}"
+    path: "{{ assistant_runtime_home }}/.local/share/assistant-team/build"
+    validate_certs: true
+    build:
+      file: "{{ assistant_runtime_home }}/.local/share/assistant-team/build/{{ harness.containerfile }}"
+      cache: true
+      extra_args: >-
+        --build-arg BASE_IMAGE={{ harness.base }}
+        --build-arg PACKAGE={{ harness.package }}
+        --build-arg PACKAGE_VERSION={{ harness.version }}
+  when: available_harness_image.rc == 1 or assistant_rebuild_images | bool
+  async: 1800
+  poll: 20
+
+- name: Smoke-test native CLI without credentials or inference
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv:
+      - podman
+      - run
+      - --rm
+      - --network=none
+      - --cap-drop=ALL
+      - --security-opt=no-new-privileges
+      - "localhost/assistant-team-{{ harness.flavour }}:{{ harness.version }}"
+      - "{{ harness.command }}"
+      - --version
+  changed_when: false
+  register: native_version
+  failed_when: native_version.rc != 0 or harness.version not in native_version.stdout

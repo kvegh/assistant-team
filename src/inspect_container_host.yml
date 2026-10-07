@@ -3,17 +3,19 @@
   hosts: localhost
   gather_facts: false
   no_log: true
-  vars_files:
-    - ../vars/environment.vault.yml
   tasks:
+    - name: Load encrypted environment without reserved variable collisions
+      ansible.builtin.include_vars:
+        file: ../vars/environment.vault.yml
+        name: assistant_environment
     - name: Add the project guest
       ansible.builtin.add_host:
         name: assistant_container_host
         groups: assistant_container_hosts
-        ansible_host: "{{ environment.guest.linux_vm_ip }}"
-        ansible_user: "{{ provisioning.guest_ssh_user }}"
-        ansible_password: "{{ provisioning.guest_ssh_password }}"
-        ansible_become_password: "{{ provisioning.guest_become_password }}"
+        ansible_host: "{{ assistant_environment.environment.guest.linux_vm_ip }}"
+        ansible_user: "{{ assistant_environment.provisioning.guest_ssh_user }}"
+        ansible_password: "{{ assistant_environment.provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ assistant_environment.provisioning.guest_become_password }}"
     - name: Inspect available execution environment collections
       ansible.builtin.command:
         argv: [ansible-galaxy, collection, list, --format, json]

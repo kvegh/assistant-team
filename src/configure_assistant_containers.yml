@@ -1,0 +1,31 @@
+---
+- name: Discover the project guest from encrypted deployment details
+  hosts: localhost
+  tags: [always]
+  gather_facts: false
+  no_log: true
+  tasks:
+    - name: Load encrypted environment without reserved variable collisions
+      ansible.builtin.include_vars:
+        file: ../vars/environment.vault.yml
+        name: assistant_environment
+    - name: Add the project guest
+      ansible.builtin.add_host:
+        name: assistant_container_host
+        groups: assistant_container_hosts
+        ansible_host: "{{ assistant_environment.environment.guest.linux_vm_ip }}"
+        ansible_user: "{{ assistant_environment.provisioning.guest_ssh_user }}"
+        ansible_password: "{{ assistant_environment.provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ assistant_environment.provisioning.guest_become_password }}"
+
+- name: Configure native assistant container foundation
+  hosts: assistant_container_hosts
+  gather_facts: true
+  become: true
+  no_log: true
+  vars:
+    provisioning: "{{ hostvars['localhost'].assistant_environment.provisioning }}"
+    containers: "{{ hostvars['localhost'].assistant_environment.containers }}"
+  roles:
+    - podman_host
+    - agent_images

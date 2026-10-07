@@ -1,0 +1,10 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ARG PACKAGE_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends git ripgrep ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir "mistral-vibe==${PACKAGE_VERSION}" \
+    && useradd --uid 1000 --create-home --shell /bin/bash agent
+ENV HOME=/home/agent
+USER 1000:1000
+WORKDIR /workspace
