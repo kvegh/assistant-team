@@ -160,3 +160,22 @@ full DNF update succeeded. The guest rebooted, reconnected, and passed the final
 check with no pending package updates. The deployment job completed successfully.
 All eight local tests passed. Environment-specific controller and guest details
 remain encrypted rather than appearing in this history.
+
+## Reproduce lasting configuration through separate roles
+
+Implementation: `8c0497114b15efbd83b424e0c2675698f59c80e5`.
+
+The user authorized direct SSH access with sudo for work on the project VM.
+Every lasting design or configuration change must be documented and represented
+in Ansible roles called by the playbook, committed and pushed to this private
+repository. The decision history records final decisions rather than individual
+interim steps, experiments, or retries. Project instructions preserve this rule
+for subsequent work; credentials and environment-specific configuration remain
+Vault encrypted.
+
+The existing deployment was reorganized into separate roles for VM provisioning,
+guest verification, and RHEL registration and updates. Cleanup templates and
+identity-reset files belong to the provisioning role, and the playbook calls the
+roles in order. Existing recovery tags and protected logging remain available.
+No live VM configuration was changed by this refactoring. Syntax checking, all
+eight tests, and guest-configuration task selection passed.
