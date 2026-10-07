@@ -179,3 +179,20 @@ identity-reset files belong to the provisioning role, and the playbook calls the
 roles in order. Existing recovery tags and protected logging remain available.
 No live VM configuration was changed by this refactoring. Syntax checking, all
 eight tests, and guest-configuration task selection passed.
+
+## Delegate settled decisions to a background implementation agent
+
+Implementation: `318ec83a7af06efec1be920da2fc2a24915836d3`.
+
+The user chose one reusable background subagent to keep the main conversation
+focused on building and design. Settled decisions are handed off sequentially
+for configuration changes, separate Ansible roles, documentation, validation,
+commits, and pushes. Sequential handoffs avoid conflicting repository edits and
+concurrent VM configuration changes while independent design discussion continues.
+
+A design agreement is explicitly implementation pending until the agent reports
+the result implemented and verified. Dependent work waits for that result.
+Completion notices remain brief; blockers requiring decisions or approval return
+to the main conversation. Background execution retains existing security,
+monitoring, validation, and approval requirements. This change documents the
+workflow only and does not change the VM or require additional infrastructure.
