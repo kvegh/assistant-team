@@ -358,3 +358,27 @@ checks remove their synthetic fixture messages. Disk capacity remained sufficien
 Native provider authentication and model sessions are not configured or launched.
 Operator login, explicit native session launch and Codex hook approval remain
 necessary. The setup performs no paid inference or external connector action.
+
+## Control the connector group through a user target
+
+Implementation: `d8e2e7b05a7c34f6055eb5d281f52c1131a864d7`.
+
+The user chose `assistant-connector.target` for one start/stop/restart control.
+Only this target is enabled for the lingering user manager's startup. It requires
+the existing broker, gateway and container services, with dependency ordering and
+service `PartOf` relationships propagating group stop/restart. Individual services
+are disabled for independent boot startup; no synthetic master service is created.
+
+The container service explicitly stops only the five named worker containers and
+clears launch markers. Persistent native homes, authentication state, workspaces
+and SQLite remain. Starting stopped containers restores tmux shells if needed;
+model sessions are not automatically launched or resumed. Routing-service refresh
+remains independent of container lifetime. Target stop can return while ordered
+child stop jobs finish, so lifecycle verification waits for actual service states.
+
+The opt-in lifecycle check refuses native login/model processes or launched work.
+It verified all services inactive and containers stopped, then successful start
+and restart with tmux and unchanged SQLite/persistent data. The final Ansible run
+passed without configuration changes, and all nineteen local tests passed. Final
+inspection confirmed only the target enabled, all four units active and all five
+containers running. Authentication and live model sessions remain pending.
