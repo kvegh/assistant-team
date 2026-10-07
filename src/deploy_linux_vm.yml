@@ -260,7 +260,7 @@
 
     - name: Inspect the guest root filesystem
       ansible.builtin.command:
-        argv: [findmnt, -n, -o, SOURCE,FSTYPE, /]
+        argv: [findmnt, -n, -o, 'SOURCE,FSTYPE', /]
       register: guest_root_filesystem
       changed_when: false
 
