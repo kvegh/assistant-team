@@ -150,3 +150,89 @@ pending until the subagent reports it implemented and verified; dependent work
 waits for that result. Completion notices are brief, and blockers requiring a
 decision or approval return to the main conversation. The same security,
 monitoring, and approval requirements apply to background work.
+
+## Native assistant container foundation
+
+`src/configure_assistant_containers.yml` calls separate `podman_host` and
+`agent_images` roles for the deployed guest. The foundation prepares reusable
+rootless Podman images for Claude Code, Codex CLI, Mistral Vibe, and Gemini CLI.
+CLI versions and base image digests are pinned in the image role defaults;
+upgrades require an explicit version change and rebuild. Each image contains the
+provider's native harness, rather than a custom replacement for its agent loop.
+
+A dedicated password-locked runtime account, configured in Vault as
+`containers.runtime_user`, has no sudo access. Each instance has a separate
+workspace and persistent home directory, which includes its native authentication
+and session state. Container processes run unprivileged with dropped capabilities,
+no new privileges, a read-only image filesystem, resource limits, and only the
+instance's two directories mounted. No host engine socket, general home directory,
+SSH directory, or sudo access is exposed to agents. The engine's default seccomp
+policy and SELinux private mount labels remain enabled. Outbound network access
+is available for provider authentication and model calls; this is not a network
+allowlist. No inbound ports or host loopback access are configured.
+
+The launcher accepts role instructions and a participant roster supplied by the
+operator. The roster is a JSON list of objects containing only `role` and
+`responsibility`. Every role sees that roster in its native instructions, but the
+roster grants no shared data, credentials, or communication capability. Keep real
+role assignments and sensitive instructions in encrypted repository inputs or
+protected runtime files. No role roster is hardcoded.
+
+Run these commands as the configured runtime account; use generic names locally:
+
+```bash
+assistant-instance init example-one codex --role-file /path/to/role.md --participants-file /path/to/participants.json
+assistant-instance run example-one version
+assistant-instance run example-one help
+assistant-instance run example-one login
+assistant-instance run example-one interactive
+assistant-instance run example-one prompt 'Summarize the material in this workspace.'
+```
+
+Each instance uses a deterministic container name, preventing two concurrent
+processes from sharing that instance's writable state. Different instances can
+run concurrently. Defaults allow read-only assistant work: Codex uses its native
+read-only sandbox, Claude print mode exposes reading/search tools only, Vibe
+explicitly selects a custom read-tool agent in both interactive and programmatic
+mode, and Gemini uses a read-tool allowlist. Interactive Claude retains its native
+approval prompts. Permission bypass flags and arbitrary container flags are not
+accepted by the launcher. Role text does not replace permission enforcement.
+
+### Native role and authentication mechanisms
+
+| Harness | Role instructions | Authentication prepared for operator |
+| --- | --- | --- |
+| Claude Code | Workspace `CLAUDE.md` | Native `claude auth login`; state in isolated home |
+| Codex CLI | Workspace `AGENTS.md` | Native `codex login --device-auth`; isolated `.codex` |
+| Mistral Vibe | Custom `.vibe/agents/instance.toml` and prompt | Native startup authentication flow; isolated `.vibe` |
+| Gemini CLI | Workspace `GEMINI.md` | Native startup sign-in flow; isolated `.gemini` |
+
+Provider access must be supplied separately for every intended instance. Images
+contain no credentials and do not inherit this development session's credentials.
+Login commands are operator actions; deployment and smoke tests do not sign in,
+accept terms, or make model requests. For Vibe and Gemini, `login` starts the native
+CLI authentication flow; exit after completing authentication. Headless methods
+and subscription eligibility depend on the provider and account. Supply API
+credentials through protected native instance configuration when applicable, never
+in image build arguments, plaintext Git files, or command-line literals.
+
+Official references: [Claude CLI](https://code.claude.com/docs/en/cli-reference),
+[Codex CLI](https://learn.chatgpt.com/docs/codex/cli),
+[Codex instructions](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
+[Vibe agents](https://docs.mistral.ai/vibe/code/cli/agents),
+[Vibe installation](https://docs.mistral.ai/vibe/code/cli/install-setup),
+[Gemini context](https://geminicli.com/docs/cli/gemini-md/), and
+[Gemini authentication](https://geminicli.com/docs/get-started/authentication/).
+
+### Foundation implementation status
+
+Container content is being prepared; live builds and verification remain pending.
+Certified collection access and SSH host trust must be verified before deployment.
+The existing VM deployment remains verified. No integrations, orchestration, or
+inter-agent communications are configured by this foundation.
+
+`src/inspect_container_host.yml` calls a read-only preflight role through AAP.
+It publishes the guest's SSH public key, root filesystem capacity, storage layout,
+and installed container/system-role packages in protected controller artifacts.
+Use this trusted controller result to establish agent-side SSH trust, and check
+capacity before builds. The preflight does not update or install packages.

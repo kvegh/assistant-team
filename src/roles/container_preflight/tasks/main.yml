@@ -1,0 +1,34 @@
+---
+- name: Read the guest SSH public host key over the trusted controller connection
+  ansible.builtin.slurp:
+    src: /etc/ssh/ssh_host_ed25519_key.pub
+  register: guest_public_key
+
+- name: Inspect root filesystem free space
+  ansible.builtin.command:
+    argv: [df, -B1, --output=avail, /]
+  register: guest_root_free
+  changed_when: false
+
+- name: Inspect guest storage layout
+  ansible.builtin.command:
+    argv: [lsblk, --bytes, --json, --output, NAME,SIZE,FSTYPE,MOUNTPOINT]
+  register: guest_storage_layout
+  changed_when: false
+
+- name: Inspect installed container and system role packages
+  ansible.builtin.command:
+    argv: [rpm, -q, podman, rhel-system-roles]
+  register: guest_container_packages
+  changed_when: false
+  failed_when: guest_container_packages.rc not in [0, 1]
+
+- name: Publish protected preflight results
+  ansible.builtin.set_stats:
+    data:
+      container_preflight:
+        ssh_ed25519_public_key: "{{ guest_public_key.content | b64decode | trim }}"
+        root_free_bytes: "{{ guest_root_free.stdout_lines[-1] | trim | int }}"
+        storage_layout: "{{ guest_storage_layout.stdout | from_json }}"
+        packages: "{{ guest_container_packages.stdout_lines }}"
+        execution_collections: "{{ hostvars['localhost'].execution_collections.stdout | from_json }}"

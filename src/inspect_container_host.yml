@@ -1,0 +1,29 @@
+---
+- name: Discover the project guest from encrypted deployment details
+  hosts: localhost
+  gather_facts: false
+  no_log: true
+  vars_files:
+    - ../vars/environment.vault.yml
+  tasks:
+    - name: Add the project guest
+      ansible.builtin.add_host:
+        name: assistant_container_host
+        groups: assistant_container_hosts
+        ansible_host: "{{ environment.guest.linux_vm_ip }}"
+        ansible_user: "{{ provisioning.guest_ssh_user }}"
+        ansible_password: "{{ provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ provisioning.guest_become_password }}"
+    - name: Inspect available execution environment collections
+      ansible.builtin.command:
+        argv: [ansible-galaxy, collection, list, --format, json]
+      register: execution_collections
+      changed_when: false
+
+- name: Inspect container host without modifying it
+  hosts: assistant_container_hosts
+  gather_facts: false
+  become: true
+  no_log: true
+  roles:
+    - container_preflight
