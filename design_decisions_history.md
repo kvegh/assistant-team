@@ -382,3 +382,48 @@ and restart with tmux and unchanged SQLite/persistent data. The final Ansible ru
 passed without configuration changes, and all nineteen local tests passed. Final
 inspection confirmed only the target enabled, all four units active and all five
 containers running. Authentication and live model sessions remain pending.
+
+## Scope native logins and provide all eight role containers
+
+Implementation: `1e4236ccb521134750b94e40ae6b8235012823e1`.
+
+The user requested actual native CLI installations in five separate home directories:
+work and private Claude accounts, Codex, Gemini and Mistral. Each directory has
+its own simple login command and contains its installation, configuration,
+credentials, caches, sessions and temporary files. The separate native-auth
+Ansible role reproduces these installations without global host CLI packages.
+A pinned official portable Python runtime makes the Mistral installation
+compatible with the guest operating system. Gemini uses its native Google
+sign-in flow rather than requiring a cloud SDK.
+
+Explicit role launch copies only missing provider authentication files from the
+matching account boundary, preserving independent role configuration and existing
+refreshed credentials. Authentication is operator-controlled: automation neither
+authenticates nor invokes models, and does not promise automatic token refresh
+synchronization between separate native homes.
+
+All eight role containers now remain available with inside-container tmux. Five
+collaboration roles use the worker broker; the hidden observer and the private
+and corporate connectors remain outside that broker. Connector general tools
+are disabled and external connector services remain unconfigured. Mistral is
+installed for native use but is not assigned a team role. The existing user target
+manages all eight named containers and preserves persistent state.
+
+One editable home prompt file contains all role sections and is preserved on
+Ansible reruns. Only the selected section and collaboration roster are rendered
+into each native workspace; the full prompt file is never mounted into workers.
+The operator control utility supports launch, tmux attach, prompt application
+and a live stock-broker event-stream viewer without timed inbox polling.
+The observer receives an operator-refreshed read-only transcript snapshot;
+private report delivery writes only to the orchestrator workspace. Continuous
+evaluation callbacks, automated orchestration and parallel-project creation
+remain pending. No create-project command is presented as implemented.
+
+The home operator guide was renamed to README.md at the user's request and
+documents actual login, target, role, viewer and prompt commands. All twenty-five
+local tests and playbook syntax checks passed. Live offline validation confirmed
+eight tmux containers, five scoped native installations, event-stream delivery
+and the private observer/report boundary without model calls. A plaintext
+repository audit found no environment identifiers or access secrets; native
+credentials and operator-edited prompts remain outside Git, and environment
+metadata remains Vault-encrypted. VM resources were not changed.
