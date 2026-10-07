@@ -1,0 +1,12 @@
+[Unit]
+Description=Identity-scoped connector gateway for project %i
+PartOf=assistant-connector@%i.target
+Requires=assistant-connector-broker@%i.service
+After=assistant-connector-broker@%i.service
+[Service]
+Environment=HOME={{ assistant_project_home }}
+Environment=ASSISTANT_PROJECT=%i
+UMask=0077
+ExecStart={{ assistant_project_home }}/agents-connector/routing/connector-team.py gateway
+Restart=on-failure
+RestartSec=2

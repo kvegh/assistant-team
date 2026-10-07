@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
 import argparse, asyncio, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-BIN = ROOT / 'bin/agents-connector'
-SESSION = 'workers'
-STATE = ROOT / 'state'
+INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
+ACCOUNT_HOME = INSTALL_ROOT.parent
+PROJECT = os.environ.get('ASSISTANT_PROJECT')
+if PROJECT and not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}', PROJECT):
+    raise ValueError('Invalid project name')
+ROOT = ACCOUNT_HOME / 'projects' / PROJECT if PROJECT else INSTALL_ROOT
+BIN = INSTALL_ROOT / 'bin/agents-connector'
+SESSION = PROJECT or 'workers'
+STATE = ROOT if PROJECT else ROOT / 'state'
 ADMIN = STATE / 'broker.sock'
 PROFILES = ROOT / 'profiles'
 VISIBLE = ['orchestrator', 'builder', 'investigator', 'challenger', 'summarizer']
@@ -33,7 +38,7 @@ def run(args, **kw):
 
 def container(name):
     if name not in ALL: raise ValueError('unknown role profile')
-    return 'ac-'+name
+    return ('acp-'+PROJECT+'-' if PROJECT else 'ac-')+name
 
 def token(name): return (PROFILES/name/'token').read_text().strip()
 
@@ -141,7 +146,7 @@ def start_container(name):
             run(['podman','exec',c,'tmux','new-session','-d','-s','native','-n','agent'])
         return
     uid=os.getuid()
-    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(p/'home')+':/home/agent:Z','-v',str(p/'workspace')+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
+    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(p/'home')+':/home/agent:Z','-v',str(p/'workspace')+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
     if name=='observer':
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(p/'context')+':/context:ro,Z']
@@ -154,7 +159,7 @@ def seed_auth(name):
     flavour=cfg['flavour']
     source_name=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex','gemini':'gemini'}[flavour])
     if source_name not in {'claude':['claude-work','claude-priv'],'codex':['codex'],'gemini':['gemini']}[flavour]:raise ValueError('unsupported provider auth boundary')
-    source=ROOT.parent/source_name
+    source=(ACCOUNT_HOME if PROJECT else ROOT.parent)/source_name
     files={'claude':['.claude/.credentials.json'],'codex':['.codex/auth.json'],'gemini':['.gemini/oauth_creds.json','.gemini/google_accounts.json']}[flavour]
     seeded=False
     for relative in files:
@@ -208,8 +213,9 @@ def wake(args):
 
 
 def apply_prompts():
-    source=ROOT.parent/'assistant-prompts.md'
+    source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'assistant-prompts.md'
     content=source.read_text()
+    goal=content.split('# Role:',1)[0].strip() if PROJECT else ''
     headers=list(re.finditer(r'^# Role: ([a-z-]+)\s*$',content,re.M))
     names=[h.group(1) for h in headers]
     if len(names)!=len(set(names)) or set(names)!=set(ALL):raise ValueError('Prompt file must contain exactly one # Role: section per role')
@@ -217,6 +223,7 @@ def apply_prompts():
     for i,header in enumerate(headers):
         role=header.group(1);cfg=json.loads((PROFILES/role/'profile.json').read_text())
         prompt=content[header.end():headers[i+1].start() if i+1<len(headers) else len(content)].strip()+'\n'
+        if PROJECT:prompt='# Project: '+PROJECT+'\n\n'+goal+'\n\n'+prompt
         if role in VISIBLE:prompt+=roster
         file=PROFILES/role/'workspace'/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
         temp=file.with_suffix('.pending');temp.write_text(prompt);temp.chmod(0o600);temp.replace(file)
@@ -257,6 +264,8 @@ def watch():
                 msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
 
 def main():
+    if not PROJECT and len(sys.argv)>1 and (sys.argv[1] in ['create-project','start','restart','status'] or len(sys.argv)>2 and sys.argv[1] in ['stop','watch','apply-prompts','refresh-observer','deliver-observer-report'] or len(sys.argv)>3 and sys.argv[1] in ['attach','launch']):
+        os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if pathlib.Path(sys.argv[0]).name=='tmux':wake(sys.argv[1:]);return
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']);parser.add_argument('name',nargs='?',choices=ALL)
     a=parser.parse_args()

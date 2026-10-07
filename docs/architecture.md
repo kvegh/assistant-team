@@ -170,5 +170,23 @@ delivery. Observer source context is mounted read-only; reports reach only the
 orchestrator's private workspace. Connector profiles disable native tools and
 have no external tools/account credentials. Continuous orchestration/evaluation
 and tool-audit integrations remain future work. The home README.md documents every existing
-operator command and explicitly states that parallel project creation is not yet
-implemented. No new multi-project framework is introduced by this change.
+operator command. The project framework described below supersedes the earlier
+single-project limitation.
+
+## Project-scoped runtime framework
+
+Each named project lives under the runtime home projects directory with its own
+stock-schema SQLite database, editable assistant-prompt.md containing goal and
+eight role sections, native homes, workspaces and filtered IPC. The installed
+CLI/images and provider login directories are reused; project state is not shared.
+Five collaboration identities alone join each broker. Hidden observer reporting
+and private/corporate connector contexts remain outside worker-readable IPC.
+
+Creation invokes the stock broker for schema migration and registration, without
+containers or models. Start first checks all required saved subscription/OAuth
+credential formats and then activates a systemd instance target with ordered
+broker, gateway and eight native tmux harnesses. Native approvals remain enabled.
+Stop and restart are project-scoped and preserve disk state; automatic restoration
+of a previous conversation is not claimed. Existing default commands remain valid.
+Projects are not boot-enabled automatically. Resource scaling for multiple busy
+teams and continuous orchestration/evaluation remain unverified or unimplemented.

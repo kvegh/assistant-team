@@ -43,7 +43,72 @@ shared. Existing role credentials retain their native refresh state. Actual
 provider authentication/refresh behavior is verified only after your login;
 subscription exhaustion must not switch automatically to paid API usage.
 
-## Start, stop, restart and inspect the group
+## Create and run a project
+
+```bash
+cd ~
+./team create-project my-project
+${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+./team start my-project
+./team status my-project
+./team attach my-project orchestrator
+./team watch my-project
+./team stop my-project
+./team restart my-project
+```
+
+Project names use lowercase letters/digits, underscores or hyphens (1–40
+characters, starting with a letter/digit). Creation initializes the stock SQLite
+schema and eight role profiles without starting containers or models. Each project
+has its own `db.sqlite`, `assistant-prompt.md`, role homes/workspaces and containers
+under `~/projects/NAME`. Existing projects and edited prompts are not overwritten.
+The prompt file starts with the project goal/context and has all eight role sections.
+Only that goal and the selected role section enter a container.
+
+Authenticate Claude work/private, Codex and Gemini first. Start checks saved
+subscription/OAuth authentication for every role before starting any project
+service, then launches all eight native harnesses into their tmux sessions without
+an initial task prompt. This checks saved credential format, not remote token
+validity: expired/revoked credentials can still require native reauthentication.
+Mistral is optional and is not assigned a team role. Native onboarding, workspace
+trust and Codex hook approvals remain explicit; no security prompts are bypassed.
+
+Direct systemd equivalents are:
+
+```bash
+systemctl --user start assistant-connector@my-project.target
+systemctl --user stop assistant-connector@my-project.target
+systemctl --user restart assistant-connector@my-project.target
+systemctl --user status assistant-connector@my-project.target
+```
+
+Project targets are not automatically enabled at boot. Stop affects only the named
+project and interrupts its live native processes while preserving SQLite, role
+homes, credentials and workspace files. Restart starts new native CLI sessions;
+conversation history remains on disk but automatic native conversation resume
+is not claimed. Detach tmux with Ctrl-b then d. Model activity begins when native
+CLI interactions request it; subscription exhaustion must not switch to paid APIs.
+
+Project prompt/review commands:
+
+```bash
+./team apply-prompts my-project
+./team refresh-observer my-project
+./team deliver-observer-report my-project
+./team launch my-project builder
+```
+
+Only five collaboration roles join each project worker broker. The hidden observer
+and the separate private/corporate connector containers are outside it. Observer
+refresh/report delivery remains manual and project-scoped; connector general
+tools remain disabled and external scoped connector services remain unconfigured.
+The live viewer uses the stock event subscription, not timed inbox polling.
+
+The initial VM has limited RAM and disk space. Parallel active projects multiply
+native processes/workspaces, while reusing the installed images and vendor logins.
+Resource capacity for multiple busy teams is not yet verified.
+
+## Legacy default group
 
 ```bash
 systemctl --user start assistant-connector.target
@@ -130,18 +195,12 @@ plugins/account credentials configured. Their provider login is distinct from
 mail/calendar credentials. They cannot perform connector actions until scoped
 tools, independent approval and actual execution audit are implemented.
 
-## Parallel projects
-
-Not implemented yet: there is no create-project command. The current project
-uses one workers broker and SQLite database. A future project command should
-create separate project databases, role workspaces and containers while reusing
-only the appropriate provider login boundary. Do not simulate this by mixing
-multiple projects into the current broker.
-
 ## Reproduce and verify
 
 The private repository's `src/configure_agents_connector.yml` calls separate roles
-for the Podman host, connector setup and native local authentication installations.
+for the Podman host, connector setup, native local authentication installations
+and the project framework. `--tags project_framework` updates project controls
+and instance unit templates without restarting existing sessions.
 `--tags native_auth,auth_sources` updates local installations and prompt/auth sources
 without restarting the service group. Offline model-free checks cover native
 versions/help, constrained containers, hooks, message delivery and event wake.

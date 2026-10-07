@@ -452,16 +452,57 @@ ansible-playbook -i 'localhost,' src/configure_agents_connector.yml \
   --tags connector_services -e assistant_connector_validate_lifecycle=true
 ```
 
-Parallel project creation is not implemented; there is no create-project command.
-The current project has one worker broker/SQLite database. Future projects should
-have separate databases, role workspaces and containers with the appropriate login
-boundary. The usage guide records this limitation explicitly.
+### Project framework
+
+The separate `project_framework` Ansible role installs project-scoped control and
+systemd instance units without restarting existing sessions. As the runtime user:
+
+```bash
+~/team create-project my-project
+${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+~/team start my-project
+~/team status my-project
+~/team attach my-project orchestrator
+~/team watch my-project
+~/team stop my-project
+~/team restart my-project
+```
+
+Creation uses the stock broker to initialize `~/projects/NAME/db.sqlite` and its
+five-worker registry. Eight profiles have separate native homes, workspaces, IPC
+and container names. The editable singular `assistant-prompt.md` contains the
+project goal and all role prompts; only the goal and the selected role section
+are rendered into each container. Existing project state is not overwritten.
+Names accept 1–40 lowercase letters/digits, underscores and hyphens, beginning
+with a letter/digit; traversal and symlink project paths are rejected.
+
+Start checks saved subscription/OAuth credential format for all required role
+account boundaries before starting services, then launches all eight native CLIs
+without an initial work prompt. Login directories remain outside projects; only
+missing provider credential files are seeded into each role home. Existing role
+refresh state is preserved. This preflight cannot establish remote token validity.
+Native onboarding, workspace trust and Codex hook approval are not bypassed.
+Mistral remains optional and unassigned to a connector team role.
+
+The user target `assistant-connector@NAME.target` orders that project's broker,
+gateway and native container services. Project targets are not enabled at boot.
+Stop/restart affect only that project and preserve its database and role state;
+restart launches new CLI sessions, without claiming automatic conversation resume.
+Only five collaboration roles join its broker; the observer and connector roles
+remain separately scoped. Observer snapshots/private report delivery remain manual,
+and external connector tools and automated orchestration remain unconfigured.
+Legacy commands without a project still control the original default group.
+
+The home README documents these commands and project-specific prompt/review
+operations. Update this layer with `--tags project_framework`. Explicit offline
+project validation uses disposable projects and dummy tmux harnesses only; no
+provider credentials are fabricated or native models invoked.
 
 ### Validation and current limits
 
 All five local installations pass host-native version/help checks. All eight
 containers are available; native authentication and model sessions remain pending.
-Twenty-five local tests passed, including scoped login paths, work/private credential
+Thirty-one local tests passed, including scoped login paths, work/private credential
 seeding, retained refresh state, hidden prompt extraction and named-eight-container
 stop. Live checks verify a read-only observer context and no provider configuration
 at the account's global home paths. The earlier target stop/start/restart check

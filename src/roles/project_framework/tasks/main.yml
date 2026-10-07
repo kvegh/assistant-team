@@ -1,0 +1,64 @@
+---
+- name: Resolve runtime account for project framework
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Define project framework paths
+  ansible.builtin.set_fact:
+    assistant_project_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    assistant_project_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Create project parent without changing existing projects
+  ansible.builtin.file:
+    path: "{{ assistant_project_home }}/projects"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Install project-scoped operator control
+  ansible.builtin.copy:
+    src: project-team.py
+    dest: "{{ assistant_project_home }}/agents-connector/routing/project-team.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Install project-aware existing lifecycle and IPC implementation
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../agents_connector/files/connector-team.py"
+    dest: "{{ assistant_project_home }}/agents-connector/routing/connector-team.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Install project instance services and target without enabling projects
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ assistant_project_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+  loop:
+    - assistant-connector@.target
+    - assistant-connector-broker@.service
+    - assistant-connector-gateway@.service
+    - assistant-connector-containers@.service
+- name: Reload project unit definitions without restarting active work
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_project_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_project_uid }}/bus"
+  ansible.builtin.systemd_service:
+    scope: user
+    daemon_reload: true
+- name: Publish actual home-local project commands
+  ansible.builtin.template:
+    src: "{{ role_path }}/../agents_connector/templates/README.md.j2"
+    dest: "{{ assistant_project_home }}/README.md"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Install explicit model-free project validation
+  ansible.builtin.copy:
+    src: validate_projects.py
+    dest: "{{ assistant_project_home }}/agents-connector/routing/validate_projects.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'

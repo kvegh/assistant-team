@@ -1,0 +1,18 @@
+[Unit]
+Description=Eight native harness sessions for project %i
+PartOf=assistant-connector@%i.target
+Requires=assistant-connector-gateway@%i.service
+After=assistant-connector-gateway@%i.service
+[Service]
+Environment=HOME={{ assistant_project_home }}
+Environment=ASSISTANT_PROJECT=%i
+Environment=XDG_RUNTIME_DIR=/run/user/{{ assistant_project_uid }}
+Type=oneshot
+RemainAfterExit=yes
+KillMode=process
+UMask=0077
+ExecStart={{ assistant_project_home }}/agents-connector/routing/project-team.py launch-all %i
+ExecStop={{ assistant_project_home }}/agents-connector/routing/project-team.py stop-containers %i
+ExecStopPost={{ assistant_project_home }}/agents-connector/routing/project-team.py stop-containers %i
+TimeoutStartSec=180
+TimeoutStopSec=90

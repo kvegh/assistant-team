@@ -1,0 +1,13 @@
+[Unit]
+Description=Stock connector broker for project %i
+PartOf=assistant-connector@%i.target
+[Service]
+Environment=HOME={{ assistant_project_home }}
+Environment=ASSISTANT_PROJECT=%i
+Environment=PATH={{ assistant_project_home }}/agents-connector/routing:/usr/bin:/bin
+UMask=0077
+ExecStartPre={{ assistant_project_home }}/agents-connector/routing/project-team.py preflight %i
+ExecStart={{ assistant_project_home }}/agents-connector/bin/agents-connector broker --socket {{ assistant_project_home }}/projects/%i/broker.sock --db {{ assistant_project_home }}/projects/%i/db.sqlite --session %i
+ExecStartPost={{ assistant_project_home }}/agents-connector/routing/connector-team.py init
+Restart=on-failure
+RestartSec=2

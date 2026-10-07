@@ -32,3 +32,5 @@
       tags: [connector_setup]
     - role: native_auth
       tags: [native_auth]
+    - role: project_framework
+      tags: [project_framework]

@@ -1,0 +1,6 @@
+[Unit]
+Description=Native assistant project %i
+Requires=assistant-connector-broker@%i.service assistant-connector-gateway@%i.service assistant-connector-containers@%i.service
+After=assistant-connector-broker@%i.service assistant-connector-gateway@%i.service assistant-connector-containers@%i.service
+[Install]
+WantedBy=default.target
