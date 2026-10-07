@@ -151,6 +151,22 @@
       ansible.builtin.set_fact:
         deployment_mac: "{{ vm_interfaces.stdout | regex_search('(?i)(?:[0-9a-f]{2}:){5}[0-9a-f]{2}') }}"
 
+    - name: Inspect the VM memory allocation in libvirt
+      tags: [guest_config, offline_recovery]
+      ansible.builtin.command:
+        argv: [virsh, dominfo, "{{ deployment_name }}"]
+      environment:
+        LC_ALL: C
+      register: vm_allocation
+      changed_when: false
+
+    - name: Verify the requested memory is allocated to the VM
+      tags: [guest_config, offline_recovery]
+      ansible.builtin.assert:
+        that:
+          - (vm_allocation.stdout | regex_findall('Used memory: +([0-9]+) +KiB') | first | int) == (vm_memory_mb | int * 1024)
+        fail_msg: Libvirt memory allocation does not match the requested VM memory.
+
     - name: Validate the VM MAC address
       tags: [guest_config, offline_recovery]
       ansible.builtin.assert:
@@ -206,6 +222,23 @@
       ansible.builtin.setup:
         gather_subset: [min, hardware]
 
+    - name: Inspect kernel crash memory reservation
+      ansible.builtin.stat:
+        path: /sys/kernel/kexec_crash_size
+        get_checksum: false
+        get_mime: false
+      register: crash_memory_file
+
+    - name: Read kernel crash memory reservation
+      ansible.builtin.slurp:
+        src: /sys/kernel/kexec_crash_size
+      register: crash_memory
+      when: crash_memory_file.stat.exists
+
+    - name: Calculate memory reserved for crash recovery
+      ansible.builtin.set_fact:
+        guest_crash_memory_mb: "{{ (crash_memory.content | default('MA==') | b64decode | trim | int) // 1048576 }}"
+
     - name: Verify Linux, hostname, and requested resources
       no_log: "{{ not (vm_guest_verification_diagnostics | default(false) | bool) }}"
       ansible.builtin.assert:
@@ -213,7 +246,8 @@
           - ansible_facts.system == 'Linux'
           - ansible_facts.hostname == deployment_vm_name
           - ansible_facts.processor_vcpus | int == deployment_vm_vcpus | int
-          - ansible_facts.memtotal_mb | int >= (deployment_vm_memory_mb | int * 0.9)
+          - ansible_facts.memtotal_mb | int >= ((deployment_vm_memory_mb | int - guest_crash_memory_mb | int) * 0.9)
+          - ansible_facts.memtotal_mb | int <= deployment_vm_memory_mb | int
         fail_msg: >-
           Guest verification mismatch: OS={{ ansible_facts.system }},
           hostname={{ ansible_facts.hostname }},
@@ -221,7 +255,8 @@
           memory={{ ansible_facts.memtotal_mb }} MiB;
           expected hostname={{ deployment_vm_name }},
           CPUs={{ deployment_vm_vcpus }},
-          memory at least {{ deployment_vm_memory_mb | int * 0.9 }} MiB.
+          allocated memory={{ deployment_vm_memory_mb }} MiB,
+          crash memory reservation={{ guest_crash_memory_mb }} MiB.
 
     - name: Inspect the guest root filesystem
       ansible.builtin.command:
@@ -312,6 +347,8 @@
           linux_vm_distribution: "{{ ansible_facts.distribution }}"
           linux_vm_vcpus: "{{ ansible_facts.processor_vcpus }}"
           linux_vm_memory_mb: "{{ ansible_facts.memtotal_mb }}"
+          linux_vm_allocated_memory_mb: "{{ deployment_vm_memory_mb }}"
+          linux_vm_crash_reserved_memory_mb: "{{ guest_crash_memory_mb }}"
           linux_vm_disk_gb: "{{ deployment_vm_disk_gb }}"
           linux_vm_root_filesystem: "{{ guest_root_filesystem.stdout }}"
           linux_vm_kernel: "{{ ansible_facts.kernel }}"

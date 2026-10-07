@@ -47,6 +47,9 @@ toolchain has been selected yet.
 playbook for the **Generic Linux VM Deployment** AAP job template. It provisions
 one VM, waits for its DHCP lease by MAC address, and verifies authenticated
 Ansible access, Linux, the hostname, CPUs, and available memory. It does not install AAP.
+Memory verification checks the exact allocation in libvirt and accounts for the
+guest kernel's crash-recovery reservation when checking usable RAM. Controller
+artifacts report allocated RAM, guest-visible RAM, and the crash reservation separately.
 
 Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
 Defaults are 2 vCPUs, 4096 MiB RAM, and a 40 GiB disk. The VM name defaults to
