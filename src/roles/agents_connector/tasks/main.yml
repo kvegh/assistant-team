@@ -134,6 +134,7 @@
     content: |
       [Unit]
       Description=Stock agent connector worker broker
+      PartOf=assistant-connector.target
       [Service]
       Environment=HOME={{ assistant_runtime_home }}
       Environment=PATH={{ assistant_connector_root }}/routing:/usr/bin:/bin
@@ -154,6 +155,7 @@
     content: |
       [Unit]
       Description=Instance-scoped connector IPC gateway
+      PartOf=assistant-connector.target
       Requires=assistant-connector-broker.service
       After=assistant-connector-broker.service
       [Service]
@@ -174,6 +176,7 @@
     content: |
       [Unit]
       Description=Available native tmux containers without model launches
+      PartOf=assistant-connector.target
       Wants=assistant-connector-gateway.service
       After=assistant-connector-gateway.service
       [Service]
@@ -183,9 +186,25 @@
       RemainAfterExit=yes
       KillMode=process
       ExecStart={{ assistant_connector_root }}/routing/connector-team.py prepare
+      ExecStop={{ assistant_connector_root }}/routing/connector-team.py stop
+      TimeoutStopSec=90
       [Install]
       WantedBy=default.target
-- name: Enable broker gateway and container availability
+- name: Install the user lifecycle target
+  tags: [connector_services]
+  ansible.builtin.copy:
+    dest: "{{ assistant_runtime_home }}/.config/systemd/user/assistant-connector.target"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+    content: |
+      [Unit]
+      Description=Native assistant connector group
+      Requires=assistant-connector-broker.service assistant-connector-gateway.service assistant-connector-containers.service
+      After=assistant-connector-broker.service assistant-connector-gateway.service assistant-connector-containers.service
+      [Install]
+      WantedBy=default.target
+- name: Remove individual boot enablement while preserving running services
   tags: [connector_services]
   become_user: "{{ containers.runtime_user }}"
   environment:
@@ -195,10 +214,22 @@
   ansible.builtin.systemd_service:
     scope: user
     name: "{{ item }}"
-    enabled: true
-    state: "{{ (item == 'assistant-connector-gateway.service' and connector_utility.changed) | ternary('restarted', 'started') }}"
+    enabled: false
     daemon_reload: true
   loop: [assistant-connector-broker.service, assistant-connector-gateway.service, assistant-connector-containers.service]
+- name: Enable and start the lifecycle target
+  tags: [connector_services]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.systemd_service:
+    scope: user
+    name: assistant-connector.target
+    enabled: true
+    state: started
+    daemon_reload: true
 - name: Install offline integration validation
   tags: [connector_services]
   ansible.builtin.copy:
@@ -217,3 +248,22 @@
   ansible.builtin.command:
     argv: [python3, "{{ assistant_connector_root }}/routing/validate_connector.py"]
   changed_when: false
+- name: Install explicit group lifecycle validation
+  tags: [connector_services]
+  ansible.builtin.copy:
+    src: validate_lifecycle.py
+    dest: "{{ assistant_connector_root }}/routing/validate_lifecycle.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Verify group stop start restart when explicitly requested
+  tags: [connector_services]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv: [python3, "{{ assistant_connector_root }}/routing/validate_lifecycle.py"]
+  changed_when: false
+  when: assistant_connector_validate_lifecycle | bool

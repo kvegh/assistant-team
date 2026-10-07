@@ -11,3 +11,4 @@ assistant_connector_profiles:
   - {name: observer, flavour: claude, visible: false}
   - {name: private-connector, flavour: claude, visible: false}
   - {name: corporate-connector, flavour: claude, visible: false}
+assistant_connector_validate_lifecycle: false

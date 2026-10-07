@@ -135,3 +135,14 @@ for native MCP shims and hooks. Observer and connector profiles remain inactive 
 unregistered, preserving hidden/private boundaries while their access bridges and
 tools are still undesigned. Provider accounts, native hook approval and live model
 session behavior require operator setup and later verification.
+
+## Group lifecycle through a user target
+
+The user selected `assistant-connector.target` as the single start/stop/restart
+control. It requires the three existing services; service ordering starts broker,
+gateway and containers in that order. `PartOf` propagates target stop/restart,
+while only the target is enabled for user-manager startup. No synthetic master
+service is introduced. The availability service explicitly stops the five named
+containers; persistent homes, provider state and SQLite survive. Group start
+restores idle tmux shells and does not automatically launch or resume model
+sessions. Routing-service refresh remains independent of container lifetime.

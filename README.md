@@ -337,7 +337,8 @@ ansible-playbook -i 'localhost,' src/configure_agents_connector.yml
 
 Use the same certified collection and protected SSH configuration as the container
 foundation. The account and guest details stay encrypted in Vault. The stock broker
-and instance-specific IPC gateway run as enabled user services. Five continuously
+and instance-specific IPC gateway run as user services grouped by the enabled
+`assistant-connector.target`. Only the target is enabled for user-manager startup. Five continuously
 running rootless containers contain tmux sessions for the visible orchestrator,
 builder, investigator, challenger and summarizer profiles. Initially those tmux
 panes contain idle shells, not authenticated model sessions. Provider login and
@@ -392,7 +393,7 @@ provider login or model inference. For a repeatable operator check before launch
 model sessions, run the home-local `routing/validate_connector.py`; it refuses the
 wake fixture if that native session is already launched.
 
-Setup is installed and offline verified: all three enabled user services are
+Setup is installed and offline verified: the enabled lifecycle target and its three user services are
 active, five tmux containers are running, and native versions match the foundation.
 All nineteen local tests pass. Live tests passed for all three stock hook formats,
 SQLite persistence, IPC identity/admin restrictions, actual fixed-only urgent
@@ -400,3 +401,43 @@ message/question wake, and busy-state wake suppression after cooldown expiry.
 Fixture messages are removed after successful validation. Routing-service refresh
 does not stop the independent containers. Guest free space remained about 2.4 GiB.
 Provider authentication and live native model sessions remain unconfigured.
+
+### Start, stop and restart the group
+
+Enter the dedicated runtime account from the guest's automation login, using its
+Vault-recorded account name. Set the user-bus environment if the sudo login does
+not populate it:
+
+```bash
+sudo -iu <runtime-account>
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+systemctl --user start assistant-connector.target
+systemctl --user stop assistant-connector.target
+systemctl --user restart assistant-connector.target
+systemctl --user status assistant-connector.target
+```
+
+The target requires broker, gateway and container availability in dependency
+order. Their `PartOf` relationship propagates group stop/restart. Only the target
+is enabled at boot through the lingering user manager; individual services are
+disabled for independent boot startup. Stopping the group explicitly stops only
+the five managed containers and clears native-session launch markers. Persistent
+homes, authentication state, workspaces and SQLite remain intact. Starting it
+restores inside-container tmux shells. Model sessions are not automatically
+relaunched or resumed; authenticate and explicitly launch them when appropriate.
+A group stop/restart interrupts any active native sessions and should be deliberate.
+
+The lifecycle validation utility refuses active native work, verifies stop/start/
+restart, and leaves the group running. It is opt-in, because it stops containers:
+
+```bash
+ansible-playbook -i 'localhost,' src/configure_agents_connector.yml \
+  --tags connector_services -e assistant_connector_validate_lifecycle=true
+```
+
+Group lifecycle checks passed in the deployed Ansible run: stop reached all
+services inactive and all five containers stopped; start/restart restored all
+services and tmux sessions. SQLite contents and persistent homes/workspaces were
+unchanged. The group is left running. Stop may return before child stop jobs finish;
+inspect the three service states when waiting for complete shutdown.
