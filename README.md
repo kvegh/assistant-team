@@ -67,6 +67,18 @@ in Vault; cleanup refuses to remove root, the automation account, or an account
 with an unexpected home directory. The shared source image is never customized.
 Guest verification checks that installer artifacts and the AAP account are absent.
 
+After boot, the job registers RHEL with the existing activation key if needed,
+enables BaseOS and AppStream, updates every installed package with DNF, and
+reboots if packages changed. It reconnects and requires `dnf --refresh check-update`
+to return no pending updates before publishing success. Subscription details are
+encrypted under `provisioning.rhsm_org` and `provisioning.rhsm_activation_key`.
+
+If provisioning succeeded but guest configuration failed, rerun the same template
+with the `guest_config` job tag and the same VM name. This discovers the existing
+guest through libvirt and resumes guest configuration without cloning or replacing
+its disk. The template must allow job tags at launch and must not use a hypervisor-only
+host limit, because the later play runs against a dynamically added guest.
+
 The golden image supplies the guest access configuration. Provisioning resets
 the cloned machine identity and host keys. Logs are protected with `no_log`;
 verified VM details are stored in AAP job artifacts. Keep controller access
