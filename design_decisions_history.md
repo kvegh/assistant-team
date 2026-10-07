@@ -196,3 +196,21 @@ Completion notices remain brief; blockers requiring decisions or approval return
 to the main conversation. Background execution retains existing security,
 monitoring, validation, and approval requirements. This change documents the
 workflow only and does not change the VM or require additional infrastructure.
+
+## Establish trusted container host preflight
+
+Implementation: `f7c3f7ae3b3da40397e2d130e57d9baafb084255`.
+
+The user authorized a rootless Podman foundation with native Claude Code, Codex
+CLI, Mistral Vibe, and Gemini CLI harnesses. Content preparation is in progress;
+image builds and live validation are not complete. Roles remain configurable,
+with participant responsibility metadata but no communication capability or
+shared credentials. Provider authentication remains an operator step.
+
+A separate read-only Ansible preflight role obtains the guest SSH public key,
+root filesystem capacity, storage layout, and installed packages through the
+existing authenticated AAP path. This establishes agent-side host trust without
+trusting an unauthenticated key scan, and checks that the filesystem has enough
+capacity before container builds. The preflight does not install or update
+packages. Environment-specific results stay in protected controller artifacts
+and encrypted configuration.
