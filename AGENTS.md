@@ -18,3 +18,18 @@ Document final design decisions and resulting behavior. Interim steps, temporary
 experiments, retries, and routine testing details do not need individual design
 history entries. Include validation results when they help assess the final change.
 Do not leave a lasting manually applied configuration change without automation.
+
+## Background implementation
+
+Keep the main conversation focused on building and design. After a design decision
+is settled, delegate its implementation to one reusable background subagent.
+The subagent handles configuration changes, separate Ansible roles, documentation,
+meaningful validation, commits, and pushes. Process handoffs sequentially to avoid
+conflicting Git changes or concurrent VM configuration changes.
+
+Distinguish "design agreed, implementation pending" from "implemented and verified."
+Continue independent design discussion while the subagent works; dependent work
+must wait for the implementation result. Report completion briefly, and bring
+blockers requiring a significant decision or approval back to the main conversation.
+Background execution does not waive validation, outcome monitoring, security rules,
+or required approvals.

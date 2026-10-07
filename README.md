@@ -141,3 +141,12 @@ result. Update the README and decision history for the final design, commit and
 push the automation and README together, and record the implementation commit
 reference in the decision history. Interim experiments and retries do not need
 individual decision entries. All environment-specific data remains encrypted.
+
+The main conversation focuses on building and design. One reusable background
+subagent handles settled decisions sequentially: configuration changes, Ansible
+roles, documentation, validation, commits, and pushes. Independent design discussion
+can continue while that work runs. A design agreement remains implementation
+pending until the subagent reports it implemented and verified; dependent work
+waits for that result. Completion notices are brief, and blockers requiring a
+decision or approval return to the main conversation. The same security,
+monitoring, and approval requirements apply to background work.
