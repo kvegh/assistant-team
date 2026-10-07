@@ -95,3 +95,22 @@ Sensitive resource identifiers belong in protected SQLite runtime storage and
 must not appear in plaintext Git files. Completing a task means marking it
 completed, preserving its history. Audit storage, connector adapters, and their
 permission enforcement require later implementation and validation.
+
+## Persistent native sessions and event delivery: implementation TODO
+
+Each native harness session must run in tmux inside its continuously running
+rootless Podman container so the operator can attach. Keep instance state and
+authentication isolated; this requirement does not authorize sharing host tmux
+sockets, provider credentials, or broader host mounts. The current container
+foundation has not implemented this session lifecycle.
+
+Prefer an existing inter-agent communication and listener implementation. Do not
+implement timed inbox polling. Wake means delivering an addressed event to the
+existing running harness, preferably through a native inbound interface that can
+serve multiple harnesses. Outbound MCP client tool calls are not proof of inbound
+idle-session support. Verify actual native capabilities and compatibility with all
+four harnesses before choosing a mechanism. A tmux wake, if selected, may submit
+only a fixed notification; authenticated MCP carries the message content.
+
+Transport evaluation is pending. No candidate is selected, and no persistent tmux
+service, new communication service, or polling timer is deployed by this decision.

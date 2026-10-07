@@ -306,3 +306,18 @@ reports remain outside worker-readable communications. These application
 components are agreed design work awaiting implementation; the container
 foundation does not deploy them. Subscription exhaustion must pause work without
 automatically switching to paid API usage.
+
+### TODO: persistent, attachable native sessions
+
+Run each native harness session in tmux inside its continuously running rootless
+Podman container, allowing the operator to attach to that session. This is an
+accepted requirement awaiting implementation; current launcher commands create
+short-lived containers and do not provide persistent tmux sessions.
+
+Prefer an existing communication/listener implementation over building a new
+message service. Reject timed inbox polling. An addressed event should reach an
+existing running harness through a supported inbound interface; MCP tool access
+alone does not establish that an idle interactive CLI can receive input. Validate
+each harness's native support before selecting the transport. If tmux waking is
+used, send only a fixed notification; message content remains in authenticated
+MCP delivery. No transport has been selected or deployed.
