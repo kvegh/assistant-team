@@ -46,6 +46,7 @@
 
     - name: Validate offline recovery safety
       tags: [never, offline_recovery]
+      when: "'offline_recovery' in ansible_run_tags"
       ansible.builtin.assert:
         that:
           - deployment_name not in existing_vms.stdout_lines
@@ -111,7 +112,7 @@
           - --hostname
           - "{{ deployment_name }}.{{ provisioning.vm_domain }}"
           - --run-command
-          - 'rm -f /etc/ssh/ssh_host_*; truncate -s 0 /etc/machine-id; rm -f /var/lib/dbus/machine-id; ln -s /etc/machine-id /var/lib/dbus/machine-id'
+          - "{{ lookup('file', playbook_dir + '/reset_linux_identity.sh') }}"
           - --selinux-relabel
       changed_when: true
 

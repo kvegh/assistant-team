@@ -30,8 +30,10 @@ The last command displays plaintext locally; do not capture or commit its output
 - `vars/environment.vault.yml`: encrypted environment configuration.
 - `src/deploy_linux_vm.yml`: generic golden-image Linux VM provisioning.
 - `src/templates/clean_linux_clone.sh.j2`: cleanup inside the cloned image.
+- `src/reset_linux_identity.sh`: reset cloned machine identity and SSH host keys.
 - `tests/test_deployment.py`: launch-validation tests without VM changes.
 - `tests/test_clone_cleanup.py`: checks that cleanup preserves protected accounts.
+- `tests/test_identity_reset.py`: identity reset with a missing legacy D-Bus directory.
 - `ansible.cfg`: local Vault password-file configuration.
 - `design_decisions_history.md`: decisions and implementation commit references.
 
@@ -94,7 +96,7 @@ restricted, and record deployment details in the encrypted configuration file.
 ## Deployment status
 
 The private repository has synchronized successfully to its AAP project using a
-repository-scoped GitHub credential. Local syntax checks and all seven tests pass.
+repository-scoped GitHub credential. Local syntax checks and all eight tests pass.
 Live deployment has not started: the AAP MCP connection currently rejects its
 configured authentication token. Job-template creation still needs confirmation
 after controller access is restored. Environment-specific controller references
