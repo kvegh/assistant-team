@@ -101,12 +101,17 @@ restricted, and record deployment details in the encrypted configuration file.
 
 ## Deployment status
 
-The private repository has synchronized successfully to its AAP project using a
-repository-scoped GitHub credential. Local syntax checks and all eight tests pass.
-Live deployment has not started: the AAP MCP connection currently rejects its
-configured authentication token. Job-template creation still needs confirmation
-after controller access is restored. Environment-specific controller references
-and the approved VM hostname remain in the encrypted configuration.
+The private repository synchronized successfully to its AAP project using a
+repository-scoped GitHub credential. The Generic Linux VM Deployment template
+has deployed and verified the first guest with 2 vCPUs, 4 GiB allocated RAM,
+and a 40 GiB virtual disk. Installer cleanup, authenticated access, RHEL
+registration, the full DNF update, reboot, and the final no-pending-updates check
+all succeeded. Local syntax checks and all eight tests pass.
+
+The earlier controller outage was attributed by the user to hypervisor memory
+starvation; access recovered without replacing the AAP token. Controller
+references, the approved hostname, address, and verified guest details remain in
+the encrypted configuration. Application design has not started yet.
 
 ## Validation
 

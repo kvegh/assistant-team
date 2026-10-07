@@ -119,3 +119,44 @@ expiration unchanged. Renew or replace it on demand when repository access
 requires it, and update the corresponding AAP Source Control credential at that
 time. No token rotation or expiration change is being made now. This decision
 does not resolve the separate AAP MCP authentication failure.
+
+
+## Restore controller access and recover the first deployment
+
+The user confirmed that hypervisor memory starvation caused the controller
+outage. Controller access recovered without changing the configured AAP token.
+The earlier token-expiration explanation was an unconfirmed hypothesis, not the
+established cause. The requested generic job template was created with the
+existing hypervisor and Vault credentials and the private project.
+
+Implementation: `ff78da81427bcd1cab888854bc40e5f7f7e16abd` and
+`e117eefcba386ffbbed73f8398ae11e47fe291ed`.
+
+The first deployment preserved its cloned disk when offline identity reset
+failed because the image lacked the legacy D-Bus directory. Recovery now
+requires that no VM is defined for that disk, resumes customization without
+repeating the copy or cleanup, and creates the missing directory before linking
+the machine identity. A regression test verifies reset and repeated execution.
+Temporary identity diagnostics remain disabled by default.
+
+## Verify guest resources and resume guest configuration
+
+Implementation: `e27958ce5b6972da979f720cc85e2acade748084`,
+`2d8343a319d05b1388e3466bba8d3288a4fcaa3b`, and
+`a73848a9acc75f6bfcd4d2a480d99ec6b80b1346`.
+
+Authenticated access succeeded after boot. The initial memory assertion was
+too strict for the guest's usable memory; the user accepted the small difference.
+Verification now confirms the requested allocation in libvirt and accounts for
+kernel crash-recovery reservation when checking guest-visible RAM. Basic
+verification diagnostics are optional and disabled by default, and credentials
+remain protected. A filesystem inspection failure was corrected by keeping the
+comma-separated output columns in one command argument.
+
+Guest configuration was resumed against the existing VM, avoiding a second
+clone. Linux identity, requested CPUs and allocation, installer cleanup, and
+removal of the unused AAP account passed verification. RHEL registration and the
+full DNF update succeeded. The guest rebooted, reconnected, and passed the final
+check with no pending package updates. The deployment job completed successfully.
+All eight local tests passed. Environment-specific controller and guest details
+remain encrypted rather than appearing in this history.
