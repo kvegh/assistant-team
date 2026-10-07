@@ -87,6 +87,9 @@ the copy or cleanup. Recovery refuses to customize a disk associated with a defi
 VM. For that identity task alone, `vm_identity_diagnostics: true` reveals its command
 result temporarily; other task output and guest credentials remain protected.
 The diagnostic default remains off.
+For guest resource mismatches, `vm_guest_verification_diagnostics: true` reveals
+only the verification assertion and basic OS, hostname, CPU, and memory values.
+Guest connection and subscription credentials remain protected.
 
 The golden image supplies the guest access configuration. Provisioning resets
 the cloned machine identity and host keys. Logs are protected with `no_log`;

@@ -207,12 +207,21 @@
         gather_subset: [min, hardware]
 
     - name: Verify Linux, hostname, and requested resources
+      no_log: "{{ not (vm_guest_verification_diagnostics | default(false) | bool) }}"
       ansible.builtin.assert:
         that:
           - ansible_facts.system == 'Linux'
           - ansible_facts.hostname == deployment_vm_name
           - ansible_facts.processor_vcpus | int == deployment_vm_vcpus | int
           - ansible_facts.memtotal_mb | int >= (deployment_vm_memory_mb | int * 0.9)
+        fail_msg: >-
+          Guest verification mismatch: OS={{ ansible_facts.system }},
+          hostname={{ ansible_facts.hostname }},
+          CPUs={{ ansible_facts.processor_vcpus }},
+          memory={{ ansible_facts.memtotal_mb }} MiB;
+          expected hostname={{ deployment_vm_name }},
+          CPUs={{ deployment_vm_vcpus }},
+          memory at least {{ deployment_vm_memory_mb | int * 0.9 }} MiB.
 
     - name: Inspect the guest root filesystem
       ansible.builtin.command:
