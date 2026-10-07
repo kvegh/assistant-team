@@ -307,17 +307,96 @@ components are agreed design work awaiting implementation; the container
 foundation does not deploy them. Subscription exhaustion must pause work without
 automatically switching to paid API usage.
 
-### TODO: persistent, attachable native sessions
+### Persistent, attachable native sessions
 
-Run each native harness session in tmux inside its continuously running rootless
-Podman container, allowing the operator to attach to that session. This is an
-accepted requirement awaiting implementation; current launcher commands create
-short-lived containers and do not provide persistent tmux sessions.
+The selected Agents Connector setup below implements continuously running rootless
+Podman containers with inside-container tmux for the five visible Claude/Codex/Gemini
+profiles. Native authenticated sessions require operator login and launch. The
+original foundation launcher remains available for short-lived isolated commands;
+Vibe is not included in the selected connector setup.
 
-Prefer an existing communication/listener implementation over building a new
-message service. Reject timed inbox polling. An addressed event should reach an
-existing running harness through a supported inbound interface; MCP tool access
-alone does not establish that an idle interactive CLI can receive input. Validate
-each harness's native support before selecting the transport. If tmux waking is
-used, send only a fixed notification; message content remains in authenticated
-MCP delivery. No transport has been selected or deployed.
+Existing communication software is preferred over a new message service. Timed
+inbox polling is rejected. The selected integration uses stock event-driven wake
+and fixed tmux notices, with content delivered through authenticated MCP/hooks.
+Generic native inbound transport across all harnesses remains unverified.
+
+## Agents Connector setup
+
+`src/configure_agents_connector.yml` creates the dedicated password-locked,
+unprivileged account recorded in Vault and calls the existing `podman_host` role
+plus the separate `agents_connector` role. Its home contains the upstream binary,
+rough role prompts, isolated native homes/workspaces, private SQLite broker state,
+and constrained routing utilities. Upstream release 0.1.0 is checksum pinned.
+The existing Claude/Codex/Gemini images are streamed into this account's rootless
+store and extended with tmux; Mistral Vibe is excluded from this setup.
+
+```bash
+ansible-playbook --syntax-check -i 'localhost,' src/configure_agents_connector.yml
+ansible-playbook -i 'localhost,' src/configure_agents_connector.yml
+```
+
+Use the same certified collection and protected SSH configuration as the container
+foundation. The account and guest details stay encrypted in Vault. The stock broker
+and instance-specific IPC gateway run as enabled user services. Five continuously
+running rootless containers contain tmux sessions for the visible orchestrator,
+builder, investigator, challenger and summarizer profiles. Initially those tmux
+panes contain idle shells, not authenticated model sessions. Provider login and
+native hook approval remain operator actions.
+
+As the dedicated runtime account, use its home-local utility:
+
+```bash
+python3 "$HOME/agents-connector/routing/connector-team.py" check
+python3 "$HOME/agents-connector/routing/connector-team.py" login builder
+python3 "$HOME/agents-connector/routing/connector-team.py" launch builder
+python3 "$HOME/agents-connector/routing/connector-team.py" attach builder
+```
+
+Select another visible profile name for its own login, launch and attachment.
+Claude uses native authentication, Codex uses device login, and Gemini opens its
+native authentication flow. No credentials are inherited. Codex hooks require the
+operator's explicit native `/hooks` approval; this setup does not bypass it.
+Launcher arguments retain native permission prompts. The builder starts in the
+native read-only sandbox; broader write permissions require an intentional later
+configuration change. Native workspace instruction files load the rough prompts.
+Do not launch a role twice while its session is active; attach instead. An exited
+session can be launched again. Containers stay available after a CLI exits.
+
+Only each instance's own home, workspace and filtered IPC directory are writable
+mounts; the connector binary is read-only. There are no host engine/tmux sockets,
+shared provider credentials, sudo, published ports, or host-loopback access inside
+workers. CPU, memory, process, capability and read-only root restrictions remain.
+The stock administrative socket and SQLite database are not mounted into workers.
+The gateway restricts authentication and message identity to the assigned instance
+and rejects administrative operations. Visible workers communicate within one
+collaboration broker; this is not a general multitenant service.
+
+Stock urgent messages/questions trigger the broker's busy-aware, debounced tmux
+wake. The host adapter routes only fixed wake notices and Enter into the named
+container's tmux session. Actual message content arrives through authenticated MCP
+and native hook context. There is no timed inbox polling. No wake is sent to a
+profile before the operator launches its native session. Stock state/cooldown
+handling is retained; this does not implement a guaranteed delivery scheduler.
+
+Observer/evaluator, Private Connector and Corporate Connector prompts are prepared
+in separate inactive profiles. They are not registered in the worker broker or
+mounted into worker containers. Observer transcript access/private reporting,
+connector scoped tools/credentials, actual tool audit adapters, automated routing,
+discussion budgets and stop enforcement remain pending. Prompt text alone does not
+implement those controls. No external connector actions are performed.
+
+The role includes offline validation of native version/help, real inside-container
+tmux, enforced isolation, gateway policy, SQLite messages, all three stock hook
+formats, and a fixed-only wake into a harmless test pane. These checks use no
+provider login or model inference. For a repeatable operator check before launching
+model sessions, run the home-local `routing/validate_connector.py`; it refuses the
+wake fixture if that native session is already launched.
+
+Setup is installed and offline verified: all three enabled user services are
+active, five tmux containers are running, and native versions match the foundation.
+All nineteen local tests pass. Live tests passed for all three stock hook formats,
+SQLite persistence, IPC identity/admin restrictions, actual fixed-only urgent
+message/question wake, and busy-state wake suppression after cooldown expiry.
+Fixture messages are removed after successful validation. Routing-service refresh
+does not stop the independent containers. Guest free space remained about 2.4 GiB.
+Provider authentication and live native model sessions remain unconfigured.

@@ -1,0 +1,40 @@
+---
+- name: Check dedicated account native image
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+  ansible.builtin.command:
+    argv: [podman, image, exists, "localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }}"]
+  register: connector_base
+  changed_when: false
+  failed_when: connector_base.rc not in [0, 1]
+- name: Transfer a public credential-free native image between rootless stores
+  when: connector_base.rc == 1
+  block:
+    - name: Stream the image archive without storing a temporary duplicate
+      ansible.builtin.shell: |
+        set -o pipefail
+        source_uid=$(id -u {{ assistant_source_user | quote }})
+        runuser -u {{ assistant_source_user | quote }} -- env HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid podman save localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }} |
+        runuser -u {{ containers.runtime_user | quote }} -- env HOME={{ assistant_runtime_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ assistant_runtime_uid }} podman load
+      args:
+        executable: /bin/bash
+        chdir: /tmp
+      async: 600
+      poll: 20
+- name: Build the native tmux extension with the certified module
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+  redhat.rhel_system_roles.podman_image:
+    name: "localhost/assistant-connector-{{ connector_image.flavour }}"
+    tag: "{{ connector_image.version }}"
+    state: build
+    path: "{{ assistant_connector_root }}/build"
+    build:
+      file: "{{ assistant_connector_root }}/build/Containerfile"
+      extra_args: "--build-arg BASE_IMAGE=localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }}"
+  async: 600
+  poll: 20

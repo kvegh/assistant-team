@@ -96,13 +96,14 @@ must not appear in plaintext Git files. Completing a task means marking it
 completed, preserving its history. Audit storage, connector adapters, and their
 permission enforcement require later implementation and validation.
 
-## Persistent native sessions and event delivery: implementation TODO
+## Persistent native sessions and event delivery requirement
 
 Each native harness session must run in tmux inside its continuously running
 rootless Podman container so the operator can attach. Keep instance state and
 authentication isolated; this requirement does not authorize sharing host tmux
-sockets, provider credentials, or broader host mounts. The current container
-foundation has not implemented this session lifecycle.
+sockets, provider credentials, or broader host mounts. The initial container
+foundation does not implement this lifecycle; the selected three-harness connector
+setup below now provides persistent tmux availability.
 
 Prefer an existing inter-agent communication and listener implementation. Do not
 implement timed inbox polling. Wake means delivering an addressed event to the
@@ -112,5 +113,25 @@ idle-session support. Verify actual native capabilities and compatibility with a
 four harnesses before choosing a mechanism. A tmux wake, if selected, may submit
 only a fixed notification; authenticated MCP carries the message content.
 
-Transport evaluation is pending. No candidate is selected, and no persistent tmux
-service, new communication service, or polling timer is deployed by this decision.
+The subsequent setup decision selects Agents Connector and fixed tmux routing
+for three harnesses. Generic native inbound control remains a research question;
+no polling timer is deployed.
+
+## Selected first setup: Agents Connector with isolated native sessions
+
+The user selected Agents Connector for an initial usable setup with native Claude
+Code, Codex and Gemini, omitting Vibe. The dedicated account, home-local binary,
+prompts, SQLite broker and enabled user services are reproduced by a separate role
+called from the connector playbook. Existing images are extended with tmux rather
+than replacing native harnesses. Idle tmux shells become native sessions only when
+the operator completes authentication and explicitly launches them.
+
+The stock launcher assumes shared host paths and tmux. A small lifecycle wrapper
+instead launches tmux inside each isolated container. A restricted host tmux adapter
+routes the stock broker's fixed wake notification to that container; message bodies
+remain in MCP/hook delivery. No polling timer or new orchestration platform is built.
+Stock broker administrative IPC is kept private, with a per-instance filtered socket
+for native MCP shims and hooks. Observer and connector profiles remain inactive and
+unregistered, preserving hidden/private boundaries while their access bridges and
+tools are still undesigned. Provider accounts, native hook approval and live model
+session behavior require operator setup and later verification.

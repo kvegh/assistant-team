@@ -1,0 +1,219 @@
+---
+- name: Inspect dedicated account for focused configuration reruns
+  tags: [connector_services]
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Resolve dedicated home and user manager
+  tags: [connector_services]
+  ansible.builtin.set_fact:
+    assistant_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    assistant_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Define protected connector root
+  tags: [connector_services]
+  ansible.builtin.set_fact:
+    assistant_connector_root: "{{ assistant_runtime_home }}/agents-connector"
+- name: Create connector directories in the dedicated home
+  ansible.builtin.file:
+    path: "{{ assistant_connector_root }}/{{ item }}"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  loop: [bin, routing, state, profiles, build, dist]
+- name: Download checksum-pinned upstream binary distribution
+  ansible.builtin.get_url:
+    url: "https://github.com/Aldenysq/agents-connector/releases/download/v{{ assistant_connector_version }}/agents-connector-x86_64-unknown-linux-gnu.tar.xz"
+    dest: "{{ assistant_connector_root }}/dist/release.tar.xz"
+    checksum: "sha256:{{ assistant_connector_sha256 }}"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Extract upstream binary and license
+  ansible.builtin.unarchive:
+    src: "{{ assistant_connector_root }}/dist/release.tar.xz"
+    dest: "{{ assistant_connector_root }}/dist"
+    remote_src: true
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+- name: Install upstream binary within the dedicated home
+  ansible.builtin.copy:
+    src: "{{ assistant_connector_root }}/dist/agents-connector-x86_64-unknown-linux-gnu/agents-connector"
+    dest: "{{ assistant_connector_root }}/bin/agents-connector"
+    remote_src: true
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0755'
+- name: Verify the upstream executable
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv: ["{{ assistant_connector_root }}/bin/agents-connector", --version]
+  changed_when: false
+- name: Install constrained lifecycle and IPC routing utility
+  tags: [connector_services]
+  ansible.builtin.copy:
+    src: connector-team.py
+    dest: "{{ assistant_connector_root }}/routing/connector-team.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  register: connector_utility
+- name: Route broker wake commands through the constrained tmux adapter
+  ansible.builtin.file:
+    src: "{{ assistant_connector_root }}/routing/connector-team.py"
+    dest: "{{ assistant_connector_root }}/routing/tmux"
+    state: link
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+- name: Prepare individual profile directories
+  ansible.builtin.file:
+    path: "{{ assistant_connector_root }}/profiles/{{ item.0.name }}/{{ item.1 }}"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  loop: "{{ assistant_connector_profiles | product(['home', 'workspace', 'ipc', 'reports']) | list }}"
+- name: Write generic profile specifications
+  ansible.builtin.copy:
+    dest: "{{ assistant_connector_root }}/profiles/{{ item.name }}/profile.json"
+    content: "{{ item | to_nice_json }}\n"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+  loop: "{{ assistant_connector_profiles }}"
+- name: Copy rough role prompts
+  ansible.builtin.copy:
+    src: "../prompts/{{ item.name }}.md"
+    dest: "{{ assistant_connector_root }}/profiles/{{ item.name }}/workspace/{{ {'claude':'CLAUDE.md', 'codex':'AGENTS.md', 'gemini':'GEMINI.md'}[item.flavour] }}"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+  loop: "{{ assistant_connector_profiles }}"
+- name: Add collaboration roster to visible worker instructions only
+  ansible.builtin.blockinfile:
+    path: "{{ assistant_connector_root }}/profiles/{{ item.name }}/workspace/{{ {'claude':'CLAUDE.md', 'codex':'AGENTS.md', 'gemini':'GEMINI.md'}[item.flavour] }}"
+    marker: '<!-- {mark} COLLABORATION ROSTER -->'
+    block: |
+      Collaboration roles: orchestrator routes and bounds work; builder implements;
+      investigator diagnoses; challenger reviews assumptions; summarizer condenses
+      settled decisions and open questions. Read addressed messages through the
+      authenticated agents_connector MCP tools. A wake notice contains no task.
+      Distinguish verified results from proposals. Pause when allowance is exhausted;
+      never switch automatically to a paid API. No external connector services are
+      available. No quotas of responses or proposals; stop completed discussions.
+  loop: "{{ assistant_connector_profiles | selectattr('visible') | list }}"
+- name: Copy the tmux image extension context
+  ansible.builtin.copy:
+    src: Containerfile
+    dest: "{{ assistant_connector_root }}/build/Containerfile"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Transfer and extend existing native images sequentially
+  ansible.builtin.include_tasks: image.yml
+  loop:
+    - {flavour: claude, version: '2.1.292'}
+    - {flavour: codex, version: '0.160.1'}
+    - {flavour: gemini, version: '0.63.0'}
+  loop_control:
+    loop_var: connector_image
+- name: Create dedicated user service directory
+  ansible.builtin.file:
+    path: "{{ assistant_runtime_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Install stock broker user service
+  tags: [connector_services]
+  ansible.builtin.copy:
+    dest: "{{ assistant_runtime_home }}/.config/systemd/user/assistant-connector-broker.service"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+    content: |
+      [Unit]
+      Description=Stock agent connector worker broker
+      [Service]
+      Environment=HOME={{ assistant_runtime_home }}
+      Environment=PATH={{ assistant_connector_root }}/routing:/usr/bin:/bin
+      UMask=0077
+      ExecStart={{ assistant_connector_root }}/bin/agents-connector broker --socket {{ assistant_connector_root }}/state/broker.sock --db {{ assistant_connector_root }}/state/db.sqlite --session workers
+      ExecStartPost={{ assistant_connector_root }}/routing/connector-team.py init
+      Restart=on-failure
+      RestartSec=2
+      [Install]
+      WantedBy=default.target
+- name: Install identity-filtered gateway user service
+  tags: [connector_services]
+  ansible.builtin.copy:
+    dest: "{{ assistant_runtime_home }}/.config/systemd/user/assistant-connector-gateway.service"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+    content: |
+      [Unit]
+      Description=Instance-scoped connector IPC gateway
+      Requires=assistant-connector-broker.service
+      After=assistant-connector-broker.service
+      [Service]
+      Environment=HOME={{ assistant_runtime_home }}
+      UMask=0077
+      ExecStart={{ assistant_connector_root }}/routing/connector-team.py gateway
+      Restart=on-failure
+      RestartSec=2
+      [Install]
+      WantedBy=default.target
+- name: Install persistent container user service
+  tags: [connector_services]
+  ansible.builtin.copy:
+    dest: "{{ assistant_runtime_home }}/.config/systemd/user/assistant-connector-containers.service"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+    content: |
+      [Unit]
+      Description=Available native tmux containers without model launches
+      Wants=assistant-connector-gateway.service
+      After=assistant-connector-gateway.service
+      [Service]
+      Environment=HOME={{ assistant_runtime_home }}
+      Environment=XDG_RUNTIME_DIR=/run/user/{{ assistant_runtime_uid }}
+      Type=oneshot
+      RemainAfterExit=yes
+      KillMode=process
+      ExecStart={{ assistant_connector_root }}/routing/connector-team.py prepare
+      [Install]
+      WantedBy=default.target
+- name: Enable broker gateway and container availability
+  tags: [connector_services]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.systemd_service:
+    scope: user
+    name: "{{ item }}"
+    enabled: true
+    state: "{{ (item == 'assistant-connector-gateway.service' and connector_utility.changed) | ternary('restarted', 'started') }}"
+    daemon_reload: true
+  loop: [assistant-connector-broker.service, assistant-connector-gateway.service, assistant-connector-containers.service]
+- name: Install offline integration validation
+  tags: [connector_services]
+  ansible.builtin.copy:
+    src: validate_connector.py
+    dest: "{{ assistant_connector_root }}/routing/validate_connector.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Validate native CLI broker hooks policy and actual tmux wake offline
+  tags: [connector_services]
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ assistant_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv: [python3, "{{ assistant_connector_root }}/routing/validate_connector.py"]
+  changed_when: false

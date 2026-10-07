@@ -1,0 +1,32 @@
+---
+- name: Discover encrypted project guest
+  hosts: localhost
+  tags: [always]
+  gather_facts: false
+  no_log: true
+  tasks:
+    - ansible.builtin.include_vars:
+        file: ../vars/environment.vault.yml
+        name: assistant_environment
+    - ansible.builtin.add_host:
+        name: assistant_connector_host
+        groups: assistant_connector_hosts
+        ansible_host: "{{ assistant_environment.environment.guest.linux_vm_ip }}"
+        ansible_user: "{{ assistant_environment.provisioning.guest_ssh_user }}"
+        ansible_password: "{{ assistant_environment.provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ assistant_environment.provisioning.guest_become_password }}"
+- name: Configure isolated native connector sessions
+  hosts: assistant_connector_hosts
+  become: true
+  gather_facts: true
+  no_log: true
+  vars:
+    provisioning: "{{ hostvars['localhost'].assistant_environment.provisioning }}"
+    assistant_source_user: "{{ hostvars['localhost'].assistant_environment.containers.runtime_user }}"
+    containers:
+      runtime_user: "{{ hostvars['localhost'].assistant_environment.agent_connector.runtime_user }}"
+  roles:
+    - role: podman_host
+      tags: [connector_host]
+    - role: agents_connector
+      tags: [connector_setup]
