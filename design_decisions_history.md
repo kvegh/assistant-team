@@ -214,3 +214,86 @@ trusting an unauthenticated key scan, and checks that the filesystem has enough
 capacity before container builds. The preflight does not install or update
 packages. Environment-specific results stay in protected controller artifacts
 and encrypted configuration.
+
+## Build reusable native assistant containers with certified Podman
+
+Implementation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+
+The user chose Podman and native Claude Code, Codex CLI, Mistral Vibe, and Gemini
+CLI harnesses, reusable across independently configured roles and instances.
+Separate Ansible roles configure the rootless host and build the four images.
+Certified Automation Hub content was verified as `redhat.rhel_system_roles`
+1.120.5, whose Podman role and image module provide the required supported
+operations. The certified archive checksum was verified before local use;
+community Podman content was not substituted. CLI versions and base image
+digests are pinned, and normal reruns preserve completed image builds.
+
+A dedicated password-locked account has no sudo access. Its user manager delegates
+only the CPU, memory, and process controllers needed to enforce container limits.
+Instances use an unprivileged process, read-only image filesystem, dropped
+capabilities, no new privileges, and separate persistent homes and workspaces.
+Only those instance directories are mounted. No engine socket, broad host mount,
+shared provider credentials, or agent sudo access is provided. Filesystem capacity
+was sufficient, so guest storage was not expanded. The user explicitly allowed
+trusting this fresh demo guest for initial SSH access; subsequent connections
+require the recorded key, whose public value is retained encrypted.
+
+All four images were built on the guest. Offline native version/help checks,
+actual root mount protections, zero effective capabilities, no-new-privileges,
+kernel-enforced limits, and persistent state isolation across two instances per
+flavour passed. All fifteen local tests and playbook syntax checks passed.
+Provider authentication and model-session verification remain operator setup;
+no inference, paid API use, external messaging, or session-credential copying
+occurred. Runtime account and verified deployment metadata remain Vault encrypted.
+
+## Keep observer roles outside worker-visible collaboration context
+
+Implementation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+
+Working roles know the responsibilities of their collaborating participants,
+without gaining access to their data, credentials, or restricted contexts. The
+user decided that working agents must not be told about the observer/evaluator.
+Operator-provided roster entries therefore carry explicit worker visibility;
+hidden entries are excluded from native worker instructions and the source roster
+is not mounted. Evaluation instructions and reports remain outside worker-readable
+communications. Tests verify that hidden observer metadata is not rendered.
+No production roster or provider-role assignment is hardcoded.
+
+## Record the next communication and connector architecture
+
+Design documentation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+
+The accepted next design uses SQLite for central discussions, handoffs, verified
+outcomes, and connector execution audit. Summarizing and orchestration remain
+separate responsibilities. One observer initially produces distinct output and
+design reports, privately evaluating quality and recommending only significant,
+evidenced workflow or design improvements. Benefits and complexity or cost must
+be considered; retaining the current design is a valid outcome. Recommendations
+do not automatically reassign roles or implement changes.
+
+Agent containers and local listeners should remain available without model calls
+while idle. Relevant addressed events may invoke native harnesses or resume saved
+sessions, subject to verifying each harness's support. Bounded rounds and completion
+signals prevent discussion loops. The observer may privately recommend stopping
+unproductive discussions; the orchestrator pauses or closes the thread, cancels
+queued discussion responses, and gives a truthful stop instruction. Containers and
+unrelated implementation work continue. Unfinished questions are retained and
+reopening requires an explicit orchestrator or user decision. Exhausted subscription
+allowances pause work without automatic paid API fallback.
+
+Two distinct Claude Code connector roles separate private and corporate credentials,
+contexts, and scoped tools. General shell and unrelated tools are disabled for these
+roles. Reads come first; later writes require approval enforced by the tool layer.
+The orchestrator routes routine work, implementation of settled designs, or debate
+followed by implementation when ambiguity or tradeoffs warrant discussion.
+
+Every connector action requires an audit of actual tool attempts and results,
+including account boundary, task/thread/correlation IDs, typed action, timestamps,
+status, error code, item count, and applicable write approval. Retries retain a
+logical operation ID. Complete resource content and secrets are excluded by default;
+sensitive resource identifiers stay in protected runtime storage. Completing a task
+preserves its history rather than deleting it.
+
+These central services, listeners, observer reports, connectors, audit adapters,
+and allowance controls are documented design agreements awaiting implementation.
+The container foundation does not deploy them.

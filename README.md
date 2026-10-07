@@ -134,7 +134,7 @@ The tests reject unsafe names, invalid sizing, and multiple hypervisor targets
 before remote work, and verify cleanup account guards without deleting files.
 Python's standard library runs the suite; Ansible must already
 be installed. Use `ansible-lint src/deploy_linux_vm.yml` when a working installation
-is available. No additional dependencies are installed automatically.
+is available. Local validation does not install additional dependencies.
 
 ## Project change workflow
 
