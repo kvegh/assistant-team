@@ -316,3 +316,45 @@ fixed notification and keep message content in authenticated MCP delivery.
 No messaging candidate, persistent session deployment, or polling implementation
 is selected by this decision. Instance isolation and existing access boundaries
 remain requirements.
+
+## Set up Agents Connector with native isolated tmux sessions
+
+Implementation: `c6a79cb6a17c17a2ae8a06db97e0bfd6c81903b5`.
+
+The user selected Agents Connector and authorized a dedicated Linux account with
+the setup in its home, using the existing Claude Code, Codex and Gemini images
+and omitting Vibe. A separate Ansible role/playbook creates the password-locked
+rootless account, installs checksum-pinned upstream release 0.1.0, extends the
+existing credential-free images with tmux, and enables broker, gateway and container
+availability services. Account/home and guest details remain encrypted in Vault.
+
+The stock launcher assumes shared host paths and tmux. A small lifecycle and wake
+adapter preserves isolated home/workspace mounts and runs tmux inside continuously
+available containers. The stock broker retains SQLite and native MCP/hook message
+delivery. Only fixed event notices enter tmux; message bodies stay in authenticated
+IPC. No timed inbox polling or new orchestration platform is introduced.
+
+Stock broker IPC also exposes administrative requests. Its socket and database
+therefore remain host-private. Per-instance filtered sockets enforce authentication,
+message identity and ask/reply ownership while denying administration. No engine
+socket, host tmux socket, sudo, provider-credential sharing or broad host mount is
+provided to workers. Routing service refresh is independent of container lifetime.
+
+Rough prompts cover visible orchestrator, Codex builder, Claude investigator, Gemini
+challenger and summarizer, plus separate inactive observer/evaluator and private
+and corporate connector profiles. Worker instructions list only collaboration
+roles. Hidden profiles are not registered or mounted in worker containers. Observer
+transcript/private reporting and connector scoped tools/credentials/audit adapters
+remain pending; their prompt text does not implement these controls. Automated
+orchestration, discussion-stop enforcement and allowance handling remain pending.
+
+All nineteen local tests and Ansible syntax checks passed. Live offline validation
+passed native version/help, inside-container tmux, enforced isolation, identity and
+administration denial, SQLite persistence, all three stock hook formats, urgent
+message/question fixed-only wake and busy suppression after cooldown expiry. Five
+containers and all three enabled user services were verified running. Successful
+checks remove their synthetic fixture messages. Disk capacity remained sufficient.
+
+Native provider authentication and model sessions are not configured or launched.
+Operator login, explicit native session launch and Codex hook approval remain
+necessary. The setup performs no paid inference or external connector action.
