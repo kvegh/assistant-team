@@ -93,3 +93,19 @@ fine-grained token creation requires the user's signed-in browser; the existing
 workspace credential has broader access and is not reused for the controller.
 The private project sync and VM deployment remain pending a Source Control
 credential in AAP with read-only access to this repository.
+
+## Private repository sync and deployment access status
+
+Implementation: `f122084131c012bd325c4e9f7ac889f487f095e9`.
+
+The user supplied the repository-scoped GitHub token, which was stored in AAP's
+encrypted credential store without adding it to repository files. The private
+controller project synchronized successfully. The user confirmed the proposed
+VM hostname; that environment-specific value stays in Vault.
+
+Before deployment, the AAP MCP service rejected its configured bearer token as
+invalid or expired. The configured token matches the original connection source,
+so a stale local copy was ruled out; the exact reason for rejection is unresolved.
+Job-template creation remains unconfirmed and no VM deployment has been launched.
+The README and encrypted controller references record this state without exposing
+secrets. Authentication must be restored before controller work can continue.
