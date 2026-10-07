@@ -1,0 +1,70 @@
+---
+- name: Inspect RHEL subscription registration
+  ansible.builtin.command:
+    argv: [subscription-manager, identity]
+  register: subscription_identity
+  changed_when: false
+  failed_when: subscription_identity.rc not in [0, 1]
+
+- name: Register the guest with the existing RHEL activation key when needed
+  ansible.builtin.command:
+    argv:
+      - subscription-manager
+      - register
+      - --org
+      - "{{ provisioning.rhsm_org }}"
+      - --activationkey
+      - "{{ provisioning.rhsm_activation_key }}"
+  when: subscription_identity.rc != 0
+  changed_when: true
+
+- name: Enable RHEL BaseOS and AppStream repositories
+  ansible.builtin.command:
+    argv:
+      - subscription-manager
+      - repos
+      - --enable=rhel-9-for-x86_64-baseos-rpms
+      - --enable=rhel-9-for-x86_64-appstream-rpms
+  register: enabled_repositories
+  changed_when: false
+
+- name: Fully update installed packages with DNF
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    update_only: true
+    update_cache: true
+  register: system_update
+
+- name: Reboot to activate updated system packages
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    post_reboot_delay: 10
+  when: system_update.changed
+
+- name: Refresh guest facts after updates
+  ansible.builtin.setup:
+    gather_subset: [min, hardware]
+
+- name: Verify that no DNF updates remain
+  ansible.builtin.command:
+    argv: [dnf, --refresh, check-update]
+  register: remaining_updates
+  changed_when: false
+  failed_when: remaining_updates.rc != 0
+
+- name: Publish verified VM details to the controller
+  ansible.builtin.set_stats:
+    data:
+      linux_vm_name: "{{ deployment_vm_name }}"
+      linux_vm_ip: "{{ deployment_vm_ip }}"
+      linux_vm_distribution: "{{ ansible_facts.distribution }}"
+      linux_vm_vcpus: "{{ ansible_facts.processor_vcpus }}"
+      linux_vm_memory_mb: "{{ ansible_facts.memtotal_mb }}"
+      linux_vm_allocated_memory_mb: "{{ deployment_vm_memory_mb }}"
+      linux_vm_crash_reserved_memory_mb: "{{ guest_crash_memory_mb }}"
+      linux_vm_disk_gb: "{{ deployment_vm_disk_gb }}"
+      linux_vm_root_filesystem: "{{ guest_root_filesystem.stdout }}"
+      linux_vm_kernel: "{{ ansible_facts.kernel }}"
+      linux_vm_dnf_updated: true
+    per_host: false

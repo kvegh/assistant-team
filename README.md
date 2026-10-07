@@ -28,9 +28,11 @@ The last command displays plaintext locally; do not capture or commit its output
 ## Layout
 
 - `vars/environment.vault.yml`: encrypted environment configuration.
-- `src/deploy_linux_vm.yml`: generic golden-image Linux VM provisioning.
-- `src/templates/clean_linux_clone.sh.j2`: cleanup inside the cloned image.
-- `src/reset_linux_identity.sh`: reset cloned machine identity and SSH host keys.
+- `src/deploy_linux_vm.yml`: calls the provisioning, guest verification, and update roles.
+- `src/roles/linux_vm/`: image cloning, cleanup, identity reset, boot, and guest discovery.
+- `src/roles/linux_guest/`: guest access, identity, resource, and cleanup verification.
+- `src/roles/linux_updates/`: RHEL registration, full updates, reboot, and result publication.
+- `AGENTS.md`: project access and reproducible-change requirements.
 - `tests/test_deployment.py`: launch-validation tests without VM changes.
 - `tests/test_clone_cleanup.py`: checks that cleanup preserves protected accounts.
 - `tests/test_identity_reset.py`: identity reset with a missing legacy D-Bus directory.
@@ -129,3 +131,13 @@ before remote work, and verify cleanup account guards without deleting files.
 Python's standard library runs the suite; Ansible must already
 be installed. Use `ansible-lint src/deploy_linux_vm.yml` when a working installation
 is available. No additional dependencies are installed automatically.
+
+## Project change workflow
+
+Direct SSH with sudo is authorized for work on the project VM. Every lasting
+configuration or design change must also be represented in separate Ansible
+roles called by the project playbook, so a fresh deployment reproduces the
+result. Update the README and decision history for the final design, commit and
+push the automation and README together, and record the implementation commit
+reference in the decision history. Interim experiments and retries do not need
+individual decision entries. All environment-specific data remains encrypted.

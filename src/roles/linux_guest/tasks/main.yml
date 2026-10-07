@@ -1,0 +1,72 @@
+---
+- name: Wait for authenticated Ansible access
+  ansible.builtin.wait_for_connection:
+    timeout: 300
+
+- name: Gather guest facts
+  ansible.builtin.setup:
+    gather_subset: [min, hardware]
+
+- name: Inspect kernel crash memory reservation
+  ansible.builtin.stat:
+    path: /sys/kernel/kexec_crash_size
+    get_checksum: false
+    get_mime: false
+  register: crash_memory_file
+
+- name: Read kernel crash memory reservation
+  ansible.builtin.slurp:
+    src: /sys/kernel/kexec_crash_size
+  register: crash_memory
+  when: crash_memory_file.stat.exists
+
+- name: Calculate memory reserved for crash recovery
+  ansible.builtin.set_fact:
+    guest_crash_memory_mb: "{{ (crash_memory.content | default('MA==') | b64decode | trim | int) // 1048576 }}"
+
+- name: Verify Linux, hostname, and requested resources
+  no_log: "{{ not (vm_guest_verification_diagnostics | default(false) | bool) }}"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.system == 'Linux'
+      - ansible_facts.hostname == deployment_vm_name
+      - ansible_facts.processor_vcpus | int == deployment_vm_vcpus | int
+      - ansible_facts.memtotal_mb | int >= ((deployment_vm_memory_mb | int - guest_crash_memory_mb | int) * 0.9)
+      - ansible_facts.memtotal_mb | int <= deployment_vm_memory_mb | int
+    fail_msg: >-
+      Guest verification mismatch: OS={{ ansible_facts.system }},
+      hostname={{ ansible_facts.hostname }},
+      CPUs={{ ansible_facts.processor_vcpus }},
+      memory={{ ansible_facts.memtotal_mb }} MiB;
+      expected hostname={{ deployment_vm_name }},
+      CPUs={{ deployment_vm_vcpus }},
+      allocated memory={{ deployment_vm_memory_mb }} MiB,
+      crash memory reservation={{ guest_crash_memory_mb }} MiB.
+
+- name: Inspect the guest root filesystem
+  ansible.builtin.command:
+    argv: [findmnt, -n, -o, 'SOURCE,FSTYPE', /]
+  register: guest_root_filesystem
+  changed_when: false
+
+- name: Check that AAP installer artifacts were removed
+  ansible.builtin.find:
+    paths: /opt/sources
+    patterns: 'ansible-automation-platform-*'
+    file_type: any
+    recurse: false
+  register: remaining_installers
+
+- name: Check that the AAP service account was removed
+  ansible.builtin.command:
+    argv: [getent, passwd, "{{ provisioning.aap_service_user }}"]
+  register: remaining_aap_account
+  changed_when: false
+  failed_when: remaining_aap_account.rc not in [0, 2]
+
+- name: Verify clone cleanup
+  ansible.builtin.assert:
+    that:
+      - remaining_installers.matched == 0
+      - remaining_aap_account.rc == 2
+

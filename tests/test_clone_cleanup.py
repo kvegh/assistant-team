@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class CloneCleanupTests(unittest.TestCase):
     def assert_account_protected(self, account, automation_account, privileged=False):
-        template = (ROOT / "src/templates/clean_linux_clone.sh.j2").read_text()
+        template = (ROOT / "src/roles/linux_vm/templates/clean_linux_clone.sh.j2").read_text()
         script = template.replace(
             "{{ provisioning.aap_service_user | quote }}", shlex.quote(account)
         ).replace(

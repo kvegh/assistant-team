@@ -37,9 +37,9 @@ class DeploymentValidationTests(unittest.TestCase):
                 cwd=ROOT, env=env, text=True, capture_output=True, check=False,
             )
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("TASK [Validate deployment inputs]", result.stdout)
+        self.assertIn("TASK [linux_vm : Validate deployment inputs]", result.stdout)
         self.assertIn("failed=1", result.stdout)
-        self.assertNotIn("TASK [Inspect existing VM names]", result.stdout)
+        self.assertNotIn("TASK [linux_vm : Inspect existing VM names]", result.stdout)
 
     def test_rejects_vm_names_with_path_separators(self):
         self.assert_rejected({"vm_name": "../example"})

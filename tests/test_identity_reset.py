@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class IdentityResetTests(unittest.TestCase):
     def test_handles_a_missing_dbus_directory_and_can_run_again(self):
-        source = (ROOT / "src/reset_linux_identity.sh").read_text()
+        source = (ROOT / "src/roles/linux_vm/files/reset_linux_identity.sh").read_text()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             etc = root / "etc"
