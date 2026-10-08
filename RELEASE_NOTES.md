@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.15.2
+
+Record the successful guarded retirement and one-pass fresh AAP end-to-end deployment. The verified snapshot is 0.9.1 at commit `405c24f`; newer source changes are outside that fresh-test result. Full update/reboot, native clients, scoped SDK and two-project isolation passed without credentials or model inference.
+
 ## 0.15.1
 
 - Record prompt migration and human-readable logging decisions with implementation references and validation.

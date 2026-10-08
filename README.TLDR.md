@@ -38,3 +38,5 @@ All eight role sessions start only after enabled assignments and saved auth pass
 Existing prompt conversion is opt-in through Ansible; it preserves instructions and makes a protected backup.
 
 Human-readable diagnostics: `tail -f ~/environment-logs/events.log` (safe metadata only).
+
+The disposable fresh deployment passed in one full AAP run at version 0.9.1; newer source changes are outside that snapshot. See [DEPLOYMENT_TEST_RESULTS.md](DEPLOYMENT_TEST_RESULTS.md).
