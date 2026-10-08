@@ -43,6 +43,10 @@ Changing a role account requires stopping and starting that project. Separate pe
 
 ## Project files and sessions
 
+`~/team --list` (or `~/team list-projects`) lists initialized project names without
+opening their prompts, databases or credentials. `~/team setup --list` lists account
+profiles instead. Empty or unfinished projects and symlink paths are excluded.
+
 - `~/projects/NAME/assistant-prompt.md`: project goal and eight editable role sections.
 - `~/projects/NAME/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
 - `~/projects/NAME/db.sqlite`: project-local stock broker history.

@@ -4,6 +4,13 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.11.0
+
+Add `~/team --list` and `~/team list-projects` for sorted initialized project names
+without authentication, database/prompt reads or service actions. Exclude partial,
+invalid and symlink paths; account profile listing remains `~/team setup --list`.
+Update both operator guides. All 86 tests and production lint pass.
+
 ## 0.10.3
 
 Record the behavior-preserving Ansible readability review and its implementation.

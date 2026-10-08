@@ -9,6 +9,7 @@ Run as the runtime user. One environment per user; credentials stay local.
 cd ~/PROFILE; ./login     # PROFILE: claude-work/priv, gemini-work/priv,
                          # codex-work/priv, mistral-work/priv (each full name)
 ./login --clear           # only current profile; exit CLI and stop using projects first
+~/team --list            # initialized project names; alias: list-projects
 ~/team create-project example
 vi ~/projects.example.config                      # role -> enabled profile
 vi ~/projects/example/assistant-prompt.md          # goal and role prose

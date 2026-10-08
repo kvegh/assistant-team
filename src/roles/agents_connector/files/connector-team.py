@@ -315,6 +315,8 @@ def watch():
                 msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
 
 def main():
+    if sys.argv[1:2] in [['--list'],['list-projects']]:
+        os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if not PROJECT:
         if len(sys.argv)>1 and (sys.argv[1] in ['setup','diagnostics','version'] or len(sys.argv)>2 and sys.argv[1] in ['create-project','start','stop','restart','status','watch','attach','launch','apply-prompts','refresh-observer','deliver-observer-report']):
             os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])

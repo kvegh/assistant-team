@@ -441,6 +441,7 @@ systemd instance units without restarting existing sessions. As the runtime user
 ```bash
 ~/team setup
 ~/team setup --list
+~/team --list                    # initialized projects, without auth or DB reads
 ~/team create-project my-project
 ${EDITOR:-vi} ~/projects.my-project.config
 ${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md

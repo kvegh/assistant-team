@@ -1,6 +1,8 @@
 # project_framework
 
 Install project-scoped control, strict configs, services and concise operator guides.
+`~/team --list` and `~/team list-projects` list initialized project names without
+opening project data or requiring authentication; account profiles use `~/team setup --list`.
 
 ## Interface
 

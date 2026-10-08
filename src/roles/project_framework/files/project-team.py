@@ -132,6 +132,25 @@ def verify_project(name):
     if not (path/'initialized').is_file():raise ValueError('Project is not initialized; create-project NAME first')
     return path
 
+def list_projects():
+    """List initialized project names without opening prompts, databases or credentials."""
+    if PROJECTS.is_symlink():
+        raise ValueError('Project paths must not be symlinks')
+    names=[]
+    if PROJECTS.exists():
+        for path in sorted(PROJECTS.iterdir()):
+            if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}',path.name):
+                continue
+            if path.is_symlink() or not path.is_dir():
+                continue
+            required_files=[path/'initialized',path/'db.sqlite',path/'assistant-prompt.md']
+            workspace=path/'workspace'
+            files_complete=all(not file.is_symlink() and file.is_file() for file in required_files)
+            workspace_complete=not workspace.is_symlink() and workspace.is_dir()
+            if files_complete and workspace_complete:
+                names.append(path.name)
+    print('\n'.join(names) if names else 'No initialized projects. Use: ~/team create-project NAME')
+
 def launch_all(name):
     core=required_auth(name)
     # Credential seeding is selective; container commands do not inherit host API-key variables.
@@ -159,6 +178,9 @@ def status(name):
         print(role+': '+state+(' / native launch requested' if (core.PROFILES/role/'launched').exists() else ''))
 
 def main():
+    if sys.argv[1:2] in [['--list'],['list-projects']]:
+        if len(sys.argv)!=2:raise ValueError('Use ~/team --list or ~/team list-projects without a project name')
+        list_projects();return
     os.umask(0o077)
     if sys.argv[1:]==['version']:
         print((INSTALL/'build-info.json').read_text().strip());return
@@ -193,9 +215,9 @@ if __name__=='__main__':
     action=sys.argv[1] if len(sys.argv)>1 else 'status'
     try:
         main()
-        if action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'completed',0)
+        if action not in ['--list','list-projects'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'completed',0)
     except (ValueError,subprocess.CalledProcessError,OSError) as error:
         try:
-            if action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'failed',1)
+            if action not in ['--list','list-projects'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'failed',1)
         except (OSError,ValueError):pass
         print('Project operation failed: '+str(error),file=sys.stderr);sys.exit(1)
