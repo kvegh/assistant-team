@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.4.1
+
+Record the future20GiB clone policy and root-filesystem growth rationale. Preserve the already-expanded running VM; this documentation update performs no storage operation.
+
 ## 0.4.0
 
 Default fresh Linux VM clones to 20 GiB and expand their direct last GPT root partition/XFS filesystem after guest setup, using the clone's actual capacity rather than retaining the golden image's small filesystem. Add a separate root-growth Ansible role with protected partition-table backups, identity checks and safe idempotent reruns.

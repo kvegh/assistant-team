@@ -569,3 +569,7 @@ The user chose a fresh deployment path that does not grant this coding agent des
 ## Headless Vibe browser authorization
 
 Installed Vibe 2.26.0 stops its authorization worker when a GUI browser cannot open, before native polling begins, while retaining the generated link and later waiting-step text. The user can complete that link in a browser but the stopped worker cannot receive the result. A profile-local supported Python browser handoff reports successful handoff so native polling, expiry and PKCE exchange continue unchanged; it does not read authorization codes or bypass authentication. Native fake-gateway validation confirmed the difference without network/model calls. Session guards recognize rewritten native process titles and preserve active user work. Implementation: `4bd241e`.
+
+## Full root capacity for fresh20GiB clones
+
+The user chose20GiB as the default cloned disk capacity for future Linux VM provisioning, with automatic growth of the existing direct last GPT root partition and XFS filesystem. The golden image retains a small filesystem, so virtual resizing alone leaves capacity unused. A separate root-growth role provides protected partition-table backups, partition-identity checks and idempotence. The existing VM had already completed an explicitly authorized50GiB expansion and is preserved without shrinking or another reboot. No separate additional-disk resize feature is retained. An unchanged guest-role rerun validates current idempotence, while a fresh20GiB end-to-end VM deployment remains untested. Implementation: `282f06b`.
