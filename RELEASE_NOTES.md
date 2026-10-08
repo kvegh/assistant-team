@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.3.2
+
+Fix headless Vibe browser sign-in: a supported profile-local browser handoff lets native polling and PKCE exchange continue after the user opens the displayed link manually. Previously native browser-launch failure stopped polling while the UI retained the link and later waiting-step text. Preserve provider checks and avoid API-key fallback. Active-session protection also recognizes native CLIs that rewrite their process title.
+
+The installed Vibe 2.26.0 auth service passed a fake-gateway regression proving zero polls after failed GUI opening and successful polling/exchange after manual handoff, without network, auth or model calls. Existing sessions and credentials are preserved; exit the earlier failed session before retrying.
+
 ## 0.3.1
 
 Record the independent deployment and target diagnostics decisions with their implementing commit. Documentation update only; fresh-VM validation and provider authentication remain explicitly separate from offline deployment checks.

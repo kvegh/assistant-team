@@ -1,6 +1,6 @@
 # assistant-team
 
-Version 0.3.1 adds operator-owned local or SSH deployment and sanitized deployment
+Version 0.3.2 adds operator-owned local or SSH deployment and sanitized deployment
 metadata transfer to the target environment diagnostics. The published 0.0.1 tag
 remains the earlier baseline. Google Cloud SDK installation is authorized on the
 development VM but awaits filesystem capacity; personal Gemini requires the
@@ -576,3 +576,5 @@ Login results include provider-specific next steps. Failed personal Gemini acces
 Follow [DEPLOYMENT.md](DEPLOYMENT.md) to initialize your own encrypted destination settings and run the complete role chain on this same host or a remote host. Destination access stays with the operator; no coding-agent access or model login is needed. Controller connection-failure metadata can be replayed to the target later. Fresh-VM end-to-end installation has not been exercised here.
 
 Use `python3 src/bump-version.py --help` for the version maintenance helper. Formal releases require pushing the annotated version tag and publishing the matching GitHub release; branch version increments alone are not published releases.
+
+Vibe browser sign-in uses a scoped manual browser handoff on headless hosts so the native authorization polling continues. Open the native displayed URL manually; the wrapper neither handles codes nor bypasses provider authorization. Existing failed sessions must be exited before retrying.

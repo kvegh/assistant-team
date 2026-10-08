@@ -59,6 +59,9 @@ if pathlib.Path(sys.argv[0]).name=='login':
         diagnostic('login','completed' if code==0 else 'failed',code)
         raise SystemExit(code)
     args={'claude':['auth','login'],'codex':['-c','cli_auth_credentials_store="file"','login','--device-auth'],'gemini':[],'vibe':['--setup']}[f]
+    if f=='vibe':
+        env=status.vibe_browser_handoff(root,env)
+        print(status.display('Open the native displayed sign-in link in your browser manually. Vibe will keep polling for that authorization; no GUI browser is launched here.'),flush=True)
     if f=='gemini':
         env['NO_BROWSER']='true'
         print(status.display('Choose Sign in with Google; use the displayed browser link and verification flow.'),flush=True)

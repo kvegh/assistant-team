@@ -9,6 +9,18 @@ def display(message):
     return "[AC-Agents]: " + message
 
 
+def vibe_browser_handoff(root, environment):
+    # Python webbrowser supports BROWSER as an executable handoff. Native Vibe
+    # keeps its own OAuth request, polling, expiry and PKCE exchange unchanged.
+    root=pathlib.Path(root)
+    helper=root/'tmp/browser-handoff.sh'
+    helper.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+    if helper.is_symlink():raise ValueError('Browser handoff path must not be a symlink')
+    helper.write_text('#!/bin/sh\nexit 0\n');helper.chmod(0o700)
+    result=dict(environment);result['BROWSER']=str(helper)
+    return result
+
+
 def follow_up(flavour, provider, successful):
     if successful:
         return 'Saved credentials do not prove model entitlement. Request an explicit bounded model check before relying on access; no model check ran automatically.'
@@ -27,8 +39,10 @@ def require_idle(root):
         try:
             if process.stat().st_uid!=__import__('os').getuid():continue
             command=(process/'cmdline').read_bytes().split(b'\0')
+            title=(process/'comm').read_text().strip().lower()
+            renamed_native=any(vendor in title for vendor in ['vibe','claude','codex','gemini']) and (process/'cwd').resolve()==root
         except OSError:continue
-        if any(argument.startswith(str(root/'.install').encode()+b'/') for argument in command):
+        if renamed_native or any(argument.startswith(str(root/'.install').encode()+b'/') for argument in command):
             raise ValueError('Exit this profile’s existing native CLI/login sessions first; no process or credentials were changed')
 
 

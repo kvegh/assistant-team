@@ -78,3 +78,12 @@ class LoginDisplayTests(unittest.TestCase):
         self.assertIn('Google Cloud CLI', module.follow_up('claude', 'vertex', False))
         self.assertIn('No scoped saved credential', module.follow_up('vibe', None, False))
         self.assertIn('no model check ran automatically', module.follow_up('codex', None, True))
+
+    def test_vibe_manual_browser_handoff_reports_success_without_opening_network(self):
+        import os,subprocess,sys
+        with tempfile.TemporaryDirectory() as directory:
+            env=module.vibe_browser_handoff(directory,os.environ.copy())
+            result=subprocess.run([sys.executable,'-c',"import webbrowser; assert webbrowser.open('https://example.invalid/auth-fixture')"],env=env,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0)
+            self.assertEqual(result.stdout,'')
+            self.assertNotEqual(env.get('BROWSER'),os.environ.get('BROWSER'))
