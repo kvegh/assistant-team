@@ -117,6 +117,13 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: '0700'
+- name: Install required login helper before invoking the native launcher
+  ansible.builtin.copy:
+    src: login-result.py
+    dest: "{{ assistant_native_home }}/{{ native.directory }}/.login-result.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
 - name: Publish native installation metadata
   ansible.builtin.copy:
     dest: "{{ assistant_native_home }}/{{ native.directory }}/.native-install.json"

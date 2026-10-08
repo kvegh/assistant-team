@@ -608,3 +608,5 @@ After provisioning succeeds, recovery must skip the `provision` tag: record the 
 Vertex Claude model selection expects a complete enabled Vertex model ID, such as `claude-opus-5`, rather than `Opus` or `Opus-5`. The example is not an access check: availability depends on the operator-selected Google project and location. Invalid input now explains the format before retrying.
 
 Configuration-only AAP recovery retains separate encrypted SSH and sudo credentials; it does not assume that their passwords match.
+
+Fresh native installations install the launcher dependency before checking CLI versions. Recovery rechecks every context, including contexts with installation metadata from an interrupted run, without authenticating or invoking models.

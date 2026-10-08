@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.7
+
+Fix fresh native CLI installation ordering: install the login helper before the launcher version check. Revalidate all contexts on recovery so an interrupted installation marker cannot conceal a broken launcher. A behavioral fresh-launcher regression and playbook syntax pass. The discovered guest recovery address is kept encrypted; repeat VM creation is avoided.
+
 ## 0.6.6
 
 Use the dedicated encrypted become-password field when restoring a guest for configuration-only AAP recovery. Initial provisioning is unchanged, and separate SSH/sudo credentials remain supported.

@@ -33,3 +33,12 @@
     group: "{{ containers.runtime_user }}"
     mode: '0700'
   loop: "{{ assistant_native_auth_dirs }}"
+- name: Verify every installed native version including recovered contexts
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv: ["{{ assistant_native_home }}/{{ item.directory }}/{{ item.flavour }}", --version]
+    chdir: "{{ assistant_native_home }}/{{ item.directory }}"
+  loop: "{{ assistant_native_auth_dirs }}"
+  register: assistant_native_all_versions
+  changed_when: false
+  failed_when: assistant_native_all_versions.rc != 0 or item.version not in assistant_native_all_versions.stdout + assistant_native_all_versions.stderr
