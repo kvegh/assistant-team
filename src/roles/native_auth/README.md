@@ -4,7 +4,7 @@ Install eight isolated native work/private profile prefixes and scoped launchers
 
 ## Interface
 
-native_auth_dirs is the typed profile catalog; containers.runtime_user and assistant_source_user identify runtime/source accounts.
+native_auth_native_auth_dirs is the typed profile catalog; containers.runtime_user and assistant_source_user identify runtime/source accounts.
 
 ## Dependencies and platform
 

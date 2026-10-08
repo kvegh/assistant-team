@@ -4,6 +4,14 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.7.1
+
+Record the verified 0.7.0 AAP outcome and implementation-linked design history.
+Add the practical good-practices matrix with explicit check-mode, idempotence,
+controller configuration and CI gaps. Correct outdated fresh-test status and the
+native profile catalog documentation. AAP job 1380 verified full root allocation,
+all native versions and disposable project isolation without model calls.
+
 ## 0.7.0
 
 Apply practical Ansible good practices with typed, documented role interfaces,

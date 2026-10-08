@@ -7,8 +7,9 @@ architecture. Runtime command and messaging logic remains application code.
 Version 0.7.0 applies practical Ansible good practices: documented and typed role
 interfaces, role-owned variable names, explicit privilege changes, a reboot handler,
 and idempotent role instructions. The complete AAP recovery installation succeeded;
-this refactoring is being verified through the same configuration-only job.
-Production-profile Ansible lint and 71 local tests pass. Role READMEs describe
+the refactoring also passed the same configuration-only job (1380).
+Production-profile Ansible lint and 71 local tests pass. See the
+[good-practices review](ANSIBLE_GOOD_PRACTICES.md) for applied changes and gaps. Role READMEs describe
 check-mode limits; this is not a claim of universal check-mode support.
 
 The published 0.0.1 tag remains the earlier baseline. Google Cloud SDK 588.0.0
@@ -584,7 +585,7 @@ Login results include provider-specific next steps. Failed personal Gemini acces
 
 ## Deploy independently
 
-Follow [DEPLOYMENT.md](DEPLOYMENT.md) to initialize your own encrypted destination settings and run the complete role chain on this same host or a remote host. Destination access stays with the operator; no coding-agent access or model login is needed. Controller connection-failure metadata can be replayed to the target later. Fresh-VM end-to-end installation has not been exercised here.
+Follow [DEPLOYMENT.md](DEPLOYMENT.md) to initialize your own encrypted destination settings and run the complete role chain on this same host or a remote host. Destination access stays with the operator; no coding-agent access or model login is needed. Controller connection-failure metadata can be replayed to the target later. The normal AAP fresh installation completed after a configuration-only recovery; the separate portable local/SSH runner has not been exercised against another fresh target.
 
 Use `python3 src/bump-version.py --help` for the version maintenance helper. Formal releases require pushing the annotated version tag and publishing the matching GitHub release; branch version increments alone are not published releases.
 
@@ -596,7 +597,7 @@ New Linux VM provisioning defaults to a 20 GiB cloned disk, with the desired siz
 
 The current running VM had already been expanded to a 50 GiB virtual disk and roughly 49 GiB root filesystem, with about 41 GiB free at verification. It is preserved without shrinking or another reboot. The default for future clones is 20 GiB. No separate additional-disk resize command is provided. Protected backup files remain on the existing guest; future automation backups are private under `/var/lib/assistant-team/storage-backups`. A partition-table backup is not a data backup, and XFS growth cannot be reversed by shrinking.
 
-The root-growth role passed an unchanged rerun on the expanded guest; a fresh 20 GiB end-to-end VM deployment has not yet been run.
+The root-growth role passed an unchanged rerun on the expanded guest and ran during the fresh 20 GiB AAP deployment.
 
 ## Work Vertex login
 
@@ -608,7 +609,7 @@ The immutable versioned SDK archive is checksum-pinned. Its payload was verified
 
 `src/deploy_complete_linux_vm.yml` provisions an isolated VM from its own Vault-encrypted definition, fully updates it, grows the cloned root filesystem and installs the entire environment through normal AAP jobs. The committed test definition is separate from the existing deployment. Use a dedicated job template with the hypervisor inventory, machine and Vault credentials, and the pinned certified collection available in its execution environment. Do not retain obsolete disk-size overrides.
 
-After provisioning succeeds, recovery must skip the `provision` tag: record the discovered guest address in the encrypted `recovery.guest_ip` field and rerun with `guest_config`. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. An actual fresh deployment has not yet been verified. AAP project revision metadata is recorded when available.
+After provisioning succeeds, recovery must skip the `provision` tag: record the discovered guest address in the encrypted `recovery.guest_ip` field and rerun with `guest_config`. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. The fresh AAP deployment completed through job 1376 after the launcher bootstrap fix; no provider credentials or model calls were used. AAP project revision metadata is recorded when available.
 
 Vertex Claude model selection expects a complete enabled Vertex model ID, such as `claude-opus-5`, rather than `Opus` or `Opus-5`. The example is not an access check: availability depends on the operator-selected Google project and location. Invalid input now explains the format before retrying.
 
