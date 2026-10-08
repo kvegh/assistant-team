@@ -505,3 +505,37 @@ no real project or provider session was started or changed. The previously
 verified project instance templates and lifecycle were preserved. A plaintext
 audit of sixty-four repository files found no environment identifiers/access
 secrets, and runtime metadata remains Vault-encrypted.
+
+## Share project artifacts while retaining private role context
+
+Implementation: `8ea9a05f5fc7e6359eff3154d26e5057aa22efe7`.
+
+The user requested a shared project workspace. Creation now prepares a project
+workspace directory, mounted at /workspace/shared in role containers. All seven
+working roles receive read/write artifact access; the observer receives read-only
+access. Native homes, credentials, role instructions and full prompt/account
+contexts remain separate. Connector tools stay disabled and prompts permit
+publication only of explicitly authorized project results. Codex uses its native
+workspace-write sandbox with on-request approval, without bypassing approvals.
+Agents coordinate file/task ownership through the orchestrator rather than a new
+custom locking mechanism.
+
+The separate project_workspace Ansible role adds missing directories without
+modifying existing contents. Active containers are preserved; their new mounts
+are applied on a normal project stop/start. Only stopped definitions with differing
+mounts are rebuilt, retaining all bind-mounted state. The home README and project
+documentation explain both host and container paths and this migration behavior.
+
+Thirty-four local tests, playbook syntax and deployment passed. Live disposable
+project checks verified all seven writer roles, cross-role artifact reads, observer
+read success/write denial, private-context separation, project isolation, event
+streaming and persistent database/lifecycle behavior using dummy harnesses only.
+Fixtures were removed; no provider authentication or model requests were made.
+A plaintext audit of sixty-five repository files found no environment identifiers
+or access secrets, and metadata remains Vault-encrypted. No dependencies, images
+or VM resources were changed.
+
+Work Claude is intended to use Vertex AI, while the current authentication/preflight
+layer supports OAuth files. The guide marks Vertex configuration pending and does
+not recommend work OAuth login. Real project startup requires the selected work
+backend; the shared-workspace validation does not claim authenticated model startup.
