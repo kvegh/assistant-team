@@ -606,3 +606,5 @@ The immutable versioned SDK archive is checksum-pinned. Its payload was verified
 After provisioning succeeds, recovery must skip the `provision` tag: record the discovered guest address in the encrypted `recovery.guest_ip` field and rerun with `guest_config`. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. An actual fresh deployment has not yet been verified. AAP project revision metadata is recorded when available.
 
 Vertex Claude model selection expects a complete enabled Vertex model ID, such as `claude-opus-5`, rather than `Opus` or `Opus-5`. The example is not an access check: availability depends on the operator-selected Google project and location. Invalid input now explains the format before retrying.
+
+Configuration-only AAP recovery retains separate encrypted SSH and sudo credentials; it does not assume that their passwords match.

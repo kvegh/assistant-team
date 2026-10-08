@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.6
+
+Use the dedicated encrypted become-password field when restoring a guest for configuration-only AAP recovery. Initial provisioning is unchanged, and separate SSH/sudo credentials remain supported.
+
 ## 0.6.5
 
 Record explicit Vault input and the preference for suitable Ansible/certified content. Add exploratory future consideration of our own modules/collection; no runtime or active deployment changes.
