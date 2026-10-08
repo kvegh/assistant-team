@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.3.3
+
+Record why headless Vibe sign-in needed a manual browser handoff and the implementing fix. Documentation only; provider authorization and model access remain separate.
+
 ## 0.3.2
 
 Fix headless Vibe browser sign-in: a supported profile-local browser handoff lets native polling and PKCE exchange continue after the user opens the displayed link manually. Previously native browser-launch failure stopped polling while the UI retained the link and later waiting-step text. Preserve provider checks and avoid API-key fallback. Active-session protection also recognizes native CLIs that rewrite their process title.
