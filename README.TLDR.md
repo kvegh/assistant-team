@@ -3,6 +3,7 @@
 Run as the runtime user. One environment per user; credentials stay local.
 
 ```sh
+~/team --help             # every command, parameters and brief explanation
 ~/team version            # installed source version/build
 ~/team setup --list       # enabled / installed / credentials saved (not model verification)
 ~/team setup             # choose profiles, then optional native login

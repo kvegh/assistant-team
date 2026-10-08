@@ -6,6 +6,10 @@ opening project data or requiring authentication; account profiles use `~/team s
 
 ## Interface
 
+`~/team --help` describes all public commands. Unknown commands explicitly report
+`Invalid command`; missing project arguments remain distinct. Help needs no auth
+and starts no service.
+
 containers.runtime_user is the account; assistant_build_commit optionally overrides source revision metadata.
 
 ## Dependencies and platform

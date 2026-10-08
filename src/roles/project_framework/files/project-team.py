@@ -5,6 +5,41 @@ INSTALL = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL.parent
 PROJECTS = ACCOUNT_HOME/'projects'
 ROLES = ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']
+PROJECT_ACTIONS = ['create-project','start','stop','restart','status','watch','attach','launch',
+                   'apply-prompts','refresh-observer','deliver-observer-report','preflight',
+                   'launch-all','stop-containers']
+GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup','diagnostics']
+HELP = '''Usage: ~/team COMMAND [PARAMETERS]
+
+Environment and discovery:
+  --help | -h | help                  Show all supported commands; no project required.
+  --list | list-projects             List initialized project names; no private content read.
+  version                            Show installed version and build metadata.
+  setup                              Select enabled account profiles; login is optional.
+  setup --list                       List enabled/installed profiles and saved-auth status.
+  diagnostics --export PATH          Export safe environment diagnostic metadata to PATH.
+
+Projects:
+  create-project NAME                Create project directories, prompts, configs and database.
+  start NAME                         Check authentication and start this project's team.
+  stop NAME                          Stop this project's target and services.
+  restart NAME                       Check authentication and restart this project's team.
+  status NAME                        Show this project's target and role/container states.
+  watch NAME                         Follow messages; Ctrl-C stops only the viewer.
+  attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
+  launch NAME ROLE                   Launch one role after checking project authentication.
+  preflight NAME                     Validate enabled role assignments and saved authentication.
+  launch-all NAME                    Launch all eight native role sessions after preflight.
+  stop-containers NAME               Stop only this project's role containers.
+  apply-prompts NAME                 Render project instructions; effective on next launch.
+  refresh-observer NAME              Update the private observer's discussion snapshot.
+  deliver-observer-report NAME       Deliver its report privately to the orchestrator.
+
+NAME: 1-40 lowercase letters/digits, underscores or hyphens; start with a letter/digit.
+ROLE: orchestrator, builder, investigator, challenger, summarizer, observer,
+      private-connector or corporate-connector.
+Account profile listing uses setup --list; project listing uses --list.
+'''
 
 def settings():
     spec=importlib.util.spec_from_file_location('environment_config',INSTALL/'routing/environment-config.py')
@@ -178,6 +213,13 @@ def status(name):
         print(role+': '+state+(' / native launch requested' if (core.PROFILES/role/'launched').exists() else ''))
 
 def main():
+    action=sys.argv[1] if len(sys.argv)>1 else None
+    if action is None:raise ValueError('A command is required. Use ~/team --help')
+    if action not in PROJECT_ACTIONS+GLOBAL_ACTIONS:
+        raise ValueError('Invalid command: '+action+'. Use ~/team --help for supported commands')
+    if action in ['--help','-h','help']:
+        if len(sys.argv)!=2:raise ValueError('Use ~/team --help without additional arguments')
+        print(HELP,end='');return
     if sys.argv[1:2] in [['--list'],['list-projects']]:
         if len(sys.argv)!=2:raise ValueError('Use ~/team --list or ~/team list-projects without a project name')
         list_projects();return
@@ -190,7 +232,7 @@ def main():
     if sys.argv[1:2]==['diagnostics']:
         if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use ~/team diagnostics --export PATH')
         diagnostics().export(ACCOUNT_HOME,sys.argv[3]);return
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['create-project','start','stop','restart','status','watch','attach','launch','apply-prompts','refresh-observer','deliver-observer-report','preflight','launch-all','stop-containers']);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
     if a.action=='create-project':create(a.project);return
     verify_project(a.project)
     if a.action in ['start','restart']:
@@ -212,12 +254,12 @@ def main():
             else:core.run(['podman','exec','-it',core.container(a.role),'tmux','attach-session','-t','native'])
 
 if __name__=='__main__':
-    action=sys.argv[1] if len(sys.argv)>1 else 'status'
+    action=sys.argv[1] if len(sys.argv)>1 else None
     try:
         main()
-        if action not in ['--list','list-projects'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'completed',0)
+        if action in PROJECT_ACTIONS+['setup'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'completed',0)
     except (ValueError,subprocess.CalledProcessError,OSError) as error:
         try:
-            if action not in ['--list','list-projects'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'failed',1)
+            if action in PROJECT_ACTIONS+['setup'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'failed',1)
         except (OSError,ValueError):pass
         print('Project operation failed: '+str(error),file=sys.stderr);sys.exit(1)

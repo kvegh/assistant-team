@@ -43,6 +43,11 @@ Changing a role account requires stopping and starting that project. Separate pe
 
 ## Project files and sessions
 
+`~/team --help` shows every supported command, required parameters and a brief
+explanation without reading authentication or starting services. Unknown commands
+explicitly report `Invalid command`; missing required parameters are a separate error.
+Use `create-project NAME`, not `create NAME`.
+
 `~/team --list` (or `~/team list-projects`) lists initialized project names without
 opening their prompts, databases or credentials. `~/team setup --list` lists account
 profiles instead. Empty or unfinished projects and symlink paths are excluded.

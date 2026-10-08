@@ -315,13 +315,18 @@ def watch():
                 msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
 
 def main():
-    if sys.argv[1:2] in [['--list'],['list-projects']]:
+    if sys.argv[1:2] in [['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if not PROJECT:
-        if len(sys.argv)>1 and (sys.argv[1] in ['setup','diagnostics','version'] or len(sys.argv)>2 and sys.argv[1] in ['create-project','start','stop','restart','status','watch','attach','launch','apply-prompts','refresh-observer','deliver-observer-report']):
-            os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
-        raise SystemExit('A project name is required. Use: ~/team create-project NAME; ~/team start NAME; ~/team attach NAME ROLE. The original default group is retired.')
+        project_actions=['create-project','start','stop','restart','status','watch','attach','launch',
+                         'apply-prompts','refresh-observer','deliver-observer-report','preflight',
+                         'launch-all','stop-containers']
+        if len(sys.argv)==2 and sys.argv[1] in project_actions:
+            raise SystemExit('A project name is required for '+sys.argv[1]+'. Use ~/team --help for parameters')
+        os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if pathlib.Path(sys.argv[0]).name=='tmux':wake(sys.argv[1:]);return
+    if len(sys.argv)>1 and sys.argv[1] not in ['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']:
+        raise SystemExit('Invalid command: '+sys.argv[1]+'. Use ~/team --help for supported commands')
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']);parser.add_argument('name',nargs='?',choices=ALL)
     a=parser.parse_args()
     if a.action=='init':initialize()

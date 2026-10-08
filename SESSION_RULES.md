@@ -231,3 +231,8 @@ material uncertainty rather than inventing history.
 This file supports consistent future sessions. Rebuilding the software environment
 requires the repository's playbooks and operator-owned encrypted configuration;
 this rules file alone is not a deployment bundle or authentication backup.
+
+## Operator command usability
+
+- Provide complete `~/team --help` with supported commands, parameters and brief explanations. Help and project listing must not require authentication or start services.
+- Unknown commands must explicitly say `Invalid command`; distinguish them from valid commands with missing parameters. Do not silently invent aliases such as `create` for `create-project`.

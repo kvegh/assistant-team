@@ -4,6 +4,13 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.12.0
+
+Add complete `~/team --help` with commands, parameters and explanations. Unknown
+commands explicitly report `Invalid command`; missing project arguments remain
+a distinct error. Help needs no auth or service actions, environment commands
+route with or without a selected project, and all 90 tests pass.
+
 ## 0.11.1
 
 Record verified project listing deployment and both successful runtime aliases.
