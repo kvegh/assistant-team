@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.5.1
+
+Record scoped work SDK installation, correct archive pinning and Vertex provider selection. Documentation only; Google login and model entitlement still belong to the operator.
+
 ## 0.5.0
 
 Install the approved Google Cloud CLI 588.0.0 in isolated Claude/Gemini work contexts, sharing only immutable program files. Scoped `./login` now guides user-owned Vertex project/location/model selection and ADC authentication; no cloud APIs, billing settings or model requests were invoked by installation.

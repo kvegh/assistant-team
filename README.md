@@ -1,6 +1,6 @@
 # assistant-team
 
-Version 0.5.0 adds operator-owned local or SSH deployment and sanitized deployment
+Version 0.5.1 adds operator-owned local or SSH deployment and sanitized deployment
 metadata transfer to the target environment diagnostics. The published 0.0.1 tag
 remains the earlier baseline. Google Cloud SDK 588.0.0 is installed and verified in the
 development VM's isolated work profiles; personal Gemini requires the
