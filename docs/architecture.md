@@ -187,6 +187,15 @@ containers or models. Start first checks all required saved subscription/OAuth
 credential formats and then activates a systemd instance target with ordered
 broker, gateway and eight native tmux harnesses. Native approvals remain enabled.
 Stop and restart are project-scoped and preserve disk state; automatic restoration
-of a previous conversation is not claimed. Existing default commands remain valid.
+of a previous conversation is not claimed. The original default runtime is retired; operator commands require a project.
 Projects are not boot-enabled automatically. Resource scaling for multiple busy
 teams and continuous orchestration/evaluation remain unverified or unimplemented.
+
+## Retire the redundant default runtime
+
+A separate retirement role stops/disables/removes only the original non-instance
+units and exact original container definitions. Their bind-mounted profile homes,
+credentials, editable prompt defaults and SQLite data are preserved. Project
+instance templates, databases and containers are not targeted. The foundation
+role no longer creates or starts original services/containers on rerun.
+Operator commands require a project name and there is no all-projects master.

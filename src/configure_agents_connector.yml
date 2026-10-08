@@ -28,6 +28,8 @@
   roles:
     - role: podman_host
       tags: [connector_host]
+    - role: retire_legacy
+      tags: [retire_legacy]
     - role: agents_connector
       tags: [connector_setup]
     - role: native_auth

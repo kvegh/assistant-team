@@ -376,81 +376,20 @@ Official references: [Gemini authentication](https://geminicli.com/docs/get-star
 [Vibe setup](https://docs.mistral.ai/vibe/code/cli/install-setup), and
 [portable Python](https://github.com/astral-sh/python-build-standalone/blob/main/docs/running.rst).
 
-### Eight available roles and user controls
+### Project-only roles and lifecycle
 
-Eight isolated containers are running with inside-container tmux: orchestrator,
-builder, investigator, challenger, summarizer, observer, private-connector and
-corporate-connector. They initially contain idle shells. Native model sessions
-require explicit authentication and launch. Mistral is installed locally but has
-no assigned connector-team role. The builder uses Codex, challenger uses Gemini,
-and the current rough other profiles use Claude.
+The redundant original non-project target, three services and eight container
+objects are retired. Saved profile homes, authentication state, prompt defaults
+and the original SQLite database remain; no actual project state is removed.
+Ansible reruns do not recreate or start the original group. Commands without a
+project name return a helpful error rather than starting shared default containers.
 
-```bash
-cd ~
-./team launch orchestrator
-./team attach orchestrator
-./team watch
-./team apply-prompts
-```
-
-The source `~/assistant-prompts.md` sits outside the five provider directories and
-contains one `# Role: name` section per role. Ansible seeds it without overwriting
-operator edits. Application extracts only each role's section, adding the permitted
-collaboration roster to visible workers. The whole source file is never mounted
-into containers. Launch applies the current prompts; active conversations receive
-changes on their next launch. Runtime edits are not copied into plaintext Git;
-import sensitive lasting additions explicitly through Vault when needed.
-
-`watch` subscribes to the stock broker's live worker stream without inbox polling
-or model calls. `attach` connects to the native tmux UI; Ctrl-b then d detaches.
-An already active role is attached rather than relaunched. Codex's `/hooks` approval
-remains an operator requirement. Native permission prompts remain; builder starts
-read-only. No permission-bypass flags or broad host mounts are introduced.
-
-Only five collaboration roles are registered in the worker broker. Its stock
-administrative socket and SQLite remain host-private; per-instance IPC filtering
-checks authentication, message identity and ask/reply ownership and denies admin
-requests. All containers retain rootless resource/capability/rootfs restrictions,
-own persistent homes/workspaces, no sudo/engine/tmux host sockets or host-loopback
-access. Credentials are reused only from the chosen provider boundary, without
-sharing complete mutable provider state.
-
-The observer has a read-only permitted discussion snapshot mount, independent
-workspace and private report. `./team refresh-observer` updates that snapshot;
-`./team deliver-observer-report` copies its `report.md` only into the orchestrator's
-`private-review.md`. Workers cannot access the observer's identity/source section
-or reports. This is a manual bridge, not continuous automatic evaluation. The
-private/corporate connector containers have native tools disabled and no external
-connector plugins/account credentials; permission enforcement and tool-action
-auditing must precede actual connector use. Starting containers alone does not
-implement model-driven orchestration or automatic discussion-stop behavior.
-
-### Group lifecycle
-
-As the dedicated runtime account, set the user-bus environment if needed:
-
-```bash
-export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-systemctl --user start assistant-connector.target
-systemctl --user stop assistant-connector.target
-systemctl --user restart assistant-connector.target
-systemctl --user status assistant-connector.target
-```
-
-Only the target is enabled. It requires the broker, gateway and container services;
-`PartOf` propagates group stop/restart. Stop explicitly controls all eight named
-containers, preserves homes/SQLite and clears launch markers. Start restores idle
-tmux shells, without automatic model launch/resume. Target stop can return while
-child stop jobs finish; inspect member service states for complete shutdown.
-Routing-service refresh remains independent of container lifetime.
-
-The opt-in lifecycle check refuses active native work:
-
-```bash
-ansible-playbook -i 'localhost,' src/configure_agents_connector.yml \
-  --tags connector_services -e assistant_connector_validate_lifecycle=true
-```
+All eight role containers and native sessions belong to the selected project.
+Only five collaboration roles join its worker broker; the observer and private/
+corporate connectors remain separately scoped. Observer snapshots/private report
+delivery remain manual, and external connector tools remain unconfigured.
+The runtime home README starts with a short create/edit/start/attach workflow.
+There is no all-projects master target.
 
 ### Project framework
 
@@ -491,7 +430,7 @@ restart launches new CLI sessions, without claiming automatic conversation resum
 Only five collaboration roles join its broker; the observer and connector roles
 remain separately scoped. Observer snapshots/private report delivery remain manual,
 and external connector tools and automated orchestration remain unconfigured.
-Legacy commands without a project still control the original default group.
+Every user-facing lifecycle/viewer/attach command requires a project name.
 
 The home README documents these commands and project-specific prompt/review
 operations. Update this layer with `--tags project_framework`. Explicit offline
@@ -500,14 +439,12 @@ provider credentials are fabricated or native models invoked.
 
 ### Validation and current limits
 
-All five local installations pass host-native version/help checks. All eight
-containers are available; native authentication and model sessions remain pending.
-Thirty-one local tests passed, including scoped login paths, work/private credential
+All five local installations pass host-native version/help checks. Native project sessions require operator authentication; setup does not launch
+models.
+Thirty-two local tests passed, including scoped login paths, work/private credential
 seeding, retained refresh state, hidden prompt extraction and named-eight-container
 stop. Live checks verify a read-only observer context and no provider configuration
-at the account's global home paths. The earlier target stop/start/restart check
-preserved SQLite and persistent state; lifecycle checks are not repeated during
-possible operator authentication. New control checks cover the stock live viewer
+at the account's global home paths. The project lifecycle check preserved SQLite and persistent state. New control checks cover the stock live viewer
 and private report routing without invoking models.
 
 The VM remains at its approved allocation. Idle containers use little memory;

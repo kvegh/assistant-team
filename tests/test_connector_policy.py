@@ -98,12 +98,19 @@ class ConnectorPolicyTests(unittest.TestCase):
             path = self.profiles / name
             path.mkdir(exist_ok=True)
             (path / 'launched').touch()
-        with mock.patch.object(sys, 'argv', ['connector-team.py', 'stop']), mock.patch.object(team.subprocess, 'run') as exists, mock.patch.object(team, 'run') as execute:
+        with mock.patch.object(team, 'PROJECT', 'sample'), mock.patch.object(sys, 'argv', ['connector-team.py', 'stop']), mock.patch.object(team.subprocess, 'run') as exists, mock.patch.object(team, 'run') as execute:
             exists.return_value.returncode = 0
             team.main()
             command = execute.call_args.args[0]
-        self.assertEqual(command, ['podman', 'stop', '--time', '10', *['ac-' + n for n in team.ALL]])
+        self.assertEqual(command, ['podman', 'stop', '--time', '10', *['acp-sample-' + n for n in team.ALL]])
         self.assertFalse(any((self.profiles / n / 'launched').exists() for n in team.ALL))
+
+    def test_no_project_command_refuses_before_touching_containers(self):
+        import sys
+        with mock.patch.object(team, 'PROJECT', None), mock.patch.object(sys, 'argv', ['team', 'stop']), mock.patch.object(team, 'run') as execute:
+            with self.assertRaisesRegex(SystemExit, 'project name is required'):
+                team.main()
+            execute.assert_not_called()
 
     def test_arbitrary_text_and_unsupported_tmux_operations_are_rejected(self):
         with mock.patch.object(team, 'run') as execute:

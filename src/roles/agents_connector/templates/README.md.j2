@@ -1,5 +1,17 @@
 # Assistant team usage
 
+## Quick start after provider authentication
+
+```bash
+~/team create-project my-project
+${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+~/team start my-project
+~/team attach my-project orchestrator
+```
+
+Tell the orchestrator what to do. In another terminal: `~/team watch my-project`.
+Stop with `~/team stop my-project`. No manual target creation is needed.
+
 ## Enter the runtime account
 
 From the VM's automation account:
@@ -108,92 +120,43 @@ The initial VM has limited RAM and disk space. Parallel active projects multiply
 native processes/workspaces, while reusing the installed images and vendor logins.
 Resource capacity for multiple busy teams is not yet verified.
 
-## Legacy default group
+## Project-only control
+
+The original non-project target/services and containers are retired. Use a project
+name with every team lifecycle, attach, viewer and prompt command. There is no
+all-projects master target. Saved original profile homes, prompt defaults and
+SQLite data are retained; project creation reuses only the profile specifications
+and editable prompt defaults, never the original database or provider state.
+
+After authentication, `./team start NAME` launches all eight native sessions;
+`./team attach NAME orchestrator` opens the orchestrator's tmux pane. Other roles
+are builder, investigator, challenger, summarizer, observer, private-connector and
+corporate-connector. Claude uses claude-work except the Private Connector's
+claude-priv. Builder uses Codex and challenger Gemini. An already active role
+must be attached rather than launched again.
+
+## Edit project prompts and deliver private review
 
 ```bash
-systemctl --user start assistant-connector.target
-systemctl --user stop assistant-connector.target
-systemctl --user restart assistant-connector.target
-systemctl --user status assistant-connector.target
-systemctl --user status assistant-connector-broker.service assistant-connector-gateway.service assistant-connector-containers.service
+${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+./team apply-prompts my-project
+./team refresh-observer my-project
+./team attach my-project observer
+./team deliver-observer-report my-project
 ```
 
-Only the target is enabled for startup. It controls the broker, filtered IPC
-gateway and all eight role containers. Stop/restart deliberately interrupts native
-sessions; homes, authentication state, workspaces and SQLite are preserved. Stop
-may return while child stop jobs finish; inspect member states for complete stop.
-Start restores idle tmux shells. It does not automatically launch models or resume
-conversations.
+Keep exactly one `# Role: name` header for each of the eight roles. Instructions
+include only the project goal and selected role section; hidden observer identity
+is excluded from worker instructions. Prompt changes take effect on next native
+launch. The global ~/assistant-prompts.md remains the editable seed for newly
+created projects and is not mounted into containers.
 
-## Launch a role and attach its native session
-
-```bash
-cd ~
-./team launch orchestrator
-./team attach orchestrator
-```
-
-Use `builder`, `investigator`, `challenger`, `summarizer`, `observer`,
-`private-connector` or `corporate-connector` in place of `orchestrator`. Authenticate
-first. Claude roles use claude-work except the Private Connector, which uses
-claude-priv. Builder uses Codex; challenger uses Gemini. Mistral is installed for
-native use but has no assigned team role yet.
-
-Launch is explicit and can invoke the provider; no launch occurred during setup.
-An already active role must be attached rather than launched again. Detach tmux
-with Ctrl-b then d; the container remains running. Talk to the orchestrator through
-its native CLI. Codex's `/hooks` approval remains an explicit native requirement.
-Native tool and permission prompts remain enabled; builder starts read-only.
-
-## Watch discussions
-
-```bash
-./team watch
-```
-
-This human viewer subscribes to the stock broker's live worker message stream.
-It does not poll inboxes or invoke models. Ctrl-C closes only the viewer. It shows
-new worker messages after attachment; it does not expose private observer reports
-or connector account contexts. The model-driven orchestration loop is not yet
-implemented merely by starting these containers.
-
-## Edit all role prompts in one file
-
-```bash
-${EDITOR:-vi} ~/assistant-prompts.md
-./team apply-prompts
-```
-
-Keep exactly one `# Role: name` header for each of the eight roles. Each role gets
-only its own section and the permitted collaboration roster. The source file is
-outside all five provider directories and is never mounted into containers.
-Ansible seeds it without overwriting your edits. Launch applies the latest prompts;
-existing conversations pick up changes on their next explicit launch. The observer
-section and identity are excluded from worker instructions. Do not copy private
-reports into worker-readable threads. Store sensitive lasting prompt additions in
-Vault when explicitly importing them into reproducible repository configuration.
-
-## Private observer snapshot and report
-
-```bash
-./team refresh-observer
-./team launch observer
-./team attach observer
-./team deliver-observer-report
-```
-
-Refresh exports permitted worker discussion to the observer's read-only context
-mount. It does not mount the broker database or corporate/private account data.
-Ask the observer to write its quality/design/stop recommendation to `report.md`
-in its own workspace. Delivery copies that report only to the orchestrator's
-`private-review.md`; tell the orchestrator to read it. This is a manual scoped
-bridge, not an automatic continuous evaluator. Reports do not trigger automatic
-reassignment, design changes or discussion cancellation.
-
-The connector containers have native tools disabled and no external connector
-plugins/account credentials configured. Their provider login is distinct from
-mail/calendar credentials. They cannot perform connector actions until scoped
-tools, independent approval and actual execution audit are implemented.
+Refresh provides the observer a read-only snapshot. Ask it to write report.md in
+its workspace; delivery copies it only to the orchestrator's private-review.md.
+This remains a manual bridge, not continuous evaluation or automatic reassignment.
+Connector roles have no external mail/calendar tools or execution audit yet.
+Do not import edited prompts or native authentication into Git without applying
+the repository's sensitive-data/Vault policy.
 
 ## Reproduce and verify
 
@@ -204,4 +167,5 @@ and instance unit templates without restarting existing sessions.
 `--tags native_auth,auth_sources` updates local installations and prompt/auth sources
 without restarting the service group. Offline model-free checks cover native
 versions/help, constrained containers, hooks, message delivery and event wake.
-Lifecycle stop/start checks are opt-in and refuse active native work.
+The opt-in validate_projects.py uses disposable projects and dummy harnesses
+without provider/model calls; it checks event streaming and project isolation.
