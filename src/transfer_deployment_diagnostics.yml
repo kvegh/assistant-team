@@ -43,10 +43,22 @@
         dest: "{{ diagnostic_home }}/environment-logs/deployment-{{ assistant_deployment_run_id }}.jsonl"
         owner: "{{ hostvars.localhost.destination.runtime_user }}"
         mode: "0600"
+    - name: Provide human-readable deployment metadata beside its JSON counterpart
+      ansible.builtin.copy:
+        dest: "{{ diagnostic_home }}/environment-logs/deployment-{{ assistant_deployment_run_id }}.log"
+        content: |
+          {% for line in lookup('file', assistant_safe_deployment_metadata).splitlines() %}
+          {% set event = line | from_json %}
+          {{ event.timestamp }} | deployment | {{ event.result }} | exit {{ event.exit_code }}
+          {% if event.module is defined %}Module: {{ event.module }}
+          {% endif %}Event: {{ event.correlation_id }}
+          {% endfor %}
+        owner: "{{ hostvars.localhost.destination.runtime_user }}"
+        mode: "0600"
     - name: Inspect regular deployment metadata files without following links
       ansible.builtin.find:
         paths: "{{ diagnostic_home }}/environment-logs"
-        patterns: "^deployment-[a-f0-9]{32}\\.jsonl$"
+        patterns: "^deployment-[a-f0-9]{32}\\.(jsonl|log)$"
         use_regex: true
         file_type: file
         follow: false
@@ -56,4 +68,4 @@
         path: "{{ item.path }}"
         state: absent
         follow: false
-      loop: "{{ (diagnostic_retained_files.files | sort(attribute='mtime'))[:-32] }}"
+      loop: "{{ (diagnostic_retained_files.files | sort(attribute='mtime'))[:-64] }}"

@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.15.0
+
+- Provide protected, rotated human-readable runtime logs alongside correlated JSON; deployment transfers include readable logs too.
+- Keep exported diagnostics JSON-only and reject symlink log destinations.
+
 ## 0.14.0
 
 - Add explicit, backup-protected migration of edited legacy project prompts to bracket sections without restarting sessions.

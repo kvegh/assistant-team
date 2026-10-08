@@ -34,6 +34,30 @@ class DiagnosticTests(unittest.TestCase):
             path.unlink();path.symlink_to(pathlib.Path(home)/'private')
             with self.assertRaises(ValueError):module.export(home,pathlib.Path(home)/'bad.tar.gz')
 
+    def test_text_log_correlates_and_explains_failure_without_arbitrary_text(self):
+        with tempfile.TemporaryDirectory() as home:
+            module.record(home,'start','failed',1)
+            directory=pathlib.Path(home)/'environment-logs'
+            event=json.loads((directory/'events.jsonl').read_text())
+            text=(directory/'events.log').read_text()
+            self.assertIn('start | failed | exit 1',text)
+            self.assertIn(event['correlation_id'],text)
+            self.assertIn('Inspect systemctl --user status',text)
+            self.assertEqual((directory/'events.log').stat().st_mode & 0o777,0o600)
+
+    def test_both_log_formats_rotate_and_reject_symlinks(self):
+        with tempfile.TemporaryDirectory() as home:
+            module.record(home,'status','completed',0)
+            directory=pathlib.Path(home)/'environment-logs'
+            for name in ['events.log','events.jsonl']:
+                (directory/name).write_text('x'*1048577)
+            module.record(home,'status','completed',0)
+            self.assertTrue((directory/'events.log.1').exists())
+            self.assertTrue((directory/'events.jsonl.1').exists())
+            (directory/'events.log').unlink()
+            (directory/'events.log').symlink_to(directory/'private')
+            with self.assertRaises(ValueError):module.record(home,'status','completed',0)
+
     def test_unknown_failure_text_cannot_be_logged(self):
         with tempfile.TemporaryDirectory() as home:
             with self.assertRaises(ValueError):module.record(home,'start','exception containing fixture secret')

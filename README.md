@@ -691,3 +691,11 @@ Migration retains active goal and role instructions, converts meaningful Markdow
 heading text to active plain text, and comments out the known rough-template guidance.
 It writes a protected backup beside the project prompt before atomic replacement.
 The default empty list leaves every existing project unchanged; no sessions restart.
+
+Human-readable runtime diagnostics are in `~/environment-logs/events.log`, alongside
+`events.jsonl`. Follow them with `tail -f ~/environment-logs/events.log`. Both use
+matching event IDs, protected permissions, and a 1 MiB rotation with three backups.
+Failure guidance is fixed safe text, not raw native output; use the user journal
+for detailed service diagnostics. Deployment transfers also provide protected
+`deployment-<run-id>.log` alongside JSON, retaining up to 32 runs. Diagnostic exports
+remain validated JSON-only; arbitrary text files are never exported.
