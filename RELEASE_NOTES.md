@@ -4,6 +4,16 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.3.0
+
+Add a concrete user-operated deployment path for both the current host and SSH destinations, using operator-owned encrypted configuration and the complete certified Podman/native installation role chain. It does not need this coding agent’s destination access or authenticate providers during installation.
+
+- Preserve Ansible’s exit code and collect protected controller metadata; transfer prescribed safe events to the target environment logs when reachable.
+- Replay an earlier safe spool explicitly after connection/account failures. Metadata export validates field values and refuses symlink traversal; raw output, access data, credentials and conversations stay excluded.
+- Provide an independent deployment guide and version increment helper. A formal release must also push its annotated tag and publish GitHub notes.
+
+Local/SSH command-generation, initializer, replay, schema and failure cases pass offline tests and Ansible syntax checks. No fresh-VM end-to-end installation has yet been performed. SDK installation and provider authentication remain operator-selected prerequisites.
+
 ## 0.2.5
 
 Document the login follow-up policy and implementing commit. No additional authentication attempts, model calls or runtime behavior changes.

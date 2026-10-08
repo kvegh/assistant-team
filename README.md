@@ -1,9 +1,10 @@
 # assistant-team
 
-Version 0.2.1 documents selectable environment profiles, authoritative per-project
-assignments and account-isolated native role state. Portable deployment is being
-committed separately. The published 0.0.1 tag remains the earlier baseline;
-work Vertex SDK installation is pending approval.
+Version 0.3.0 adds operator-owned local or SSH deployment and sanitized deployment
+metadata transfer to the target environment diagnostics. The published 0.0.1 tag
+remains the earlier baseline. Google Cloud SDK installation is authorized on the
+development VM but awaits filesystem capacity; personal Gemini requires the
+supported Antigravity migration. These prerequisites are not model-access proof.
 
 Private project for an assistant team. Application requirements are still being defined.
 
@@ -569,3 +570,9 @@ bypass, automatic paid API fallback or account-data migration is configured.
 Login wrapper status, outcome and error messages use the `[AC-Agents]:` prefix; native vendor output keeps its original format.
 
 Login results include provider-specific next steps. Failed personal Gemini access directs the supported Antigravity migration; failed Vertex setup identifies scoped SDK/configuration prerequisites. Saved credentials remain explicitly unverified for model access.
+
+## Deploy independently
+
+Follow [DEPLOYMENT.md](DEPLOYMENT.md) to initialize your own encrypted destination settings and run the complete role chain on this same host or a remote host. Destination access stays with the operator; no coding-agent access or model login is needed. Controller connection-failure metadata can be replayed to the target later. Fresh-VM end-to-end installation has not been exercised here.
+
+Use `python3 src/bump-version.py --help` for the version maintenance helper. Formal releases require pushing the annotated version tag and publishing the matching GitHub release; branch version increments alone are not published releases.

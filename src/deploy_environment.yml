@@ -1,0 +1,38 @@
+---
+- name: Load operator-owned encrypted destination configuration
+  hosts: localhost
+  gather_facts: false
+  no_log: true
+  tasks:
+    - ansible.builtin.include_vars:
+        file: "{{ assistant_destination_vault }}"
+        name: destination
+    - ansible.builtin.add_host:
+        name: assistant_destination
+        groups: assistant_destinations
+        ansible_host: "{{ destination.connection.host }}"
+        ansible_user: "{{ destination.connection.user }}"
+        ansible_connection: "{{ assistant_local | default(false) | bool | ternary('local','ssh') }}"
+        ansible_port: "{{ destination.connection.port | default(22) }}"
+        ansible_password: "{{ destination.connection.password | default(omit) }}"
+        ansible_become_password: "{{ destination.connection.become_password | default(omit) }}"
+- name: Install reproducible native environment without model authentication
+  hosts: assistant_destinations
+  become: true
+  gather_facts: true
+  no_log: true
+  vars:
+    containers:
+      runtime_user: "{{ hostvars.localhost.destination.runtime_user }}"
+    provisioning:
+      guest_ssh_user: "{{ hostvars.localhost.destination.connection.user }}"
+    assistant_source_user: "{{ containers.runtime_user }}"
+    assistant_vertex_install_sdk: "{{ hostvars.localhost.destination.install_google_cloud_sdk | default(false) }}"
+  roles:
+    - podman_host
+    - agent_images
+    - agents_connector
+    - native_auth
+    - project_framework
+    - project_workspace
+    - vertex_auth
