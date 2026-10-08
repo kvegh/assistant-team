@@ -561,3 +561,7 @@ The user requested the exact `[AC-Agents]:` prefix for wrapper-owned login outco
 ## Actionable login follow-up guidance
 
 The user requested useful next steps after each wrapper login result. Guidance distinguishes local saved evidence from model access and points to provider-specific prerequisites or retirement limitations. It does not launch model checks, switch to paid APIs or erase credentials. Native Vibe authentication storage was checked against the installed source before advising a retry. Implementation: `c880a3d`.
+
+## Operator-owned deployment and primary target diagnostics
+
+The user chose a fresh deployment path that does not grant this coding agent destination access. An operator-owned external Vault provides connection settings; the complete role chain supports both local connections and SSH destinations without developer-specific account/image/Vault dependencies. No provider authentication or inference occurs during installation. Protected target environment logs are primary; controller metadata covers preconnection failures and can be replayed later. Only prescribed, validated metadata is exported, excluding raw output, credentials, prompts and conversations. Fresh-VM end-to-end deployment remains untested; local/SSH fixtures, failure/export tests and syntax checks establish the current validation boundary. The version helper follows feature-minor and fix/documentation-patch increments, while formal releases also require pushed annotated tags and published GitHub notes. Implementation: `decdc5c`.

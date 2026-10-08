@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.3.1
+
+Record the independent deployment and target diagnostics decisions with their implementing commit. Documentation update only; fresh-VM validation and provider authentication remain explicitly separate from offline deployment checks.
+
 ## 0.3.0
 
 Add a concrete user-operated deployment path for both the current host and SSH destinations, using operator-owned encrypted configuration and the complete certified Podman/native installation role chain. It does not need this coding agent’s destination access or authenticate providers during installation.
