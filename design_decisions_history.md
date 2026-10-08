@@ -593,3 +593,7 @@ The checkout-relative password setting resolved to an unrelated missing path und
 ## Prefer suitable Ansible and certified content
 
 The user chose Ansible for clear deployment/configuration tasks and an obviously suitable certified collection when available, while avoiding complexity added merely to force a collection. Runtime CLI/authentication/router application logic remains code installed by Ansible. Deployment-helper review follows blocking fixes. Developing project-specific Ansible modules and packaging a collection is an exploratory future item, not current implementation.
+
+## Fresh native launcher bootstrap and safe recovery
+
+The first normal AAP fresh deployment reached native CLI installation after provisioning, full filesystem growth, updates, image builds and broker installation. Its launcher imported a helper that was installed only after version validation, causing the fresh bootstrap to fail. The helper now precedes launcher invocation, and all contexts are checked on recovery to detect incomplete metadata markers. A behavioral regression reproduces missing-helper failure and successful installation without inference. The discovered endpoint remains encrypted and recovery skips provisioning. Implementation: `9a56278`. Separate sudo recovery credentials were corrected in `178fc83`. The Ansible/certified-content policy and exploratory collection backlog were recorded in `a35bf43`.
