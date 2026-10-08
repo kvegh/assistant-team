@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.1.1
+
+Document the account/authentication decision and the initial release boundary. Record the implementing commit without changing authentication behavior; work Vertex SDK approval and later integration work remain pending.
+
 ## 0.1.0
 
 Add the isolated native account and authentication foundation.

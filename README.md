@@ -1,6 +1,6 @@
 # assistant-team
 
-Version 0.1.0 commits the isolated native account/authentication foundation.
+Version 0.1.1 documents the isolated native account/authentication foundation introduced in 0.1.0.
 Environment/project assignment integration and portable diagnostics described below
 are being committed separately; the initial published 0.0.1 snapshot remains the
 baseline tagged before these updates. Work Vertex SDK installation is pending approval.

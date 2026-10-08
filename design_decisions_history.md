@@ -539,3 +539,9 @@ Work Claude is intended to use Vertex AI, while the current authentication/prefl
 layer supports OAuth files. The guide marks Vertex configuration pending and does
 not recommend work OAuth login. Real project startup requires the selected work
 backend; the shared-workspace validation does not claim authenticated model startup.
+
+## Isolated work/private native authentication and initial release boundary
+
+The user chose work and private profiles for all four native harness vendors. Each profile keeps its own installation, configuration and authentication state; existing personal data is migrated without importing it into work contexts. Work Claude and Gemini use Vertex ADC, while private Gemini uses Google OAuth and private Claude uses its supported account plan. Native login outcomes distinguish local credential evidence from model entitlement. Explicit local clearing preserves unrelated settings and refuses active use. Personal Gemini restricts its native authentication choice to OAuth so the API-key dialog cannot accept an OAuth verification code. Concurrent profile login refuses existing native sessions rather than stopping user work. Google Cloud SDK installation remains approval-gated; Mistral team integration remains future work. Implementation: `45c8784`.
+
+At the user's explicit request, release `v0.0.1` was tagged and published from existing committed baseline `df70417418b8a2e88658e8772df96a26d0acb293` before these pending changes were committed. Subsequent feature commits increment minor versions, and fixes/documentation commits increment patch versions; release notes record each version. This preserves the published baseline rather than representing uncommitted development VM changes as its content.
