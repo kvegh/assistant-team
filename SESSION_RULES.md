@@ -236,3 +236,9 @@ this rules file alone is not a deployment bundle or authentication backup.
 
 - Provide complete `~/team --help` with supported commands, parameters and brief explanations. Help and project listing must not require authentication or start services.
 - Unknown commands must explicitly say `Invalid command`; distinguish them from valid commands with missing parameters. Do not silently invent aliases such as `create` for `create-project`.
+
+## Editable project prompt templates
+
+- New templates use `[Project]` and `[Role: Investigator]` style sections for all supported roles, with human display names such as `Private Connector`.
+- Lines starting with `#` are comments in the new format. All starter examples and human guidance are commented and excluded from harness input; users add or uncomment their active instructions. Do not activate examples as a fallback.
+- Preserve existing project files and legacy `# Role:` interpretation. Reject duplicate, missing or unknown roles before rendering, and preserve private observer isolation.

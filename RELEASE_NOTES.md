@@ -4,6 +4,15 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.13.0
+
+Create editable prompt templates with `[Project]` and `[Role: Investigator]` style
+sections. All starter examples and human guidance use inactive `#` comment lines;
+the new renderer excludes them from harness input without fallback. Existing
+legacy role headers remain compatible and project files are preserved. Seven new
+parser/isolation tests pass (97 total); production lint and APME rescan complete.
+Deployment of the new template/parser to the original VM is explicitly held.
+
 ## 0.12.1
 
 Record verified runtime help, explicit command errors and listing. Further original-VM

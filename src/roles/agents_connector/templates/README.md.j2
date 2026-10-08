@@ -57,6 +57,14 @@ profiles instead. Empty or unfinished projects and symlink paths are excluded.
 - `~/projects/NAME/db.sqlite`: project-local stock broker history.
 - `~/projects/NAME/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
 
+New project templates use `[Project]` and role markers such as `[Role: Investigator]`,
+`[Role: Private Connector]` and `[Role: Corporate Connector]`. All `#` lines are
+comments, including the initial example instructions, and are excluded from native
+harness input. Add active text beneath the comments or remove the `# Example:` prefix.
+Blank roles are allowed; examples do not become automatic fallback instructions.
+Existing legacy `# Role: canonical-name` files retain their previous interpretation
+and are not rewritten. Duplicate, missing or unknown roles are rejected before rendering.
+
 `~/team apply-prompts NAME` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
 
 `~/team start NAME` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `~/team attach NAME ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.

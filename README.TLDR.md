@@ -13,7 +13,7 @@ cd ~/PROFILE; ./login     # PROFILE: claude-work/priv, gemini-work/priv,
 ~/team --list            # initialized project names; alias: list-projects
 ~/team create-project example
 vi ~/projects.example.config                      # role -> enabled profile
-vi ~/projects/example/assistant-prompt.md          # goal and role prose
+vi ~/projects/example/assistant-prompt.md          # fill [Project] and [Role: Name]; # lines are comments
 ~/team start example
 ~/team attach example orchestrator                 # give task; Ctrl-B D detaches
 ~/team watch example                               # live messages; Ctrl-C viewer only

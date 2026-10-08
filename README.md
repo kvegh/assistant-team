@@ -435,6 +435,15 @@ There is no all-projects master target.
 
 ### Project framework
 
+New prompt templates use `[Project]` and `[Role: Investigator]` (likewise all eight
+roles, including `[Role: Private Connector]`). Lines beginning with `#`, including
+example instructions, are comments and are removed before delivery to harnesses.
+Write active instructions below them or remove the `# Example:` prefix. Blank role
+sections are allowed; examples are never silently activated. Existing `# Role:`
+project files remain supported and are not overwritten. The new template/parser
+is committed for future deployment; its deployment to the original VM is currently
+held at the operator's request.
+
 The separate `project_framework` Ansible role installs project-scoped control and
 systemd instance units without restarting existing sessions. As the runtime user:
 
@@ -446,6 +455,7 @@ systemd instance units without restarting existing sessions. As the runtime user
 ~/team create-project my-project
 ${EDITOR:-vi} ~/projects.my-project.config
 ${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+# Fill [Project] and [Role: Name] with active instructions; # lines are inactive examples.
 ~/team start my-project
 ~/team status my-project
 ~/team attach my-project orchestrator

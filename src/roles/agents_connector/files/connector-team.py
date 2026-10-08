@@ -261,17 +261,72 @@ def wake(args):
     run(['podman','exec',container(name),'tmux','send-keys']+(['-l'] if payload!='Enter' else [])+['-t','native:agent',payload],stdout=subprocess.DEVNULL)
 
 
+def prompt_sections(content):
+    """Parse bracket templates or existing legacy role headers before writing anything."""
+    headers=list(re.finditer(r'^\[([^\]\r\n]+)\][ \t]*$',content,re.M))
+    legacy_headers=list(re.finditer(r'^# Role: ([a-z-]+)[ \t]*$',content,re.M))
+    bracket_roles=any(re.match(r'Role:',header.group(1),re.I) for header in headers)
+    bracket_format=bracket_roles or bool(headers) and not legacy_headers
+    goal=''
+    sections={}
+    if bracket_format:
+        role_lookup={name.replace('-','').casefold():name for name in ALL}
+        preamble=content[:headers[0].start()]
+        if any(line.strip() and not line.lstrip().startswith('#') for line in preamble.splitlines()):
+            raise ValueError('Place active instructions under [Project] or [Role: Name]')
+        for index,header in enumerate(headers):
+            label=header.group(1).strip()
+            body=content[header.end():headers[index+1].start() if index+1<len(headers) else len(content)].strip()
+            if label.casefold()=='project':
+                if index!=0:raise ValueError('[Project] must appear once before the role sections')
+                goal=body
+                continue
+            match=re.fullmatch(r'Role:[ \t]*(.+)',label,re.I)
+            role=role_lookup.get(re.sub(r'[-\s]','',match.group(1)).casefold()) if match else None
+            if role is None:raise ValueError('Unknown prompt section: ['+label+']')
+            if role in sections:raise ValueError('Duplicate prompt role: '+role)
+            sections[role]=body
+    else:
+        headers=legacy_headers
+        goal=content[:headers[0].start()].strip() if headers else ''
+        for index,header in enumerate(headers):
+            role=header.group(1)
+            if role in sections:raise ValueError('Duplicate prompt role: '+role)
+            sections[role]=content[header.end():headers[index+1].start() if index+1<len(headers) else len(content)].strip()
+    if set(sections)!=set(ALL):
+        raise ValueError('Prompt file must contain exactly one section per supported role')
+    return goal,sections,bracket_format
+
+def active_prompt_text(text):
+    return '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#')).strip()
+
+def project_prompt_template(content):
+    """Use explicit sections; legacy starter prose becomes commented examples."""
+    _,sections,bracket_format=prompt_sections(content)
+    output=['[Project]','# Describe this project\'s goal, context, boundaries and completion criteria here.','']
+    for role in ALL:
+        body=sections[role]
+        if not bracket_format:
+            lines=[]
+            for line in body.splitlines():
+                if line.lstrip().startswith('#'):continue
+                if line.strip()=='Rough initial role prompt; refine through design.':
+                    lines.append('# '+line.strip())
+                else:lines.append('# Example: '+line if line.strip() else '')
+            body='\n'.join(lines)
+        output.extend(['[Role: '+role.replace('-',' ').title()+']',body,''])
+    return '\n'.join(output)+'\n'
+
 def apply_prompts():
     source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'assistant-prompts.md'
-    content=source.read_text()
-    goal=content.split('# Role:',1)[0].strip() if PROJECT else ''
-    headers=list(re.finditer(r'^# Role: ([a-z-]+)\s*$',content,re.M))
-    names=[h.group(1) for h in headers]
-    if len(names)!=len(set(names)) or set(names)!=set(ALL):raise ValueError('Prompt file must contain exactly one # Role: section per role')
+    goal,sections,bracket_format=prompt_sections(source.read_text())
+    if bracket_format:
+        goal=active_prompt_text(goal)
+        sections={role:active_prompt_text(body) for role,body in sections.items()}
     roster='\n\nCollaboration roles: orchestrator routes and bounds work; builder implements; investigator diagnoses; challenger reviews assumptions; summarizer condenses decisions. Read addressed MCP messages. Distinguish proposals from verified results. Stop completed discussions; pause exhausted subscription work without paid API fallback.\n'
-    for i,header in enumerate(headers):
-        role=header.group(1);cfg=json.loads((PROFILES/role/'profile.json').read_text())
-        prompt=content[header.end():headers[i+1].start() if i+1<len(headers) else len(content)].strip()+'\n'
+    for role in ALL:
+        cfg=json.loads((PROFILES/role/'profile.json').read_text())
+        prompt=sections[role]+'\n'
         if PROJECT:prompt='# Project: '+PROJECT+'\n\n'+goal+'\n\n'+prompt
         if PROJECT:
             prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+('Read-only access; evaluate outcomes without modifying shared artifacts.' if role=='observer' else 'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.')+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'

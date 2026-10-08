@@ -102,14 +102,15 @@ def create(name):
     if path.exists():raise ValueError('Project already exists; prompts and state were not overwritten')
     PROJECTS.mkdir(mode=0o700,exist_ok=True);path.mkdir(mode=0o700)
     (path/'workspace').mkdir(mode=0o700)
-    prompts=(ACCOUNT_HOME/'assistant-prompts.md').read_text()
-    (path/'assistant-prompt.md').write_text('# Project goal\n\nDescribe this project’s goal, context, boundaries and completion criteria here.\n\n'+prompts)
+    core=load(name)
+    prompts=core.project_prompt_template((ACCOUNT_HOME/'assistant-prompts.md').read_text())
+    (path/'assistant-prompt.md').write_text(prompts)
     for role in ROLES:
         p=path/'profiles'/role
         for directory in ['home','workspace','ipc','reports']:(p/directory).mkdir(mode=0o700,parents=True,exist_ok=True)
         source=INSTALL/'profiles'/role/'profile.json'
         (p/'profile.json').write_bytes(source.read_bytes())
-    core=load(name);core.apply_prompts()
+    core.apply_prompts()
     settings().project(ACCOUNT_HOME,name,create=True)
     # The actual stock broker opens/migrates the SQLite database, not a guessed schema.
     env=user_env();env['ASSISTANT_PROJECT']=name;env['PATH']=str(INSTALL/'routing')+':'+env.get('PATH','/usr/bin:/bin')

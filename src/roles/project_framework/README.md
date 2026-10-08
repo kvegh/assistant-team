@@ -23,3 +23,7 @@ Does not enable or restart projects. Editable project definitions/prompts/auth a
 ## Validation
 
 Run the repository production lint and tests. Fresh installation and configuration recovery are verified through the normal AAP deployment template; authenticated model tests are separate operator actions.
+
+New projects receive `[Project]` and `[Role: Name]` sections with inactive `#` example
+comments. Authors must add active instructions. Existing project files are never
+overwritten; legacy role headers remain supported by the renderer.

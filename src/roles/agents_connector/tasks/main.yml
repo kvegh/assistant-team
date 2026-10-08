@@ -98,13 +98,12 @@
   ansible.builtin.copy:
     dest: "{{ agents_connector_runtime_home }}/assistant-prompts.md"
     content: |
-      # Assistant role prompts
-
-      Edit the body under each exact Role header. Apply with ./team apply-prompts.
-      Working containers receive only their own extracted section.
+      # Edit the body under each [Role: Name] section; # lines are comments.
+      # Examples below are inactive. Write instructions below them or remove '# Example:'.
+      # Working containers receive only their own active section.
 
       {% for role in agents_connector_profiles %}
-      # Role: {{ role.name }}
+      [Role: {{ role.name | replace('-', ' ') | title }}]
 
       {{ lookup('ansible.builtin.file', role_path + '/prompts/' + role.name + '.md') }}
 

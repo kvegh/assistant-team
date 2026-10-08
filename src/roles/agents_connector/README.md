@@ -17,3 +17,8 @@ Immutable artifacts/config are managed idempotently; editable prompt seed uses f
 ## Validation
 
 Run the repository production lint and tests. Fresh installation and configuration recovery are verified through the normal AAP deployment template; authenticated model tests are separate operator actions.
+
+Prompt rendering accepts new `[Role: Name]` markers and existing `# Role:` headers.
+New-format `#` lines are author comments, removed before role extraction is delivered
+to native harnesses. Each supported role must appear once; only its own active text
+and the shared project goal are rendered. Blank sections have no example fallback.
