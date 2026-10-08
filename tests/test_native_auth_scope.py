@@ -21,6 +21,9 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
             capture = prefix / ('node' if flavour in ['codex', 'gemini'] else 'native')
             capture.write_text('#!/usr/bin/python3\nimport json,os,pathlib,sys\npathlib.Path(os.environ["HOME"],"saved-config").write_text("fixture")\nprint(json.dumps({"args":sys.argv[1:],"scope":{k:os.environ.get(k) for k in ["HOME","XDG_CONFIG_HOME","XDG_CACHE_HOME","XDG_DATA_HOME","XDG_STATE_HOME","TMPDIR","CLAUDE_CONFIG_DIR","CODEX_HOME","GEMINI_CLI_HOME","VIBE_HOME","NO_BROWSER"]},"cwd":os.getcwd()}))\n')
             capture.chmod(0o700)
+            credential = {'claude':('.claude/.credentials.json', {'claudeAiOauth':{'accessToken':'fixture'}}),'codex':('.codex/auth.json',{'tokens':{'access_token':'fixture'}}),'gemini':('.gemini/oauth_creds.json',{'refresh_token':'fixture'})}[flavour]
+            capture.write_text(capture.read_text()+ '\np=pathlib.Path(os.environ[\"HOME\"])/'+repr(credential[0])+';p.parent.mkdir(parents=True,exist_ok=True);p.write_text('+repr(json.dumps(credential[1]))+')\n')
+            shutil.copyfile(LAUNCHER.parent/'login-result.py', directory/'.login-result.py')
             shutil.copyfile(LAUNCHER, directory / '.native-cli.py')
             (directory / '.native-cli.py').chmod(0o700)
             (directory / 'login').symlink_to('.native-cli.py')
@@ -29,7 +32,7 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
             environment = os.environ.copy()
             environment['HOME'] = str(caller)
             result = subprocess.run([str(directory / 'login')], env=environment, capture_output=True, text=True, check=True)
-            output = json.loads(result.stdout.splitlines()[-1])
+            output = json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
             for key, value in output['scope'].items():
                 if key != 'NO_BROWSER':
                     self.assertTrue(pathlib.Path(value).is_relative_to(directory), key)

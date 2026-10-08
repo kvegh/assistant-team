@@ -1,5 +1,10 @@
 # assistant-team
 
+Version 0.1.0 commits the isolated native account/authentication foundation.
+Environment/project assignment integration and portable diagnostics described below
+are being committed separately; the initial published 0.0.1 snapshot remains the
+baseline tagged before these updates. Work Vertex SDK installation is pending approval.
+
 Private project for an assistant team. Application requirements are still being defined.
 
 ## Security
@@ -322,12 +327,15 @@ Generic native inbound transport across all harnesses remains unverified.
 
 ## Current assistant team setup
 
-`src/configure_agents_connector.yml` calls separate `podman_host`,
-`agents_connector` and `native_auth` roles. Run the container foundation first,
+`src/configure_agents_connector.yml` calls separate host, connector, native
+installation, account migration, Vertex authentication and project framework
+roles. Run the container foundation first,
 then this playbook; it reuses the existing pinned native images. Guest/account
 details stay in Vault. The complete operator guide is installed as `~/README.md`
 in the dedicated account's home, from
-[its template](src/roles/agents_connector/templates/README.md.j2).
+[its template](src/roles/agents_connector/templates/README.md.j2). A condensed
+`~/README.TLDR.md` provides the minimum operator commands. Keep both guides
+current when behavior changes.
 
 ```bash
 ansible-playbook --syntax-check -i 'localhost,' src/configure_agents_connector.yml
@@ -340,8 +348,9 @@ and home-local controls without restarting the service group.
 
 ### Native installations and account login
 
-The dedicated home contains five real local installations: `claude-work`,
-`claude-priv`, `gemini`, `codex` and `mistral`. Each provides `./login` and its
+The dedicated home contains eight isolated account profiles: `claude-work`,
+`claude-priv`, `gemini-work`, `gemini-priv`, `codex-work`, `codex-priv`,
+`mistral-work` and `mistral-priv`. Each provides `./login` and its
 native `./claude`, `./gemini`, `./codex` or `./vibe`. Program artifacts are reused
 from the pinned images; duplicated Claude code and Node runtime use hard links.
 Vibe uses checksum-pinned Astral Python Build Standalone 3.12.15 to support the
@@ -349,20 +358,35 @@ guest's libc. No global CLI, npm, pip, gcloud or libc shim is installed.
 
 ```bash
 cd ~/claude-priv && ./login
-cd ~/gemini && ./login
-cd ~/codex && ./login
-cd ~/mistral && ./login
+cd ~/gemini-priv && ./login
+cd ~/codex-priv && ./login
+cd ~/mistral-priv && ./login
 ```
 
-Private Claude uses native OAuth login; work Claude Vertex configuration is
-pending as described below. Gemini uses native Sign in with Google
-with a remote browser flow; gcloud is unnecessary. Codex uses device login and a
-file credential store. Mistral opens Vibe's native setup wizard. All five wrappers
+Private Claude uses native OAuth login. Private Gemini selects personal Google
+sign-in and removes competing API-key and Vertex environment settings from its
+process. Work Claude and work Gemini use Vertex, with guided project, region and
+model configuration and profile-local Application Default Credentials. Their
+Cloud SDK installation is separately gated; those login flows cannot run until
+the required SDK is installed. Codex uses device login and a file credential
+store. Mistral opens Vibe's native setup wizard. Work and private labels for
+Codex and Mistral select separate accounts; they do not imply Vertex support.
+All eight wrappers
 scope HOME, provider configuration, credentials, caches, state and temporary files
 to their respective directory. Provider authentication is performed by the operator,
-never inherited from this development session. No login, terms acceptance or model
-request occurred during setup. Choose the intended account/subscription; there is
-no automatic paid API fallback.
+never inherited from this development session. Installation does not log in,
+accept provider terms or request model output. Choose the intended account;
+there is
+no automatic paid API fallback. Each login reports failure/cancellation or saved
+credentials with model access unverified. Local credentials and a successful
+login command do not prove model entitlement; verified access requires a separate
+explicit model check. Such checks are not run automatically.
+
+`./login --clear` removes that profile's saved authentication and matching
+project-role copies, preserving program files, provider configuration and other
+profiles. It refuses to clear an active native session or a running project
+using that profile; stop those sessions first. Clearing local files does not
+promise provider-wide remote revocation.
 
 On explicit role launch, only missing credential files are seeded into that role's
 isolated home. Claude copies only optional OAuth account metadata, not global MCP
@@ -397,7 +421,10 @@ The separate `project_framework` Ansible role installs project-scoped control an
 systemd instance units without restarting existing sessions. As the runtime user:
 
 ```bash
+~/team setup
+~/team setup --list
 ~/team create-project my-project
+${EDITOR:-vi} ~/projects.my-project.config
 ${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
 ~/team start my-project
 ~/team status my-project
@@ -407,9 +434,27 @@ ${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
 ~/team restart my-project
 ```
 
+There is one environment per Linux user. `~/environment.config` records which
+of the eight profiles are enabled; setup selects those profiles before offering
+native logins. Listing distinguishes enabled, installed and locally saved
+credentials, without making model requests. Disabling a profile preserves its
+credentials and existing projects, but prevents new starts that require it.
+
+`~/projects.NAME.config` is the sole authority for role-to-profile assignments.
+Both configuration files use JSON and contain no authentication secrets. Project
+assignments must select enabled profiles. Connector roles whose required account
+is unavailable need an explicit assignment before startup; they do not silently
+switch private and corporate contexts. The observer and two restricted connector
+roles currently require Claude. The five collaboration roles support the native
+Claude, Codex and Gemini adapters. Mistral profiles support standalone login and
+CLI use; assigning them to team roles is refused until its adapter is implemented.
+
 Creation uses the stock broker to initialize `~/projects/NAME/db.sqlite` and its
 five-worker registry. Eight profiles have separate native homes, workspaces, IPC
-and container names. The editable singular `assistant-prompt.md` contains the
+and container names. Native role state is separated by assigned account profile,
+so changing accounts does not reuse another profile's credentials. Stop an active
+project before changing its assignments, then start it again. The editable
+singular `assistant-prompt.md` contains the
 project goal and all role prompts; only the goal and the selected role section
 are rendered into each container. Existing project state is not overwritten.
 Names accept 1–40 lowercase letters/digits, underscores and hyphens, beginning
@@ -421,7 +466,8 @@ without an initial work prompt. Login directories remain outside projects; only
 missing provider credential files are seeded into each role home. Existing role
 refresh state is preserved. This preflight cannot establish remote token validity.
 Native onboarding, workspace trust and Codex hook approval are not bypassed.
-Mistral remains optional and unassigned to a connector team role.
+Native Mistral team support is tracked as required future work, including an
+upstream agents-connector pull request.
 
 The user target `assistant-connector@NAME.target` orders that project's broker,
 gateway and native container services. Project targets are not enabled at boot.
@@ -437,15 +483,20 @@ operations. Update this layer with `--tags project_framework`. Explicit offline
 project validation uses disposable projects and dummy tmux harnesses only; no
 provider credentials are fabricated or native models invoked.
 
-### Work Claude provider limitation
+### Vertex login prerequisites
 
-Work Claude is intended to use Google Vertex AI. The native harness supports it,
-but this deployment's work auth launcher and project preflight currently support
-OAuth-file authentication only. Skip work OAuth login until Vertex ADC/project/
-region support is configured; real all-role project startup remains blocked by
-that backend requirement. Private Claude, Codex, Gemini and Mistral native account
-flows remain available. No cloud SDK installation or Vertex authentication was
-performed as part of the shared-workspace change.
+Both work Claude and work Gemini use Google Vertex AI. Their profile-local login
+helpers configure the project, region and explicit model, then run the Google
+Cloud ADC login flow. They preserve that provider configuration when credentials
+are cleared. Work role containers receive only their selected profile's ADC and
+provider settings. Personal profiles do not inherit Vertex authentication.
+
+The separately gated `vertex_auth` role installs the Cloud SDK only when explicitly
+authorized. SDK installation remains pending in the current development setup;
+no Vertex login, cloud API enablement or model request is performed automatically.
+Cloud billing, model access and quota must already be available to the operator.
+Disabled work profiles do not block projects assigned entirely to other enabled,
+authenticated profiles. Work projects require the chosen backend to be ready.
 
 ### Shared project artifact workspace
 
@@ -466,16 +517,46 @@ preserving all bind-mounted data. No images, dependencies or VM resources change
 
 ### Validation and current limits
 
-All five local installations pass host-native version/help checks. Native project sessions require operator authentication; setup does not launch
-models.
-Thirty-four local tests passed, including scoped login paths, work/private credential
-seeding, retained refresh state, hidden prompt extraction and named-eight-container
-stop. Live checks verify a read-only observer context and no provider configuration
-at the account's global home paths. The project lifecycle check preserved SQLite and persistent state. New control checks cover the stock live viewer
-and private report routing without invoking models.
+All eight local installations pass host-native version/help checks. Native
+project sessions require operator authentication; installation does not launch
+models. Tests cover scoped configuration and login paths, work/private credential
+seeding, retained refresh state, hidden prompt extraction and project lifecycle.
+Live checks use disposable projects and dummy sessions to validate communication,
+read-only observer access and persistent state without provider model requests.
+These checks do not establish all providers' account validity or entitlement.
 
 The VM remains at its approved allocation. Idle containers use little memory;
-concurrent native/model/build workloads remain unmeasured. The guest root filesystem
-has about 1.3 GiB free after the local installs, so review storage before further
-image builds or substantial workspace growth. No memory or filesystem expansion
-was performed.
+concurrent native/model/build workloads remain unmeasured. Review free storage
+before further image builds or substantial workspace growth. No memory or
+filesystem expansion was performed.
+
+### Deployment access and diagnostics
+
+The operating workflow separates development from access to authenticated
+environments: develop and review repository changes here, then have the operator
+deploy to their own destination and perform provider logins there. Deployment
+must not require model credentials or give this development agent destination
+access. Existing development access is retained; it is not a security boundary
+for the current VM.
+
+The portable user-operated deployment path supports the same roles for local and
+remote Ansible connections. That path and unified target-side
+`~/environment-logs` are being implemented. Diagnostics will cover deployment,
+setup, authentication outcomes and service/container lifecycle using protected
+operational metadata. They must exclude credentials, conversations, prompts and
+raw model output. Failures before a target connection exists require a protected
+local fallback, transferred to the target when reachable. Sharing a sanitized
+diagnostic export does not grant destination access.
+
+### Release policy and future work
+
+The first release will be `0.0.1` after outstanding implementation, validation,
+documentation and reproducibility checks are complete. After that release,
+feature commits increment the minor version and reset patch; all other commits,
+including documentation commits, increment patch. Installed version and commit
+metadata belong in diagnostics. Release automation is still being prepared.
+
+[Future work](TODO.md) distinguishes required later work—custom roles based on
+the default templates and Mistral team support—from optional custom account
+contexts and multiple environments. Multiple environments are not supported now;
+use separate Linux users for isolated environments.

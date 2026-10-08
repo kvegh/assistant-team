@@ -7,8 +7,29 @@
   ansible.builtin.set_fact:
     assistant_native_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     assistant_native_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Inspect installed contexts before focused account provisioning
+  ansible.builtin.stat:
+    path: "{{ assistant_native_home }}/{{ item.directory }}/.native-install.json"
+  loop: "{{ assistant_native_auth_dirs }}"
+  register: assistant_native_contexts
 - name: Install real native packages and scoped launchers sequentially
   ansible.builtin.include_tasks: install.yml
-  loop: "{{ assistant_native_auth_dirs }}"
+  loop: "{{ assistant_native_contexts.results | rejectattr('stat.exists') | map(attribute='item') | list }}"
   loop_control:
     loop_var: native
+- name: Maintain secret-free login outcome reporting in every installed context
+  ansible.builtin.copy:
+    src: login-result.py
+    dest: "{{ assistant_native_home }}/{{ item.directory }}/.login-result.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+  loop: "{{ assistant_native_auth_dirs }}"
+- name: Maintain scoped launchers without changing credentials or installation metadata
+  ansible.builtin.copy:
+    src: native-cli.py
+    dest: "{{ assistant_native_home }}/{{ item.directory }}/.native-cli.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  loop: "{{ assistant_native_auth_dirs }}"

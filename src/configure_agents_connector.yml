@@ -32,9 +32,15 @@
       tags: [retire_legacy]
     - role: agents_connector
       tags: [connector_setup]
+    - role: gemini_account
+      tags: [gemini_account]
     - role: native_auth
       tags: [native_auth]
     - role: project_framework
       tags: [project_framework]
     - role: project_workspace
       tags: [project_framework, project_workspace]
+    - role: vertex_auth
+      tags: [vertex_auth]
+      vars:
+        assistant_vertex_install_sdk: "{{ hostvars['localhost'].assistant_environment.agent_connector.vertex_sdk_install_authorized | default(false) }}"

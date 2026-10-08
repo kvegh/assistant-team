@@ -1,0 +1,38 @@
+---
+- name: Resolve Gemini account directory owner
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Define work Gemini migration home
+  ansible.builtin.set_fact:
+    assistant_gemini_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+- name: Safely migrate the old Gemini directory without changing its contents
+  become_user: "{{ containers.runtime_user }}"
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - |
+        import os,pathlib
+        home=pathlib.Path.home();old=home/'{{ item.old }}';new=home/'{{ item.new }}'
+        if not old.exists():
+            print('unchanged');raise SystemExit(0)
+        if old.is_symlink() or new.exists():raise SystemExit('Gemini migration requires an absent destination and real source directory; no files changed')
+        for p in pathlib.Path('/proc').iterdir():
+            if not p.name.isdigit():continue
+            try:
+                if p.stat().st_uid!=os.getuid():continue
+                args=(p/'cmdline').read_bytes().split(b'\0')
+                if any(a.startswith(str(old).encode()+b'/') for a in args):raise SystemExit('Native login/CLI is active; wait for it to finish before directory migration')
+            except (OSError,PermissionError):pass
+        old.rename(new)
+        print('migrated')
+    chdir: /tmp
+  environment:
+    HOME: "{{ assistant_gemini_home }}"
+  loop:
+    - {old: gemini, new: gemini-work}
+    - {old: codex, new: codex-priv}
+    - {old: mistral, new: mistral-priv}
+  register: assistant_gemini_move
+  changed_when: "'migrated' in assistant_gemini_move.stdout"
