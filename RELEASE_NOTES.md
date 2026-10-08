@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.1
+
+Record the isolated AAP-only fresh deployment decision and safe configuration recovery, with its implementation commit. Actual end-to-end execution remains pending.
+
 ## 0.6.0
 
 Add a dedicated normal-AAP-job playbook for isolated fresh provisioning and complete native environment installation, including root growth, full DNF updates, approved SDK and model-free project isolation validation. Keep its encrypted target definition separate and support configuration-only recovery after successful creation. Record AAP source revision in installed build metadata. Syntax validation passes; the actual fresh AAP deployment is the next verification step, not yet claimed complete.
