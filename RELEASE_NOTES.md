@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.2.1
+
+Record the selectable environment/project configuration and account isolation rationale, implementing commit and operator limitations. No runtime behavior changes; retain the native-vendor adapter boundaries and provider-access caveats.
+
 ## 0.2.0
 
 Add selectable environment profiles and isolated project account contexts.

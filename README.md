@@ -1,6 +1,6 @@
 # assistant-team
 
-Version 0.2.0 adds selectable environment profiles, authoritative per-project
+Version 0.2.1 documents selectable environment profiles, authoritative per-project
 assignments and account-isolated native role state. Portable deployment is being
 committed separately. The published 0.0.1 tag remains the earlier baseline;
 work Vertex SDK installation is pending approval.
