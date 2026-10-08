@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.10.2
+
+Clarify existing Ansible shell parameter mappings and root-growth result naming;
+make runtime account desired state explicit. Commands and behavior are preserved.
+The 80-test suite, production lint and contextual APME rescan complete.
+
 ## 0.10.1
 
 Record the personal Antigravity implementation, native file-storage protection

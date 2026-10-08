@@ -662,6 +662,8 @@ was provisioned from its verified original artifact. Findings require contextual
 review; unavailable or unauditable checks are not passing results. Read-only scans
 are authorized, and relevant fixes may follow assessment. Production lint remains
 the established gate; no automatic source remediation or AI request was made.
+The subsequent [Ansible readability review](ANSIBLE_GOOD_PRACTICES.md) preserves
+command behavior while clarifying shell parameters and internal result names.
 
 ## Disposable deployment test lifecycle
 

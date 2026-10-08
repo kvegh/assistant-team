@@ -23,3 +23,20 @@ unnecessary architecture. It covers this project, not the umbrella repositories.
 The local production lint and unit suite are necessary checks, not a blanket
 compliance certificate. Live deployment outcomes and known limitations are recorded
 in the design history and release notes.
+
+## Readability review after the full APME assessment
+
+The review followed each entry playbook through provisioning, guest storage and
+updates, rootless images, native authentication, project services and validation.
+It retained role boundaries, recovery tags, protected data and existing module
+choices rather than introducing a new abstraction layer.
+
+Three deliberate shell pipelines now put `cmd`, `executable` and `chdir` together
+under the shell module. Their parsed command strings, conditions, privilege
+settings and async behavior are unchanged. The root-growth result has a concise
+role-scoped name, and runtime account creation states `present` explicitly.
+These improve readability without modifying deployment behavior. The existing
+80-test suite and production lint pass; the authorized APME rescan completes and
+no longer reports `M027` for those pipelines. Other contextual indicators remain
+subject to the assessment in `docs/APME_EVALUATION.md`; this is not a blanket clean
+scan or proof of a new fresh deployment.

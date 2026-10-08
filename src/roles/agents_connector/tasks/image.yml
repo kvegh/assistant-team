@@ -15,16 +15,16 @@
   block:
     - name: Stream the image archive without storing a temporary duplicate
       changed_when: true
-      ansible.builtin.shell: |
-        set -o pipefail
-        source_uid=$(id -u {{ assistant_source_user | quote }})
-        runuser -u {{ assistant_source_user | quote }} -- env \
-          HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid \
-          podman save localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }} |
-        runuser -u {{ containers.runtime_user | quote }} -- env \
-          HOME={{ agents_connector_runtime_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ agents_connector_runtime_uid }} \
-          podman load
-      args:
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          source_uid=$(id -u {{ assistant_source_user | quote }})
+          runuser -u {{ assistant_source_user | quote }} -- env \
+            HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid \
+            podman save localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }} |
+          runuser -u {{ containers.runtime_user | quote }} -- env \
+            HOME={{ agents_connector_runtime_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ agents_connector_runtime_uid }} \
+            podman load
         executable: /bin/bash
         chdir: /tmp
       async: 600

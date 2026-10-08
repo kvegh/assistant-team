@@ -38,15 +38,15 @@
 - name: Export the real native package into its home-local prefix
   changed_when: true
   when: not __native_auth_native_existing.stat.exists and native.flavour != 'vibe' and native.directory not in ['claude-priv', 'codex-work', 'gemini-priv']
-  ansible.builtin.shell: |
-    set -o pipefail
-    runuser -u {{ containers.runtime_user | quote }} -- env \
-      HOME={{ __native_auth_native_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ __native_auth_native_uid }} \
-      podman run --rm --network=none localhost/assistant-connector-{{ native.flavour }}:{{ native.version }} \
-      tar -C /usr/local -cf - lib/node_modules/{{ native.package }} \
-      {{ (native.flavour == 'codex') | ternary('bin/node', '') }} |
-    runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (__native_auth_native_home + '/' + native.directory + '/.install') | quote }} -xf -
-  args:
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      runuser -u {{ containers.runtime_user | quote }} -- env \
+        HOME={{ __native_auth_native_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ __native_auth_native_uid }} \
+        podman run --rm --network=none localhost/assistant-connector-{{ native.flavour }}:{{ native.version }} \
+        tar -C /usr/local -cf - lib/node_modules/{{ native.package }} \
+        {{ (native.flavour == 'codex') | ternary('bin/node', '') }} |
+      runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (__native_auth_native_home + '/' + native.directory + '/.install') | quote }} -xf -
     executable: /bin/bash
     chdir: /tmp
   async: 600
@@ -81,15 +81,15 @@
 - name: Export the installed Vibe Python runtime and packages from the original native image
   changed_when: true
   when: not __native_auth_native_existing.stat.exists and native.flavour == 'vibe' and native.directory != 'mistral-work'
-  ansible.builtin.shell: |
-    set -o pipefail
-    source_uid=$(id -u {{ assistant_source_user | quote }})
-    runuser -u {{ assistant_source_user | quote }} -- env \
-      HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid \
-      podman run --rm --network=none localhost/assistant-team-vibe:{{ native.version }} \
-      tar -C /usr/local -cf - bin lib |
-    runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (__native_auth_native_home + '/' + native.directory + '/.install') | quote }} -xf -
-  args:
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      source_uid=$(id -u {{ assistant_source_user | quote }})
+      runuser -u {{ assistant_source_user | quote }} -- env \
+        HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid \
+        podman run --rm --network=none localhost/assistant-team-vibe:{{ native.version }} \
+        tar -C /usr/local -cf - bin lib |
+      runuser -u {{ containers.runtime_user | quote }} -- tar -C {{ (__native_auth_native_home + '/' + native.directory + '/.install') | quote }} -xf -
     executable: /bin/bash
     chdir: /tmp
   async: 600

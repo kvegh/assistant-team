@@ -34,6 +34,7 @@
 - name: Create an unprivileged runtime account
   ansible.builtin.user:
     name: "{{ containers.runtime_user }}"
+    state: present
     create_home: true
     password_lock: true
     shell: /bin/bash
