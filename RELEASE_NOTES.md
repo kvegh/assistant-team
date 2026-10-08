@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.9.3
+
+Record the full APME assessment and its implementation decision with the actual commit.
+
 ## 0.9.2
 
 Complete full-codebase APME validation using the verified certified artifact;
