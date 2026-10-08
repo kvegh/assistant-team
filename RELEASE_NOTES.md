@@ -4,6 +4,11 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.12.1
+
+Record verified runtime help, explicit command errors and listing. Further original-VM
+deployment is paused at the operator's request; installed implementation is 0.12.0.
+
 ## 0.12.0
 
 Add complete `~/team --help` with commands, parameters and explanations. Unknown
