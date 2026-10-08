@@ -38,4 +38,14 @@ class VertexAuthenticationTests(unittest.TestCase):
   with patch('builtins.input',side_effect=['fixture-project','global','gemini-fixture']),patch.object(self.m.subprocess,'run',side_effect=fake_auth):self.m.login({'HOME':str(self.root)})
   value=json.loads(settings.read_text());self.assertEqual(value['security']['auth']['selectedType'],'vertex-ai');self.assertEqual(value['security']['auth']['enforcedType'],'vertex-ai');self.assertIn('fixture',value['hooks'])
 
+ def test_invalid_claude_alias_explains_full_id_without_claiming_access(self):
+  sdk=self.root/'.install/google-cloud-sdk/bin/gcloud';sdk.parent.mkdir(parents=True);sdk.touch()
+  def fake_auth(*args,**kwargs):self.m.ADC.write_text('{}')
+  with patch('builtins.input',side_effect=['fixture-project','global','Opus-5','opus','claude-opus-5','']),patch('builtins.print') as output,patch.object(self.m.subprocess,'run',side_effect=fake_auth):
+   self.m.login({})
+  messages=[call.args[0] for call in output.call_args_list]
+  self.assertEqual(sum('not full IDs' in message for message in messages),2)
+  self.assertTrue(any('does not check access' in message for message in messages))
+  self.assertEqual(self.m.read_config()['ANTHROPIC_MODEL'],'claude-opus-5')
+
 if __name__=='__main__':unittest.main()

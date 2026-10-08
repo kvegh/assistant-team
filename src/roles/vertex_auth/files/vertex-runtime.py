@@ -47,7 +47,10 @@ def login(env):
   while True:
    value=input(label+(' ['+old+']' if old else '')+': ').strip() or old
    if re.fullmatch(pattern,value):return value
-   print('[AC-Agents]: Enter the requested identifier in its supported format.')
+   if key in {'ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL'}:
+    print('[AC-Agents]: Use the full Vertex model ID, for example claude-opus-5. Opus, opus and Opus-5 are not full IDs. The selected model must be enabled for your Google project and location; this prompt does not check access.')
+   else:
+    print('[AC-Agents]: Enter the requested identifier in its supported format.')
  is_gemini=vendor()=='gemini'
  project=prompt('Google project ID','GOOGLE_CLOUD_PROJECT' if is_gemini else 'ANTHROPIC_VERTEX_PROJECT_ID',r'[a-z][a-z0-9-]{4,28}[a-z0-9]')
  region=prompt('Vertex region/location (for example us-east5 or global)','GOOGLE_CLOUD_LOCATION' if is_gemini else 'CLOUD_ML_REGION',r'[a-z][a-z0-9-]{0,39}')
@@ -72,7 +75,7 @@ def login(env):
  print('[AC-Agents]: Work Vertex login saved in this directory. No API enablement, billing change or model probe was requested by this wrapper.')
 
 def claude_models(prompt,project,region):
- model=prompt('Enabled Vertex Claude primary model ID (no alias)','ANTHROPIC_MODEL',r'claude-[a-z0-9-]+(?:@[0-9]{8})?')
+ model=prompt('Enabled Vertex Claude primary model ID (for example claude-opus-5; not Opus)','ANTHROPIC_MODEL',r'claude-[a-z0-9-]+(?:@[0-9]{8})?')
  small=prompt('Enabled small/background model ID (Enter uses primary)','ANTHROPIC_DEFAULT_HAIKU_MODEL',r'claude-[a-z0-9-]+(?:@[0-9]{8})?',model)
  cfg={'CLAUDE_CODE_USE_VERTEX':'1','CLOUD_ML_REGION':region,'ANTHROPIC_VERTEX_PROJECT_ID':project,'ANTHROPIC_MODEL':model,'ANTHROPIC_DEFAULT_OPUS_MODEL':model,'ANTHROPIC_DEFAULT_SONNET_MODEL':model,'ANTHROPIC_DEFAULT_HAIKU_MODEL':small}
  return cfg
