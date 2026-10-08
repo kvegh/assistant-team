@@ -4,6 +4,11 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.3
+
+Record the reusable session-context implementation and rationale with its actual
+commit. Runtime capability status remains separate from agreed future requirements.
+
 ## 0.8.2
 
 Add reusable session rules covering the user's security, Ansible, background-work,

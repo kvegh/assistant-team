@@ -605,3 +605,7 @@ The user requested applicable parts of the Red Hat good-practices guide without 
 ## Reuse existing quality tools without silent installation
 
 Practical guide adoption now includes one tested quality command shared by local pre-commit configuration and a manually dispatched trusted-runner CI workflow. It runs tests and production-profile lint, preserves failure status, and requires explicit external Vault access without installing dependencies. CI registration and pre-commit installation remain operator choices; no hosted secret or paid platform configuration is introduced. Three behavioral tests cover stopped execution after failure, missing Vault input and test-only execution. Implementation: `9c0f1a3`.
+
+## Reusable rules for future sessions
+
+The user requested one comprehensive context document for future assistants. SESSION_RULES.md consolidates explicit working rules and settled boundaries while directing readers to current source, release notes and verified deployment outcomes. It contains no credentials or environment identifiers and does not turn pending capabilities into completion claims. Implementation: `140dccc`.
