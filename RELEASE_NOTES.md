@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.13.1
+
+Record the verified prompt-template implementation and its explicit deployment hold.
+Add the required future reusable post-deployment acceptance-suite TODO, building
+on existing model-free validation rather than implying no checks exist.
+
 ## 0.13.0
 
 Create editable prompt templates with `[Project]` and `[Role: Investigator]` style

@@ -15,6 +15,14 @@
 
 ## Required later
 
+- [ ] Define a reusable post-deployment acceptance suite with documented test cases
+  and a command or AAP verification job to run them after installation. Build on
+  the existing native-version and disposable-project checks; cover installed CLI
+  commands, service/project lifecycle, shared workspace and project isolation,
+  and model-free communication checks. Report clear pass/fail results without
+  exposing credentials. Keep provider authentication and inference tests separate
+  from ordinary deployment checks and require explicit authorization for model calls.
+
 - [ ] Build native Mistral Vibe support for agents-connector and submit an
   upstream pull request. Implement and verify MCP configuration, native event
   handling and session wake-up so Mistral agents can participate in team roles.
