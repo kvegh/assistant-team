@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.13.3
+
+Record the tmux startup race, bounded readiness fix and its validation.
+
 ## 0.13.2
 
 Fix the detached Podman startup race by waiting for tmux readiness before harness

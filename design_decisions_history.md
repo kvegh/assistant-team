@@ -672,3 +672,17 @@ The user requested complete team --help and clear invalid-command errors after c
 ## Distinguish project prompt sections from inactive examples
 
 The user selected bracket sections such as [Role: Investigator] with # comment lines rather than Markdown role headings. All starter example prose and human guidance are comments, removed before delivery to harnesses in the new format; no fallback activates examples. The shared goal uses [Project]. Authors add their active text or uncomment examples. Each supported role must appear exactly once and receives only its own active section plus the shared goal and existing workspace context. Legacy # Role: files retain their prior interpretation and existing project files are preserved; new projects convert old default-template prose into commented samples. Seven new tests exercise comment exclusion, blank roles, legacy compatibility, aliases, validation and private-observer isolation; all 97 tests and production lint pass and the contextual APME rescan completes. The operator explicitly holds deployment of the new template/parser/generator to the original VM while starting a first team; these changes are committed source only. Implementation: `14914da`.
+
+## Wait for idle tmux before native harness launch
+
+Implementation: `c7d4473`.
+
+The first project launch reached tmux commands before a newly detached Podman
+container had finished its idle entrypoint. Restarting that idle container made
+tmux immediately available without a model request, supporting a startup race
+rather than a persistent permission problem. Launch now waits for readiness for
+at most 15 seconds and reports stopped containers or timeouts explicitly. Existing
+containers restore a missing session only after PID 1 reaches its idle sleep,
+avoiding competing tmux creation. New entrypoints stop on tmux initialization
+failure. Five readiness regressions passed, along with all 102 tests and production
+Ansible lint with zero failures or warnings.
