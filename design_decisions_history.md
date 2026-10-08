@@ -617,3 +617,7 @@ The user authorized a pinned isolated APME installation and local OPA container 
 ## Enable only account profiles the operator currently uses
 
 The operator disabled unused work profiles in the current environment while retaining their installations, credentials and project definitions. This is an environment-specific enablement choice, not a removal from the eight-profile catalog or a default restriction for future operators. Existing account state and running work are not erased or silently reassigned.
+
+## Safely replace a disposable deployment test clone
+
+The user explicitly authorized removal of only the second test VM and a fresh third-clone end-to-end deployment. A dedicated normal AAP retirement playbook defaults to read-only preflight, validates the selected disposable naming convention, verifies one exclusive regular clone disk against all other domains, gracefully shuts down the selected guest and checks that the golden image and other domains remain intact. Separate encrypted retirement and fresh definitions prevent accidental reuse of the old recovery address. Safety rejection tests pass and the new role passes production lint. Actual AAP retirement and fresh deployment results are tracked separately after execution. Implementation: `e1545f9`.
