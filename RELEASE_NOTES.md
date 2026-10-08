@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.10.3
+
+Record the behavior-preserving Ansible readability review and its implementation.
+
 ## 0.10.2
 
 Clarify existing Ansible shell parameter mappings and root-growth result naming;

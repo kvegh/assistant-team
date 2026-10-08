@@ -656,3 +656,7 @@ eight native version checks. Read-only Antigravity help/version checks passed;
 the personal profile and its Gemini state directory were verified mode 0700.
 No login or inference was performed by deployment. Operator authentication and
 personal team integration remain separate subsequent verification steps.
+
+## Make Ansible operations easier to read without changing behavior
+
+After the APME assessment, the user requested an end-to-end Ansible readability review that retains relevant practices and functionality. Entry playbooks and roles were reviewed from provisioning through validation. Three shell pipelines now use explicit cmd/executable/chdir mappings; normalized parsed tasks confirm identical commands, conditions and async settings. A repeated internal root-growth result name was simplified and the user module desired state made explicit. No new architecture or role consolidation was introduced. All 80 tests and production lint pass; the APME rescan completes with the three M027 pipeline indicators removed and other contextual limitations preserved. Implementation: `00af762`.
