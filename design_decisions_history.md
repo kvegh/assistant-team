@@ -557,3 +557,7 @@ The personal Gemini OAuth input stage was verified without submitting authentica
 ## Recognizable login status messages
 
 The user requested the exact `[AC-Agents]:` prefix for wrapper-owned login outcomes, clear confirmations and errors so these messages are distinguishable from native provider output. The native providers retain their own output, and local credential evidence still does not imply model access. Atomic helper updates preserve active login processes and existing credentials. Implementation: `ccf07f2`.
+
+## Actionable login follow-up guidance
+
+The user requested useful next steps after each wrapper login result. Guidance distinguishes local saved evidence from model access and points to provider-specific prerequisites or retirement limitations. It does not launch model checks, switch to paid APIs or erase credentials. Native Vibe authentication storage was checked against the installed source before advising a retry. Implementation: `c880a3d`.
