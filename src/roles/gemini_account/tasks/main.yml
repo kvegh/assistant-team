@@ -5,8 +5,9 @@
     key: "{{ containers.runtime_user }}"
 - name: Define work Gemini migration home
   ansible.builtin.set_fact:
-    assistant_gemini_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    __gemini_account_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
 - name: Safely migrate the old Gemini directory without changing its contents
+  become: true
   become_user: "{{ containers.runtime_user }}"
   ansible.builtin.command:
     argv:
@@ -23,16 +24,17 @@
             try:
                 if p.stat().st_uid!=os.getuid():continue
                 args=(p/'cmdline').read_bytes().split(b'\0')
-                if any(a.startswith(str(old).encode()+b'/') for a in args):raise SystemExit('Native login/CLI is active; wait for it to finish before directory migration')
+                if any(a.startswith(str(old).encode()+b'/') for a in args):
+                    raise SystemExit('Native login/CLI is active; wait for it to finish before directory migration')
             except (OSError,PermissionError):pass
         old.rename(new)
         print('migrated')
     chdir: /tmp
   environment:
-    HOME: "{{ assistant_gemini_home }}"
+    HOME: "{{ __gemini_account_home }}"
   loop:
-    - {old: gemini, new: gemini-work}
-    - {old: codex, new: codex-priv}
-    - {old: mistral, new: mistral-priv}
-  register: assistant_gemini_move
-  changed_when: "'migrated' in assistant_gemini_move.stdout"
+    - { old: gemini, new: gemini-work }
+    - { old: codex, new: codex-priv }
+    - { old: mistral, new: mistral-priv }
+  register: __gemini_account_move
+  changed_when: "'migrated' in __gemini_account_move.stdout"

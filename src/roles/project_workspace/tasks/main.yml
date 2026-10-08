@@ -8,22 +8,22 @@
     paths: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/projects"
     file_type: directory
     recurse: false
-  register: assistant_workspace_projects
+  register: __project_workspace_projects
 - name: Inspect project initialization markers
   ansible.builtin.stat:
     path: "{{ item.path }}/initialized"
-  loop: "{{ assistant_workspace_projects.files }}"
-  register: assistant_workspace_initialized
+  loop: "{{ __project_workspace_projects.files }}"
+  register: __project_workspace_initialized
 - name: Add shared artifact directories without modifying existing contents
   ansible.builtin.file:
     path: "{{ item.item.path }}/workspace"
     state: directory
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0700'
+    mode: "0700"
     follow: false
   when: item.stat.exists
-  loop: "{{ assistant_workspace_initialized.results }}"
+  loop: "{{ __project_workspace_initialized.results }}"
 - name: Report that container mount migration occurs at normal project stop start
   ansible.builtin.debug:
     msg: Shared directories are ready. Active containers are preserved; existing containers acquire mounts at the next project stop/start.

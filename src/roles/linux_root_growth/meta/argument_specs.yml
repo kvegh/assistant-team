@@ -1,0 +1,5 @@
+---
+argument_specs:
+  main:
+    short_description: Grow only the existing last GPT root partition and XFS filesystem.
+    options: {}

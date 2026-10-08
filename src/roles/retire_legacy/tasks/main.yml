@@ -5,57 +5,62 @@
     key: "{{ containers.runtime_user }}"
 - name: Define original unit paths
   ansible.builtin.set_fact:
-    assistant_legacy_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
-    assistant_legacy_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+    __retire_legacy_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    __retire_legacy_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Inspect only original non-instance unit files
   ansible.builtin.stat:
-    path: "{{ assistant_legacy_home }}/.config/systemd/user/{{ item }}"
+    path: "{{ __retire_legacy_home }}/.config/systemd/user/{{ item }}"
   loop: [assistant-connector.target, assistant-connector-containers.service, assistant-connector-gateway.service, assistant-connector-broker.service]
-  register: assistant_legacy_units
+  register: __retire_legacy_units
 - name: Stop and disable existing original units only
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_legacy_uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_legacy_uid }}/bus"
+    XDG_RUNTIME_DIR: "/run/user/{{ __retire_legacy_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ __retire_legacy_uid }}/bus"
   ansible.builtin.systemd_service:
     scope: user
     name: "{{ item.item }}"
     state: stopped
     enabled: false
   when: item.stat.exists
-  loop: "{{ assistant_legacy_units.results }}"
+  loop: "{{ __retire_legacy_units.results }}"
 - name: Inspect only original non-project container definitions
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    HOME: "{{ assistant_legacy_home }}"
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_legacy_uid }}"
+    HOME: "{{ __retire_legacy_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ __retire_legacy_uid }}"
   ansible.builtin.command:
     argv: [podman, container, exists, "{{ item }}"]
     chdir: /tmp
   changed_when: false
-  failed_when: assistant_legacy_container.rc not in [0, 1]
-  register: assistant_legacy_container
+  failed_when: __retire_legacy_container.rc not in [0, 1]
+  register: __retire_legacy_container
   loop: [ac-orchestrator, ac-builder, ac-investigator, ac-challenger, ac-summarizer, ac-observer, ac-private-connector, ac-corporate-connector]
 - name: Remove exact original container definitions while retaining bind-mounted data
+  changed_when: true
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    HOME: "{{ assistant_legacy_home }}"
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_legacy_uid }}"
+    HOME: "{{ __retire_legacy_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ __retire_legacy_uid }}"
   ansible.builtin.command:
     argv: [podman, rm, --force, "{{ item.item }}"]
     chdir: /tmp
   when: item.rc == 0
-  loop: "{{ assistant_legacy_container.results }}"
+  loop: "{{ __retire_legacy_container.results }}"
 - name: Remove only original non-instance unit files
   ansible.builtin.file:
-    path: "{{ assistant_legacy_home }}/.config/systemd/user/{{ item }}"
+    path: "{{ __retire_legacy_home }}/.config/systemd/user/{{ item }}"
     state: absent
   loop: [assistant-connector.target, assistant-connector-containers.service, assistant-connector-gateway.service, assistant-connector-broker.service]
 - name: Reload user manager without restarting project instances
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_legacy_uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_legacy_uid }}/bus"
+    XDG_RUNTIME_DIR: "/run/user/{{ __retire_legacy_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ __retire_legacy_uid }}/bus"
   ansible.builtin.systemd_service:
     scope: user
     daemon_reload: true

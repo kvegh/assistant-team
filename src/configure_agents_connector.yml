@@ -5,10 +5,12 @@
   gather_facts: false
   no_log: true
   tasks:
-    - ansible.builtin.include_vars:
+    - name: Load the encrypted deployment definition
+      ansible.builtin.include_vars:
         file: ../vars/environment.vault.yml
         name: assistant_environment
-    - ansible.builtin.add_host:
+    - name: Register the destination in transient inventory
+      ansible.builtin.add_host:
         name: assistant_connector_host
         groups: assistant_connector_hosts
         ansible_host: "{{ assistant_environment.environment.guest.linux_vm_ip }}"
@@ -43,4 +45,4 @@
     - role: vertex_auth
       tags: [vertex_auth]
       vars:
-        assistant_vertex_install_sdk: "{{ hostvars['localhost'].assistant_environment.agent_connector.vertex_sdk_install_authorized | default(false) }}"
+        vertex_auth_install_sdk: "{{ hostvars['localhost'].assistant_environment.agent_connector.vertex_sdk_install_authorized | default(false) }}"

@@ -1,0 +1,5 @@
+---
+argument_specs:
+  main:
+    short_description: Inspect host-key, disk and package metadata through the selected trusted guest connection.
+    options: {}

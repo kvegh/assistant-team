@@ -1,0 +1,3 @@
+---
+environment_validation_run_projects: false
+environment_validation_expected_disk_gb: 20

@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Perform the legacy Gemini directory-name migration without losing saved state.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.

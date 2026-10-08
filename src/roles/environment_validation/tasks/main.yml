@@ -1,0 +1,32 @@
+---
+- name: Inspect the complete root filesystem allocation
+  ansible.builtin.command:
+    argv: [df, -B1, "--output=size,avail", /]
+  register: __environment_validation_root_capacity
+  changed_when: false
+- name: Verify that the clone uses its configured root capacity
+  ansible.builtin.assert:
+    that:
+      - >-
+        __environment_validation_root_capacity.stdout_lines[-1].split()[0] | int
+        > (environment_validation_expected_disk_gb | int - 2) * 1073741824
+- name: Verify disposable project isolation without authentication or inference
+  become: true
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ podman_host_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
+  ansible.builtin.command:
+    argv: [python3, "{{ podman_host_runtime_home }}/agents-connector/routing/validate_projects.py"]
+  changed_when: false
+  when: environment_validation_run_projects | bool
+- name: Publish verified installation metadata without account authentication
+  ansible.builtin.set_stats:
+    data:
+      assistant_installation_verified: true
+      assistant_installation_version: "{{ lookup('file', role_path + '/../../../VERSION') | trim }}"
+      assistant_installation_root_bytes: "{{ __environment_validation_root_capacity.stdout_lines[-1].split()[0] | int }}"
+      assistant_installation_root_free_bytes: "{{ __environment_validation_root_capacity.stdout_lines[-1].split()[1] | int }}"
+      assistant_installation_model_inference: false
+      assistant_installation_source_revision: "{{ awx_project_revision | default('unavailable') }}"

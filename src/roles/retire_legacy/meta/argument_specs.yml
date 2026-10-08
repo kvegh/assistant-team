@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Retire only the exact original non-project units/containers.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.

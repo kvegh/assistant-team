@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Verify installed root capacity and optional model-free project lifecycle.
+    options:
+      environment_validation_expected_disk_gb:
+        type: int
+      environment_validation_run_projects:
+        type: bool

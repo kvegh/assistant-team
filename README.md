@@ -4,11 +4,16 @@ Deployment and configuration use Ansible where it provides clear, reliable
 behavior, preferring a suitable certified collection without adding unnecessary
 architecture. Runtime command and messaging logic remains application code.
 
-Version 0.5.1 adds operator-owned local or SSH deployment and sanitized deployment
-metadata transfer to the target environment diagnostics. The published 0.0.1 tag
-remains the earlier baseline. Google Cloud SDK 588.0.0 is installed and verified in the
-development VM's isolated work profiles; personal Gemini requires the
-supported Antigravity migration. These prerequisites are not model-access proof.
+Version 0.7.0 applies practical Ansible good practices: documented and typed role
+interfaces, role-owned variable names, explicit privilege changes, a reboot handler,
+and idempotent role instructions. The complete AAP recovery installation succeeded;
+this refactoring is being verified through the same configuration-only job.
+Production-profile Ansible lint and 71 local tests pass. Role READMEs describe
+check-mode limits; this is not a claim of universal check-mode support.
+
+The published 0.0.1 tag remains the earlier baseline. Google Cloud SDK 588.0.0
+is installed in isolated work profiles; personal Gemini requires the supported
+Antigravity migration. Installation is not model-access proof.
 
 Private project for an assistant team. Application requirements are still being defined.
 

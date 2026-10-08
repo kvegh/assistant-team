@@ -1,0 +1,39 @@
+---
+argument_specs:
+  main:
+    short_description: Install eight isolated native work/private profile prefixes and scoped launchers.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.
+      assistant_source_user:
+        type: str
+        required: true
+      native_auth_dirs:
+        type: list
+        elements: dict
+        options:
+          directory:
+            type: str
+            required: true
+          flavour:
+            type: str
+            choices:
+              - claude
+              - codex
+              - gemini
+              - vibe
+            required: true
+          version:
+            type: str
+            required: true
+          entrypoint:
+            type: str
+            required: true
+          package:
+            type: str
+          provider:
+            type: str
+            choices:
+              - vertex

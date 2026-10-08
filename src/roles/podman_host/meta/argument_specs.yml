@@ -1,0 +1,13 @@
+---
+argument_specs:
+  main:
+    short_description: Prepare one isolated rootless container runtime account using certified Podman content.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.
+      provisioning:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.

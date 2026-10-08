@@ -1,4 +1,4 @@
 ---
-assistant_vertex_install_sdk: false
-assistant_vertex_sdk_version: '588.0.0'
-assistant_vertex_sdk_sha256: e38ceac43022bb5a4d94d5a4a9c9c51f90f28c910b59a018ae07011e220c4412
+vertex_auth_install_sdk: false
+vertex_auth_sdk_version: "588.0.0"
+vertex_auth_sdk_sha256: e38ceac43022bb5a4d94d5a4a9c9c51f90f28c910b59a018ae07011e220c4412

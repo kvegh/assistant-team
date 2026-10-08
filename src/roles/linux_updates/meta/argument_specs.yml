@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Register the selected RHEL guest and fully update installed packages.
+    options:
+      provisioning:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.

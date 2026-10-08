@@ -4,15 +4,17 @@
   gather_facts: false
   no_log: true
   tasks:
-    - ansible.builtin.include_vars:
+    - name: Load the encrypted deployment definition
+      ansible.builtin.include_vars:
         file: "{{ assistant_destination_vault }}"
         name: destination
-    - ansible.builtin.add_host:
+    - name: Register the destination in transient inventory
+      ansible.builtin.add_host:
         name: assistant_destination
         groups: assistant_destinations
         ansible_host: "{{ destination.connection.host }}"
         ansible_user: "{{ destination.connection.user }}"
-        ansible_connection: "{{ assistant_local | default(false) | bool | ternary('local','ssh') }}"
+        ansible_connection: "{{ assistant_local | default(false) | bool | ternary('local', 'ssh') }}"
         ansible_port: "{{ destination.connection.port | default(22) }}"
         ansible_password: "{{ destination.connection.password | default(omit) }}"
         ansible_become_password: "{{ destination.connection.become_password | default(omit) }}"
@@ -22,29 +24,36 @@
   gather_facts: false
   no_log: true
   tasks:
-    - ansible.builtin.getent:
+    - name: Resolve the runtime account
+      ansible.builtin.getent:
         database: passwd
         key: "{{ hostvars.localhost.destination.runtime_user }}"
-    - ansible.builtin.set_fact:
+    - name: Define protected runtime paths
+      ansible.builtin.set_fact:
         diagnostic_home: "{{ ansible_facts.getent_passwd[hostvars.localhost.destination.runtime_user][4] }}"
-    - ansible.builtin.file:
+    - name: Prepare protected runtime paths
+      ansible.builtin.file:
         path: "{{ diagnostic_home }}/environment-logs"
         state: directory
         owner: "{{ hostvars.localhost.destination.runtime_user }}"
-        mode: '0700'
-    - ansible.builtin.copy:
+        mode: "0700"
+    - name: Install protected deployment content
+      ansible.builtin.copy:
         src: "{{ assistant_safe_deployment_metadata }}"
         dest: "{{ diagnostic_home }}/environment-logs/deployment-{{ assistant_deployment_run_id }}.jsonl"
         owner: "{{ hostvars.localhost.destination.runtime_user }}"
-        mode: '0600'
-    - name: Bound the retained deployment metadata runs
-      ansible.builtin.command:
-        argv:
-          - python3
-          - -c
-          - |
-            import pathlib,re,sys
-            root=pathlib.Path(sys.argv[1])
-            files=sorted([p for p in root.glob('deployment-*.jsonl') if not p.is_symlink() and p.is_file() and re.fullmatch(r'deployment-[a-f0-9]{32}\.jsonl',p.name)],key=lambda p:p.stat().st_mtime)
-            for path in files[:-32]:path.unlink()
-          - "{{ diagnostic_home }}/environment-logs"
+        mode: "0600"
+    - name: Inspect regular deployment metadata files without following links
+      ansible.builtin.find:
+        paths: "{{ diagnostic_home }}/environment-logs"
+        patterns: "^deployment-[a-f0-9]{32}\\.jsonl$"
+        use_regex: true
+        file_type: file
+        follow: false
+      register: diagnostic_retained_files
+    - name: Bound retained deployment metadata using Ansible file state
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+        follow: false
+      loop: "{{ (diagnostic_retained_files.files | sort(attribute='mtime'))[:-32] }}"

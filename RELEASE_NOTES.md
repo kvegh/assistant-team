@@ -4,6 +4,15 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.7.0
+
+Apply practical Ansible good practices with typed, documented role interfaces,
+role-prefixed variables, explicit privilege escalation, a reboot handler and
+built-in diagnostic retention. Render role instructions without rerun churn.
+Validate full cloned root capacity and publish safe installation metadata through
+AAP. Production-profile lint and 71 tests pass; live refactoring verification follows.
+Existing encrypted definitions and legacy VM resource overrides remain compatible.
+
 ## 0.6.9
 
 Make VM input-validation tests independent of the development Vault by running an isolated fixture playbook. Removing the checkout password assumption no longer prevents tests from reaching the intended safety guards. Four validation tests pass without target connections.

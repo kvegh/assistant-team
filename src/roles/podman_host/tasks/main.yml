@@ -1,4 +1,11 @@
 ---
+- name: Require the documented RHEL-family platform and native architecture
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'RedHat'
+      - ansible_facts.distribution_major_version | int == 9
+      - ansible_facts.architecture == 'x86_64'
+    fail_msg: This foundation supports RHEL-family 9 on x86_64; other platforms are not verified.
 - name: Require encrypted runtime account configuration
   ansible.builtin.assert:
     that:
@@ -10,13 +17,13 @@
 - name: Check free space before installing and building
   ansible.builtin.command:
     argv: [df, -B1, --output=avail, /]
-  register: container_disk_space
+  register: __podman_host_container_disk_space
   changed_when: false
 
 - name: Require enough filesystem capacity
   ansible.builtin.assert:
     that:
-      - container_disk_space.stdout_lines[-1] | trim | int >= assistant_minimum_free_bytes | int
+      - __podman_host_container_disk_space.stdout_lines[-1] | trim | int >= podman_host_minimum_free_bytes | int
     fail_msg: Container builds require more free filesystem capacity; review storage before proceeding.
 
 - name: Install rootless container dependencies
@@ -40,23 +47,23 @@
 - name: Set runtime paths
   tags: [instance_validation]
   ansible.builtin.set_fact:
-    assistant_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
-    assistant_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+    podman_host_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    podman_host_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 
 - name: Verify subordinate IDs exist for rootless Podman
   ansible.builtin.command:
     argv: [grep, -E, "^{{ containers.runtime_user }}:[0-9]+:[0-9]+$", /etc/subuid, /etc/subgid]
-  register: subordinate_ids
+  register: __podman_host_subordinate_ids
   changed_when: false
-  failed_when: subordinate_ids.rc != 0 or subordinate_ids.stdout_lines | length != 2
+  failed_when: __podman_host_subordinate_ids.rc != 0 or __podman_host_subordinate_ids.stdout_lines | length != 2
 
 - name: Create protected runtime directories
   ansible.builtin.file:
-    path: "{{ assistant_runtime_home }}/{{ item }}"
+    path: "{{ podman_host_runtime_home }}/{{ item }}"
     state: directory
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0700'
+    mode: "0700"
   loop: [.local/share/assistant-team, .local/share/assistant-team/instances, .local/share/assistant-team/build]
 
 - name: Configure Podman through certified Red Hat content
@@ -71,44 +78,46 @@
 - name: Inspect rootless user lingering
   ansible.builtin.stat:
     path: "/var/lib/systemd/linger/{{ containers.runtime_user }}"
-  register: runtime_linger
+  register: __podman_host_runtime_linger
 
 - name: Enable rootless user services
+  changed_when: true
   ansible.builtin.command:
     argv: [loginctl, enable-linger, "{{ containers.runtime_user }}"]
-  when: not runtime_linger.stat.exists
+  when: not __podman_host_runtime_linger.stat.exists
 
 - name: Create a resource delegation override for the runtime account only
   ansible.builtin.file:
-    path: "/etc/systemd/system/user@{{ assistant_runtime_uid }}.service.d"
+    path: "/etc/systemd/system/user@{{ podman_host_runtime_uid }}.service.d"
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Delegate the controllers required for enforced container limits
   ansible.builtin.copy:
-    dest: "/etc/systemd/system/user@{{ assistant_runtime_uid }}.service.d/assistant-containers.conf"
+    dest: "/etc/systemd/system/user@{{ podman_host_runtime_uid }}.service.d/assistant-containers.conf"
     content: "[Service]\nDelegate=cpu memory pids\n"
     owner: root
     group: root
-    mode: '0644'
-  register: runtime_delegation
+    mode: "0644"
+  register: __podman_host_runtime_delegation
 
 - name: Ensure the runtime user manager is active
   ansible.builtin.systemd_service:
-    name: "user@{{ assistant_runtime_uid }}.service"
-    state: "{{ runtime_delegation.changed | ternary('restarted', 'started') }}"
-    daemon_reload: "{{ runtime_delegation.changed }}"
+    name: "user@{{ podman_host_runtime_uid }}.service"
+    state: "{{ __podman_host_runtime_delegation.changed | ternary('restarted', 'started') }}"
+    daemon_reload: "{{ __podman_host_runtime_delegation.changed }}"
 
 - name: Verify rootless engine
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    HOME: "{{ assistant_runtime_home }}"
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+    HOME: "{{ podman_host_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
   ansible.builtin.command:
     argv: [podman, info, --format, '{{ "{{.Host.Security.Rootless}}" }}']
   changed_when: false
-  register: rootless_engine
-  failed_when: rootless_engine.rc != 0 or rootless_engine.stdout | trim != 'true'
+  register: __podman_host_rootless_engine
+  failed_when: __podman_host_rootless_engine.rc != 0 or __podman_host_rootless_engine.stdout | trim != 'true'

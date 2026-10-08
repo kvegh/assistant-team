@@ -1,2 +1,2 @@
 ---
-assistant_minimum_free_bytes: 1073741824
+podman_host_minimum_free_bytes: 1073741824

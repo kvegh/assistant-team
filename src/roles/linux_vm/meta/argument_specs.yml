@@ -1,0 +1,17 @@
+---
+argument_specs:
+  main:
+    short_description: Provision a guarded fresh clone on one libvirt hypervisor.
+    options:
+      provisioning:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.
+      linux_vm_vcpus:
+        type: int
+      linux_vm_memory_mb:
+        type: int
+      linux_vm_disk_gb:
+        type: int
+      linux_vm_deployment_name:
+        type: str

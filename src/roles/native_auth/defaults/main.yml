@@ -1,10 +1,36 @@
 ---
-assistant_native_auth_dirs:
-  - {directory: codex-priv, flavour: codex, version: '0.160.1', package: '@openai/codex', entrypoint: 'lib/node_modules/@openai/codex/bin/codex.js'}
-  - {directory: codex-work, flavour: codex, version: '0.160.1', package: '@openai/codex', entrypoint: 'lib/node_modules/@openai/codex/bin/codex.js'}
-  - {directory: gemini-work, flavour: gemini, provider: vertex, version: '0.63.0', package: '@google/gemini-cli', entrypoint: 'lib/node_modules/@google/gemini-cli/bundle/gemini.js'}
-  - {directory: gemini-priv, flavour: gemini, version: '0.63.0', package: '@google/gemini-cli', entrypoint: 'lib/node_modules/@google/gemini-cli/bundle/gemini.js'}
-  - {directory: claude-work, flavour: claude, provider: vertex, version: '2.1.292', package: '@anthropic-ai/claude-code', entrypoint: 'lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe'}
-  - {directory: claude-priv, flavour: claude, version: '2.1.292', package: '@anthropic-ai/claude-code', entrypoint: 'lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe'}
-  - {directory: mistral-priv, flavour: vibe, version: '2.26.0', entrypoint: 'bin/vibe'}
-  - {directory: mistral-work, flavour: vibe, version: '2.26.0', entrypoint: 'bin/vibe'}
+native_auth_native_auth_dirs:
+  - directory: codex-priv
+    flavour: codex
+    version: "0.160.1"
+    package: "@openai/codex"
+    entrypoint: "lib/node_modules/@openai/codex/bin/codex.js"
+  - directory: codex-work
+    flavour: codex
+    version: "0.160.1"
+    package: "@openai/codex"
+    entrypoint: "lib/node_modules/@openai/codex/bin/codex.js"
+  - directory: gemini-work
+    flavour: gemini
+    provider: vertex
+    version: "0.63.0"
+    package: "@google/gemini-cli"
+    entrypoint: "lib/node_modules/@google/gemini-cli/bundle/gemini.js"
+  - directory: gemini-priv
+    flavour: gemini
+    version: "0.63.0"
+    package: "@google/gemini-cli"
+    entrypoint: "lib/node_modules/@google/gemini-cli/bundle/gemini.js"
+  - directory: claude-work
+    flavour: claude
+    provider: vertex
+    version: "2.1.292"
+    package: "@anthropic-ai/claude-code"
+    entrypoint: "lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+  - directory: claude-priv
+    flavour: claude
+    version: "2.1.292"
+    package: "@anthropic-ai/claude-code"
+    entrypoint: "lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+  - { directory: mistral-priv, flavour: vibe, version: "2.26.0", entrypoint: "bin/vibe" }
+  - { directory: mistral-work, flavour: vibe, version: "2.26.0", entrypoint: "bin/vibe" }

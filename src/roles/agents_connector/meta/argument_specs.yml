@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Install the pinned stock broker, restricted routing and native tmux image extensions.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.
+      assistant_source_user:
+        type: str
+        required: true

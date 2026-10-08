@@ -1,0 +1,9 @@
+---
+argument_specs:
+  main:
+    short_description: Build and smoke-test four pinned native harness images without credentials.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.

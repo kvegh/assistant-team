@@ -2,42 +2,42 @@
 - name: Copy build contexts
   ansible.builtin.copy:
     src: containers/
-    dest: "{{ assistant_runtime_home }}/.local/share/assistant-team/build/"
+    dest: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0600'
+    mode: "0600"
 
 - name: Define native harness builds
   ansible.builtin.set_fact:
-    assistant_harnesses:
+    __agent_images_harnesses:
       - flavour: claude
-        package: '@anthropic-ai/claude-code'
-        version: "{{ assistant_claude_version }}"
-        base: "{{ assistant_node_base }}"
+        package: "@anthropic-ai/claude-code"
+        version: "{{ agent_images_claude_version }}"
+        base: "{{ agent_images_node_base }}"
         containerfile: Containerfile.node
         command: claude
       - flavour: codex
-        package: '@openai/codex'
-        version: "{{ assistant_codex_version }}"
-        base: "{{ assistant_node_base }}"
+        package: "@openai/codex"
+        version: "{{ agent_images_codex_version }}"
+        base: "{{ agent_images_node_base }}"
         containerfile: Containerfile.node
         command: codex
       - flavour: gemini
-        package: '@google/gemini-cli'
-        version: "{{ assistant_gemini_version }}"
-        base: "{{ assistant_node_base }}"
+        package: "@google/gemini-cli"
+        version: "{{ agent_images_gemini_version }}"
+        base: "{{ agent_images_node_base }}"
         containerfile: Containerfile.node
         command: gemini
       - flavour: vibe
         package: mistral-vibe
-        version: "{{ assistant_vibe_version }}"
-        base: "{{ assistant_python_base }}"
+        version: "{{ agent_images_vibe_version }}"
+        base: "{{ agent_images_python_base }}"
         containerfile: Containerfile.vibe
         command: vibe
 
 - name: Build and validate each native harness sequentially
   ansible.builtin.include_tasks: build.yml
-  loop: "{{ assistant_harnesses }}"
+  loop: "{{ __agent_images_harnesses }}"
   loop_control:
     loop_var: harness
 
@@ -47,7 +47,7 @@
     dest: /usr/local/bin/assistant-instance
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Create launcher configuration directory
   ansible.builtin.file:
@@ -55,32 +55,33 @@
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Publish verified local image versions
   ansible.builtin.copy:
     dest: /etc/assistant-team/images.json
-    content: "{{ dict(assistant_harnesses | map(attribute='flavour') | zip(assistant_harnesses | map(attribute='version'))) | to_nice_json }}\n"
+    content: "{{ dict(__agent_images_harnesses | map(attribute='flavour') | zip(__agent_images_harnesses | map(attribute='version'))) | to_nice_json }}\n"
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
 - name: Copy offline instance validation utility
   tags: [instance_validation]
   ansible.builtin.copy:
     src: validate_instances.py
-    dest: "{{ assistant_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"
+    dest: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0700'
+    mode: "0700"
 
 - name: Verify native harness instances and isolation without model calls
   tags: [instance_validation]
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    HOME: "{{ assistant_runtime_home }}"
-    XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+    HOME: "{{ podman_host_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
   ansible.builtin.command:
-    argv: [python3, "{{ assistant_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"]
+    argv: [python3, "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"]
   changed_when: false

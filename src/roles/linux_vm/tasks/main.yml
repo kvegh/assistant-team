@@ -4,10 +4,10 @@
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
-      - deployment_name is match('^[a-z][a-z0-9-]{0,62}$')
-      - vm_vcpus | int >= 1
-      - vm_memory_mb | int >= 1024
-      - vm_disk_gb | int >= 1
+      - linux_vm_deployment_name is match('^[a-z][a-z0-9-]{0,62}$')
+      - linux_vm_vcpus | int >= 1
+      - linux_vm_memory_mb | int >= 1024
+      - linux_vm_disk_gb | int >= 1
       - provisioning.golden_image_path is match('^/')
       - provisioning.vm_dir is match('^/')
       - provisioning.vm_domain | length > 0
@@ -19,60 +19,60 @@
   tags: [offline_recovery]
   ansible.builtin.command:
     argv: [virsh, list, --all, --name]
-  register: existing_vms
+  register: __linux_vm_existing_vms
   changed_when: false
 
 - name: Inspect target disk
   tags: [offline_recovery]
   ansible.builtin.stat:
-    path: "{{ deployment_disk }}"
-  register: existing_disk
+    path: "{{ linux_vm_deployment_disk }}"
+  register: __linux_vm_existing_disk
 
 - name: Validate offline recovery safety
   tags: [never, offline_recovery]
   when: "'offline_recovery' in ansible_run_tags"
   ansible.builtin.assert:
     that:
-      - deployment_name not in existing_vms.stdout_lines
-      - existing_disk.stat.exists
+      - linux_vm_deployment_name not in __linux_vm_existing_vms.stdout_lines
+      - __linux_vm_existing_disk.stat.exists
     fail_msg: Offline recovery requires an existing disk with no defined VM.
 
 - name: Refuse to overwrite an existing VM or disk
   ansible.builtin.assert:
     that:
-      - deployment_name not in existing_vms.stdout_lines
-      - not existing_disk.stat.exists
+      - linux_vm_deployment_name not in __linux_vm_existing_vms.stdout_lines
+      - not __linux_vm_existing_disk.stat.exists
     fail_msg: The VM or disk already exists; investigate before retrying.
 
 - name: Inspect golden image
   ansible.builtin.command:
     argv: [qemu-img, info, --output=json, "{{ provisioning.golden_image_path }}"]
-  register: golden_image
+  register: __linux_vm_golden_image
   changed_when: false
 
 - name: Refuse disk sizes smaller than the golden image
   ansible.builtin.assert:
     that:
-      - (vm_disk_gb | int * 1073741824) >= ((golden_image.stdout | from_json)['virtual-size'] | int)
-    fail_msg: Requested disk size is smaller than the source image; increase vm_disk_gb.
+      - (linux_vm_disk_gb | int * 1073741824) >= ((__linux_vm_golden_image.stdout | from_json)['virtual-size'] | int)
+    fail_msg: Requested disk size is smaller than the source image; increase linux_vm_disk_gb.
 
 - name: Ensure VM directory exists
   ansible.builtin.file:
     path: "{{ provisioning.vm_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Clone the golden image without overwriting a disk
   ansible.builtin.copy:
     src: "{{ provisioning.golden_image_path }}"
-    dest: "{{ deployment_disk }}"
+    dest: "{{ linux_vm_deployment_disk }}"
     remote_src: true
     force: false
-    mode: '0600'
+    mode: "0600"
 
 - name: Resize the cloned disk
   ansible.builtin.command:
-    argv: [qemu-img, resize, "{{ deployment_disk }}", "{{ vm_disk_gb | int }}G"]
+    argv: [qemu-img, resize, "{{ linux_vm_deployment_disk }}", "{{ linux_vm_disk_gb | int }}G"]
   changed_when: true
 
 - name: Remove AAP installer artifacts and inherited clutter from the clone
@@ -80,7 +80,7 @@
     argv:
       - virt-customize
       - -a
-      - "{{ deployment_disk }}"
+      - "{{ linux_vm_deployment_disk }}"
       - --run-command
       - "{{ lookup('template', role_path + '/templates/clean_linux_clone.sh.j2') }}"
   changed_when: true
@@ -92,9 +92,9 @@
     argv:
       - virt-customize
       - -a
-      - "{{ deployment_disk }}"
+      - "{{ linux_vm_deployment_disk }}"
       - --hostname
-      - "{{ deployment_name }}.{{ provisioning.vm_domain }}"
+      - "{{ linux_vm_deployment_name }}.{{ provisioning.vm_domain }}"
       - --run-command
       - "{{ lookup('file', role_path + '/files/reset_linux_identity.sh') }}"
       - --selinux-relabel
@@ -106,18 +106,18 @@
     argv:
       - virt-install
       - --name
-      - "{{ deployment_name }}"
+      - "{{ linux_vm_deployment_name }}"
       - --vcpus
-      - "{{ vm_vcpus | int }}"
+      - "{{ linux_vm_vcpus | int }}"
       - --memory
-      - "{{ vm_memory_mb | int }}"
+      - "{{ linux_vm_memory_mb | int }}"
       - --import
       - --graphics
       - none
       - --osinfo
       - detect=on,require=off
       - --disk
-      - "path={{ deployment_disk }},format=qcow2"
+      - "path={{ linux_vm_deployment_disk }},format=qcow2"
       - --network
       - "network={{ provisioning.vm_network }}"
       - --noautoconsole
@@ -126,66 +126,65 @@
 - name: Read the VM network interface
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, domiflist, "{{ deployment_name }}"]
-  register: vm_interfaces
+    argv: [virsh, domiflist, "{{ linux_vm_deployment_name }}"]
+  register: __linux_vm_vm_interfaces
   changed_when: false
 
 - name: Extract the VM MAC address
   tags: [guest_config, offline_recovery]
   ansible.builtin.set_fact:
-    deployment_mac: "{{ vm_interfaces.stdout | regex_search('(?i)(?:[0-9a-f]{2}:){5}[0-9a-f]{2}') }}"
+    __linux_vm_deployment_mac: "{{ __linux_vm_vm_interfaces.stdout | regex_search('(?i)(?:[0-9a-f]{2}:){5}[0-9a-f]{2}') }}"
 
 - name: Inspect the VM memory allocation in libvirt
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, dominfo, "{{ deployment_name }}"]
+    argv: [virsh, dominfo, "{{ linux_vm_deployment_name }}"]
   environment:
     LC_ALL: C
-  register: vm_allocation
+  register: __linux_vm_vm_allocation
   changed_when: false
 
 - name: Verify the requested memory is allocated to the VM
   tags: [guest_config, offline_recovery]
   ansible.builtin.assert:
     that:
-      - (vm_allocation.stdout | regex_findall('Used memory: +([0-9]+) +KiB') | first | int) == (vm_memory_mb | int * 1024)
+      - (__linux_vm_vm_allocation.stdout | regex_findall('Used memory: +([0-9]+) +KiB') | first | int) == (linux_vm_memory_mb | int * 1024)
     fail_msg: Libvirt memory allocation does not match the requested VM memory.
 
 - name: Validate the VM MAC address
   tags: [guest_config, offline_recovery]
   ansible.builtin.assert:
     that:
-      - deployment_mac is string
-      - deployment_mac | length == 17
+      - __linux_vm_deployment_mac is string
+      - __linux_vm_deployment_mac | length == 17
 
 - name: Wait for a DHCP lease matching the VM MAC address
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, net-dhcp-leases, "{{ provisioning.vm_network }}", --mac, "{{ deployment_mac }}"]
-  register: vm_lease
+    argv: [virsh, net-dhcp-leases, "{{ provisioning.vm_network }}", --mac, "{{ __linux_vm_deployment_mac }}"]
+  register: __linux_vm_vm_lease
   changed_when: false
-  until: vm_lease.stdout is search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+')
+  until: __linux_vm_vm_lease.stdout is search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+')
   retries: 60
   delay: 5
 
 - name: Extract the IPv4 address
   tags: [guest_config, offline_recovery]
   ansible.builtin.set_fact:
-    deployment_ip: "{{ vm_lease.stdout | regex_search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?=/)') }}"
+    __linux_vm_deployment_ip: "{{ __linux_vm_vm_lease.stdout | regex_search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?=/)') }}"
 
 - name: Add the new guest for connection verification
   tags: [guest_config, offline_recovery]
   ansible.builtin.add_host:
-    name: "{{ deployment_name }}"
+    name: "{{ linux_vm_deployment_name }}"
     groups: provisioned_linux_guest
-    ansible_host: "{{ deployment_ip }}"
+    ansible_host: "{{ __linux_vm_deployment_ip }}"
     ansible_user: "{{ provisioning.guest_ssh_user }}"
     ansible_password: "{{ provisioning.guest_ssh_password }}"
     ansible_become: true
     ansible_become_password: "{{ provisioning.guest_become_password }}"
-    deployment_vm_name: "{{ deployment_name }}"
-    deployment_vm_ip: "{{ deployment_ip }}"
-    deployment_vm_disk_gb: "{{ vm_disk_gb | int }}"
-    deployment_vm_vcpus: "{{ vm_vcpus | int }}"
-    deployment_vm_memory_mb: "{{ vm_memory_mb | int }}"
-
+    deployment_vm_name: "{{ linux_vm_deployment_name }}"
+    deployment_vm_ip: "{{ __linux_vm_deployment_ip }}"
+    deployment_vm_disk_gb: "{{ linux_vm_disk_gb | int }}"
+    deployment_vm_vcpus: "{{ linux_vm_vcpus | int }}"
+    deployment_vm_memory_mb: "{{ linux_vm_memory_mb | int }}"

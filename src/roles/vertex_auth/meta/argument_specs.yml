@@ -1,0 +1,11 @@
+---
+argument_specs:
+  main:
+    short_description: Install approved pinned work SDK and isolated Vertex helpers without authentication.
+    options:
+      containers:
+        type: dict
+        required: true
+        description: Shared encrypted definition; role-specific required fields are documented and checked by the role.
+      vertex_auth_install_sdk:
+        type: bool

@@ -5,7 +5,8 @@
   no_log: true
   tags: [always]
   tasks:
-    - ansible.builtin.include_vars:
+    - name: Load the encrypted deployment definition
+      ansible.builtin.include_vars:
         file: "{{ assistant_vm_configuration | default('../vars/fresh_test.vault.yml') }}"
         name: fresh_definition
     - name: Restore the guest group for a configuration-only recovery
@@ -45,7 +46,7 @@
     containers:
       runtime_user: "{{ hostvars.localhost.fresh_definition.runtime_user }}"
     assistant_source_user: "{{ containers.runtime_user }}"
-    assistant_vertex_install_sdk: "{{ hostvars.localhost.fresh_definition.install_google_cloud_sdk | default(false) }}"
+    vertex_auth_install_sdk: "{{ hostvars.localhost.fresh_definition.install_google_cloud_sdk | default(false) }}"
   roles:
     - linux_guest
     - linux_root_growth
@@ -57,14 +58,6 @@
     - project_framework
     - project_workspace
     - vertex_auth
-  tasks:
-    - name: Verify disposable project isolation without authentication or inference
-      become_user: "{{ containers.runtime_user }}"
-      environment:
-        HOME: "{{ assistant_runtime_home }}"
-        XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
-        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
-      ansible.builtin.command:
-        argv: [python3, "{{ assistant_runtime_home }}/agents-connector/routing/validate_projects.py"]
-      changed_when: false
-      when: hostvars.localhost.fresh_definition.validate_projects | default(true) | bool
+    - role: environment_validation
+      environment_validation_run_projects: "{{ hostvars.localhost.fresh_definition.validate_projects | default(true) | bool }}"
+      environment_validation_expected_disk_gb: "{{ hostvars.localhost.fresh_definition.provisioning.vm_disk_gb }}"

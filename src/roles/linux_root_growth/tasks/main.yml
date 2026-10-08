@@ -8,9 +8,9 @@
     dest: /var/lib/assistant-team-grow-root.py
     owner: root
     group: root
-    mode: '0700'
+    mode: "0700"
 - name: Expand only the existing last root partition and XFS filesystem
   ansible.builtin.command:
     argv: [python3, /var/lib/assistant-team-grow-root.py]
-  register: root_growth
-  changed_when: (root_growth.stdout | from_json).changed
+  register: __linux_root_growth_root_growth
+  changed_when: (__linux_root_growth_root_growth.stdout | from_json).changed

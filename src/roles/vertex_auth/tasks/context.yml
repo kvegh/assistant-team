@@ -2,23 +2,23 @@
 - name: Install isolated work Vertex helper
   ansible.builtin.copy:
     src: vertex-runtime.py
-    dest: "{{ assistant_vertex_root | dirname }}/{{ vertex_context }}/.vertex-runtime.py"
+    dest: "{{ __vertex_auth_root | dirname }}/{{ vertex_context }}/.vertex-runtime.py"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0700'
+    mode: "0700"
 - name: Read existing installation metadata without credentials
   ansible.builtin.slurp:
-    src: "{{ assistant_vertex_root | dirname }}/{{ vertex_context }}/.native-install.json"
-  register: vertex_metadata
+    src: "{{ __vertex_auth_root | dirname }}/{{ vertex_context }}/.native-install.json"
+  register: __vertex_auth_metadata
 - name: Select work Vertex provider explicitly
   ansible.builtin.copy:
-    dest: "{{ assistant_vertex_root | dirname }}/{{ vertex_context }}/.native-install.json"
-    content: "{{ vertex_metadata.content | b64decode | from_json | combine({'provider':'vertex'}) | to_nice_json }}\n"
+    dest: "{{ __vertex_auth_root | dirname }}/{{ vertex_context }}/.native-install.json"
+    content: "{{ __vertex_auth_metadata.content | b64decode | from_json | combine({'provider': 'vertex'}) | to_nice_json }}\n"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
-    mode: '0600'
+    mode: "0600"
 - name: Reuse only immutable SDK program files in Gemini work context
-  when: vertex_context == 'gemini-work' and (assistant_vertex_sdk.stat.exists or assistant_vertex_install_sdk | bool)
+  when: vertex_context == 'gemini-work' and (__vertex_auth_sdk.stat.exists or vertex_auth_install_sdk | bool)
   ansible.builtin.command:
-    argv: [cp, -al, "{{ assistant_vertex_root }}/.install/google-cloud-sdk", "{{ assistant_vertex_root | dirname }}/gemini-work/.install/google-cloud-sdk"]
-    creates: "{{ assistant_vertex_root | dirname }}/gemini-work/.install/google-cloud-sdk/bin/gcloud"
+    argv: [cp, -al, "{{ __vertex_auth_root }}/.install/google-cloud-sdk", "{{ __vertex_auth_root | dirname }}/gemini-work/.install/google-cloud-sdk"]
+    creates: "{{ __vertex_auth_root | dirname }}/gemini-work/.install/google-cloud-sdk/bin/gcloud"

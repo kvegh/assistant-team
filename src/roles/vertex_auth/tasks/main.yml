@@ -5,41 +5,41 @@
     key: "{{ containers.runtime_user }}"
 - name: Define work-only Vertex paths
   ansible.builtin.set_fact:
-    assistant_vertex_root: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/claude-work"
+    __vertex_auth_root: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/claude-work"
 - name: Inspect local Google Cloud CLI
   ansible.builtin.stat:
-    path: "{{ assistant_vertex_root }}/.install/google-cloud-sdk/bin/gcloud"
-  register: assistant_vertex_sdk
+    path: "{{ __vertex_auth_root }}/.install/google-cloud-sdk/bin/gcloud"
+  register: __vertex_auth_sdk
 - name: Install checksum-pinned Google Cloud CLI only in the work directory
-  when: not assistant_vertex_sdk.stat.exists and assistant_vertex_install_sdk | bool
+  when: not __vertex_auth_sdk.stat.exists and vertex_auth_install_sdk | bool
   block:
     - name: Inspect available guest filesystem reserve
       ansible.builtin.command:
         argv: [df, -B1, --output=avail, /]
       changed_when: false
-      register: assistant_vertex_free
+      register: __vertex_auth_free
     - name: Require space for local SDK extraction
       ansible.builtin.assert:
-        that: assistant_vertex_free.stdout_lines[-1] | trim | int > 1073741824
+        that: __vertex_auth_free.stdout_lines[-1] | trim | int > 1073741824
         fail_msg: Local SDK installation requires filesystem reserve; review disk growth before proceeding.
     - name: Download official versioned SDK archive
       ansible.builtin.get_url:
-        url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{{ assistant_vertex_sdk_version }}-linux-x86_64.tar.gz"
-        checksum: "sha256:{{ assistant_vertex_sdk_sha256 }}"
-        dest: "{{ assistant_vertex_root }}/.install/google-cloud-cli.tar.gz"
+        url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{{ vertex_auth_sdk_version }}-linux-x86_64.tar.gz"
+        checksum: "sha256:{{ vertex_auth_sdk_sha256 }}"
+        dest: "{{ __vertex_auth_root }}/.install/google-cloud-cli.tar.gz"
         owner: "{{ containers.runtime_user }}"
         group: "{{ containers.runtime_user }}"
-        mode: '0600'
+        mode: "0600"
     - name: Extract SDK without shell-profile changes or global installation
       ansible.builtin.unarchive:
-        src: "{{ assistant_vertex_root }}/.install/google-cloud-cli.tar.gz"
-        dest: "{{ assistant_vertex_root }}/.install"
+        src: "{{ __vertex_auth_root }}/.install/google-cloud-cli.tar.gz"
+        dest: "{{ __vertex_auth_root }}/.install"
         remote_src: true
         owner: "{{ containers.runtime_user }}"
         group: "{{ containers.runtime_user }}"
     - name: Remove the owned download archive after extraction
       ansible.builtin.file:
-        path: "{{ assistant_vertex_root }}/.install/google-cloud-cli.tar.gz"
+        path: "{{ __vertex_auth_root }}/.install/google-cloud-cli.tar.gz"
         state: absent
 - name: Prepare both isolated work Vertex helpers without requiring authentication
   ansible.builtin.include_tasks: context.yml
@@ -47,22 +47,23 @@
   loop_control:
     loop_var: vertex_context
 - name: Verify installed SDK without login or cloud API calls
-  when: assistant_vertex_sdk.stat.exists or assistant_vertex_install_sdk | bool
+  when: __vertex_auth_sdk.stat.exists or vertex_auth_install_sdk | bool
+  become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
-    HOME: "{{ assistant_vertex_root }}"
-    XDG_CONFIG_HOME: "{{ assistant_vertex_root }}/.config"
-    XDG_CACHE_HOME: "{{ assistant_vertex_root }}/.cache"
-    CLOUDSDK_CONFIG: "{{ assistant_vertex_root }}/.config/gcloud"
-    CLOUDSDK_CORE_DISABLE_USAGE_REPORTING: 'true'
-    TMPDIR: "{{ assistant_vertex_root }}/tmp"
+    HOME: "{{ __vertex_auth_root }}"
+    XDG_CONFIG_HOME: "{{ __vertex_auth_root }}/.config"
+    XDG_CACHE_HOME: "{{ __vertex_auth_root }}/.cache"
+    CLOUDSDK_CONFIG: "{{ __vertex_auth_root }}/.config/gcloud"
+    CLOUDSDK_CORE_DISABLE_USAGE_REPORTING: "true"
+    TMPDIR: "{{ __vertex_auth_root }}/tmp"
   ansible.builtin.command:
-    argv: ["{{ assistant_vertex_root }}/.install/google-cloud-sdk/bin/gcloud", --version]
-    chdir: "{{ assistant_vertex_root }}"
+    argv: ["{{ __vertex_auth_root }}/.install/google-cloud-sdk/bin/gcloud", --version]
+    chdir: "{{ __vertex_auth_root }}"
   changed_when: false
 
-  register: assistant_vertex_version
+  register: __vertex_auth_version
 - name: Verify the pinned SDK release
-  when: assistant_vertex_sdk.stat.exists or assistant_vertex_install_sdk | bool
+  when: __vertex_auth_sdk.stat.exists or vertex_auth_install_sdk | bool
   ansible.builtin.assert:
-    that: "('Google Cloud SDK ' + assistant_vertex_sdk_version) in assistant_vertex_version.stdout_lines"
+    that: "('Google Cloud SDK ' + vertex_auth_sdk_version) in __vertex_auth_version.stdout_lines"

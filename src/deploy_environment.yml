@@ -4,15 +4,17 @@
   gather_facts: false
   no_log: true
   tasks:
-    - ansible.builtin.include_vars:
+    - name: Load the encrypted deployment definition
+      ansible.builtin.include_vars:
         file: "{{ assistant_destination_vault }}"
         name: destination
-    - ansible.builtin.add_host:
+    - name: Register the destination in transient inventory
+      ansible.builtin.add_host:
         name: assistant_destination
         groups: assistant_destinations
         ansible_host: "{{ destination.connection.host }}"
         ansible_user: "{{ destination.connection.user }}"
-        ansible_connection: "{{ assistant_local | default(false) | bool | ternary('local','ssh') }}"
+        ansible_connection: "{{ assistant_local | default(false) | bool | ternary('local', 'ssh') }}"
         ansible_port: "{{ destination.connection.port | default(22) }}"
         ansible_password: "{{ destination.connection.password | default(omit) }}"
         ansible_become_password: "{{ destination.connection.become_password | default(omit) }}"
@@ -27,7 +29,7 @@
     provisioning:
       guest_ssh_user: "{{ hostvars.localhost.destination.connection.user }}"
     assistant_source_user: "{{ containers.runtime_user }}"
-    assistant_vertex_install_sdk: "{{ hostvars.localhost.destination.install_google_cloud_sdk | default(false) }}"
+    vertex_auth_install_sdk: "{{ hostvars.localhost.destination.install_google_cloud_sdk | default(false) }}"
   roles:
     - podman_host
     - agent_images
