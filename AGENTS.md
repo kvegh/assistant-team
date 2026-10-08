@@ -11,6 +11,13 @@ Direct SSH access with sudo to the project VM is authorized for project work.
 Keep access credentials and environment-specific values in Ansible Vault.
 Do not broaden this authorization to unrelated hosts or security-control bypasses.
 
+All read-only APME scans are authorized without repeated approval, provided they
+leave systems and project code unchanged. Preserve existing installation,
+credential-protection, and security-control rules. Assess findings for relevance
+to this project's security, compliance, stability, and supported Ansible version;
+implement justified fixes with validation. Do not blindly apply automatic upstream
+remediation or use external AI fallback.
+
 For every lasting design or configuration change:
 
 - Keep README.md and README.TLDR.md (including the deployed home operator guides) current; update the design decision history to describe the final state

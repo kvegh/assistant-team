@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.9.2
+
+Complete full-codebase APME validation using the verified certified artifact;
+document contextual findings, optional dependency-check limits and standing
+authorization for read-only scans and assessed fixes. No blind remediation.
+
 ## 0.9.1
 
 Record the guarded disposable test lifecycle implementation and its validation.

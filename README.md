@@ -645,10 +645,12 @@ runner setup. Its checkout action is pinned and does not retain a Git credential
 
 ### Optional local APME evaluation
 
-[APME evaluation](docs/APME_EVALUATION.md) records the pinned isolated audit tool,
-partial coverage and certified-dependency blocker. It did not modify source or
-invoke AI. Full-project success is not claimed; production lint remains the
-existing verified check.
+[APME evaluation](docs/APME_EVALUATION.md) records the completed full-codebase
+Native/OPA/Ansible scan and optional dependency-check coverage. Certified content
+was provisioned from its verified original artifact. Findings require contextual
+review; unavailable or unauditable checks are not passing results. Read-only scans
+are authorized, and relevant fixes may follow assessment. Production lint remains
+the established gate; no automatic source remediation or AI request was made.
 
 ## Disposable deployment test lifecycle
 

@@ -82,6 +82,12 @@ material uncertainty rather than inventing history.
 - Apply only relevant Red Hat CoP automation good practices. Use ansible-lint and
   meaningful tests. Evaluate APME's read-only policy checks, including its local
   OPA service, without automatic remediation or external AI fallback.
+- All APME scans that leave systems and project code unchanged are authorized;
+  do not ask again for each validator or scan. Existing dependency-installation,
+  credential-protection, and security-control rules still apply. Assess findings
+  against this project's actual security, compliance, stability, and supported
+  Ansible version. Implement relevant, justified fixes with appropriate validation;
+  do not blindly apply upstream automatic remediation or chase false positives.
 - Protect diagnostic output by default. Investigate the actual failed task, make
   a focused fix, validate, and rerun the relevant template or recovery stage.
   Do not repeat successful or destructive provisioning unnecessarily.
