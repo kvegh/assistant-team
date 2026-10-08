@@ -4,6 +4,13 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.13.2
+
+Fix the detached Podman startup race by waiting for tmux readiness before harness
+launch. Report stopped containers and bounded timeouts without inference; restore
+missing idle sessions only after entrypoint initialization finishes. New entrypoints
+stop if tmux initialization fails instead of masking that failure.
+
 ## 0.13.1
 
 Record the verified prompt-template implementation and its explicit deployment hold.

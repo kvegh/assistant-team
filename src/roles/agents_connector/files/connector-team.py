@@ -137,6 +137,31 @@ async def gateway():
         path.chmod(0o600)
     await asyncio.gather(*(s.serve_forever() for s in servers))
 
+def wait_for_native_session(c, restore=False, timeout=15):
+    """Wait for the detached entrypoint; never start a model to probe readiness."""
+    deadline=time.monotonic()+timeout
+    while True:
+        if subprocess.run(['podman','exec',c,'tmux','has-session','-t','native'],
+                          stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:
+            return
+        running=subprocess.run(['podman','inspect','--format','{{.State.Running}}',c],
+                               capture_output=True,text=True)
+        if running.returncode or running.stdout.strip()!='true':
+            raise ValueError('Container stopped before its native tmux session was ready: '+c)
+        # Existing idle containers may have lost their session. Restore only after
+        # PID 1 has finished initialization, so we cannot race its tmux creation.
+        if restore:
+            process=subprocess.run(['podman','exec',c,'cat','/proc/1/comm'],
+                                   capture_output=True,text=True)
+            if process.returncode==0 and process.stdout.strip()=='sleep':
+                run(['podman','exec',c,'tmux','new-session','-d','-s','native','-n','agent'],
+                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                restore=False
+                continue
+        if time.monotonic()>=deadline:
+            raise ValueError('Native tmux session did not become ready within '+str(timeout)+' seconds: '+c)
+        time.sleep(0.2)
+
 def start_container(name):
     p=PROFILES/name;spec=json.loads((p/'profile.json').read_text());c=container(name)
     exists=subprocess.run(['podman','container','exists',c]).returncode==0
@@ -166,11 +191,10 @@ def start_container(name):
                 run(['podman','rm','--force',c],stdout=subprocess.DEVNULL);exists=False
     if exists:
         run(['podman','start',c],stdout=subprocess.DEVNULL)
-        if subprocess.run(['podman','exec',c,'tmux','has-session','-t','native'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
-            run(['podman','exec',c,'tmux','new-session','-d','-s','native','-n','agent'])
+        wait_for_native_session(c,restore=True)
         return
     uid=os.getuid()
-    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(role_home(name))+':/home/agent:Z','-v',str(role_workspace(name))+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
+    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(role_home(name))+':/home/agent:Z','-v',str(role_workspace(name))+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent && exec sleep infinity']
     if PROJECT:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:'+('ro,z' if name=='observer' else 'rw,z')]
@@ -178,6 +202,7 @@ def start_container(name):
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(p/'context')+':/context:ro,Z']
     run(cmd,stdout=subprocess.DEVNULL)
+    wait_for_native_session(c)
 
 
 def seed_auth(name):

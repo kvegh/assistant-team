@@ -337,6 +337,9 @@ Podman containers with inside-container tmux for the five visible Claude/Codex/G
 profiles. Native authenticated sessions require operator login and launch. The
 original foundation launcher remains available for short-lived isolated commands;
 Vibe is not included in the selected connector setup.
+Container launch waits up to 15 seconds for the idle tmux session before starting
+a native harness. A stopped container or readiness timeout fails clearly without
+a model request; existing idle sessions can be restored safely.
 
 Existing communication software is preferred over a new message service. Timed
 inbox polling is rejected. The selected integration uses stock event-driven wake
