@@ -1,0 +1,127 @@
+---
+- name: Validate exact retirement request
+  ansible.builtin.assert:
+    that:
+      - ansible_play_hosts_all | length == 1
+      - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-2$')
+      - linux_vm_retire_definition.vm_dir is match('^/')
+      - linux_vm_retire_definition.golden_image_path is match('^/')
+      - linux_vm_retire_disk != linux_vm_retire_definition.golden_image_path
+      - not ansible_check_mode
+    fail_msg: Retirement requires an explicitly selected disposable test clone and a live safety preflight.
+
+- name: Inspect all defined domains
+  ansible.builtin.command:
+    argv: [virsh, list, --all, --name]
+  register: __linux_vm_retire_domains
+  changed_when: false
+
+- name: Require the exact selected test domain
+  ansible.builtin.assert:
+    that:
+      - linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
+
+- name: Inspect every domain disk reference
+  ansible.builtin.command:
+    argv: [virsh, domblklist, "{{ item }}", --details]
+  loop: "{{ __linux_vm_retire_domains.stdout_lines | reject('equalto', '') | list }}"
+  register: __linux_vm_retire_references
+  changed_when: false
+
+- name: Confirm exclusive ownership of one file-backed clone disk
+  ansible.builtin.assert:
+    that:
+      - >-
+        (item.stdout_lines | select('search', '^\\s*file\\s+disk\\s+') | list | length == 1)
+        if item.item == linux_vm_retire_definition.vm_name else true
+      - >-
+        (item.stdout.split() | select('equalto', linux_vm_retire_disk) | list | length)
+        == (1 if item.item == linux_vm_retire_definition.vm_name else 0)
+  loop: "{{ __linux_vm_retire_references.results }}"
+  loop_control:
+    label: Safety check
+
+- name: Inspect the owned clone disk
+  ansible.builtin.stat:
+    path: "{{ linux_vm_retire_disk }}"
+    follow: false
+  register: __linux_vm_retire_disk_stat
+
+- name: Inspect the golden image preservation baseline
+  ansible.builtin.stat:
+    path: "{{ linux_vm_retire_definition.golden_image_path }}"
+    follow: false
+  register: __linux_vm_retire_golden_before
+
+- name: Require regular distinct clone and golden files
+  ansible.builtin.assert:
+    that:
+      - __linux_vm_retire_disk_stat.stat.isreg | default(false)
+      - not (__linux_vm_retire_disk_stat.stat.islnk | default(false))
+      - __linux_vm_retire_golden_before.stat.isreg | default(false)
+      - __linux_vm_retire_disk_stat.stat.inode != __linux_vm_retire_golden_before.stat.inode
+
+- name: Complete read-only retirement preflight
+  ansible.builtin.debug:
+    msg: Exact test domain and exclusive clone disk verified; other domains and the golden image are protected.
+
+- name: Retire the explicitly selected test clone
+  when: linux_vm_retire_execute | bool
+  block:
+    - name: Read selected domain state
+      ansible.builtin.command:
+        argv: [virsh, domstate, "{{ linux_vm_retire_definition.vm_name }}"]
+      environment:
+        LC_ALL: C
+      register: __linux_vm_retire_state
+      changed_when: false
+
+    - name: Request graceful shutdown of only the selected domain
+      ansible.builtin.command:
+        argv: [virsh, shutdown, "{{ linux_vm_retire_definition.vm_name }}"]
+      when: __linux_vm_retire_state.stdout | trim != 'shut off'
+      changed_when: true
+
+    - name: Wait for graceful shutdown without a forced stop
+      ansible.builtin.command:
+        argv: [virsh, domstate, "{{ linux_vm_retire_definition.vm_name }}"]
+      environment:
+        LC_ALL: C
+      register: __linux_vm_retire_shutdown
+      changed_when: false
+      until: __linux_vm_retire_shutdown.stdout | trim == 'shut off'
+      retries: 60
+      delay: 5
+
+    - name: Undefine only the verified stopped domain
+      ansible.builtin.command:
+        argv: [virsh, undefine, "{{ linux_vm_retire_definition.vm_name }}", --nvram]
+      changed_when: true
+
+    - name: Delete only the exclusively owned regular clone disk
+      ansible.builtin.file:
+        path: "{{ linux_vm_retire_disk }}"
+        state: absent
+
+    - name: Inspect surviving domain names
+      ansible.builtin.command:
+        argv: [virsh, list, --all, --name]
+      register: __linux_vm_retire_survivors
+      changed_when: false
+
+    - name: Inspect preserved golden image
+      ansible.builtin.stat:
+        path: "{{ linux_vm_retire_definition.golden_image_path }}"
+        follow: false
+      register: __linux_vm_retire_golden_after
+
+    - name: Verify every other domain and the source image remain intact
+      ansible.builtin.assert:
+        that:
+          - >-
+            (__linux_vm_retire_survivors.stdout_lines | reject('equalto', '') | sort)
+            == (__linux_vm_retire_domains.stdout_lines | reject('equalto', '')
+            | reject('equalto', linux_vm_retire_definition.vm_name) | sort)
+          - __linux_vm_retire_golden_after.stat.inode == __linux_vm_retire_golden_before.stat.inode
+          - __linux_vm_retire_golden_after.stat.size == __linux_vm_retire_golden_before.stat.size
+          - __linux_vm_retire_golden_after.stat.mtime == __linux_vm_retire_golden_before.stat.mtime

@@ -649,3 +649,7 @@ runner setup. Its checkout action is pinned and does not retain a Git credential
 partial coverage and certified-dependency blocker. It did not modify source or
 invoke AI. Full-project success is not claimed; production lint remains the
 existing verified check.
+
+## Disposable deployment test lifecycle
+
+`src/retire_test_linux_vm.yml` performs a read-only preflight by default using its separate encrypted retirement definition. Its dedicated normal AAP template removes the selected second test clone only when explicitly launched with `retire_test_execute: true`. The role verifies exclusive disk ownership, refuses source-image or shared disks, uses graceful shutdown, and checks preservation of all other domains and the golden image. The fresh deployment definition selects the next test clone with an empty recovery address; configuration-only recovery remains available after successful provisioning. No provider credentials are copied or model inference performed by this test.

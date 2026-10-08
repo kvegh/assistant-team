@@ -1,0 +1,14 @@
+---
+argument_specs:
+  main:
+    short_description: Retire one explicitly selected disposable second test clone.
+    options:
+      linux_vm_retire_definition:
+        type: dict
+        required: true
+      linux_vm_retire_execute:
+        type: bool
+        default: false
+      linux_vm_retire_disk:
+        type: str
+        required: true

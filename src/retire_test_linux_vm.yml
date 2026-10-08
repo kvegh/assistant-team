@@ -1,0 +1,22 @@
+---
+- name: Load the isolated encrypted retirement definition
+  hosts: localhost
+  gather_facts: false
+  no_log: true
+  tasks:
+    - name: Read the explicitly selected test clone definition
+      ansible.builtin.include_vars:
+        file: ../vars/retire_test.vault.yml
+        name: retired_definition
+
+- name: Safely retire only the selected disposable Linux test clone
+  hosts: hypervisor
+  gather_facts: false
+  become: true
+  no_log: true
+  vars:
+    linux_vm_retire_definition: "{{ hostvars.localhost.retired_definition.provisioning }}"
+    linux_vm_retire_disk: "{{ linux_vm_retire_definition.vm_dir }}/{{ linux_vm_retire_definition.vm_name }}.disk.qcow2"
+    linux_vm_retire_execute: "{{ retire_test_execute | default(false) | bool }}"
+  roles:
+    - linux_vm_retire

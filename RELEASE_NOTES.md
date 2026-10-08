@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.9.0
+
+Add guarded AAP retirement of the explicitly selected disposable second test clone, then prepare an independent fresh third-clone deployment. Read-only preflight is the default; removal checks exclusive disk ownership and preserves other domains and the golden image. End-to-end deployment results are recorded after execution.
+
 ## 0.8.5
 
 Document the scoped APME evaluation implementation and the non-destructive
