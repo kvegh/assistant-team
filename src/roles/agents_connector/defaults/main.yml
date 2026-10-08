@@ -4,9 +4,9 @@ assistant_connector_sha256: cb9e0d92e55a3896e51e326d630330bde32b43fbb33b42d5498e
 assistant_connector_source_revision: 44c195a6ed9e4df608d9fde30e3d8759fc92b900
 assistant_connector_profiles:
   - {name: orchestrator, flavour: claude, visible: true, auth_directory: claude-work}
-  - {name: builder, flavour: codex, visible: true}
+  - {name: builder, flavour: codex, visible: true, auth_directory: codex-priv}
   - {name: investigator, flavour: claude, visible: true, auth_directory: claude-work}
-  - {name: challenger, flavour: gemini, visible: true}
+  - {name: challenger, flavour: gemini, visible: true, auth_directory: gemini-work}
   - {name: summarizer, flavour: claude, visible: true, auth_directory: claude-work}
   - {name: observer, flavour: claude, visible: false, auth_directory: claude-work}
   - {name: private-connector, flavour: claude, visible: false, auth_directory: claude-priv}

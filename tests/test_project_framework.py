@@ -41,23 +41,23 @@ class ProjectFrameworkTests(unittest.TestCase):
   worker=(core.PROFILES/'builder/workspace/CLAUDE.md').read_text();observer=(core.PROFILES/'observer/workspace/CLAUDE.md').read_text()
   self.assertIn('/workspace/shared',worker);self.assertIn('Read/write project artifacts',worker);self.assertNotIn('UNIQUE_observer',worker);self.assertIn('Read-only access',observer)
  def test_missing_auth_refuses_before_systemd_start(self):
-  core=type('Core',(),{'PROFILES':self.root/'profiles'})()
+  core=type('Core',(),{'PROFILES':self.root/'profiles','role_home':lambda _self,role:self.root/'profiles'/role/'home'})()
   for name in self.m.ROLES:
    p=core.PROFILES/name;p.mkdir(parents=True);(p/'profile.json').write_text(json.dumps({'flavour':'claude','auth_directory':'claude-priv' if name=='private-connector' else 'claude-work'}))
-  with patch.object(self.m,'load',return_value=core):
+  with patch.object(self.m,'configure_roles'),patch.object(self.m,'load',return_value=core):
    with self.assertRaisesRegex(ValueError,'before starting ANY'):self.m.required_auth('sample')
  def test_api_key_is_not_accepted_as_chatgpt_subscription_auth(self):
-  core=type('Core',(),{'PROFILES':self.root/'profiles'})()
+  core=type('Core',(),{'PROFILES':self.root/'profiles','role_home':lambda _self,role:self.root/'profiles'/role/'home'})()
   for name in self.m.ROLES:
    p=core.PROFILES/name;p.mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"codex"}')
   (self.root/'codex/.codex').mkdir(parents=True);(self.root/'codex/.codex/auth.json').write_text('{"OPENAI_API_KEY":"dummy"}')
-  with patch.object(self.m,'load',return_value=core):
+  with patch.object(self.m,'configure_roles'),patch.object(self.m,'load',return_value=core):
    with self.assertRaises(ValueError):self.m.required_auth('sample')
  def test_existing_native_refreshed_auth_takes_precedence(self):
-  core=type('Core',(),{'PROFILES':self.root/'profiles'})()
+  core=type('Core',(),{'PROFILES':self.root/'profiles','role_home':lambda _self,role:self.root/'profiles'/role/'home'})()
   for name in self.m.ROLES:
    p=core.PROFILES/name;(p/'home/.codex').mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"codex"}');(p/'home/.codex/auth.json').write_text('{"auth_mode":"chatgpt","tokens":{"access_token":"offline-test"}}')
-  with patch.object(self.m,'load',return_value=core):self.assertIs(self.m.required_auth('sample'),core)
+  with patch.object(self.m,'configure_roles'),patch.object(self.m,'load',return_value=core):self.assertIs(self.m.required_auth('sample'),core)
  def test_launch_all_uses_all_eight_profiles_without_task_prompts(self):
   from unittest.mock import Mock
   core=Mock();core.PROFILES=self.root/'profiles'

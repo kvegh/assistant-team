@@ -62,6 +62,8 @@ for role in c.ALL:
   (sandbox/'agents-connector/routing').mkdir(parents=True)
   shutil.copy2(ROOT/'routing/connector-team.py',sandbox/'agents-connector/routing/connector-team.py')
   shutil.copy2(ROOT/'routing/project-team.py',sandbox/'agents-connector/routing/project-team.py')
+  shutil.copy2(ROOT/'routing/environment-config.py',sandbox/'agents-connector/routing/environment-config.py')
+  (sandbox/'environment.config').write_text(json.dumps({'version':1,'profiles':{v+'-'+a:{'enabled':True} for v in ['claude','gemini','codex','mistral'] for a in ['work','priv']}}))
   p=sandbox/'projects/sample';(p/'profiles').mkdir(parents=True);(p/'initialized').touch()
   for role in ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']:
    q=p/'profiles'/role;q.mkdir();shutil.copy2(ROOT/'profiles'/role/'profile.json',q/'profile.json')
@@ -107,5 +109,7 @@ for role in c.ALL:
    if owned:subprocess.run(['podman','rm','--force',*owned],env=ENV,check=True,stdout=subprocess.DEVNULL)
   for d in dropins:shutil.rmtree(d)
   subprocess.run(['systemctl','--user','daemon-reload'],env=ENV,check=True)
-  for name in made:shutil.rmtree(ACCOUNT_HOME/'projects'/name)
+  for name in made:
+   shutil.rmtree(ACCOUNT_HOME/'projects'/name)
+   (ACCOUNT_HOME/('projects.'+name+'.config')).unlink(missing_ok=True)
 if __name__=='__main__':main()

@@ -1,9 +1,9 @@
 # assistant-team
 
-Version 0.1.1 documents the isolated native account/authentication foundation introduced in 0.1.0.
-Environment/project assignment integration and portable diagnostics described below
-are being committed separately; the initial published 0.0.1 snapshot remains the
-baseline tagged before these updates. Work Vertex SDK installation is pending approval.
+Version 0.2.0 adds selectable environment profiles, authoritative per-project
+assignments and account-isolated native role state. Portable deployment is being
+committed separately. The published 0.0.1 tag remains the earlier baseline;
+work Vertex SDK installation is pending approval.
 
 Private project for an assistant team. Application requirements are still being defined.
 
@@ -445,8 +445,8 @@ Both configuration files use JSON and contain no authentication secrets. Project
 assignments must select enabled profiles. Connector roles whose required account
 is unavailable need an explicit assignment before startup; they do not silently
 switch private and corporate contexts. The observer and two restricted connector
-roles currently require Claude. The five collaboration roles support the native
-Claude, Codex and Gemini adapters. Mistral profiles support standalone login and
+roles currently require Claude. The collaboration roles retain their current native adapter and can select its
+enabled work/private profile; changing the role’s vendor adapter is not implemented. Mistral profiles support standalone login and
 CLI use; assigning them to team roles is refused until its adapter is implemented.
 
 Creation uses the stock broker to initialize `~/projects/NAME/db.sqlite` and its
@@ -560,3 +560,8 @@ metadata belong in diagnostics. Release automation is still being prepared.
 the default templates and Mistral team support—from optional custom account
 contexts and multiple environments. Multiple environments are not supported now;
 use separate Linux users for isolated environments.
+
+Personal Gemini’s OAuth prompt has been verified, but the provider currently rejects
+this CLI client for Gemini Code Assist for individuals and directs the user to
+Antigravity. Saved OAuth credentials do not prove usable model access. No client-ID
+bypass, automatic paid API fallback or account-data migration is configured.

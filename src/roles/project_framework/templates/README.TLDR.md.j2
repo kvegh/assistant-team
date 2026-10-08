@@ -1,0 +1,29 @@
+# Assistant team: commands
+
+Run as the runtime user. One environment per user; credentials stay local.
+
+```sh
+~/team version            # installed source version/build
+~/team setup --list       # enabled / installed / credentials saved (not model verification)
+~/team setup             # choose profiles, then optional native login
+cd ~/PROFILE; ./login     # PROFILE: claude-work/priv, gemini-work/priv,
+                         # codex-work/priv, mistral-work/priv (each full name)
+./login --clear           # only current profile; exit CLI and stop using projects first
+~/team create-project example
+vi ~/projects.example.config                      # role -> enabled profile
+vi ~/projects/example/assistant-prompt.md          # goal and role prose
+~/team start example
+~/team attach example orchestrator                 # give task; Ctrl-B D detaches
+~/team watch example                               # live messages; Ctrl-C viewer only
+~/team status example
+~/team stop example
+~/team restart example
+~/team diagnostics --export /private/metadata.tar.gz # safe environment metadata
+~/team apply-prompts example                       # effective next launch
+```
+
+Artifacts: `~/projects/example/workspace` (`/workspace/shared` in containers).
+Vertex work profiles require local Cloud SDK approval/setup; private Gemini uses Google OAuth but current client is provider-blocked for individuals.
+Mistral native login is supported; team adapter is not implemented yet.
+Login reports failed/cancelled or credentials saved/model access unverified; no automatic inference.
+All eight role sessions start only after enabled assignments and saved auth pass; connectors lack service tools, observer snapshots are manual. Details: `~/README.md`.

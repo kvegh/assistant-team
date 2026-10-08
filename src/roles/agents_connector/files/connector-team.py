@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
-import argparse, asyncio, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
+import argparse, asyncio, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 PROJECT = os.environ.get('ASSISTANT_PROJECT')
@@ -15,6 +15,15 @@ PROFILES = ROOT / 'profiles'
 VISIBLE = ['orchestrator', 'builder', 'investigator', 'challenger', 'summarizer']
 ALL = VISIBLE + ['observer','private-connector','corporate-connector']
 VERSIONS = {'claude':'2.1.292', 'codex':'0.160.1', 'gemini':'0.63.0'}
+
+def role_directory(name, kind):
+    base=PROFILES/name
+    cfg=json.loads((base/'profile.json').read_text())
+    account=cfg.get('account_profile')
+    return base/'accounts'/account/kind if account else base/kind
+
+def role_home(name):return role_directory(name,'home')
+def role_workspace(name):return role_directory(name,'workspace')
 
 def frame(s, obj):
     raw=json.dumps(obj).encode();s.sendall(struct.pack('!I',len(raw))+raw)
@@ -62,19 +71,19 @@ def initialize():
         def hook(event,kind):return ' '.join(['/opt/connector/bin/agents-connector','hook','--socket','/ipc/agent.sock','--agent-token',t,'--event',event,'--cli-kind',kind])
         flavour=spec['flavour']
         if flavour=='claude':
-            (p/'home/mcp.json').write_text(json.dumps({'mcpServers':{'agents_connector':server}}))
+            (role_home(name)/'mcp.json').write_text(json.dumps({'mcpServers':{'agents_connector':server}}))
             events={'SessionStart':'session_start','UserPromptSubmit':'user_prompt_submit','PostToolUse':'post_tool_use','Stop':'stop'}
             cfg={'hooks':{e:[{'matcher':'','hooks':[{'type':'command','command':hook(k,'claude')}]}] for e,k in events.items()}}
-            (p/'home/settings.json').write_text(json.dumps(cfg))
+            (role_home(name)/'settings.json').write_text(json.dumps(cfg))
         elif flavour=='gemini':
-            d=p/'home/.gemini';d.mkdir(exist_ok=True)
+            d=role_home(name)/'.gemini';d.mkdir(exist_ok=True)
             events={'BeforeAgent':'before_agent','AfterTool':'after_tool','AfterAgent':'after_agent'}
             cfg={'mcpServers':{'agents_connector':server},'hooks':{e:[{'matcher':'*','hooks':[{'type':'command','name':'connector-'+k,'command':hook(k,'gemini')}]}] for e,k in events.items()}}
             settings=d/'settings.json'
             previous=json.loads(settings.read_text()) if settings.exists() else {}
             previous.update(cfg);settings.write_text(json.dumps(previous))
         else:
-            d=p/'home/.codex';d.mkdir(exist_ok=True)
+            d=role_home(name)/'.codex';d.mkdir(exist_ok=True)
             config='[features]\nhooks = true\n[mcp_servers.agents_connector]\ncommand = '+json.dumps(args[0])+'\nargs = '+json.dumps(args[1:])+'\n'
             for event,k in {'UserPromptSubmit':'user_prompt_submit','PostToolUse':'post_tool_use','Stop':'stop'}.items():
                 config+='[[hooks.'+event+']]\n[[hooks.'+event+'.hooks]]\ntype = "command"\ncommand = '+json.dumps(hook(k,'codex'))+'\n'
@@ -140,6 +149,8 @@ def start_container(name):
             mount=next((m for m in inspected['Mounts'] if m['Destination']=='/workspace/shared'),None)
             desired_rw=name!='observer'
             correct=mount and mount['Source']==str(shared) and mount['RW']==desired_rw
+            homes=next((m for m in inspected['Mounts'] if m['Destination']=='/home/agent'),None)
+            correct=correct and homes and homes['Source']==str(role_home(name))
             if not correct:
                 if inspected['State']['Running']:
                     raise ValueError('Shared workspace mount pending: stop project '+PROJECT+' and start it again; active container was preserved')
@@ -159,7 +170,7 @@ def start_container(name):
             run(['podman','exec',c,'tmux','new-session','-d','-s','native','-n','agent'])
         return
     uid=os.getuid()
-    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(p/'home')+':/home/agent:Z','-v',str(p/'workspace')+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
+    cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(role_home(name))+':/home/agent:Z','-v',str(role_workspace(name))+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
     if PROJECT:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:'+('ro,z' if name=='observer' else 'rw,z')]
@@ -173,25 +184,40 @@ def seed_auth(name):
     profile=PROFILES/name
     cfg=json.loads((profile/'profile.json').read_text())
     flavour=cfg['flavour']
-    source_name=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex','gemini':'gemini'}[flavour])
-    if source_name not in {'claude':['claude-work','claude-priv'],'codex':['codex'],'gemini':['gemini']}[flavour]:raise ValueError('unsupported provider auth boundary')
+    source_name=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[flavour])
+    if source_name not in [flavour+'-work',flavour+'-priv']:raise ValueError('unsupported provider auth boundary')
     source=(ACCOUNT_HOME if PROJECT else ROOT.parent)/source_name
+    if flavour in ['claude','gemini'] and source_name==flavour+'-work':
+        provider=json.loads((source/'.vertex.json').read_text())
+        allowed=({'CLAUDE_CODE_USE_VERTEX','CLOUD_ML_REGION','ANTHROPIC_VERTEX_PROJECT_ID','ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL'} if flavour=='claude' else {'GOOGLE_GENAI_USE_VERTEXAI','GOOGLE_CLOUD_PROJECT','GOOGLE_CLOUD_LOCATION','GEMINI_MODEL'})
+        if set(provider)!=allowed:raise ValueError('Invalid work Vertex configuration')
+        adc=source/'.config/gcloud/application_default_credentials.json'
+        target=role_home(name)/'.config/gcloud/application_default_credentials.json'
+        if not target.is_file():
+            target.parent.mkdir(mode=0o700,parents=True,exist_ok=True);target.write_bytes(adc.read_bytes());target.chmod(0o600)
+        settings=role_home(name)/'.vertex.json';settings.write_text(json.dumps(provider));settings.chmod(0o600)
+        if flavour=='gemini':
+            settings=role_home(name)/'.gemini/settings.json'
+            current=json.loads(settings.read_text()) if settings.exists() else {}
+            current.setdefault('security',{}).setdefault('auth',{})['selectedType']='vertex-ai'
+            settings.parent.mkdir(mode=0o700,parents=True,exist_ok=True);settings.write_text(json.dumps(current))
+        return
     files={'claude':['.claude/.credentials.json'],'codex':['.codex/auth.json'],'gemini':['.gemini/oauth_creds.json','.gemini/google_accounts.json']}[flavour]
     seeded=False
     for relative in files:
-        src=source/relative;dst=profile/'home'/relative
+        src=source/relative;dst=role_home(name)/relative
         if src.is_file() and not dst.exists():
             dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
             dst.write_bytes(src.read_bytes());dst.chmod(0o600);seeded=True
     metadata_path=next((p for p in [source/'.claude/.claude.json',source/'.claude.json'] if p.is_file()),None)
     if flavour=='claude' and seeded and metadata_path is not None:
         metadata=json.loads(metadata_path.read_text())
-        config=profile/'home/.claude.json'
+        config=role_home(name)/'.claude.json'
         current=json.loads(config.read_text()) if config.exists() else {}
         if 'oauthAccount' in metadata:current['oauthAccount']=metadata['oauthAccount']
         config.write_text(json.dumps(current));config.chmod(0o600)
     if flavour=='gemini' and (source/'.gemini/oauth_creds.json').is_file():
-        config=profile/'home/.gemini/settings.json'
+        config=role_home(name)/'.gemini/settings.json'
         current=json.loads(config.read_text())
         current.setdefault('security',{}).setdefault('auth',{})['selectedType']='oauth-personal'
         config.write_text(json.dumps(current));config.chmod(0o600)
@@ -205,11 +231,18 @@ def launch(name):
     start_container(name);spec=json.loads((PROFILES/name/'profile.json').read_text());flavour=spec['flavour']
     apply_prompts()
     cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
+    if flavour in ['claude','gemini'] and spec.get('auth_directory',flavour+'-work')==flavour+'-work':
+        provider=json.loads((role_home(name)/'.vertex.json').read_text())
+        for value in provider.values():
+            if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9_@.-]+',value):raise ValueError('Invalid Vertex environment value')
+        provider['GOOGLE_APPLICATION_CREDENTIALS']='/home/agent/.config/gcloud/application_default_credentials.json'
+        vertex_command=['env','-u','ANTHROPIC_API_KEY','-u','ANTHROPIC_AUTH_TOKEN','-u','CLAUDE_CODE_OAUTH_TOKEN','-u','GOOGLE_API_KEY','-u','GEMINI_API_KEY',*[key+'='+value for key,value in provider.items()]]
+    else:vertex_command=[]
     if name=='observer':refresh_observer();cmd=['claude','--tools','Read,Grep,Glob,Write']
     elif name in ['private-connector','corporate-connector']:cmd=['claude','--tools','']
     run(['podman','exec',container(name),'tmux','set-option','-g','remain-on-exit','on'])
     # Operator launch is explicit; never supply a work prompt or bypass approval.
-    run(['podman','exec',container(name),'tmux','respawn-pane','-k','-t','native:agent',shlex.join(cmd)])
+    run(['podman','exec',container(name),'tmux','respawn-pane','-k','-t','native:agent',shlex.join(vertex_command+cmd)])
 
 def wake(args):
     # Only upstream literal fixed notices and Enter are accepted; discard sender text.
@@ -243,7 +276,7 @@ def apply_prompts():
         if PROJECT:
             prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+('Read-only access; evaluate outcomes without modifying shared artifacts.' if role=='observer' else 'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.')+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'
         if role in VISIBLE:prompt+=roster
-        file=PROFILES/role/'workspace'/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
+        file=role_workspace(role)/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
         temp=file.with_suffix('.pending');temp.write_text(prompt);temp.chmod(0o600);temp.replace(file)
 
 def refresh_observer():
@@ -255,9 +288,9 @@ def refresh_observer():
     print('Observer snapshot updated; no SQLite database or private connector context mounted.')
 
 def deliver_observer_report():
-    source=PROFILES/'observer/workspace/report.md'
+    source=role_workspace('observer')/'report.md'
     if not source.is_file():raise ValueError('Observer report.md is not available yet')
-    target=PROFILES/'orchestrator/workspace/private-review.md'
+    target=role_workspace('orchestrator')/'private-review.md'
     target.write_bytes(source.read_bytes());target.chmod(0o600)
     print('Private review delivered only to orchestrator workspace; no worker-broker message sent.')
 
@@ -283,7 +316,7 @@ def watch():
 
 def main():
     if not PROJECT:
-        if len(sys.argv)>2 and sys.argv[1] in ['create-project','start','stop','restart','status','watch','attach','launch','apply-prompts','refresh-observer','deliver-observer-report']:
+        if len(sys.argv)>1 and (sys.argv[1] in ['setup','diagnostics','version'] or len(sys.argv)>2 and sys.argv[1] in ['create-project','start','stop','restart','status','watch','attach','launch','apply-prompts','refresh-observer','deliver-observer-report']):
             os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
         raise SystemExit('A project name is required. Use: ~/team create-project NAME; ~/team start NAME; ~/team attach NAME ROLE. The original default group is retired.')
     if pathlib.Path(sys.argv[0]).name=='tmux':wake(sys.argv[1:]);return
@@ -312,4 +345,18 @@ def main():
     elif a.action=='deliver-observer-report':deliver_observer_report()
     elif a.action=='check':print(json.dumps(rpc({'kind':'list_agents'})))
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    diagnostic=None;action=None
+    if PROJECT and len(sys.argv)>1:
+        path=INSTALL_ROOT/'routing/environment-diagnostics.py'
+        if path.is_file():
+            spec=importlib.util.spec_from_file_location('environment_diagnostics',path)
+            diagnostic=importlib.util.module_from_spec(spec);spec.loader.exec_module(diagnostic)
+            action={'init':'broker_init','gateway':'gateway','prepare':'containers_prepare','stop':'containers_stop'}.get(sys.argv[1])
+    try:
+        if diagnostic and action:diagnostic.record(ACCOUNT_HOME,action,'started')
+        main()
+        if diagnostic and action:diagnostic.record(ACCOUNT_HOME,action,'completed',0)
+    except Exception:
+        if diagnostic and action:diagnostic.record(ACCOUNT_HOME,action,'failed',1)
+        raise

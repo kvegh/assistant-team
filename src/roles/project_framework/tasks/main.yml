@@ -1,9 +1,11 @@
 ---
 - name: Resolve runtime account for project framework
+  tags: [operator_docs]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define project framework paths
+  tags: [operator_docs]
   ansible.builtin.set_fact:
     assistant_project_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     assistant_project_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
@@ -21,6 +23,41 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: '0700'
+- name: Install strict non-secret environment and assignment configuration
+  ansible.builtin.copy:
+    src: environment-config.py
+    dest: "{{ assistant_project_home }}/agents-connector/routing/environment-config.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Install bounded environment metadata diagnostics
+  ansible.builtin.copy:
+    src: environment-diagnostics.py
+    dest: "{{ assistant_project_home }}/agents-connector/routing/environment-diagnostics.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Create protected primary target diagnostics directory
+  ansible.builtin.file:
+    path: "{{ assistant_project_home }}/environment-logs"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+- name: Install central source version
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../../VERSION"
+    dest: "{{ assistant_project_home }}/agents-connector/VERSION"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
+- name: Install source commit metadata without environment identifiers
+  ansible.builtin.copy:
+    dest: "{{ assistant_project_home }}/agents-connector/build-info.json"
+    content: "{{ {'version': lookup('file', role_path + '/../../../VERSION') | trim, 'commit': lookup('env', 'ASSISTANT_BUILD_COMMIT') | default('development-uncommitted', true)} | to_nice_json }}\n"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'
 - name: Install project-aware existing lifecycle and IPC implementation
   ansible.builtin.copy:
     src: "{{ role_path }}/../agents_connector/files/connector-team.py"
@@ -62,3 +99,11 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: '0700'
+- name: Publish concise operator guide
+  tags: [operator_docs]
+  ansible.builtin.template:
+    src: README.TLDR.md.j2
+    dest: "{{ assistant_project_home }}/README.TLDR.md"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0600'

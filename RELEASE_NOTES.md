@@ -4,6 +4,17 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.2.0
+
+Add selectable environment profiles and isolated project account contexts.
+
+- `team setup` selects enabled profiles before optional native login; `setup --list` reports installation/local credential evidence without model calls.
+- Keep one strict JSON environment definition and separate home-level project role assignments. Prompt files contain goals and role prose; legacy account directives migrate once without becoming a second authority.
+- Keep role homes/sessions separate per account and refuse live account/mount replacement. Disabled profiles retain their data; unresolved connector assignments require explicit configuration.
+- Provide bounded protected environment metadata logs and manual sanitized export, plus matching full/condensed operator guides and installed version metadata.
+
+Two disposable projects passed stock schema, eight dummy sessions, workspace permissions, stream and independent lifecycle checks without inference. Personal Gemini’s Google OAuth screen is correct, but the provider rejects this CLI client for individuals; no entitlement or paid fallback is implied. Work Vertex SDK approval, Mistral team adapter and automatic observer review remain pending.
+
 ## 0.1.1
 
 Document the account/authentication decision and the initial release boundary. Record the implementing commit without changing authentication behavior; work Vertex SDK approval and later integration work remain pending.

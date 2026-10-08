@@ -6,7 +6,7 @@ Do not broaden this authorization to unrelated hosts or security-control bypasse
 
 For every lasting design or configuration change:
 
-- Update the README and the design decision history to describe the final state
+- Keep README.md and README.TLDR.md (including the deployed home operator guides) current; update the design decision history to describe the final state
   and the reason for the decision.
 - Implement the resulting configuration in separate Ansible roles called by
   the project playbook so it can be reproduced on a fresh deployment.
@@ -33,3 +33,11 @@ must wait for the implementation result. Report completion briefly, and bring
 blockers requiring a significant decision or approval back to the main conversation.
 Background execution does not waive validation, outcome monitoring, security rules,
 or required approvals.
+
+## Release versions
+
+After the verified initial 0.0.1 release, every commit increments VERSION. Feature
+commits increment the minor version and reset patch; all other commits, including
+documentation/history commits, increment patch. Use `python3 src/bump-version.py`
+or add `--feature`, and deploy matching version/build metadata. Keep README.md,
+README.TLDR.md and both home operator guides current with lasting changes.

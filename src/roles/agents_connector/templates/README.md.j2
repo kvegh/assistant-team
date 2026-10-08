@@ -1,196 +1,73 @@
-# Assistant team usage
+# Assistant team operator guide
 
-## Quick start after provider authentication
+Run commands as the dedicated runtime user. After entering that user’s shell, `~/team` supplies the user-systemd environment automatically.
 
-```bash
-~/team create-project my-project
-${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
-~/team start my-project
-~/team attach my-project orchestrator
+## Quick start
+
+1. Run `~/team setup --list` to inspect profiles, then `~/team setup` to select enabled profiles. Login is optional and runs only when you choose it.
+2. Authenticate selected profiles using their local `./login` commands.
+3. Create a project: `~/team create-project example`.
+4. Edit `~/projects.example.config` to assign enabled profiles to roles. Edit `~/projects/example/assistant-prompt.md` for the goal, boundaries and role instructions.
+5. Run `~/team start example`, then `~/team attach example orchestrator` and give the orchestrator a bounded task.
+6. In another terminal, `~/team watch example` shows worker messages. Ctrl-C stops only the viewer.
+7. `~/team status example`, `~/team stop example` and `~/team restart example` control that project only.
+
+## Authentication and account isolation
+
+Each directory contains its own installation, configuration, credentials, cache and history. Canonical commands remain `./claude`, `./gemini`, `./codex` and `./vibe`. Work/priv labels select isolated contexts; they do not invent provider capabilities.
+
+| Profile directory | Native authentication |
+| --- | --- |
+| `~/claude-work` | Vertex ADC; guided project, location and enabled model ID |
+| `~/claude-priv` | Claude account with a plan supporting Claude Code |
+| `~/gemini-work` | Vertex ADC; guided project, location and enabled model ID |
+| `~/gemini-priv` | Personal Google OAuth; displayed browser URL/code flow |
+| `~/codex-work`, `~/codex-priv` | ChatGPT device login; isolated file credential stores |
+| `~/mistral-work`, `~/mistral-priv` | Native Vibe setup/account login |
+
+For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The provider currently rejects this CLI client for Gemini Code Assist for individuals; its OAuth flow does not prove model access. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: installation on this development VM is awaiting approval. The wrapper fails clearly until it is available. No API enablement, billing changes or model probes occur during deployment.
+
+At session end, `./login` reports **Failed or cancelled** or **Credentials saved; model access unverified**. Interactive exit without new credential evidence is not treated as successful login. Native account status and saved JSON do not prove model entitlement. No model check runs automatically; this setup does not yet expose a universal opt-in model verifier.
+
+`./login --clear` clears only that profile’s saved auth and matching stopped project-role copies, then exits. Installation and non-secret provider settings remain. Exit active local CLI sessions and stop projects using that profile first; otherwise clearing refuses before mutation. This clears local credentials, without promising remote token revocation.
+
+Mistral profiles work as standalone native CLI installations. Vibe participation in Agents Connector is required future work; project assignment to Mistral currently fails with an actionable error.
+
+## Configuration
+
+There is one environment per Linux user. `~/environment.config` is strict JSON containing eight profile enablement flags. `~/team setup --list` distinguishes enabled, installed and locally saved credentials without printing identities or tokens. Disabling a profile preserves its files and does not stop running projects.
+
+Each `~/projects.NAME.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-priv"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
+
+Changing a role account requires stopping and starting that project. Separate per-profile role homes and sessions prevent previous-account credentials carrying over. Native provider approvals remain enabled. Codex uses workspace-write/on-request; observer tools are restricted and connector general tools disabled. Connector service credentials/plugins are not configured.
+
+## Project files and sessions
+
+- `~/projects/NAME/assistant-prompt.md`: project goal and eight editable role sections.
+- `~/projects/NAME/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
+- `~/projects/NAME/db.sqlite`: project-local stock broker history.
+- `~/projects/NAME/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
+
+`~/team apply-prompts NAME` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
+
+`~/team start NAME` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `~/team attach NAME ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
+
+The per-project systemd target is `assistant-connector@NAME.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
+
+```sh
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
+systemctl --user status assistant-connector@NAME.target
 ```
 
-Tell the orchestrator what to do. In another terminal: `~/team watch my-project`.
-Stop with `~/team stop my-project`. No manual target creation is needed.
+## Private observer
 
-## Enter the runtime account
+Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `~/team refresh-observer NAME` updates its snapshot; `~/team deliver-observer-report NAME` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
 
-From the VM's automation account:
+See `~/README.TLDR.md` for condensed commands. Keep both guides current after lasting configuration changes.
 
-```bash
-sudo -iu {{ containers.runtime_user }}
-export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-```
+## Environment diagnostics and version
 
-All following commands run as this account on the VM. The exports fix access to
-its systemd user bus after a sudo login; they are not provider credentials.
+`~/environment-logs` holds protected bounded deployment and runtime metadata, including login outcomes and project lifecycle results. It excludes credentials, prompts, conversations, databases and raw CLI output. Deployment controller failures before connectivity retain a local protected spool; the user-operated runner transfers safe metadata when reachable.
 
-## Authenticate once in each account/provider directory
-
-```bash
-cd ~/claude-priv && ./login
-cd ~/gemini && ./login
-cd ~/codex && ./login
-cd ~/mistral && ./login
-```
-
-Claude private uses native `claude auth login`. Work Claude is intended to use
-Google Vertex AI, which is not configured by this setup yet: skip the work
-OAuth login, and do not start a real team until that backend is implemented.
-The current project authentication preflight supports OAuth files only; Vertex
-ADC/project/region support and the cloud SDK remain pending. No Vertex tool
-installation or authentication was performed. Gemini opens
-its native Sign in with Google flow with a remote browser link; it does not
-require gcloud. Codex uses native device authentication and a local file store.
-Mistral opens Vibe's native setup wizard; choose the intended subscription/account
-rather than introducing a paid API fallback. Complete login yourself; no login,
-model request, or account terms were accepted during installation.
-
-Actual native executables are available as `./claude`, `./gemini`, `./codex` and
-`./vibe` in their respective directories. They run directly on Linux, not through
-login containers. Program artifacts, HOME, provider settings, credentials, caches,
-state and temporary files are scoped inside each directory. Work/private Claude
-share only immutable program files, never credentials or configuration. Update
-pinned program versions through Ansible.
-
-On explicit role launch, only missing provider credential files are seeded into
-the role's isolated home. Other settings, hooks, sessions and workspaces are not
-shared. Existing role credentials retain their native refresh state. Actual
-provider authentication/refresh behavior is verified only after your login;
-subscription exhaustion must not switch automatically to paid API usage.
-
-## Create and run a project
-
-```bash
-cd ~
-./team create-project my-project
-${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
-./team start my-project
-./team status my-project
-./team attach my-project orchestrator
-./team watch my-project
-./team stop my-project
-./team restart my-project
-```
-
-Project names use lowercase letters/digits, underscores or hyphens (1–40
-characters, starting with a letter/digit). Creation initializes the stock SQLite
-schema and eight role profiles without starting containers or models. Each project
-has its own `db.sqlite`, `assistant-prompt.md`, role homes/workspaces and containers
-under `~/projects/NAME`. Existing projects and edited prompts are not overwritten.
-The prompt file starts with the project goal/context and has all eight role sections.
-Only that goal and the selected role section enter a container.
-
-The work Vertex backend must be configured before real project startup.
-Private Claude, Codex and Gemini authentication can be completed now. Current
-start checks saved
-subscription/OAuth authentication for every role before starting any project
-service, then launches all eight native harnesses into their tmux sessions without
-an initial task prompt. This checks saved credential format, not remote token
-validity: expired/revoked credentials can still require native reauthentication.
-Mistral is optional and is not assigned a team role. Native onboarding, workspace
-trust and Codex hook approvals remain explicit; no security prompts are bypassed.
-
-Direct systemd equivalents are:
-
-```bash
-systemctl --user start assistant-connector@my-project.target
-systemctl --user stop assistant-connector@my-project.target
-systemctl --user restart assistant-connector@my-project.target
-systemctl --user status assistant-connector@my-project.target
-```
-
-Project targets are not automatically enabled at boot. Stop affects only the named
-project and interrupts its live native processes while preserving SQLite, role
-homes, credentials and workspace files. Restart starts new native CLI sessions;
-conversation history remains on disk but automatic native conversation resume
-is not claimed. Detach tmux with Ctrl-b then d. Model activity begins when native
-CLI interactions request it; subscription exhaustion must not switch to paid APIs.
-
-Project prompt/review commands:
-
-```bash
-./team apply-prompts my-project
-./team refresh-observer my-project
-./team deliver-observer-report my-project
-./team launch my-project builder
-```
-
-Only five collaboration roles join each project worker broker. The hidden observer
-and the separate private/corporate connector containers are outside it. Observer
-refresh/report delivery remains manual and project-scoped; connector general
-tools remain disabled and external scoped connector services remain unconfigured.
-The live viewer uses the stock event subscription, not timed inbox polling.
-
-The initial VM has limited RAM and disk space. Parallel active projects multiply
-native processes/workspaces, while reusing the installed images and vendor logins.
-Resource capacity for multiple busy teams is not yet verified.
-
-## Shared project artifacts
-
-Host directory: `~/projects/NAME/workspace`. Inside containers: `/workspace/shared`.
-All seven working roles have read/write access; the observer has read-only access.
-Private native homes and each role's instructions remain separate. Credentials,
-account context and the full prompt file are never mounted into the shared directory.
-
-Put project code, documents and agreed output artifacts there. Agree file/task
-ownership through the orchestrator and avoid concurrent edits to the same file.
-Connector roles may publish only explicitly authorized project results; never
-copy private/corporate mail, account data or credentials there automatically.
-Their native general tools remain disabled until scoped connector tools are configured.
-Codex uses its native workspace-write sandbox with on-request approval.
-
-Existing projects receive the shared directory without overwriting contents.
-An active container is preserved; stop/start that project normally to acquire the
-new mount. New projects have it from creation. Saved SQLite, prompts, credentials
-and private workspaces are retained when a stopped container definition is rebuilt.
-
-## Project-only control
-
-The original non-project target/services and containers are retired. Use a project
-name with every team lifecycle, attach, viewer and prompt command. There is no
-all-projects master target. Saved original profile homes, prompt defaults and
-SQLite data are retained; project creation reuses only the profile specifications
-and editable prompt defaults, never the original database or provider state.
-
-After authentication, `./team start NAME` launches all eight native sessions;
-`./team attach NAME orchestrator` opens the orchestrator's tmux pane. Other roles
-are builder, investigator, challenger, summarizer, observer, private-connector and
-corporate-connector. Claude uses claude-work except the Private Connector's
-claude-priv. Builder uses Codex and challenger Gemini. An already active role
-must be attached rather than launched again.
-
-## Edit project prompts and deliver private review
-
-```bash
-${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
-./team apply-prompts my-project
-./team refresh-observer my-project
-./team attach my-project observer
-./team deliver-observer-report my-project
-```
-
-Keep exactly one `# Role: name` header for each of the eight roles. Instructions
-include only the project goal and selected role section; hidden observer identity
-is excluded from worker instructions. Prompt changes take effect on next native
-launch. The global ~/assistant-prompts.md remains the editable seed for newly
-created projects and is not mounted into containers.
-
-Refresh provides the observer a read-only snapshot. Ask it to write report.md in
-its workspace; delivery copies it only to the orchestrator's private-review.md.
-This remains a manual bridge, not continuous evaluation or automatic reassignment.
-Connector roles have no external mail/calendar tools or execution audit yet.
-Do not import edited prompts or native authentication into Git without applying
-the repository's sensitive-data/Vault policy.
-
-## Reproduce and verify
-
-The private repository's `src/configure_agents_connector.yml` calls separate roles
-for the Podman host, connector setup, native local authentication installations
-and the project framework. `--tags project_framework` updates project controls
-and instance unit templates without restarting existing sessions.
-`--tags native_auth,auth_sources` updates local installations and prompt/auth sources
-without restarting the service group. Offline model-free checks cover native
-versions/help, constrained containers, hooks, message delivery and event wake.
-The opt-in validate_projects.py uses disposable projects and dummy harnesses
-without provider/model calls; it checks event streaming and project isolation.
+`~/team diagnostics --export /private/environment-metadata.tar.gz` creates an explicit sanitized bundle for manual sharing. `~/team version` prints installed VERSION/build metadata. No automatic diagnostic replication or coding-agent access to a fresh authenticated deployment is configured.

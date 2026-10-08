@@ -76,6 +76,10 @@ class ConnectorPolicyTests(unittest.TestCase):
             directory.mkdir(parents=True)
             (directory / '.credentials.json').write_text(value)
             (directory / '.claude.json').write_text(json.dumps({'oauthAccount': {'fixture': True}, 'mcpServers': {'forbidden': {}}}))
+        vertex = {'CLAUDE_CODE_USE_VERTEX':'1','CLOUD_ML_REGION':'global','ANTHROPIC_VERTEX_PROJECT_ID':'fixture-project','ANTHROPIC_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_OPUS_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_SONNET_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_HAIKU_MODEL':'claude-fixture'}
+        (root.parent / 'claude-work/.vertex.json').write_text(json.dumps(vertex))
+        adc = root.parent / 'claude-work/.config/gcloud'
+        adc.mkdir(parents=True);(adc/'application_default_credentials.json').write_text('work-fixture')
         for name, boundary in [('investigator', 'claude-work'), ('private-connector', 'claude-priv')]:
             path = self.profiles / name
             (path / 'home').mkdir(parents=True, exist_ok=True)
@@ -83,13 +87,15 @@ class ConnectorPolicyTests(unittest.TestCase):
         with mock.patch.object(team, 'ROOT', root):
             team.seed_auth('investigator')
             team.seed_auth('private-connector')
-            saved = self.profiles / 'investigator/home/.claude/.credentials.json'
+            saved = self.profiles / 'investigator/home/.config/gcloud/application_default_credentials.json'
             self.assertEqual(saved.read_text(), 'work-fixture')
             saved.write_text('refreshed-fixture')
             team.seed_auth('investigator')
             self.assertEqual(saved.read_text(), 'refreshed-fixture')
         self.assertEqual((self.profiles / 'private-connector/home/.claude/.credentials.json').read_text(), 'private-fixture')
-        metadata = json.loads((self.profiles / 'investigator/home/.claude.json').read_text())
+        self.assertFalse((self.profiles / 'investigator/home/.claude/.credentials.json').exists())
+        self.assertFalse((self.profiles / 'private-connector/home/.vertex.json').exists())
+        metadata = json.loads((self.profiles / 'private-connector/home/.claude.json').read_text())
         self.assertNotIn('mcpServers', metadata)
 
     def test_group_stop_targets_all_eight_named_containers_only(self):
