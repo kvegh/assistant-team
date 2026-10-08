@@ -53,7 +53,9 @@ if pathlib.Path(sys.argv[0]).name=='login':
         except (ValueError,subprocess.CalledProcessError,KeyboardInterrupt) as error:
             code=130 if isinstance(error,KeyboardInterrupt) else 1
             print(status.display('Vertex login did not complete; configuration or SDK prerequisites may need attention.'),flush=True)
-        print(status.display(status.result(code,before,status.credential_snapshot(root,f,config.get('provider')))),flush=True)
+        message=status.result(code,before,status.credential_snapshot(root,f,config.get('provider')))
+        print(status.display(message),flush=True)
+        print(status.display(status.follow_up(f,config.get('provider'),message!='Failed or cancelled')),flush=True)
         diagnostic('login','completed' if code==0 else 'failed',code)
         raise SystemExit(code)
     args={'claude':['auth','login'],'codex':['-c','cli_auth_credentials_store="file"','login','--device-auth'],'gemini':[],'vibe':['--setup']}[f]
@@ -67,6 +69,7 @@ if pathlib.Path(sys.argv[0]).name=='login':
     after=status.credential_snapshot(root,f,config.get('provider'))
     message=status.result(code,before,after,interactive=f in ['gemini','vibe'])
     print('\n'+status.display(message),flush=True)
+    print(status.display(status.follow_up(f,config.get('provider'),message!='Failed or cancelled')),flush=True)
     diagnostic('login','credentials_saved' if message!='Failed or cancelled' else 'credentials_unconfirmed',code)
     if message=='Failed or cancelled' and code==0:
         print(status.display('No new completed login was confirmed; existing saved credentials, if any, were preserved.'),flush=True)

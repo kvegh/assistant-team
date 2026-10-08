@@ -567,3 +567,5 @@ Antigravity. Saved OAuth credentials do not prove usable model access. No client
 bypass, automatic paid API fallback or account-data migration is configured.
 
 Login wrapper status, outcome and error messages use the `[AC-Agents]:` prefix; native vendor output keeps its original format.
+
+Login results include provider-specific next steps. Failed personal Gemini access directs the supported Antigravity migration; failed Vertex setup identifies scoped SDK/configuration prerequisites. Saved credentials remain explicitly unverified for model access.

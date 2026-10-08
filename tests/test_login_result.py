@@ -72,3 +72,9 @@ class LoginDisplayTests(unittest.TestCase):
     def test_all_result_labels_have_exact_required_prefix(self):
         for message in ["Failed or cancelled", "Credentials saved; model access unverified", "Model access verified"]:
             self.assertEqual(module.display(message), "[AC-Agents]: " + message)
+
+    def test_follow_up_is_provider_specific_and_never_automatic_inference(self):
+        self.assertIn('Antigravity', module.follow_up('gemini', None, False))
+        self.assertIn('Google Cloud CLI', module.follow_up('claude', 'vertex', False))
+        self.assertIn('No scoped saved credential', module.follow_up('vibe', None, False))
+        self.assertIn('no model check ran automatically', module.follow_up('codex', None, True))

@@ -9,6 +9,18 @@ def display(message):
     return "[AC-Agents]: " + message
 
 
+def follow_up(flavour, provider, successful):
+    if successful:
+        return 'Saved credentials do not prove model entitlement. Request an explicit bounded model check before relying on access; no model check ran automatically.'
+    if provider == 'vertex':
+        return 'Check the scoped Google Cloud CLI installation and Vertex project, region and model configuration, then run ./login again. Do not enable billing or APIs merely to retry.'
+    if flavour == 'gemini':
+        return 'Personal Gemini CLI access was retired by the provider. Use the supported Antigravity migration when ready; retrying or entering an API key is not a subscription login fix.'
+    if flavour == 'vibe':
+        return 'Exit existing Vibe sessions, then run ./login again and complete its account/setup flow. No scoped saved credential was confirmed; do not choose an unintended paid API fallback.'
+    return 'Exit any remaining native sessions, then run ./login again and complete the browser/device authorization. Existing credentials were preserved.'
+
+
 def require_idle(root):
     root=pathlib.Path(root).resolve()
     for process in pathlib.Path('/proc').glob('[0-9]*'):

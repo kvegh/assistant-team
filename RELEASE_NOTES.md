@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.2.4
+
+Add actionable provider-specific follow-up lines to login results, with the required prefix. Distinguish retryable account authorization, missing scoped Vertex prerequisites and retired personal Gemini access. Saved credentials suggest an explicit bounded check rather than automatic inference. Vibe guidance reflects its scoped native credential storage.
+
 ## 0.2.3
 
 Record the required login-message prefix and its implementing commit. Documentation update only; native authentication and provider-access limitations remain unchanged.
