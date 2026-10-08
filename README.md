@@ -1,9 +1,9 @@
 # assistant-team
 
-Version 0.4.1 adds operator-owned local or SSH deployment and sanitized deployment
+Version 0.5.0 adds operator-owned local or SSH deployment and sanitized deployment
 metadata transfer to the target environment diagnostics. The published 0.0.1 tag
-remains the earlier baseline. Google Cloud SDK installation is authorized on the
-development VM; its storage capacity has been expanded; personal Gemini requires the
+remains the earlier baseline. Google Cloud SDK 588.0.0 is installed and verified in the
+development VM's isolated work profiles; personal Gemini requires the
 supported Antigravity migration. These prerequisites are not model-access proof.
 
 Private project for an assistant team. Application requirements are still being defined.
@@ -586,3 +586,9 @@ New Linux VM provisioning defaults to a 20 GiB cloned disk, with the desired siz
 The current running VM had already been expanded to a 50 GiB virtual disk and roughly 49 GiB root filesystem, with about 41 GiB free at verification. It is preserved without shrinking or another reboot. The default for future clones is 20 GiB. No separate additional-disk resize command is provided. Protected backup files remain on the existing guest; future automation backups are private under `/var/lib/assistant-team/storage-backups`. A partition-table backup is not a data backup, and XFS growth cannot be reversed by shrinking.
 
 The root-growth role passed an unchanged rerun on the expanded guest; a fresh 20 GiB end-to-end VM deployment has not yet been run.
+
+## Work Vertex login
+
+The approved local Google Cloud CLI 588.0.0 is installed in both work profiles with separate Cloud SDK configuration/ADC paths and shared immutable program files. Run `cd ~/claude-work; ./login` or `cd ~/gemini-work; ./login` to enter your own project, region and enabled model ID, then complete native ADC authentication. No login, API enablement, billing change or model call ran during installation. Gemini's native selected/enforced auth type becomes Vertex after completed ADC login, preserving unrelated hooks/settings.
+
+The immutable versioned SDK archive is checksum-pinned. Its payload was verified identical to Google's rolling archive that matches the published checksum, avoiding use of one archive's checksum for a differently packaged tarball. SDK verification checks the installed release exactly and removes the owned staging download. Independent deployments install this selected dependency only when their encrypted operator configuration enables it.

@@ -25,7 +25,7 @@ Each directory contains its own installation, configuration, credentials, cache 
 | `~/codex-work`, `~/codex-priv` | ChatGPT device login; isolated file credential stores |
 | `~/mistral-work`, `~/mistral-priv` | Native Vibe setup/account login |
 
-For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The provider currently rejects this CLI client for Gemini Code Assist for individuals; its OAuth flow does not prove model access. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: installation on this development VM is awaiting approval. The wrapper fails clearly until it is available. No API enablement, billing changes or model probes occur during deployment.
+For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The provider currently rejects this CLI client for Gemini Code Assist for individuals; its OAuth flow does not prove model access. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: the operator enables that selected dependency in encrypted deployment settings. The wrapper fails clearly if it is unavailable. No API enablement, billing changes or model probes occur during deployment.
 
 At session end, `./login` reports **Failed or cancelled** or **Credentials saved; model access unverified**. Interactive exit without new credential evidence is not treated as successful login. Native account status and saved JSON do not prove model entitlement. No model check runs automatically; this setup does not yet expose a universal opt-in model verifier.
 
@@ -75,3 +75,5 @@ See `~/README.TLDR.md` for condensed commands. Keep both guides current after la
 ## VM storage
 
 Fresh Linux VM provisioning expands the root filesystem to use its configured cloned disk capacity (20 GiB by default). The existing running VM retains its already-expanded capacity. Runtime team commands do not resize disks. Existing project and authentication data are preserved.
+
+For headless Vibe login, open its displayed sign-in link manually; the scoped browser handoff keeps native polling active. Wrapper-owned outcomes and next steps begin `[AC-Agents]:`.

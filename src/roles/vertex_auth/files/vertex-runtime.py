@@ -47,7 +47,7 @@ def login(env):
   while True:
    value=input(label+(' ['+old+']' if old else '')+': ').strip() or old
    if re.fullmatch(pattern,value):return value
-   print('Enter the requested identifier in its supported format.')
+   print('[AC-Agents]: Enter the requested identifier in its supported format.')
  is_gemini=vendor()=='gemini'
  project=prompt('Google project ID','GOOGLE_CLOUD_PROJECT' if is_gemini else 'ANTHROPIC_VERTEX_PROJECT_ID',r'[a-z][a-z0-9-]{4,28}[a-z0-9]')
  region=prompt('Vertex region/location (for example us-east5 or global)','GOOGLE_CLOUD_LOCATION' if is_gemini else 'CLOUD_ML_REGION',r'[a-z][a-z0-9-]{0,39}')
@@ -57,11 +57,19 @@ def login(env):
  else:
   cfg=claude_models(prompt,project,region)
  CONFIG.write_text(json.dumps(cfg,indent=2)+'\n');CONFIG.chmod(0o600)
- scoped=env.copy();scoped['CLOUDSDK_CONFIG']=str(root/'.config/gcloud');scoped['CLOUDSDK_CORE_DISABLE_USAGE_REPORTING']='true';scoped['CLOUDSDK_CORE_PROJECT']=project
+ scoped=env.copy()
+ for key in ['GOOGLE_APPLICATION_CREDENTIALS','GEMINI_API_KEY','GOOGLE_API_KEY']:
+  scoped.pop(key,None)
+ scoped['CLOUDSDK_CONFIG']=str(root/'.config/gcloud');scoped['CLOUDSDK_CORE_DISABLE_USAGE_REPORTING']='true';scoped['CLOUDSDK_CORE_PROJECT']=project
  subprocess.run([str(sdk),'auth','application-default','login','--no-launch-browser','--project',project],env=scoped,check=True)
  if not ADC.is_file():raise ValueError('Google ADC login did not create the expected scoped credential file')
  ADC.chmod(0o600)
- print('Work Vertex login saved in this directory. No API enablement, billing change or model probe was requested by this wrapper.')
+ if is_gemini:
+  settings=root/'.gemini/settings.json';settings.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+  value=json.loads(settings.read_text()) if settings.is_file() else {}
+  auth=value.setdefault('security',{}).setdefault('auth',{});auth['selectedType']='vertex-ai';auth['enforcedType']='vertex-ai'
+  settings.write_text(json.dumps(value,indent=2)+'\n');settings.chmod(0o600)
+ print('[AC-Agents]: Work Vertex login saved in this directory. No API enablement, billing change or model probe was requested by this wrapper.')
 
 def claude_models(prompt,project,region):
  model=prompt('Enabled Vertex Claude primary model ID (no alias)','ANTHROPIC_MODEL',r'claude-[a-z0-9-]+(?:@[0-9]{8})?')

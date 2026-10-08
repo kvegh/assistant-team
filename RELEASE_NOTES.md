@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.5.0
+
+Install the approved Google Cloud CLI 588.0.0 in isolated Claude/Gemini work contexts, sharing only immutable program files. Scoped `./login` now guides user-owned Vertex project/location/model selection and ADC authentication; no cloud APIs, billing settings or model requests were invoked by installation.
+
+Correct the versioned archive checksum after verifying its entire payload against the separately packaged official rolling archive and published digest. Check the installed SDK release exactly and remove staging downloads. Gemini ADC completion selects native Vertex authentication while preserving unrelated settings; competing API-key/ADC environment values are excluded from login setup. Six Vertex tests and the focused live SDK role/version check pass. Model entitlement remains untested and user authentication is still required.
+
 ## 0.4.1
 
 Record the future20GiB clone policy and root-filesystem growth rationale. Preserve the already-expanded running VM; this documentation update performs no storage operation.
@@ -12,7 +18,7 @@ Record the future20GiB clone policy and root-filesystem growth rationale. Preser
 
 Default fresh Linux VM clones to 20 GiB and expand their direct last GPT root partition/XFS filesystem after guest setup, using the clone's actual capacity rather than retaining the golden image's small filesystem. Add a separate root-growth Ansible role with protected partition-table backups, identity checks and safe idempotent reruns.
 
-The existing VM's already-completed 50 GiB expansion is preserved without shrinking or another reboot; it is not the future-clone default. No separate additional-disk resize feature is retained. Guest role rerun passed unchanged and storage unit/syntax tests pass; fresh20GiB end-to-end reprovisioning was not performed.
+The existing VM's already-completed 50 GiB expansion is preserved without shrinking or another reboot; it is not the future-clone default. No separate additional-disk resize feature is retained. Guest role rerun passed unchanged and storage unit/syntax tests pass; fresh 20 GiB end-to-end reprovisioning was not performed.
 
 ## 0.3.3
 

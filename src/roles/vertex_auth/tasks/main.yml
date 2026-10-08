@@ -37,6 +37,10 @@
         remote_src: true
         owner: "{{ containers.runtime_user }}"
         group: "{{ containers.runtime_user }}"
+    - name: Remove the owned download archive after extraction
+      ansible.builtin.file:
+        path: "{{ assistant_vertex_root }}/.install/google-cloud-cli.tar.gz"
+        state: absent
 - name: Prepare both isolated work Vertex helpers without requiring authentication
   ansible.builtin.include_tasks: context.yml
   loop: [claude-work, gemini-work]
@@ -56,3 +60,9 @@
     argv: ["{{ assistant_vertex_root }}/.install/google-cloud-sdk/bin/gcloud", --version]
     chdir: "{{ assistant_vertex_root }}"
   changed_when: false
+
+  register: assistant_vertex_version
+- name: Verify the pinned SDK release
+  when: assistant_vertex_sdk.stat.exists or assistant_vertex_install_sdk | bool
+  ansible.builtin.assert:
+    that: "('Google Cloud SDK ' + assistant_vertex_sdk_version) in assistant_vertex_version.stdout_lines"

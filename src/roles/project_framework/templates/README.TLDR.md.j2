@@ -23,7 +23,7 @@ vi ~/projects/example/assistant-prompt.md          # goal and role prose
 ```
 
 Artifacts: `~/projects/example/workspace` (`/workspace/shared` in containers).
-Vertex work profiles require local Cloud SDK approval/setup; private Gemini uses Google OAuth but current client is provider-blocked for individuals.
+Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses Google OAuth but current client is provider-blocked for individuals.
 Mistral native login is supported; team adapter is not implemented yet.
 Login reports failed/cancelled or credentials saved/model access unverified; no automatic inference.
 All eight role sessions start only after enabled assignments and saved auth pass; connectors lack service tools, observer snapshots are manual. Details: `~/README.md`.

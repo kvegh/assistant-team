@@ -29,4 +29,13 @@ class VertexAuthenticationTests(unittest.TestCase):
    self.assertEqual(args[1:4],['auth','application-default','login']);self.assertIn('--no-launch-browser',args);self.assertEqual(kwargs['env']['CLOUDSDK_CONFIG'],str(self.root/'.config/gcloud'));self.m.ADC.write_text('{"type":"authorized_user","refresh_token":"offline-fixture"}')
   with patch('builtins.input',side_effect=['fixture-project','global','claude-fixture','']),patch.object(self.m.subprocess,'run',side_effect=fake_auth):self.m.login({'HOME':str(self.root)})
   cfg=self.m.read_config();self.assertEqual(cfg['ANTHROPIC_DEFAULT_HAIKU_MODEL'],'claude-fixture');self.assertEqual(self.m.CONFIG.stat().st_mode&0o777,0o600)
+
+ def test_gemini_vertex_login_selects_native_vertex_provider_and_preserves_hooks(self):
+  (self.root/'.native-install.json').write_text('{"flavour":"gemini"}')
+  settings=self.root/'.gemini/settings.json';settings.parent.mkdir();settings.write_text('{"hooks":{"fixture":[]},"security":{"auth":{"selectedType":"oauth-personal"}}}')
+  sdk=self.root/'.install/google-cloud-sdk/bin/gcloud';sdk.parent.mkdir(parents=True);sdk.touch()
+  def fake_auth(args,**kwargs):self.m.ADC.write_text('{"type":"authorized_user","refresh_token":"offline-fixture"}')
+  with patch('builtins.input',side_effect=['fixture-project','global','gemini-fixture']),patch.object(self.m.subprocess,'run',side_effect=fake_auth):self.m.login({'HOME':str(self.root)})
+  value=json.loads(settings.read_text());self.assertEqual(value['security']['auth']['selectedType'],'vertex-ai');self.assertEqual(value['security']['auth']['enforcedType'],'vertex-ai');self.assertIn('fixture',value['hooks'])
+
 if __name__=='__main__':unittest.main()
