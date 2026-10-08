@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.1
+
+Document the quality-workflow implementation and its operator prerequisites with
+the actual implementation commit. Distinguish configured checks from an executed
+CI run; no runner or credential installation is implied.
+
 ## 0.8.0
 
 Add one reusable quality command for tests and production-profile lint, plus local
