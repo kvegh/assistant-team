@@ -19,6 +19,27 @@ class ProjectFrameworkTests(unittest.TestCase):
   with patch('sys.argv',['team','stop','builder']),patch.object(core.os,'execv',side_effect=SystemExit) as execute:
    with self.assertRaises(SystemExit):core.main()
   self.assertEqual(execute.call_args.args[1][-2:],['stop','builder'])
+ def test_active_container_missing_shared_mount_is_preserved(self):
+  source=SOURCE.parents[2]/'agents_connector/files/connector-team.py'
+  spec=importlib.util.spec_from_file_location('shared_core_test',source);core=importlib.util.module_from_spec(spec)
+  with patch.dict(os.environ,{},clear=True):spec.loader.exec_module(core)
+  core.PROJECT='sample';core.ROOT=self.root;core.PROFILES=self.root/'profiles'
+  p=core.PROFILES/'builder';p.mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"codex"}')
+  from unittest.mock import Mock
+  with patch.object(core.subprocess,'run',return_value=Mock(returncode=0)),patch.object(core.subprocess,'check_output',return_value='[{"Mounts":[],"State":{"Running":true}}]'),patch.object(core,'run') as execute:
+   with self.assertRaisesRegex(ValueError,'active container was preserved'):core.start_container('builder')
+   execute.assert_not_called()
+ def test_shared_workspace_prompts_exclude_other_role_context(self):
+  source=SOURCE.parents[2]/'agents_connector/files/connector-team.py'
+  spec=importlib.util.spec_from_file_location('shared_prompt_test',source);core=importlib.util.module_from_spec(spec)
+  with patch.dict(os.environ,{},clear=True):spec.loader.exec_module(core)
+  core.PROJECT='sample';core.ROOT=self.root;core.PROFILES=self.root/'profiles'
+  (self.root/'assistant-prompt.md').write_text('# Project goal\nBuild the fixture.\n'+''.join('# Role: '+name+'\nUNIQUE_'+name+'\n' for name in core.ALL))
+  for name in core.ALL:
+   p=core.PROFILES/name;(p/'workspace').mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"claude"}')
+  core.apply_prompts()
+  worker=(core.PROFILES/'builder/workspace/CLAUDE.md').read_text();observer=(core.PROFILES/'observer/workspace/CLAUDE.md').read_text()
+  self.assertIn('/workspace/shared',worker);self.assertIn('Read/write project artifacts',worker);self.assertNotIn('UNIQUE_observer',worker);self.assertIn('Read-only access',observer)
  def test_missing_auth_refuses_before_systemd_start(self):
   core=type('Core',(),{'PROFILES':self.root/'profiles'})()
   for name in self.m.ROLES:

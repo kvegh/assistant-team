@@ -28,14 +28,18 @@ its systemd user bus after a sudo login; they are not provider credentials.
 ## Authenticate once in each account/provider directory
 
 ```bash
-cd ~/claude-work && ./login
 cd ~/claude-priv && ./login
 cd ~/gemini && ./login
 cd ~/codex && ./login
 cd ~/mistral && ./login
 ```
 
-Claude work/private use separate native `claude auth login` flows. Gemini opens
+Claude private uses native `claude auth login`. Work Claude is intended to use
+Google Vertex AI, which is not configured by this setup yet: skip the work
+OAuth login, and do not start a real team until that backend is implemented.
+The current project authentication preflight supports OAuth files only; Vertex
+ADC/project/region support and the cloud SDK remain pending. No Vertex tool
+installation or authentication was performed. Gemini opens
 its native Sign in with Google flow with a remote browser link; it does not
 require gcloud. Codex uses native device authentication and a local file store.
 Mistral opens Vibe's native setup wizard; choose the intended subscription/account
@@ -77,7 +81,9 @@ under `~/projects/NAME`. Existing projects and edited prompts are not overwritte
 The prompt file starts with the project goal/context and has all eight role sections.
 Only that goal and the selected role section enter a container.
 
-Authenticate Claude work/private, Codex and Gemini first. Start checks saved
+The work Vertex backend must be configured before real project startup.
+Private Claude, Codex and Gemini authentication can be completed now. Current
+start checks saved
 subscription/OAuth authentication for every role before starting any project
 service, then launches all eight native harnesses into their tmux sessions without
 an initial task prompt. This checks saved credential format, not remote token
@@ -119,6 +125,25 @@ The live viewer uses the stock event subscription, not timed inbox polling.
 The initial VM has limited RAM and disk space. Parallel active projects multiply
 native processes/workspaces, while reusing the installed images and vendor logins.
 Resource capacity for multiple busy teams is not yet verified.
+
+## Shared project artifacts
+
+Host directory: `~/projects/NAME/workspace`. Inside containers: `/workspace/shared`.
+All seven working roles have read/write access; the observer has read-only access.
+Private native homes and each role's instructions remain separate. Credentials,
+account context and the full prompt file are never mounted into the shared directory.
+
+Put project code, documents and agreed output artifacts there. Agree file/task
+ownership through the orchestrator and avoid concurrent edits to the same file.
+Connector roles may publish only explicitly authorized project results; never
+copy private/corporate mail, account data or credentials there automatically.
+Their native general tools remain disabled until scoped connector tools are configured.
+Codex uses its native workspace-write sandbox with on-request approval.
+
+Existing projects receive the shared directory without overwriting contents.
+An active container is preserved; stop/start that project normally to acquire the
+new mount. New projects have it from creation. Saved SQLite, prompts, credentials
+and private workspaces are retained when a stopped container definition is rebuilt.
 
 ## Project-only control
 

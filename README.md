@@ -348,14 +348,14 @@ Vibe uses checksum-pinned Astral Python Build Standalone 3.12.15 to support the
 guest's libc. No global CLI, npm, pip, gcloud or libc shim is installed.
 
 ```bash
-cd ~/claude-work && ./login
 cd ~/claude-priv && ./login
 cd ~/gemini && ./login
 cd ~/codex && ./login
 cd ~/mistral && ./login
 ```
 
-Claude work/private authenticate separately. Gemini uses native Sign in with Google
+Private Claude uses native OAuth login; work Claude Vertex configuration is
+pending as described below. Gemini uses native Sign in with Google
 with a remote browser flow; gcloud is unnecessary. Codex uses device login and a
 file credential store. Mistral opens Vibe's native setup wizard. All five wrappers
 scope HOME, provider configuration, credentials, caches, state and temporary files
@@ -437,11 +437,38 @@ operations. Update this layer with `--tags project_framework`. Explicit offline
 project validation uses disposable projects and dummy tmux harnesses only; no
 provider credentials are fabricated or native models invoked.
 
+### Work Claude provider limitation
+
+Work Claude is intended to use Google Vertex AI. The native harness supports it,
+but this deployment's work auth launcher and project preflight currently support
+OAuth-file authentication only. Skip work OAuth login until Vertex ADC/project/
+region support is configured; real all-role project startup remains blocked by
+that backend requirement. Private Claude, Codex, Gemini and Mistral native account
+flows remain available. No cloud SDK installation or Vertex authentication was
+performed as part of the shared-workspace change.
+
+### Shared project artifact workspace
+
+Every project has `~/projects/NAME/workspace`, mounted at `/workspace/shared`.
+All seven working roles can read/write shared artifacts; the observer can only
+read them. Their native homes, credentials and role instruction files remain
+separate. The full prompt file and private connector contexts are not shared.
+Only explicitly authorized project results may be published from connector roles.
+Their general native tools remain disabled pending scoped external tools.
+
+Codex uses native workspace-write with on-request approval for project work.
+Prompts ask agents to coordinate file/task ownership through the orchestrator and
+avoid concurrent edits; no custom locking system is introduced. The separate
+project_workspace Ansible role adds missing directories without modifying their
+contents. Active containers are preserved and acquire new mounts on a normal
+project stop/start. Stopped definitions are rebuilt only when mounts differ,
+preserving all bind-mounted data. No images, dependencies or VM resources change.
+
 ### Validation and current limits
 
 All five local installations pass host-native version/help checks. Native project sessions require operator authentication; setup does not launch
 models.
-Thirty-two local tests passed, including scoped login paths, work/private credential
+Thirty-four local tests passed, including scoped login paths, work/private credential
 seeding, retained refresh state, hidden prompt extraction and named-eight-container
 stop. Live checks verify a read-only observer context and no provider configuration
 at the account's global home paths. The project lifecycle check preserved SQLite and persistent state. New control checks cover the stock live viewer

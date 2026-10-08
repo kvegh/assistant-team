@@ -31,6 +31,7 @@ def create(name):
     path=project_path(name)
     if path.exists():raise ValueError('Project already exists; prompts and state were not overwritten')
     PROJECTS.mkdir(mode=0o700,exist_ok=True);path.mkdir(mode=0o700)
+    (path/'workspace').mkdir(mode=0o700)
     prompts=(ACCOUNT_HOME/'assistant-prompts.md').read_text()
     (path/'assistant-prompt.md').write_text('# Project goal\n\nDescribe this project’s goal, context, boundaries and completion criteria here.\n\n'+prompts)
     for role in ROLES:

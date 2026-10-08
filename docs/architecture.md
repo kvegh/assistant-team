@@ -199,3 +199,17 @@ credentials, editable prompt defaults and SQLite data are preserved. Project
 instance templates, databases and containers are not targeted. The foundation
 role no longer creates or starts original services/containers on rerun.
 Operator commands require a project name and there is no all-projects master.
+
+## Shared project artifacts with separate role context
+
+The project-root workspace is a shared artifact directory mounted at
+/workspace/shared. Seven working roles get read/write access and the observer
+gets read-only access. Each role retains private /workspace instructions and its
+own native home; neither provider credentials nor full prompt/account contexts
+are mounted into shared artifacts. Connector publication remains explicitly
+authorized and their general tools remain disabled. Codex uses workspace-write
+with on-request approval. File ownership is coordinated through the orchestrator.
+
+Ansible adds missing shared directories without touching existing contents.
+Running containers are never replaced for migration; the normal project stop/start
+rebuilds only stopped definitions whose mounts differ, preserving disk state.

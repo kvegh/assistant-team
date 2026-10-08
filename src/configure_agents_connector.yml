@@ -36,3 +36,5 @@
       tags: [native_auth]
     - role: project_framework
       tags: [project_framework]
+    - role: project_workspace
+      tags: [project_framework, project_workspace]

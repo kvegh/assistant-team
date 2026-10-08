@@ -131,6 +131,19 @@ async def gateway():
 def start_container(name):
     p=PROFILES/name;spec=json.loads((p/'profile.json').read_text());c=container(name)
     exists=subprocess.run(['podman','container','exists',c]).returncode==0
+    if PROJECT:
+        shared=ROOT/'workspace'
+        if shared.is_symlink():raise ValueError('Shared project workspace must not be a symlink')
+        shared.mkdir(mode=0o700,exist_ok=True)
+        if exists:
+            inspected=json.loads(subprocess.check_output(['podman','inspect',c],text=True))[0]
+            mount=next((m for m in inspected['Mounts'] if m['Destination']=='/workspace/shared'),None)
+            desired_rw=name!='observer'
+            correct=mount and mount['Source']==str(shared) and mount['RW']==desired_rw
+            if not correct:
+                if inspected['State']['Running']:
+                    raise ValueError('Shared workspace mount pending: stop project '+PROJECT+' and start it again; active container was preserved')
+                run(['podman','rm',c],stdout=subprocess.DEVNULL);exists=False
     if name=='observer':
         refresh_observer()
         if exists:
@@ -147,6 +160,9 @@ def start_container(name):
         return
     uid=os.getuid()
     cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(p/'home')+':/home/agent:Z','-v',str(p/'workspace')+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent; exec sleep infinity']
+    if PROJECT:
+        image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
+        cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:'+('ro,z' if name=='observer' else 'rw,z')]
     if name=='observer':
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(p/'context')+':/context:ro,Z']
@@ -188,7 +204,7 @@ def launch(name):
     seed_auth(name)
     start_container(name);spec=json.loads((PROFILES/name/'profile.json').read_text());flavour=spec['flavour']
     apply_prompts()
-    cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--sandbox','read-only','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
+    cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
     if name=='observer':refresh_observer();cmd=['claude','--tools','Read,Grep,Glob,Write']
     elif name in ['private-connector','corporate-connector']:cmd=['claude','--tools','']
     run(['podman','exec',container(name),'tmux','set-option','-g','remain-on-exit','on'])
@@ -224,6 +240,8 @@ def apply_prompts():
         role=header.group(1);cfg=json.loads((PROFILES/role/'profile.json').read_text())
         prompt=content[header.end():headers[i+1].start() if i+1<len(headers) else len(content)].strip()+'\n'
         if PROJECT:prompt='# Project: '+PROJECT+'\n\n'+goal+'\n\n'+prompt
+        if PROJECT:
+            prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+('Read-only access; evaluate outcomes without modifying shared artifacts.' if role=='observer' else 'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.')+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'
         if role in VISIBLE:prompt+=roster
         file=PROFILES/role/'workspace'/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
         temp=file.with_suffix('.pending');temp.write_text(prompt);temp.chmod(0o600);temp.replace(file)
