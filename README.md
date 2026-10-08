@@ -642,3 +642,10 @@ self-hosted runner labelled `assistant-team-quality`, provisioned with the same
 tools, certified collections and external Vault access. No runner is registered
 or cloud secret configured by this change; CI execution remains pending operator
 runner setup. Its checkout action is pinned and does not retain a Git credential.
+
+### Optional local APME evaluation
+
+[APME evaluation](docs/APME_EVALUATION.md) records the pinned isolated audit tool,
+partial coverage and certified-dependency blocker. It did not modify source or
+invoke AI. Full-project success is not claimed; production lint remains the
+existing verified check.

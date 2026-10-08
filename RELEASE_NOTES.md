@@ -4,6 +4,13 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.4
+
+Record the authorized local APME audit, pinned source and captured dependency lock.
+Builtin-only role checks completed with no remaining violations and17 formatting
+proposals preserving YAML values. Full-project scanning remains blocked by its
+certified-content installer; this is not a new mandatory gate or full coverage claim.
+
 ## 0.8.3
 
 Record the reusable session-context implementation and rationale with its actual
