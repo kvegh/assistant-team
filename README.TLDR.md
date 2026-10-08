@@ -34,3 +34,5 @@ All eight role sessions start only after enabled assignments and saved auth pass
 ## Disposable deployment test lifecycle
 
 `src/retire_test_linux_vm.yml` performs a read-only preflight by default using its separate encrypted retirement definition. Its dedicated normal AAP template removes the selected second test clone only when explicitly launched with `retire_test_execute: true`. The role verifies exclusive disk ownership, refuses source-image or shared disks, uses graceful shutdown, and checks preservation of all other domains and the golden image. The fresh deployment definition selects the next test clone with an empty recovery address; configuration-only recovery remains available after successful provisioning. No provider credentials are copied or model inference performed by this test.
+
+Existing prompt conversion is opt-in through Ansible; it preserves instructions and makes a protected backup.

@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.14.0
+
+- Add explicit, backup-protected migration of edited legacy project prompts to bracket sections without restarting sessions.
+- Record parallel background work for independent tasks; coordinate shared Git and VM changes.
+
 Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.

@@ -27,3 +27,8 @@ Run the repository production lint and tests. Fresh installation and configurati
 New projects receive `[Project]` and `[Role: Name]` sections with inactive `#` example
 comments. Authors must add active instructions. Existing project files are never
 overwritten; legacy role headers remain supported by the renderer.
+
+`project_framework_migrate_prompt_projects` defaults to an empty list. Set explicit
+project names only to migrate legacy prompts to bracket sections. Migration makes
+0600 backups and preserves custom instructions and meaningful heading text; it is
+idempotent and does not restart or apply prompts to running sessions.

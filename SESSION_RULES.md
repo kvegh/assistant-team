@@ -22,10 +22,12 @@ material uncertainty rather than inventing history.
 - When the user reaches for another language, briefly give the natural English
   equivalent in **bold**, then continue the task. Do not add other highlighting
   for the language explanation. A clear task does not need reformulation.
-- Use one reusable background subagent for settled implementation work: Ansible,
+- Use background subagents for settled implementation work: Ansible,
   configuration, documentation, validation, commits, pushes, and deployments.
   Keep the main conversation available for design and steering. Coordinate shared
-  files, Git operations, and VM changes sequentially to avoid collisions.
+  files, Git operations, and VM changes to avoid collisions. Run tasks in parallel
+  when they do not overlap or endanger one another; serialize only conflicting
+  operations, rather than making independent tasks wait.
 - Clearly distinguish a proposal, an agreed decision awaiting implementation,
   an implemented change, a deployed change, and a verified result.
 - Continue authorized work and routine reversible fixes without repeatedly asking

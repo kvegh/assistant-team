@@ -36,10 +36,12 @@ Do not leave a lasting manually applied configuration change without automation.
 ## Background implementation
 
 Keep the main conversation focused on building and design. After a design decision
-is settled, delegate its implementation to one reusable background subagent.
-The subagent handles configuration changes, separate Ansible roles, documentation,
-meaningful validation, commits, and pushes. Process handoffs sequentially to avoid
-conflicting Git changes or concurrent VM configuration changes.
+is settled, delegate its implementation to background subagents as appropriate.
+Subagents handle configuration changes, separate Ansible roles, documentation,
+meaningful validation, commits, and pushes. Run tasks in parallel when they do not
+overlap or endanger one another. Coordinate file ownership, and serialize shared
+Git mutations and conflicting VM configuration changes; these constraints do not
+require unrelated investigation or implementation to wait.
 
 Distinguish "design agreed, implementation pending" from "implemented and verified."
 Continue independent design discussion while the subagent works; dependent work

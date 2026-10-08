@@ -169,8 +169,9 @@ push the automation and README together, and record the implementation commit
 reference in the decision history. Interim experiments and retries do not need
 individual decision entries. All environment-specific data remains encrypted.
 
-The main conversation focuses on building and design. One reusable background
-subagent handles settled decisions sequentially: configuration changes, Ansible
+The main conversation focuses on building and design. Background
+subagents handle settled decisions in parallel when their tasks do not overlap or
+endanger one another: configuration changes, Ansible
 roles, documentation, validation, commits, and pushes. Independent design discussion
 can continue while that work runs. A design agreement remains implementation
 pending until the subagent reports it implemented and verified; dependent work
@@ -683,3 +684,10 @@ command behavior while clarifying shell parameters and internal result names.
 ## Disposable deployment test lifecycle
 
 `src/retire_test_linux_vm.yml` performs a read-only preflight by default using its separate encrypted retirement definition. Its dedicated normal AAP template removes the selected second test clone only when explicitly launched with `retire_test_execute: true`. The role verifies exclusive disk ownership, refuses source-image or shared disks, uses graceful shutdown, and checks preservation of all other domains and the golden image. The fresh deployment definition selects the next test clone with an empty recovery address; configuration-only recovery remains available after successful provisioning. No provider credentials are copied or model inference performed by this test.
+
+Existing legacy project prompts can be converted explicitly with the project-framework
+role variable `project_framework_migrate_prompt_projects`, a list of project names.
+Migration retains active goal and role instructions, converts meaningful Markdown
+heading text to active plain text, and comments out the known rough-template guidance.
+It writes a protected backup beside the project prompt before atomic replacement.
+The default empty list leaves every existing project unchanged; no sessions restart.

@@ -3,6 +3,11 @@ argument_specs:
   main:
     short_description: Install project-scoped control, strict configs, services and concise operator guides.
     options:
+      project_framework_migrate_prompt_projects:
+        type: list
+        elements: str
+        default: []
+        description: Explicit project names whose legacy prompts are migrated with protected backups; no sessions restart.
       containers:
         type: dict
         required: true
