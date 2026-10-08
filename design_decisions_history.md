@@ -553,3 +553,7 @@ The user chose one environment per Linux user, with eight available work/private
 The user requested concise home and repository README.TLDR guides alongside the full guide, and protected bounded environment metadata for diagnostics. Metadata excludes authentication values, conversations, prompts, databases and raw CLI output; manual exports contain only prescribed fields/files. Backlog items distinguish required custom roles/Mistral integration from optional custom account contexts and multiple environments. Implementation: `a587343`.
 
 The personal Gemini OAuth input stage was verified without submitting authentication or model input. The user then encountered a provider restriction rejecting this native client for individuals. This is an access limitation, not authorization to alter client identity or switch to paid API authentication. Work Vertex access remains a separate setup path.
+
+## Recognizable login status messages
+
+The user requested the exact `[AC-Agents]:` prefix for wrapper-owned login outcomes, clear confirmations and errors so these messages are distinguishable from native provider output. The native providers retain their own output, and local credential evidence still does not imply model access. Atomic helper updates preserve active login processes and existing credentials. Implementation: `ccf07f2`.
