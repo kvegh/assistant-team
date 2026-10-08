@@ -686,3 +686,27 @@ containers restore a missing session only after PID 1 reaches its idle sleep,
 avoiding competing tmux creation. New entrypoints stop on tmux initialization
 failure. Five readiness regressions passed, along with all 102 tests and production
 Ansible lint with zero failures or warnings.
+
+## Protected editable-prompt migration and parallel implementation
+
+Implementation: `2e3c616` (0.14.0).
+
+The operator requested converting an already edited project to explicit bracket
+sections rather than leaving legacy role headings. Conversion is opt-in through
+Ansible, preserves role-specific custom instructions and meaningful heading text,
+comments known rough-template guidance, and writes a protected backup before atomic
+replacement. It does not restart sessions or alter saved account credentials.
+Independent background tasks now run in parallel; shared Git and VM changes remain
+coordinated to prevent conflicting writes.
+
+## Human-readable operational diagnostics
+
+Implementation: `373b8f7` (0.15.0).
+
+The operator wanted logs made for humans alongside structured JSON. Runtime events
+now have matching readable lines, correlation IDs, protected permissions and bounded
+rotation. Known failure guidance is fixed safe text instead of unfiltered native
+errors. Deployment transfers provide readable counterparts too. Exports continue to
+validate JSON metadata and exclude arbitrary text, credentials and conversation data.
+Validation: 106 unit tests passed before commit; focused diagnostic and migration
+cases passed; production Ansible lint passed for the affected role and transfer play.

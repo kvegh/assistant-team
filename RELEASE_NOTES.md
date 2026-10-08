@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.15.1
+
+- Record prompt migration and human-readable logging decisions with implementation references and validation.
+
 ## 0.15.0
 
 - Provide protected, rotated human-readable runtime logs alongside correlated JSON; deployment transfers include readable logs too.
