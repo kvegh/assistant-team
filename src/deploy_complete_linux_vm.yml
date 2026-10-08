@@ -1,0 +1,70 @@
+---
+- name: Load the isolated encrypted deployment definition
+  hosts: localhost
+  gather_facts: false
+  no_log: true
+  tags: [always]
+  tasks:
+    - ansible.builtin.include_vars:
+        file: "{{ assistant_vm_configuration | default('../vars/fresh_test.vault.yml') }}"
+        name: fresh_definition
+    - name: Restore the guest group for a configuration-only recovery
+      ansible.builtin.add_host:
+        name: "{{ fresh_definition.provisioning.vm_name }}"
+        groups: provisioned_linux_guest
+        ansible_host: "{{ fresh_definition.recovery.guest_ip }}"
+        ansible_user: "{{ fresh_definition.provisioning.guest_ssh_user }}"
+        ansible_password: "{{ fresh_definition.provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ fresh_definition.provisioning.guest_ssh_password }}"
+        deployment_vm_name: "{{ fresh_definition.provisioning.vm_name }}"
+        deployment_vm_ip: "{{ fresh_definition.recovery.guest_ip }}"
+        deployment_vm_disk_gb: "{{ fresh_definition.provisioning.vm_disk_gb }}"
+        deployment_vm_vcpus: 2
+        deployment_vm_memory_mb: 4096
+      when: fresh_definition.recovery.guest_ip | default('') | length > 0
+
+- name: Provision the isolated fresh Linux VM
+  hosts: hypervisor
+  gather_facts: false
+  become: true
+  no_log: true
+  tags: [provision]
+  vars:
+    provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+  roles:
+    - linux_vm
+
+- name: Update and install the complete native environment
+  hosts: provisioned_linux_guest
+  gather_facts: false
+  become: true
+  no_log: true
+  tags: [guest_config]
+  vars:
+    provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+    containers:
+      runtime_user: "{{ hostvars.localhost.fresh_definition.runtime_user }}"
+    assistant_source_user: "{{ containers.runtime_user }}"
+    assistant_vertex_install_sdk: "{{ hostvars.localhost.fresh_definition.install_google_cloud_sdk | default(false) }}"
+  roles:
+    - linux_guest
+    - linux_root_growth
+    - linux_updates
+    - podman_host
+    - agent_images
+    - agents_connector
+    - native_auth
+    - project_framework
+    - project_workspace
+    - vertex_auth
+  tasks:
+    - name: Verify disposable project isolation without authentication or inference
+      become_user: "{{ containers.runtime_user }}"
+      environment:
+        HOME: "{{ assistant_runtime_home }}"
+        XDG_RUNTIME_DIR: "/run/user/{{ assistant_runtime_uid }}"
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ assistant_runtime_uid }}/bus"
+      ansible.builtin.command:
+        argv: [python3, "{{ assistant_runtime_home }}/agents-connector/routing/validate_projects.py"]
+      changed_when: false
+      when: hostvars.localhost.fresh_definition.validate_projects | default(true) | bool

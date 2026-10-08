@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.0
+
+Add a dedicated normal-AAP-job playbook for isolated fresh provisioning and complete native environment installation, including root growth, full DNF updates, approved SDK and model-free project isolation validation. Keep its encrypted target definition separate and support configuration-only recovery after successful creation. Record AAP source revision in installed build metadata. Syntax validation passes; the actual fresh AAP deployment is the next verification step, not yet claimed complete.
+
 ## 0.5.1
 
 Record scoped work SDK installation, correct archive pinning and Vertex provider selection. Documentation only; Google login and model entitlement still belong to the operator.

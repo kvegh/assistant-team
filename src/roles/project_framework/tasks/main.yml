@@ -54,7 +54,7 @@
 - name: Install source commit metadata without environment identifiers
   ansible.builtin.copy:
     dest: "{{ assistant_project_home }}/agents-connector/build-info.json"
-    content: "{{ {'version': lookup('file', role_path + '/../../../VERSION') | trim, 'commit': lookup('env', 'ASSISTANT_BUILD_COMMIT') | default('development-uncommitted', true)} | to_nice_json }}\n"
+    content: "{{ {'version': lookup('file', role_path + '/../../../VERSION') | trim, 'commit': assistant_build_commit | default(awx_project_revision | default(lookup('env', 'ASSISTANT_BUILD_COMMIT') | default('development-uncommitted', true)))} | to_nice_json }}\n"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: '0600'
