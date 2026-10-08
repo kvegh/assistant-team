@@ -565,3 +565,5 @@ Personal Gemini’s OAuth prompt has been verified, but the provider currently r
 this CLI client for Gemini Code Assist for individuals and directs the user to
 Antigravity. Saved OAuth credentials do not prove usable model access. No client-ID
 bypass, automatic paid API fallback or account-data migration is configured.
+
+Login wrapper status, outcome and error messages use the `[AC-Agents]:` prefix; native vendor output keeps its original format.

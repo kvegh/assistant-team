@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.2.2
+
+Prefix wrapper-owned login outcomes, clear confirmations and actionable errors with `[AC-Agents]:`, while preserving native vendor output. Handle interrupted or unavailable native login commands as failed/cancelled without changing saved credentials. Scoped helpers are deployed in every account context; no model calls were used for validation.
+
 ## 0.2.1
 
 Record the selectable environment/project configuration and account isolation rationale, implementing commit and operator limitations. No runtime behavior changes; retain the native-vendor adapter boundaries and provider-access caveats.

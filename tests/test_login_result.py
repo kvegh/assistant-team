@@ -66,3 +66,9 @@ class LoginOutcomeTests(unittest.TestCase):
             digest = module.credential_snapshot(directory, 'gemini')
             self.assertEqual(len(digest), 64)
             self.assertNotIn('fixture', digest)
+
+
+class LoginDisplayTests(unittest.TestCase):
+    def test_all_result_labels_have_exact_required_prefix(self):
+        for message in ["Failed or cancelled", "Credentials saved; model access unverified", "Model access verified"]:
+            self.assertEqual(module.display(message), "[AC-Agents]: " + message)

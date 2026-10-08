@@ -24,7 +24,7 @@ if pathlib.Path(sys.argv[0]).name=='login':
     try:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         status.require_idle(root)
-    except (BlockingIOError,ValueError) as error:raise SystemExit(str(error))
+    except (BlockingIOError,ValueError) as error:raise SystemExit(status.display(str(error)))
 def diagnostic(action,result,code=0):
     path=root.parent/'agents-connector/routing/environment-diagnostics.py'
     if not path.is_file():return
@@ -41,37 +41,40 @@ if f in ['claude','gemini'] and config.get('provider')=='vertex' and sys.argv[1:
 if pathlib.Path(sys.argv[0]).name=='login':
     if args==['--clear']:
         try:copies=status.clear_profile(root,f,config.get('provider'))
-        except (ValueError,OSError) as error:raise SystemExit(str(error))
-        print('Saved authentication cleared for this profile and '+str(copies)+' matching role contexts. Remote revocation and model access were not tested.',flush=True)
+        except (ValueError,OSError) as error:raise SystemExit(status.display(str(error)))
+        print(status.display('Saved authentication cleared for this profile and '+str(copies)+' matching role contexts. Remote revocation and model access were not tested.'),flush=True)
         diagnostic('clear','completed')
         raise SystemExit(0)
-    if args:raise SystemExit('./login takes no arguments')
+    if args:raise SystemExit(status.display('./login takes no arguments'))
     before=status.credential_snapshot(root,f,config.get('provider'))
     if vertex is not None:
         os.umask(0o077);os.chdir(root)
         try:vertex.login(env);code=0
-        except (ValueError,subprocess.CalledProcessError,KeyboardInterrupt):code=1
-        print(status.result(code,before,status.credential_snapshot(root,f,config.get('provider'))),flush=True)
+        except (ValueError,subprocess.CalledProcessError,KeyboardInterrupt) as error:
+            code=130 if isinstance(error,KeyboardInterrupt) else 1
+            print(status.display('Vertex login did not complete; configuration or SDK prerequisites may need attention.'),flush=True)
+        print(status.display(status.result(code,before,status.credential_snapshot(root,f,config.get('provider')))),flush=True)
         diagnostic('login','completed' if code==0 else 'failed',code)
         raise SystemExit(code)
     args={'claude':['auth','login'],'codex':['-c','cli_auth_credentials_store="file"','login','--device-auth'],'gemini':[],'vibe':['--setup']}[f]
     if f=='gemini':
         env['NO_BROWSER']='true'
-        print('Choose Sign in with Google; use the displayed browser link and verification flow.',flush=True)
+        print(status.display('Choose Sign in with Google; use the displayed browser link and verification flow.'),flush=True)
     os.umask(0o077);os.chdir(root)
     try:code=subprocess.call(command+args,env=env)
     except KeyboardInterrupt:code=130
+    except OSError:code=1
     after=status.credential_snapshot(root,f,config.get('provider'))
     message=status.result(code,before,after,interactive=f in ['gemini','vibe'])
-    print('\n'+message,flush=True)
+    print('\n'+status.display(message),flush=True)
     diagnostic('login','credentials_saved' if message!='Failed or cancelled' else 'credentials_unconfirmed',code)
     if message=='Failed or cancelled' and code==0:
-        print('No new completed login was confirmed; existing saved credentials, if any, were preserved.',flush=True)
+        print(status.display('No new completed login was confirmed; existing saved credentials, if any, were preserved.'),flush=True)
         code=1
     raise SystemExit(code if code>=0 else 128-code)
 if vertex is not None and args not in [['--version'],['--help']]:
     try:env=vertex.environment(env)
-    except ValueError as error:raise SystemExit(str(error))
+    except ValueError as error:raise SystemExit(status.display(str(error)))
 os.umask(0o077)
 os.chdir(root)
 os.execve(command[0],command+args,env)

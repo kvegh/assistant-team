@@ -5,6 +5,10 @@ import pathlib
 import subprocess
 
 
+def display(message):
+    return "[AC-Agents]: " + message
+
+
 def require_idle(root):
     root=pathlib.Path(root).resolve()
     for process in pathlib.Path('/proc').glob('[0-9]*'):
