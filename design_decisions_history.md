@@ -581,3 +581,7 @@ The user approved the required SDK dependency. Google Cloud CLI 588.0.0 is insta
 ## Fresh complete installation through normal AAP jobs
 
 The user requested a separate fresh VM as an end-to-end automation test, with all target changes performed by normal AAP job templates rather than ad-hoc commands or manual SSH. A separate encrypted definition protects the existing deployment. The new playbook uses the discovered guest for root growth, complete updates and the full native environment role chain, then exercises disposable dummy-harness project isolation without authentication or model calls. Configuration-only recovery uses a vaulted guest address and skips successful provisioning. Installed metadata can use the AAP project revision. At this commit, syntax is verified and the actual deployment remains pending. Implementation: `7034bc1`.
+
+## Explain full Vertex model identifiers at login
+
+The operator encountered unclear rejection of display names and aliases. Model prompts now show a complete Vertex identifier and explain invalid input while keeping project/location entitlement unverified. This improves guided login without cloud lookups, model calls or changes to existing sessions. Seven scoped regression tests pass. Implementation: `b1f2d02`.

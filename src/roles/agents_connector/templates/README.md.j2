@@ -77,3 +77,8 @@ See `~/README.TLDR.md` for condensed commands. Keep both guides current after la
 Fresh Linux VM provisioning expands the root filesystem to use its configured cloned disk capacity (20 GiB by default). The existing running VM retains its already-expanded capacity. Runtime team commands do not resize disks. Existing project and authentication data are preserved.
 
 For headless Vibe login, open its displayed sign-in link manually; the scoped browser handoff keeps native polling active. Wrapper-owned outcomes and next steps begin `[AC-Agents]:`.
+# Vertex model identifier
+
+Claude work login requires a full enabled Vertex model ID, for example
+`claude-opus-5`; `Opus` and `Opus-5` are not full IDs. Availability depends on
+your Google project and location. The login helper does not probe model access.

@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.3
+
+Record the full model-ID usability fix and include its explanation in the reproducible home operator guide. No provider access probe or authentication change.
+
 ## 0.6.2
 
 Clarify the Vertex Claude model prompt with a full-ID example and actionable errors for aliases. Keep project/location entitlement explicit and unverified; no model lookup or inference is added. Seven scoped Vertex tests pass, and the helper is deployed without interrupting existing logins.
