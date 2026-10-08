@@ -1,5 +1,9 @@
 # assistant-team
 
+For another working session, start with [the reusable session rules](SESSION_RULES.md)
+and `AGENTS.md`. The rules collect our collaboration, security, deployment, design,
+and versioning decisions without including environment credentials.
+
 Deployment and configuration use Ansible where it provides clear, reliable
 behavior, preferring a suitable certified collection without adding unnecessary
 architecture. Runtime command and messaging logic remains application code.

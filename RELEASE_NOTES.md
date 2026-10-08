@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.2
+
+Add reusable session rules covering the user's security, Ansible, background-work,
+authentication, documentation and release requirements. Link the handoff document
+from README so future sessions can recover agreed context without exposing secrets.
+
 ## 0.8.1
 
 Document the quality-workflow implementation and its operator prerequisites with
