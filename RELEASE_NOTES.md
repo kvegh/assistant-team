@@ -4,6 +4,12 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.5
+
+Document the scoped APME evaluation implementation and the non-destructive
+operator enablement policy. Unused account contexts stay available without
+forcing their login or deleting saved state.
+
 ## 0.8.4
 
 Record the authorized local APME audit, pinned source and captured dependency lock.

@@ -609,3 +609,11 @@ Practical guide adoption now includes one tested quality command shared by local
 ## Reusable rules for future sessions
 
 The user requested one comprehensive context document for future assistants. SESSION_RULES.md consolidates explicit working rules and settled boundaries while directing readers to current source, release notes and verified deployment outcomes. It contains no credentials or environment identifiers and does not turn pending capabilities into completion claims. Implementation: `140dccc`.
+
+## Evaluate APME locally without broadening deployment
+
+The user authorized a pinned isolated APME installation and local OPA container evaluation. Its full-project scan failed certified collection provisioning, so a builtin-only role subset was evaluated separately and coverage limitations were retained. The partial scan reported no remaining policy violations and proposed only value-preserving YAML formatting. No automatic fixes, AI requests, authentication reuse or mandatory gate were introduced. Installation capture and reproducible audit instructions are documented. Implementation: `5692d3c`.
+
+## Enable only account profiles the operator currently uses
+
+The operator disabled unused work profiles in the current environment while retaining their installations, credentials and project definitions. This is an environment-specific enablement choice, not a removal from the eight-profile catalog or a default restriction for future operators. Existing account state and running work are not erased or silently reassigned.
