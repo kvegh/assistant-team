@@ -1,5 +1,10 @@
 # Future work
 
+## Exploratory
+
+- Consider developing our own Ansible modules and packaging them as a collection
+  when repeated project-specific deployment behavior justifies it.
+
 ## Priority after bug fixes and blocking features
 
 - [ ] Select the model used by each native harness for the task it receives,

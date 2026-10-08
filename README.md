@@ -1,5 +1,9 @@
 # assistant-team
 
+Deployment and configuration use Ansible where it provides clear, reliable
+behavior, preferring a suitable certified collection without adding unnecessary
+architecture. Runtime command and messaging logic remains application code.
+
 Version 0.5.1 adds operator-owned local or SSH deployment and sanitized deployment
 metadata transfer to the target environment diagnostics. The published 0.0.1 tag
 remains the earlier baseline. Google Cloud SDK 588.0.0 is installed and verified in the

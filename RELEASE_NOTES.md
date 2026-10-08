@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.5
+
+Record explicit Vault input and the preference for suitable Ansible/certified content. Add exploratory future consideration of our own modules/collection; no runtime or active deployment changes.
+
 ## 0.6.4
 
 Remove the checkout-relative Vault password path from tracked Ansible configuration. AAP uses its attached Vault credential without a misleading missing-file warning; local operators supply their own explicit file or environment setting. Fresh-playbook syntax and seven portable deployment tests pass.

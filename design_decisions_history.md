@@ -585,3 +585,11 @@ The user requested a separate fresh VM as an end-to-end automation test, with al
 ## Explain full Vertex model identifiers at login
 
 The operator encountered unclear rejection of display names and aliases. Model prompts now show a complete Vertex identifier and explain invalid input while keeping project/location entitlement unverified. This improves guided login without cloud lookups, model calls or changes to existing sessions. Seven scoped regression tests pass. Implementation: `b1f2d02`.
+
+## Explicit Vault password configuration
+
+The checkout-relative password setting resolved to an unrelated missing path under AAP even though its attached Vault credential worked. Tracked configuration now delegates Vault access to explicit operator input or AAP credential injection, avoiding developer workspace assumptions. Syntax and portable deployment tests pass. Implementation: `3ba883f`.
+
+## Prefer suitable Ansible and certified content
+
+The user chose Ansible for clear deployment/configuration tasks and an obviously suitable certified collection when available, while avoiding complexity added merely to force a collection. Runtime CLI/authentication/router application logic remains code installed by Ansible. Deployment-helper review follows blocking fixes. Developing project-specific Ansible modules and packaging a collection is an exploratory future item, not current implementation.

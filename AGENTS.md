@@ -1,5 +1,12 @@
 # Project working rules
 
+Use Ansible for deployment and configuration where its modules provide clear,
+reliable and idempotent behavior. Prefer an obviously suitable certified collection
+when available; do not force one where it would complicate the architecture.
+Keep runtime CLI, authentication-flow and broker routing logic as application code
+installed by Ansible. Review deployment helpers after blocking fixes, rather than
+rewriting unrelated working code during an active deployment.
+
 Direct SSH access with sudo to the project VM is authorized for project work.
 Keep access credentials and environment-specific values in Ansible Vault.
 Do not broaden this authorization to unrelated hosts or security-control bypasses.
