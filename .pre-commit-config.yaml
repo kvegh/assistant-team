@@ -1,0 +1,10 @@
+---
+repos:
+  - repo: local
+    hooks:
+      - id: project-quality
+        name: Existing Python tests and production Ansible lint
+        entry: python3.12 src/check-quality.py
+        language: system
+        pass_filenames: false
+        always_run: true

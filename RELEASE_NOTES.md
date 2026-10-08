@@ -4,6 +4,14 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.8.0
+
+Add one reusable quality command for tests and production-profile lint, plus local
+pre-commit hooks and a manually dispatched trusted-runner CI configuration.
+No tools, runner registrations or cloud secrets are installed. Existing checks
+pass and regressions cover failure propagation and missing Vault input. Actual
+CI execution requires an operator-provisioned runner with certified dependencies.
+
 ## 0.7.1
 
 Record the verified 0.7.0 AAP outcome and implementation-linked design history.

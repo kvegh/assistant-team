@@ -17,7 +17,7 @@ unnecessary architecture. It covers this project, not the umbrella repositories.
 | Dependencies | Pinned certified collection, CLI artifacts and SDK checksums; documented role ordering. | Hub authentication and target prerequisites remain operator-owned. No unsolicited test-tool installation. |
 | Logging and errors | Protected metadata diagnostics, bounded retention, explicit failure guards, protected sensitive tasks. | Some broad `no_log` scopes reduce failed-task detail; scoped safe diagnostic improvements remain useful. |
 | AAP configuration | Private HTTPS SCM, explicit credentials, certified dependency synchronization and recovery tags. | Controller configuration-as-code draft is not verified or included as a supported deployment path yet. |
-| Quality workflow | Versioned focused commits, release notes, implementation-linked history and operator guides. | CI, pre-commit installation, branch protections and signing are not configured automatically; they require a separate practical proposal. |
+| Quality workflow | Versioned focused commits, release notes, implementation-linked history and operator guides. | A manually dispatched trusted-runner CI workflow and local pre-commit configuration use the same tested quality command. Runner registration, pre-commit installation, branch protections and signing remain operator decisions. |
 | Collections and custom modules | Suitable certified content is preferred without forcing a collection migration. | Project-owned module/collection development is exploratory backlog work. |
 
 The local production lint and unit suite are necessary checks, not a blanket

@@ -618,3 +618,23 @@ Configuration-only AAP recovery retains separate encrypted SSH and sudo credenti
 Fresh native installations install the launcher dependency before checking CLI versions. Recovery rechecks every context, including contexts with installation metadata from an interrupted run, without authenticating or invoking models.
 
 Deployment input tests execute the VM role with isolated fixture data; they do not require the development Vault or its password file.
+
+## Repeatable quality checks
+
+Use the already-installed Python 3.12, Ansible and ansible-lint with the pinned
+certified collection available and an external Vault password file:
+
+```sh
+export ANSIBLE_VAULT_PASSWORD_FILE=/private/vpf
+python3.12 src/check-quality.py
+```
+
+The command runs tests and production-profile offline lint, preserves failure
+exit codes, and installs nothing. `--tests-only` omits lint; VM input tests still
+require an installed Ansible executable. The local pre-commit configuration uses
+this same command if the operator already has pre-commit; pre-commit was not
+installed automatically. A manually dispatched GitHub workflow targets a trusted
+self-hosted runner labelled `assistant-team-quality`, provisioned with the same
+tools, certified collections and external Vault access. No runner is registered
+or cloud secret configured by this change; CI execution remains pending operator
+runner setup. Its checkout action is pinned and does not retain a Git credential.
