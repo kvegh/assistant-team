@@ -18,12 +18,14 @@ generic placeholders. Never commit the Vault password file or decrypted output.
 ## Vault setup
 
 Ansible and Git must already be available. Run commands from this repository.
-`ansible.cfg` uses the existing workspace password file at `../../vpf`.
+Supply an external password file explicitly using `--vault-password-file` or
+`ANSIBLE_VAULT_PASSWORD_FILE`; the checkout does not assume a workspace layout.
 The password file stays outside this repository; do not copy it here.
-On another checkout, override the location with `ANSIBLE_VAULT_PASSWORD_FILE`.
+AAP supplies its own attached Vault credential without a checkout password path.
 Ansible uses a project-specific temporary directory under `/tmp` for local work.
 
 ```bash
+export ANSIBLE_VAULT_PASSWORD_FILE=/private/vpf
 ansible-vault edit vars/environment.vault.yml
 ansible-vault encrypt path/to/environment-specific.yml
 ansible-vault view vars/environment.vault.yml

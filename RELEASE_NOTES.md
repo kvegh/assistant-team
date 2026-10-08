@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.4
+
+Remove the checkout-relative Vault password path from tracked Ansible configuration. AAP uses its attached Vault credential without a misleading missing-file warning; local operators supply their own explicit file or environment setting. Fresh-playbook syntax and seven portable deployment tests pass.
+
 ## 0.6.3
 
 Record the full model-ID usability fix and include its explanation in the reproducible home operator guide. No provider access probe or authentication change.
