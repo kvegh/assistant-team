@@ -41,6 +41,23 @@ class LoginOutcomeTests(unittest.TestCase):
             self.assertEqual(value['security']['auth']['selectedType'],'oauth-personal')
             self.assertEqual(value['security']['auth']['enforcedType'],'oauth-personal')
             self.assertIn('hooks',value)
+    def test_antigravity_uses_only_its_own_saved_token(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=pathlib.Path(directory);path=root/'.gemini/antigravity-cli'
+            path.mkdir(parents=True)
+            (root/'.gemini/oauth_creds.json').write_text('{"refresh_token":"old-gemini-fixture"}')
+            self.assertIsNone(module.credential_snapshot(root,'gemini','antigravity'))
+            (path/'antigravity-oauth-token').write_text('{"access_token":"antigravity-fixture"}')
+            self.assertEqual(len(module.credential_snapshot(root,'gemini','antigravity')),64)
+            module.clear_profile(root,'gemini','antigravity')
+            self.assertFalse((path/'antigravity-oauth-token').exists())
+            self.assertFalse((root/'.gemini/settings.json').exists())
+
+    def test_antigravity_removes_competing_api_and_vertex_auth_without_forcing_storage(self):
+        result=module.personal_antigravity({'GEMINI_API_KEY':'fixture','GOOGLE_APPLICATION_CREDENTIALS':'fixture',
+            'GEMINI_FORCE_FILE_STORAGE':'true','PATH':'retained','SSH_CONNECTION':'retained'})
+        self.assertEqual(result,{'PATH':'retained','SSH_CONNECTION':'retained'})
+
     def test_cancelled_login_does_not_reuse_old_credential_evidence(self):
         self.assertEqual(module.result(130, 'old', 'old'), 'Failed or cancelled')
         self.assertEqual(module.result(0, 'old', 'old'), 'Failed or cancelled')

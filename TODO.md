@@ -34,3 +34,7 @@
   and isolate its systemd units, container names and communication sockets.
   For now, support one environment per Linux user; do not migrate the current
   directory layout as part of this optional feature request.
+
+- Implement the agents-connector adapter for personal Antigravity, preserving its
+  native harness, MCP routing, event-driven wake-up and scoped authentication.
+  Installation/login support does not establish team integration.

@@ -17,8 +17,9 @@ Production-profile Ansible lint and 71 local tests pass. See the
 check-mode limits; this is not a claim of universal check-mode support.
 
 The published 0.0.1 tag remains the earlier baseline. Google Cloud SDK 588.0.0
-is installed in isolated work profiles; personal Gemini requires the supported
-Antigravity migration. Installation is not model-access proof.
+is installed in isolated work profiles. Personal Gemini uses the supported
+Antigravity native CLI; installation is not model-access proof. Its team adapter
+remains pending.
 
 Private project for an assistant team. Application requirements are still being defined.
 
@@ -578,10 +579,20 @@ the default templates and Mistral team support—from optional custom account
 contexts and multiple environments. Multiple environments are not supported now;
 use separate Linux users for isolated environments.
 
-Personal Gemini’s OAuth prompt has been verified, but the provider currently rejects
-this CLI client for Gemini Code Assist for individuals and directs the user to
-Antigravity. Saved OAuth credentials do not prove usable model access. No client-ID
-bypass, automatic paid API fallback or account-data migration is configured.
+Personal Gemini uses the official pinned Antigravity CLI in `~/gemini-priv`:
+run `./login`, complete its personal Google browser/code authorization yourself,
+then exit the CLI to see the saved-auth result. `./agy` launches the native CLI;
+`./login --clear` removes this profile's local authentication. The work profile
+continues to use Gemini CLI through Vertex. No old account data is migrated.
+
+Antigravity chooses native file token storage in SSH/container environments;
+GNOME packages are not required. Directories are 0700 and launcher umask is 077.
+These are local file permissions, not encryption at rest, and do not protect
+against root, sudo or other processes running as the runtime user. Deployment
+never signs in or reads/copies existing credentials. Saved authentication does
+not prove model access. No client-ID bypass or automatic paid API fallback is
+configured. Personal Antigravity cannot yet be assigned to a project role:
+the existing agents-connector Gemini ACP adapter requires a separate adaptation.
 
 Login wrapper status, outcome and error messages use the `[AC-Agents]:` prefix; native vendor output keeps its original format.
 

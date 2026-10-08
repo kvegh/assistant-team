@@ -21,11 +21,11 @@ Each directory contains its own installation, configuration, credentials, cache 
 | `~/claude-work` | Vertex ADC; guided project, location and enabled model ID |
 | `~/claude-priv` | Claude account with a plan supporting Claude Code |
 | `~/gemini-work` | Vertex ADC; guided project, location and enabled model ID |
-| `~/gemini-priv` | Personal Google OAuth; displayed browser URL/code flow |
+| `~/gemini-priv` | Personal Google OAuth through Antigravity; displayed browser/code flow |
 | `~/codex-work`, `~/codex-priv` | ChatGPT device login; isolated file credential stores |
 | `~/mistral-work`, `~/mistral-priv` | Native Vibe setup/account login |
 
-For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The provider currently rejects this CLI client for Gemini Code Assist for individuals; its OAuth flow does not prove model access. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: the operator enables that selected dependency in encrypted deployment settings. The wrapper fails clearly if it is unavailable. No API enablement, billing changes or model probes occur during deployment.
+For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The supported native CLI is Antigravity (`./agy`). After personal Google sign-in, exit it to see the saved-auth result. Its normal SSH/container token fallback uses scoped files protected by 0700 directories and umask 077; this is not encryption at rest and does not protect against root/sudo. No desktop/keyring packages are required. Model access remains unverified and its agents-connector team adapter is pending; use Gemini work for roles. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: the operator enables that selected dependency in encrypted deployment settings. The wrapper fails clearly if it is unavailable. No API enablement, billing changes or model probes occur during deployment.
 
 At session end, `./login` reports **Failed or cancelled** or **Credentials saved; model access unverified**. Interactive exit without new credential evidence is not treated as successful login. Native account status and saved JSON do not prove model entitlement. No model check runs automatically; this setup does not yet expose a universal opt-in model verifier.
 
@@ -37,7 +37,7 @@ Mistral profiles work as standalone native CLI installations. Vibe participation
 
 There is one environment per Linux user. `~/environment.config` is strict JSON containing eight profile enablement flags. `~/team setup --list` distinguishes enabled, installed and locally saved credentials without printing identities or tokens. Disabling a profile preserves its files and does not stop running projects.
 
-Each `~/projects.NAME.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-priv"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
+Each `~/projects.NAME.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-work"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
 
 Changing a role account requires stopping and starting that project. Separate per-profile role homes and sessions prevent previous-account credentials carrying over. Native provider approvals remain enabled. Codex uses workspace-write/on-request; observer tools are restricted and connector general tools disabled. Connector service credentials/plugins are not configured.
 

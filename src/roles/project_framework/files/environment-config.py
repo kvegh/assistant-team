@@ -75,6 +75,7 @@ def assignments(home, name):
     for role, profile in data['roles'].items():
         if profile is None:errors.append(role+': select an enabled profile')
         elif not env['profiles'][profile]['enabled']:errors.append(role+': '+profile+' is disabled')
+        elif profile=='gemini-priv':errors.append(role+': Antigravity team adapter is not implemented; use Gemini work')
         elif PROFILES[profile]['vendor']=='mistral':errors.append(role+': Mistral team adapter is not implemented; use Claude/Codex/Gemini')
         elif PROFILES[profile]['vendor']!=PROFILES[DEFAULTS[role]]['vendor']:errors.append(role+': current role adapter requires '+PROFILES[DEFAULTS[role]]['vendor']+'; choose its enabled work/priv profile')
         elif role in ['observer','private-connector','corporate-connector'] and PROFILES[profile]['vendor']!='claude':errors.append(role+': current restricted role requires Claude')
@@ -89,7 +90,9 @@ def saved(home, profile):
     spec = importlib.util.spec_from_file_location('login_evidence',helper)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     definition=PROFILES[profile]
-    return bool(module.credential_snapshot(root,'vibe' if definition['vendor']=='mistral' else definition['vendor'],definition['auth']))
+    metadata=root/'.native-install.json'
+    provider=json.loads(metadata.read_text()).get('provider',definition['auth']) if metadata.is_file() else definition['auth']
+    return bool(module.credential_snapshot(root,'vibe' if definition['vendor']=='mistral' else definition['vendor'],provider))
 
 
 def setup(home, listing=False):

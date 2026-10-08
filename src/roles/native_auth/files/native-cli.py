@@ -8,7 +8,10 @@ prefix=root/'.install'
 env=os.environ.copy()
 env.update(HOME=str(root),XDG_CONFIG_HOME=str(root/'.config'),XDG_CACHE_HOME=str(root/'.cache'),XDG_DATA_HOME=str(root/'.local/share'),XDG_STATE_HOME=str(root/'.local/state'),TMPDIR=str(root/'tmp'),CLAUDE_CONFIG_DIR=str(root/'.claude'),CODEX_HOME=str(root/'.codex'),VIBE_HOME=str(root/'.vibe'),GEMINI_CLI_HOME=str(root),PATH=str(prefix/'bin')+os.pathsep+env.get('PATH',''),DISABLE_AUTOUPDATER='1',CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC='1')
 f=config['flavour']
-if f=='claude':command=[str(prefix/config['entrypoint'])]
+if config.get('provider')=='antigravity':
+    env['AGY_CLI_DISABLE_AUTO_UPDATE']='true'
+    command=[str(prefix/config['entrypoint'])]
+elif f=='claude':command=[str(prefix/config['entrypoint'])]
 elif f in ['codex','gemini']:command=[str(prefix/'bin/node'),str(prefix/config['entrypoint'])]
 else:
     env['VIBE_TEST_DISABLE_KEYRING']='1'
@@ -32,7 +35,9 @@ def diagnostic(action,result,code=0):
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     try:module.record(root.parent,action,result,code)
     except (ValueError,OSError):pass
-if f=='gemini' and config.get('provider')!='vertex':
+if config.get('provider')=='antigravity':
+    env=status.personal_antigravity(env)
+elif f=='gemini' and config.get('provider')!='vertex':
     env=status.personal_gemini(root,env)
 vertex=None
 if f in ['claude','gemini'] and config.get('provider')=='vertex' and sys.argv[1:] not in [['--version'],['--help'],['--clear']]:
@@ -62,7 +67,10 @@ if pathlib.Path(sys.argv[0]).name=='login':
     if f=='vibe':
         env=status.vibe_browser_handoff(root,env)
         print(status.display('Open the native displayed sign-in link in your browser manually. Vibe will keep polling for that authorization; no GUI browser is launched here.'),flush=True)
-    if f=='gemini':
+    if config.get('provider')=='antigravity':
+        env['NO_BROWSER']='true'
+        print(status.display('Choose personal Google sign-in in Antigravity. Complete its displayed browser/code flow yourself; never send authorization codes here. Exit the CLI after signing in to see the saved-auth result.'),flush=True)
+    elif f=='gemini':
         env['NO_BROWSER']='true'
         print(status.display('Choose Sign in with Google; use the displayed browser link and verification flow.'),flush=True)
     os.umask(0o077);os.chdir(root)

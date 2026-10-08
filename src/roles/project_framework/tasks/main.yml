@@ -24,6 +24,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0700"
 - name: Install strict non-secret environment and assignment configuration
+  tags: [native_auth]
   ansible.builtin.copy:
     src: environment-config.py
     dest: "{{ __project_framework_home }}/agents-connector/routing/environment-config.py"
@@ -92,6 +93,7 @@
     scope: user
     daemon_reload: true
 - name: Publish actual home-local project commands
+  tags: [operator_docs]
   ansible.builtin.template:
     src: "{{ role_path }}/../agents_connector/templates/README.md.j2"
     dest: "{{ __project_framework_home }}/README.md"

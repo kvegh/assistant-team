@@ -7,6 +7,13 @@
   ansible.builtin.set_fact:
     __native_auth_native_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     __native_auth_native_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Install supported personal Antigravity before maintaining shared launchers
+  ansible.builtin.include_role:
+    name: antigravity_auth
+  vars:
+    antigravity_auth_profile_home: "{{ __native_auth_native_home }}/gemini-priv"
+    antigravity_auth_runtime_user: "{{ containers.runtime_user }}"
+  when: native_auth_native_auth_dirs | selectattr('directory', 'equalto', 'gemini-priv') | list | length > 0
 - name: Inspect installed contexts before focused account provisioning
   ansible.builtin.stat:
     path: "{{ __native_auth_native_home }}/{{ item.directory }}/.native-install.json"

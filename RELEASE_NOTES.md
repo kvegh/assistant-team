@@ -4,6 +4,14 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.10.0
+
+Install the supported personal Antigravity native CLI in the isolated Gemini
+private profile with pinned official checksum, scoped login/clear/status support,
+and operator instructions. Gemini work remains on Vertex. Native SSH/container
+file credentials use local permissions, not encryption at rest. Project role
+selection refuses Antigravity until a compatible team adapter is implemented.
+
 ## 0.9.3
 
 Record the full APME assessment and its implementation decision with the actual commit.

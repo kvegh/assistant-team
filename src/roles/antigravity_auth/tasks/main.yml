@@ -1,0 +1,56 @@
+---
+- name: Prepare isolated personal Antigravity program and state directories
+  ansible.builtin.file:
+    path: "{{ antigravity_auth_profile_home }}/{{ item }}"
+    state: directory
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+    mode: "0700"
+  loop:
+    - .install
+    - ".install/antigravity/{{ antigravity_auth_version }}"
+    - .config
+    - .cache
+    - .local/share
+    - .local/state
+    - tmp
+    - .gemini
+- name: Download pinned official Antigravity artifact with verified checksum
+  ansible.builtin.get_url:
+    url: "{{ antigravity_auth_url }}"
+    checksum: "{{ antigravity_auth_checksum }}"
+    dest: "{{ antigravity_auth_profile_home }}/.install/antigravity/{{ antigravity_auth_version }}/archive.tar.gz"
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+    mode: "0600"
+- name: Extract pinned native Antigravity binary
+  ansible.builtin.unarchive:
+    src: "{{ antigravity_auth_profile_home }}/.install/antigravity/{{ antigravity_auth_version }}/archive.tar.gz"
+    dest: "{{ antigravity_auth_profile_home }}/.install/antigravity/{{ antigravity_auth_version }}"
+    creates: "{{ antigravity_auth_profile_home }}/.install/antigravity/{{ antigravity_auth_version }}/antigravity"
+    remote_src: true
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+- name: Protect native executable inside the personal profile
+  ansible.builtin.file:
+    path: "{{ antigravity_auth_profile_home }}/.install/antigravity/{{ antigravity_auth_version }}/antigravity"
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+    mode: "0700"
+- name: Select native Antigravity for the personal Gemini profile
+  ansible.builtin.copy:
+    dest: "{{ antigravity_auth_profile_home }}/.native-install.json"
+    content: >-
+      {{ {'directory': 'gemini-priv', 'flavour': 'gemini', 'provider': 'antigravity',
+      'version': antigravity_auth_version, 'entrypoint': 'antigravity/' + antigravity_auth_version + '/antigravity'} | to_nice_json }}
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+    mode: "0600"
+- name: Provide scoped native and login commands
+  ansible.builtin.file:
+    src: .native-cli.py
+    dest: "{{ antigravity_auth_profile_home }}/{{ item }}"
+    state: link
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+  loop: [agy, gemini, login]

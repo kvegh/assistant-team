@@ -1,0 +1,22 @@
+---
+argument_specs:
+  main:
+    short_description: Install pinned Antigravity in the isolated personal Gemini profile without authentication.
+    options:
+      antigravity_auth_profile_home:
+        type: path
+        required: true
+        description: Absolute operator-owned personal profile directory.
+      antigravity_auth_runtime_user:
+        type: str
+        required: true
+        description: Existing runtime account owning the isolated profile.
+      antigravity_auth_version:
+        type: str
+        description: Pinned vendor CLI version.
+      antigravity_auth_url:
+        type: str
+        description: Official artifact URL.
+      antigravity_auth_checksum:
+        type: str
+        description: Official manifest checksum including algorithm.

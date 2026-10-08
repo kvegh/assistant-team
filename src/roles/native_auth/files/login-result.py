@@ -26,6 +26,8 @@ def follow_up(flavour, provider, successful):
         return 'Saved credentials do not prove model entitlement. Request an explicit bounded model check before relying on access; no model check ran automatically.'
     if provider == 'vertex':
         return 'Check the scoped Google Cloud CLI installation and Vertex project, region and model configuration, then run ./login again. Do not enable billing or APIs merely to retry.'
+    if provider == 'antigravity':
+        return 'Run ./login again and complete Antigravity personal Google authorization. Saved credentials do not establish usable access; do not select an unintended paid API fallback.'
     if flavour == 'gemini':
         return 'Personal Gemini CLI access was retired by the provider. Use the supported Antigravity migration when ready; retrying or entering an API key is not a subscription login fix.'
     if flavour == 'vibe':
@@ -40,7 +42,7 @@ def require_idle(root):
             if process.stat().st_uid!=__import__('os').getuid():continue
             command=(process/'cmdline').read_bytes().split(b'\0')
             title=(process/'comm').read_text().strip().lower()
-            renamed_native=any(vendor in title for vendor in ['vibe','claude','codex','gemini']) and (process/'cwd').resolve()==root
+            renamed_native=any(vendor in title for vendor in ['vibe','claude','codex','gemini','antigravity','agy']) and (process/'cwd').resolve()==root
         except OSError:continue
         if renamed_native or any(argument.startswith(str(root/'.install').encode()+b'/') for argument in command):
             raise ValueError('Exit this profile’s existing native CLI/login sessions first; no process or credentials were changed')
@@ -61,9 +63,20 @@ def personal_gemini(root, environment):
     return environment
 
 
+def personal_antigravity(environment):
+    environment = dict(environment)
+    for key in ['GEMINI_API_KEY','GOOGLE_API_KEY','GOOGLE_GENAI_USE_VERTEXAI',
+                'GOOGLE_CLOUD_PROJECT','GOOGLE_CLOUD_LOCATION','GOOGLE_APPLICATION_CREDENTIALS',
+                'GOOGLE_GENAI_USE_GCA','GEMINI_FORCE_FILE_STORAGE']:
+        environment.pop(key, None)
+    return environment
+
+
 def credential_snapshot(root, flavour, provider=None):
     root = pathlib.Path(root)
-    if provider == 'vertex':
+    if provider == 'antigravity':
+        relative = '.gemini/antigravity-cli/antigravity-oauth-token'
+    elif provider == 'vertex':
         relative = '.config/gcloud/application_default_credentials.json'
     else:
         relative = {'claude': '.claude/.credentials.json', 'codex': '.codex/auth.json',
@@ -118,7 +131,8 @@ def clear_profile(root, flavour, provider=None):
     # Validate every destination before mutation, including parent paths and config/env files.
     files=['.claude/.credentials.json','.codex/auth.json','.gemini/oauth_creds.json',
            '.gemini/google_accounts.json','.gemini/mcp-oauth-tokens.json','.gemini/gemini-credentials.json',
-           '.config/gcloud/application_default_credentials.json','.model-verification.json']
+           '.config/gcloud/application_default_credentials.json','.model-verification.json',
+           '.gemini/antigravity-cli/antigravity-oauth-token']
     for directory in [root,*copies]:
         for relative in files+['.env','.gemini/.env','.vibe/.env','.claude.json','.claude/.claude.json','.gemini/settings.json']:
             file=directory/relative
@@ -143,5 +157,5 @@ def clear_profile(root, flavour, provider=None):
             if file.exists():
                 value=json.loads(file.read_text());value.pop('oauthAccount',None)
                 file.write_text(json.dumps(value,indent=2)+'\n');file.chmod(0o600)
-        if flavour=='gemini' and provider!='vertex':personal_gemini(directory,{})
+        if flavour=='gemini' and provider not in ['vertex','antigravity']:personal_gemini(directory,{})
     return len(copies)

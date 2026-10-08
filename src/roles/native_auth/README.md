@@ -17,3 +17,8 @@ Retains completed programs and validates all CLI versions on recovery. Live expo
 ## Validation
 
 Run the repository production lint and tests. Fresh installation and configuration recovery are verified through the normal AAP deployment template; authenticated model tests are separate operator actions.
+
+Personal Gemini invokes the separate `antigravity_auth` role for the supported
+native Antigravity CLI. Vertex Gemini remains unchanged. Operator login is ready
+after deployment; personal Antigravity team routing remains explicitly blocked
+until its adapter is implemented. See that role README for file-storage limits.

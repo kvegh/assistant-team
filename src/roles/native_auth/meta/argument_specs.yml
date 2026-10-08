@@ -37,3 +37,4 @@ argument_specs:
             type: str
             choices:
               - vertex
+              - antigravity
