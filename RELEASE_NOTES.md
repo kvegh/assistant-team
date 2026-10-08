@@ -4,6 +4,11 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.10.1
+
+Record the personal Antigravity implementation, native file-storage protection
+limits and successful targeted Ansible deployment with its actual commit.
+
 ## 0.10.0
 
 Install the supported personal Antigravity native CLI in the isolated Gemini

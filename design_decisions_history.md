@@ -625,3 +625,34 @@ The user explicitly authorized removal of only the second test VM and a fresh th
 ## Interpret completed APME checks against the supported deployment
 
 The user authorized all read-only APME scans without repeated approval and relevant fixes after contextual security, compliance and stability assessment. The certified dependency was supplied through upstream proxy conversion/cache using its original SHA256-verified artifact. Full-codebase Native, OPA and Ansible checks completed, followed by optional collection-health and Python auditing. Findings include intentional privileged actions, statically unresolved encrypted inputs and future-version migration warnings; these do not justify blanket rewriting. Optional dependency coverage limits are retained, including the non-PyPI certified wheel and old pip in the disposable scanner environment. No project code defect was selected from this first assessment, and no automatic source edits or AI requests were made. Implementation: `e169e6b`.
+
+## Supported personal Antigravity with scoped native authentication
+
+Implementation: `3a5a1b9` (version 0.10.0).
+
+Personal Gemini moved to the supported official Antigravity native CLI because
+Google retired the former personal Gemini CLI client. Keep the existing profile
+name and isolate the pinned program, HOME, configuration and authentication there;
+Gemini work continues using its native CLI through Vertex. A dedicated Ansible
+role downloads the official checksum-verified binary. Existing account data is
+not migrated and deployment performs no authentication or model inference.
+
+Current Antigravity deliberately uses file token storage for SSH/container
+sessions and can fall back to files when a keyring is unavailable. Consequently
+GNOME packages are unnecessary for this selected native workflow. Keep profile
+directories 0700 and launcher umask 077, with credentials controlled by the
+operator. These local permissions are not encryption at rest and do not protect
+against root, sudo or other processes under the same runtime account. Git secrets
+remain encrypted independently. No forced keyring bypass was introduced.
+
+Login, local clear and saved-auth reporting use the scoped native wrapper. Saved
+credentials do not prove model entitlement. Explicitly reject personal Antigravity
+project assignment until an agents-connector adapter is implemented, rather than
+claiming its different native protocol works with the existing Gemini ACP adapter.
+
+Validation: 80 local tests passed, production Ansible lint had zero findings,
+and targeted Ansible deployment to the original environment succeeded with all
+eight native version checks. Read-only Antigravity help/version checks passed;
+the personal profile and its Gemini state directory were verified mode 0700.
+No login or inference was performed by deployment. Operator authentication and
+personal team integration remain separate subsequent verification steps.
