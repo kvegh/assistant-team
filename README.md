@@ -1,9 +1,9 @@
 # assistant-team
 
-Version 0.3.3 adds operator-owned local or SSH deployment and sanitized deployment
+Version 0.4.0 adds operator-owned local or SSH deployment and sanitized deployment
 metadata transfer to the target environment diagnostics. The published 0.0.1 tag
 remains the earlier baseline. Google Cloud SDK installation is authorized on the
-development VM but awaits filesystem capacity; personal Gemini requires the
+development VM; its storage capacity has been expanded; personal Gemini requires the
 supported Antigravity migration. These prerequisites are not model-access proof.
 
 Private project for an assistant team. Application requirements are still being defined.
@@ -64,7 +64,7 @@ guest kernel's crash-recovery reservation when checking usable RAM. Controller
 artifacts report allocated RAM, guest-visible RAM, and the crash reservation separately.
 
 Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
-Defaults are 2 vCPUs, 4096 MiB RAM, and a 40 GiB disk. The VM name defaults to
+Defaults are 2 vCPUs, 4096 MiB RAM, and a 20 GiB disk. The VM name defaults to
 the encrypted configuration. Environment settings and guest credentials are
 under `provisioning` in `vars/environment.vault.yml`. AAP must supply the Vault
 and hypervisor machine credentials; its project needs a GitHub source-control
@@ -578,3 +578,11 @@ Follow [DEPLOYMENT.md](DEPLOYMENT.md) to initialize your own encrypted destinati
 Use `python3 src/bump-version.py --help` for the version maintenance helper. Formal releases require pushing the annotated version tag and publishing the matching GitHub release; branch version increments alone are not published releases.
 
 Vibe browser sign-in uses a scoped manual browser handoff on headless hosts so the native authorization polling continues. Open the native displayed URL manually; the wrapper neither handles codes nor bypasses provider authorization. Existing failed sessions must be exited before retrying.
+
+## Fresh cloned VM storage
+
+New Linux VM provisioning defaults to a 20 GiB cloned disk, with the desired size recorded in encrypted deployment settings. After guest setup, `linux_root_growth` expands the direct last GPT root partition and XFS filesystem to use the clone's available capacity. It saves a protected partition-table backup before growth and validates the partition start, type and identity. Reruns are idempotent; unsupported filesystem/mapping layouts fail before mutation.
+
+The current running VM had already been expanded to a 50 GiB virtual disk and roughly 49 GiB root filesystem, with about 41 GiB free at verification. It is preserved without shrinking or another reboot. The default for future clones is 20 GiB. No separate additional-disk resize command is provided. Protected backup files remain on the existing guest; future automation backups are private under `/var/lib/assistant-team/storage-backups`. A partition-table backup is not a data backup, and XFS growth cannot be reversed by shrinking.
+
+The root-growth role passed an unchanged rerun on the expanded guest; a fresh 20 GiB end-to-end VM deployment has not yet been run.

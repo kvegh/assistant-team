@@ -2,5 +2,5 @@
 deployment_name: "{{ vm_name | default(provisioning.vm_name) }}"
 vm_vcpus: 2
 vm_memory_mb: 4096
-vm_disk_gb: 40
+vm_disk_gb: "{{ provisioning.vm_disk_gb | default(20) }}"
 deployment_disk: "{{ provisioning.vm_dir }}/{{ deployment_name }}.disk.qcow2"

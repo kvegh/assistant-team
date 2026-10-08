@@ -20,4 +20,5 @@
     - ../vars/environment.vault.yml
   roles:
     - linux_guest
+    - linux_root_growth
     - linux_updates

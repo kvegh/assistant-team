@@ -71,3 +71,7 @@ See `~/README.TLDR.md` for condensed commands. Keep both guides current after la
 `~/environment-logs` holds protected bounded deployment and runtime metadata, including login outcomes and project lifecycle results. It excludes credentials, prompts, conversations, databases and raw CLI output. Deployment controller failures before connectivity retain a local protected spool; the user-operated runner transfers safe metadata when reachable.
 
 `~/team diagnostics --export /private/environment-metadata.tar.gz` creates an explicit sanitized bundle for manual sharing. `~/team version` prints installed VERSION/build metadata. No automatic diagnostic replication or coding-agent access to a fresh authenticated deployment is configured.
+
+## VM storage
+
+Fresh Linux VM provisioning expands the root filesystem to use its configured cloned disk capacity (20 GiB by default). The existing running VM retains its already-expanded capacity. Runtime team commands do not resize disks. Existing project and authentication data are preserved.
