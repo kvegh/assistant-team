@@ -610,3 +610,5 @@ Vertex Claude model selection expects a complete enabled Vertex model ID, such a
 Configuration-only AAP recovery retains separate encrypted SSH and sudo credentials; it does not assume that their passwords match.
 
 Fresh native installations install the launcher dependency before checking CLI versions. Recovery rechecks every context, including contexts with installation metadata from an interrupted run, without authenticating or invoking models.
+
+Deployment input tests execute the VM role with isolated fixture data; they do not require the development Vault or its password file.

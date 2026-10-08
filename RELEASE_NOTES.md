@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.6.9
+
+Make VM input-validation tests independent of the development Vault by running an isolated fixture playbook. Removing the checkout password assumption no longer prevents tests from reaching the intended safety guards. Four validation tests pass without target connections.
+
 ## 0.6.8
 
 Document the fresh launcher bootstrap fix and safe recovery credentials with their implementation commits. The AAP configuration-only verification is in progress; no successful end-to-end result is claimed yet.

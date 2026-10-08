@@ -28,11 +28,21 @@ class DeploymentValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             inventory_file = Path(directory) / "inventory.ini"
             inventory_file.write_text(inventory)
-            env = dict(os.environ, ANSIBLE_NOCOLOR="1")
+            playbook_file = Path(directory) / "validate.yml"
+            playbook_file.write_text(
+                "- name: Validate isolated fixture inputs\n"
+                "  hosts: hypervisor\n"
+                "  gather_facts: false\n"
+                "  no_log: true\n"
+                "  roles:\n"
+                "    - linux_vm\n"
+            )
+            env = dict(os.environ, ANSIBLE_NOCOLOR="1",
+                       ANSIBLE_ROLES_PATH=str(ROOT / "src/roles"))
             result = subprocess.run(
                 [
                     "ansible-playbook", "--check", "-i", str(inventory_file),
-                    "src/deploy_linux_vm.yml", "-e", json.dumps(variables),
+                    str(playbook_file), "-e", json.dumps(variables),
                 ],
                 cwd=ROOT, env=env, text=True, capture_output=True, check=False,
             )
