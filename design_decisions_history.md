@@ -475,3 +475,33 @@ was performed; authenticated native-session startup remains to be exercised by
 the operator. The original eight containers remained running. An audit of
 sixty-three plaintext repository files found no environment identifiers/access
 secrets; environment metadata remains Vault-encrypted. VM resources were unchanged.
+
+## Retire the redundant original runtime
+
+Implementation: `f9d0eeb9272c45b0e951059974ba36c3cb94894b`.
+
+The user approved retiring the original non-project group now that the named
+project framework provides the intended lifecycle. A separate retirement role
+stops/disables/removes only its original non-instance target and three services,
+and removes exactly the eight original container definitions. Their bind-mounted
+profile homes, authentication state, prompt defaults and SQLite data are retained.
+Project instance templates, native installations and actual project data are
+untouched. The foundation role no longer recreates or starts the retired group
+on subsequent Ansible runs.
+
+Operator commands require a project name and refuse no-project operations with
+a helpful message. There is no all-projects master target. The runtime home
+README starts with the short create/edit/start/attach workflow and contains only
+the current project lifecycle instructions. New projects reuse the retained
+profile specifications and editable prompt defaults, not the original database
+or native credential homes.
+
+Preflight found only idle shell/tmux processes in the original containers.
+Thirty-two local tests, Ansible syntax and retirement deployment passed. Live
+checks confirmed original units not found, original container definitions absent,
+saved data retained, project creation/prompt routing still functional, and
+no-project stop refused. Only the disposable creation-check project was removed;
+no real project or provider session was started or changed. The previously
+verified project instance templates and lifecycle were preserved. A plaintext
+audit of sixty-four repository files found no environment identifiers/access
+secrets, and runtime metadata remains Vault-encrypted.
