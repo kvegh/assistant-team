@@ -4,6 +4,10 @@ Keep a concise entry for each version, newest first. Describe what changed and
 what it enables, including limitations that affect use. Entries cover committed
 changes; a Git tag identifies a published release snapshot.
 
+## 0.11.1
+
+Record verified project listing deployment and both successful runtime aliases.
+
 ## 0.11.0
 
 Add `~/team --list` and `~/team list-projects` for sorted initialized project names
