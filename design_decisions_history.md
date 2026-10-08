@@ -714,3 +714,15 @@ cases passed; production Ansible lint passed for the affected role and transfer 
 ## Verify the guarded lifecycle with a complete fresh AAP run
 
 The guarded retirement design (`e1545f9`) was exercised through read-only preflight job 1389 and removal job 1391. The selected disposable test clone and its exclusive disk were removed while other domain names and the source image were preserved. Fresh deployment job 1394 then completed all roles in one pass without recovery or retries at `405c24f2f44259dab90545a63d0bd6832b867972`, version 0.9.1. The run verified full root growth, package updates/reboot, container and host-native clients, the scoped SDK and disposable two-project isolation, without copying provider authentication or invoking models. Later changes are outside this tested snapshot; further deployments remain separately authorized. Detailed results and limitations are recorded in DEPLOYMENT_TEST_RESULTS.md.
+
+## Verified operator prompt and log deployment
+
+Deployment source: `949d2c6` (0.15.2), including prompt migration `2e3c616`
+and readable diagnostics `373b8f7`.
+
+The targeted Ansible project-framework deployment completed successfully with zero
+failed or unreachable tasks. The explicitly selected operator-edited project was
+converted to eight bracket role sections and has one protected backup; custom
+instructions were preserved by migration validation. Live checks verified readable
+and JSON log correlation and 0600 file permissions. Authentication files and active
+sessions were not changed or restarted. No prompt contents were included in reports.
