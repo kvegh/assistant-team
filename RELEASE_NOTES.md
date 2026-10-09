@@ -33,6 +33,29 @@ Integrate private event-driven summarizer and observer with the fresh installati
 
 Integrate the approved PREFIX/ac-agents installation layout with the current runtime fixes. Projects keep their own config, native profiles stay under model-environments, and shared configuration/templates and commands have dedicated directories.
 
+## 0.32.3
+
+Document successful synthetic Ansible transport acceptance and the JSON
+serialization correction, preserving protected bootstrap-only transfer scope.
+
+## 0.32.2
+
+Preserve JSON text across Ansible native templating and protected restore stdin.
+Verify the actual local Ansible metadata preflight, restore and missing-only rerun
+using disposable synthetic credentials, with safe diagnostic error codes.
+
+## 0.32.1
+
+Document selective bootstrap transfer boundaries, the accepted future-vault
+material manifest and synthetic verification; actual AAP copy remains pending
+fresh deployment readiness.
+
+## 0.32.0
+
+Add selective bootstrap authentication transfer through a dedicated Ansible/AAP
+playbook. Preflight enabled profiles, preserve existing target credentials, enforce
+provider/file allowlists and publish a secret-free future-vault material manifest.
+Actual transfer and bounded access checks wait for fresh deployment readiness.
 
 ## 0.28.3
 

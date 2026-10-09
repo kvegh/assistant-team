@@ -344,3 +344,10 @@ writes succeeded; writes into the writable outer home and protected `.git`,
 `.agents`, `.codex` and `.aws` paths failed, and network socket creation failed.
 Outer capabilities stayed zero, no-new-privileges and seccomp stayed enabled,
 and the dedicated domain retained nonzero MCS categories.
+
+Bootstrap authentication replication is an operator-run Ansible/AAP operation,
+not a team command. It preflights enabled profiles and can restore only missing
+allowlisted credentials to a fresh environment. Target-local
+`environment-logs/auth-transfer/latest.json` reports safe status and the exact
+future-vault material manifest. It does not prove provider access or copy project
+role sessions; no credentials belong in Git, even encrypted.

@@ -1052,3 +1052,17 @@ by its own MAC address; it never reuses the retired guest as a recovery target.
 
 Retirement disk inspection reads file metadata only; it does not hash entire
 virtual disks because preservation checks use inode, size and modification time.
+
+## Selective bootstrap authentication replication
+
+A dedicated Ansible/AAP playbook can preflight and selectively restore enabled
+bootstrap profiles into a fresh installation without replacing existing target
+credentials. See [the transfer guide](docs/AUTH_TRANSFER.md) for the exact file and
+config-field manifest, encrypted endpoint bindings and separate bounded model
+checks. Model authentication never belongs in Git, even encrypted. The future
+external vault remains a separate task; no automatic credential archive is built.
+
+The auth-transfer transport is verified through an actual local Ansible fixture:
+metadata-only preflight, six-context missing-only restore and idempotent rerun.
+Explicit JSON serialization preserves native credential documents across Ansible
+templating. These disposable checks do not access real model authentication.

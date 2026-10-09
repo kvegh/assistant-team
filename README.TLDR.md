@@ -119,3 +119,24 @@ Test-clone retirement now requires an exact authorized name in the encrypted
 retirement definition, in addition to exclusive disk ownership and preservation
 checks. Fresh deployment clears recovery addressing and discovers the new clone
 by its own MAC address; it never reuses the retired guest as a recovery target.
+For a concise decision feed, run `tail -f ~/projects/NAME/workspace/DECISIONS.log`.
+The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
+meaningful accepted outcomes, agreed direction changes or blockers requiring
+user input. The orchestrator requests these updates at milestones, without timers.
+The summarizer is the sole intended writer; proposals, repetitive progress,
+credentials, private connector content and hidden-role identities stay out.
+This is an agent instruction policy, not a filesystem enforcement of append-only
+writes: project workspace collaborators retain their existing write permissions.
+Existing user prompts and log content are preserved during deployment. Already
+running harness conversations need an explicit instruction refresh to adopt it;
+updating files alone does not guarantee they re-read their role instructions.
+
+Codex containers require the dedicated enforcing-SELinux sandbox policy. Native workspace-write confinement remains active; no outside-sandbox approval is needed for ordinary shared-workspace writes.
+
+Bootstrap auth replication: `src/transfer_native_auth.yml` via AAP, metadata-only
+by default; missing-only restore after explicit authorization. See
+[AUTH_TRANSFER.md](docs/AUTH_TRANSFER.md). Existing credentials and projects stay
+unchanged. External vault implementation is a later task.
+
+Auth transfer transport: synthetic local Ansible preflight/copy/rerun verified;
+real AAP transfer remains gated on fresh environment readiness.

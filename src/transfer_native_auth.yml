@@ -1,0 +1,11 @@
+---
+- name: Transfer explicitly authorized bootstrap authentication to an installed destination
+  hosts: native_auth_destinations
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../vars/environment.vault.yml
+    - "{{ native_auth_transfer_config_file | default('../vars/environment.vault.yml') }}"
+  roles:
+    - role: native_auth_transfer
+      tags: [native_auth_transfer]

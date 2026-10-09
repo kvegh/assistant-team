@@ -1,0 +1,9 @@
+---
+native_auth_transfer_execute: false
+native_auth_transfer_runtime_user: "{{ containers.runtime_user }}"
+native_auth_transfer_source_host: ''
+native_auth_transfer_source_profiles_root: ''
+native_auth_transfer_source_environment_config: ''
+native_auth_transfer_destination_profiles_root: ''
+native_auth_transfer_destination_environment_config: ''
+native_auth_transfer_report_directory: "{{ native_auth_transfer_destination_profiles_root | dirname }}/environment-logs/auth-transfer"
