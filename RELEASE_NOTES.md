@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.15.9
+
+Record verified Antigravity saved-auth detection. Helper-only deployment recognizes
+existing native credentials without changing them or restarting any project agent;
+remote model access remains unverified.
+
 ## 0.15.8
 
 Recognize Antigravity's native nested OAuth token file instead of falsely reporting

@@ -767,3 +767,26 @@ eight actual native panes remained alive and had launch markers; all container I
 start times and pane PIDs were unchanged. The full 114-test suite and production
 Ansible lint passed with zero failures or warnings. No work prompt, model request
 or provider credential content was sent to the chat.
+
+## Recognize native Antigravity saved authentication correctly
+
+Implementation: `a990e87`.
+
+The operator completed personal Antigravity authorization, but the reporting
+wrapper classified it as failed because its detector expected top-level OAuth
+fields. A metadata-only inspection of the native 1.3.1 artifact showed that those
+fields are stored under a `token` object. The detector now accepts that actual
+structure without inspecting identity values or treating local evidence as proof
+of remote model access. Newly persisted valid evidence after a TUI interruption
+is saved/unverified; cancellation without new evidence and unrelated errors remain
+failed/cancelled. Unchanged saved state receives a separate explanation rather
+than an unnecessary re-login instruction. Native interruption remains in diagnostic
+metadata while a saved-evidence wrapper outcome exits successfully.
+
+Synthetic fixtures cover native shape, malformed artifacts, cancellation, unchanged
+evidence and the complete interrupted-wrapper path. All 118 tests and production
+Ansible lint passed. A helper-only original-environment deployment completed 13
+tasks with zero failures and the installed detector recognized the saved artifact.
+Credential contents and permissions were unchanged; all eight live container
+identities and native pane PIDs remained unchanged. No sign-in, inference or
+credential clearing was performed, and historical diagnostic records were preserved.
