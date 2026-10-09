@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.17.1
+
+Record verified installed project-status listing. Runtime queries preserve existing
+containers and project files; stopped teams remain stopped without inference.
+
 ## 0.17.0
 
 Show project runtime status beside each name in `team --list` / `list-projects`.

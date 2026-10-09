@@ -815,3 +815,22 @@ rejected an archive collision, destroyed named fixtures and cleaned them all up.
 The existing team had separate logged stop operations before fixture creation;
 its unchanged container identities were retained and it was not restarted. No
 existing project was archived/destroyed and no model request was performed.
+
+## Include read-only runtime status in project listings
+
+Implementation: `235a6cc`.
+
+The user requested project status beside each listed name. Listing now distinguishes
+running, starting, stopping, stopped, failed, partial orphan components and unknown
+metadata. It checks target/service metadata and, for inactive services, exact named
+containers. Query errors remain unknown with an actionable user-bus/Podman access
+hint instead of being mistaken for stopped. Listing neither activates services nor
+opens project prompts, credentials or SQLite. Running describes target state, not
+individual native-pane health or provider entitlement.
+
+Four added category/error regressions and the installed-router tests passed within
+all 137 tests; production Ansible lint had zero failures or warnings. Targeted
+Ansible deployment completed 33 tasks with zero failures. The installed list command
+returned NAME/STATUS columns and reported the independently stopped existing team
+as stopped. All eight existing container identities, states and start times were
+unchanged by listing, and existing project/config files were retained.
