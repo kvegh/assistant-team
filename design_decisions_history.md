@@ -855,3 +855,28 @@ old file was absent, the new file retained its exact previous checksum, and the
 existing project prompt was unchanged. A disposable model-free project was
 created from the moved template and destroyed successfully; no credentials were
 read and no inference was performed. The stopped original team was not started.
+
+
+## Always date archives and forget retired systemd instances
+
+Implementation: `6368773`.
+
+The user requested a dated directory for every archive, using the operation-start
+local time in day/month/two-digit-year/24-hour-hour/minute order. Existing archive
+contents are never overwritten or renamed. Both same-minute destinations and an
+archive matching the current project name exactly are rejected before shutdown;
+the latter recommends changing the project name. Private timestamp metadata
+records the operation time. No timestamp suffix is invented to hide a collision.
+
+Retirement disables only named instances, clears their failed state and verifies
+that systemd has forgotten all four using nonloading unit-list queries. Files
+remain when shutdown, collection or verification fails. Shared templates and
+other instances are retained. Config moves roll back on archive failure, while
+full-directory moves preserve project files, private role state and internal links.
+
+All 153 tests and production Ansible lint passed. Targeted deployment completed
+31 target tasks without failure. Installed disposable checks exercised a failed
+unit without authentication or inference, confirmed all four instances unloaded,
+verified dated content/config permissions and both collision guards, and cleaned
+the fixtures. Shared templates and unrelated container states were unchanged.
+The real project was not archived, deleted or started.

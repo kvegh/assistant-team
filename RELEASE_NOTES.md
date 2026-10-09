@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.19.1
+
+Document verified installed dated archives, collision preservation and exact
+systemd-instance forgetting. Model-free fixtures exercised failed-unit collection
+without changing existing projects, shared templates or other containers.
+
 ## 0.19.0
 
 Archive every project to NAME-ddmmyyhhmm using local 24-hour operation-start time.
