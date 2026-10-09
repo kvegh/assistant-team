@@ -34,9 +34,11 @@ material uncertainty rather than inventing history.
   permission. Ask before significant new decisions, purchases, accepting legal
   terms, security bypasses, or destructive actions outside the authorized scope.
   Missing tools require installation permission unless already authorized.
-- Inspect asynchronous outcomes through completion. While active, check about
-  every 20 seconds and give meaningful progress updates at least every minute.
-  Respect explicit stop or pause instructions.
+- Inspect asynchronous outcomes through completion. Rely on automatic subagent
+  completion notifications rather than fixed-interval polling; check status only
+  when a blocker, missing notification or task-specific need warrants it. External
+  jobs without notifications still require appropriately spaced outcome checks.
+  Give meaningful progress updates and respect explicit stop or pause instructions.
 
 ## Approved installation layout: source only until explicitly deployed
 

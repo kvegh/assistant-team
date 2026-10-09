@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.22.10
+
+Document notification-driven background monitoring; remove the fixed 20-second
+subagent polling rule while retaining outcome verification for external jobs.
+
 ## 0.22.9
 
 Document the model-selection hold commit and the user's retained priority.
