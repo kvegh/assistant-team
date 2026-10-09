@@ -1044,3 +1044,5 @@ The approved install-prefix layout is currently **source only**. The existing de
 Fresh and portable environment deployment include `codex_sandbox` after Podman host preparation and before container creation. Authentication migration and automatic permission management remain on hold; fresh deployment does not copy model credentials.
 
 Fresh deployment also verifies the scoped Antigravity executable without authentication or inference after installing the native profiles. The model-free deployment checks verify private readers have no shared workspace mount and that their SUMMARY.md exists.
+
+The [team review backlog](TODO.md#team-source-review--review-only-not-approved-fixes) preserves findings from an older pinned source snapshot for reassessment against current code. These are review items, not approved implementations or a complete audit.

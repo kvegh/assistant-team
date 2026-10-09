@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.3
+
+Document thirteen team-review items for reassessment against current source, distinguish already changed designs from unresolved claims, and retain rejected findings outside the active defect list. No fixes or runtime changes are included.
+
 ## 0.31.2
 
 Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.
