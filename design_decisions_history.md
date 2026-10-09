@@ -1332,3 +1332,18 @@ passed with zero findings across 168 files. Ansible policy activation and guarde
 builder deployment succeeded. The current conversation returned to its native
 prompt. Hidden-role architecture and installation-prefix changes remain separate
 source-only work and were not deployed by this fix.
+
+
+## Flexible watch arguments — 0.28.2
+
+Implementation: `10177d8`. Accept watch options before or after the single project
+name, and compact `-NUMBERf`, because users naturally apply familiar tail syntax.
+Preserve last-50 snapshot defaults, new-only `-f`, explicit history limits and
+zero-history support. Reject duplicate options, unsupported flags and missing or
+multiple projects with actionable usage. The existing framed live subscription,
+role colors and message privacy remain unchanged. Ansible installs only the CLI
+helpers and operator guides; running model sessions need no restart.
+
+Validation: 250 tests passed, including both reported commands and parser failure
+cases. Production-profile offline ansible-lint passed across 169 files using the
+already available certified collection path.

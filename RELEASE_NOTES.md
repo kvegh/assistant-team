@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.28.3
+
+Document flexible watch argument ordering and compact history/follow syntax.
+
 ## 0.28.2
 
 Fix watch options before or after the project name, including compact `-NUMBERf`.
