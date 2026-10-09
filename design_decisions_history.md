@@ -908,3 +908,30 @@ exact current name.
 Validation: all 162 unit tests passed; production Ansible lint reported zero
 failures or warnings across the content processed. Live deployment verification
 is reported separately after completion.
+
+## Rename project identity without rewriting user content
+
+Implementation: `75842fb` (0.21.0).
+
+The operator requested a project rename command, including renaming restored
+dated project names. `team rename-project OLD NEW` stops and forgets only the
+old named runtime, renames the project directory and authoritative home config,
+and rebases their structured identity and generated role instructions. Native
+account state, the editable prompt, shared artifacts and SQLite conversation
+history remain unchanged. The stock broker's session identity is supplied by
+the new instance at startup; its stored history needs no blind text replacement.
+
+The new target preserves the old target's persistent/runtime enablement and
+stays stopped until explicitly started. Destination path/config/unit/container
+conflicts and actual Unix socket limits fail before shutdown. Partial rename,
+rendering or target-enable failures roll back retained files and identity where
+possible; incomplete rollback is reported instead of overwriting recreated paths.
+Same-project lifecycle commands must not run concurrently. Shared images,
+provider profiles, systemd templates and other projects remain outside scope.
+
+Validation: 172 tests passed and production Ansible lint reported zero failures
+or warnings. The targeted Ansible deployment completed 34 target tasks without
+failure. Installed disposable fixtures verified conflict preservation, old/new
+config identity, unchanged user content and database bytes, retained native
+fixture state, enabled but stopped new target, and human/JSON lifecycle logs.
+The fixtures were cleaned; no real project was renamed and no model was invoked.

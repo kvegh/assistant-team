@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.1
+
+Record the project-rename design and successful installed fixture acceptance:
+content/history preserved, stopped target enablement transferred, conflicts
+refused before mutation, and readable/JSON outcomes logged.
+
 ## 0.21.0
 
 Add `team rename-project OLD NEW`. Stop and forget only the old project,
