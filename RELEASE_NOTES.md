@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.3
+
+Prepare encrypted guest discovery for configuration-only recovery of the existing fresh-test clone. Use guest_config to skip provisioning; later fresh clones require a separate blank recovery definition.
+
 ## 1.0.2
 
 Document the fresh-account preflight fix and its verified Ansible regression. No additional runtime change beyond 1.0.1.

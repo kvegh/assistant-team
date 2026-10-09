@@ -1076,3 +1076,5 @@ transfer accepts its `vibe` flavour while keeping `mistral-work` and
 a separate unfinished task.
 
 Fresh-account preflight normalizes a missing passwd record to an empty list before inspecting legacy home paths. This avoids Ansible non-native templating turning None into an empty string and accidentally executing checks before the runtime user is created. Existing-account migration protection remains in force.
+
+The current encrypted test definition selects configuration-only recovery of an existing clone. Run `src/deploy_complete_linux_vm.yml` with `guest_config` so its initial recovery task registers the existing guest and provisioning is skipped. A complete fresh provisioning run requires a separate fresh definition with an unused clone identity and an empty recovery address; do not launch the current recovery definition through provisioning. No existing disk is recreated by this recovery choice.
