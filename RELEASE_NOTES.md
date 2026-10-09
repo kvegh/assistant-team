@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.16
+
+Document verified recovery of the recognized cleared native target state and static refusal diagnostics without exposing credentials.
+
 ## 1.0.15
 
 Recognize the exact private Claude token-cleared target cache after failed native authentication. Matching account metadata and all safety checks remain mandatory; malformed or API-key records remain refused.
