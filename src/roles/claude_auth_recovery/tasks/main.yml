@@ -1,0 +1,117 @@
+---
+- name: Require explicit distinct endpoints and private account bindings
+  ansible.builtin.assert:
+    that:
+      - claude_auth_recovery_source_host in hostvars
+      - claude_auth_recovery_source_host != inventory_hostname
+      - claude_auth_recovery_runtime_user | length > 0
+      - claude_auth_recovery_source_role is match('^/')
+      - claude_auth_recovery_source_home == claude_auth_recovery_source_role + '/accounts/claude-priv/home'
+      - claude_auth_recovery_source_metadata == claude_auth_recovery_source_home + '/.claude.json'
+      - claude_auth_recovery_destination_profiles_root is match('^/')
+      - claude_auth_recovery_destination_environment_config is match('^/')
+      - claude_auth_recovery_report_directory is match('^/')
+    quiet: true
+
+- name: Validate and explicitly recover one same-account Claude credential stream
+  become: true
+  become_user: "{{ claude_auth_recovery_runtime_user }}"
+  no_log: true
+  diff: false
+  block:
+    - name: Allocate private source helper storage without credentials
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ac-claude-recovery-
+      delegate_to: "{{ claude_auth_recovery_source_host }}"
+      register: claude_auth_recovery_source_temporary
+
+    - name: Allocate private destination helper storage without credentials
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ac-claude-recovery-
+      register: claude_auth_recovery_destination_temporary
+
+    - name: Install source validation helpers
+      ansible.builtin.copy:
+        src: "{{ item.source }}"
+        dest: "{{ claude_auth_recovery_source_temporary.path }}/{{ item.name }}"
+        mode: '0700'
+      delegate_to: "{{ claude_auth_recovery_source_host }}"
+      loop: &helpers
+        - source: claude-auth-recovery.py
+          name: claude-auth-recovery.py
+        - source: "{{ role_path }}/../native_auth_transfer/files/native-auth-transfer.py"
+          name: native-auth-transfer.py
+        - source: "{{ role_path }}/../codex_auth_recovery/files/codex-auth-recovery.py"
+          name: codex-auth-recovery.py
+
+    - name: Install destination validation helpers
+      ansible.builtin.copy:
+        src: "{{ item.source }}"
+        dest: "{{ claude_auth_recovery_destination_temporary.path }}/{{ item.name }}"
+        mode: '0700'
+      loop: *helpers
+
+    - name: Validate the explicitly selected archived role stream
+      ansible.builtin.command:
+        argv: >-
+          {{ ['python3', claude_auth_recovery_source_temporary.path + '/claude-auth-recovery.py', 'capture',
+          '--source-role', claude_auth_recovery_source_role, '--source-home', claude_auth_recovery_source_home,
+          '--source-metadata', claude_auth_recovery_source_metadata] }}
+      delegate_to: "{{ claude_auth_recovery_source_host }}"
+      changed_when: false
+      register: claude_auth_recovery_capture
+
+    - name: Atomically replace only existing same-account target credentials
+      ansible.builtin.command:
+        argv: >-
+          {{ ['python3', claude_auth_recovery_destination_temporary.path + '/claude-auth-recovery.py', 'replace',
+          '--profiles-root', claude_auth_recovery_destination_profiles_root,
+          '--environment-config', claude_auth_recovery_destination_environment_config]
+          + (claude_auth_recovery_execute | bool | ternary([], ['--validate-only'])) }}
+        stdin: "{{ claude_auth_recovery_capture.stdout | from_json | to_json }}"
+        stdin_add_newline: false
+      register: claude_auth_recovery_restore
+      changed_when: (claude_auth_recovery_restore.stdout | from_json).changed | bool
+
+    - name: Retain only safe stream provenance and recovery outcomes
+      ansible.builtin.set_fact:
+        claude_auth_recovery_public_result: "{{ claude_auth_recovery_restore.stdout | from_json }}"
+        cacheable: false
+
+    - name: Create private local audit storage
+      ansible.builtin.file:
+        path: "{{ claude_auth_recovery_report_directory }}"
+        state: directory
+        mode: '0700'
+
+    - name: Save secret-free named stream provenance and model-unverified result
+      ansible.builtin.copy:
+        content: "{{ claude_auth_recovery_public_result | to_nice_json }}\n"
+        dest: "{{ claude_auth_recovery_report_directory }}/claude-priv.json"
+        mode: '0600'
+
+  always:
+    - name: Discard transient authentication payload facts
+      ansible.builtin.set_fact:
+        claude_auth_recovery_capture: {}
+        claude_auth_recovery_restore: {}
+        cacheable: false
+
+    - name: Remove source helper storage created by this operation
+      when: claude_auth_recovery_source_temporary.path is defined
+      ansible.builtin.file:
+        path: "{{ claude_auth_recovery_source_temporary.path }}"
+        state: absent
+      delegate_to: "{{ claude_auth_recovery_source_host }}"
+
+    - name: Remove destination helper storage created by this operation
+      when: claude_auth_recovery_destination_temporary.path is defined
+      ansible.builtin.file:
+        path: "{{ claude_auth_recovery_destination_temporary.path }}"
+        state: absent
+
+- name: Report safe recovery result without claiming model access
+  ansible.builtin.debug:
+    msg: "{{ claude_auth_recovery_public_result }}"

@@ -1,0 +1,10 @@
+---
+claude_auth_recovery_source_host: ''
+claude_auth_recovery_source_role: ''
+claude_auth_recovery_source_home: ''
+claude_auth_recovery_source_metadata: ''
+claude_auth_recovery_destination_profiles_root: ''
+claude_auth_recovery_destination_environment_config: ''
+claude_auth_recovery_runtime_user: ''
+claude_auth_recovery_report_directory: "{{ claude_auth_recovery_destination_profiles_root | dirname }}/environment-logs/auth-recovery"
+claude_auth_recovery_execute: false

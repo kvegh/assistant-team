@@ -1,0 +1,41 @@
+argument_specs:
+  main:
+    short_description: Recover only an explicitly selected same-account private Claude
+      credential stream.
+    options:
+      claude_auth_recovery_source_metadata:
+        type: str
+        default: ''
+        description: Exact source-home .claude.json account metadata binding.
+      claude_auth_recovery_source_host:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_source_role:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_source_home:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_destination_profiles_root:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_destination_environment_config:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_runtime_user:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_report_directory:
+        type: str
+        default: '{{ claude_auth_recovery_destination_profiles_root | dirname }}/environment-logs/auth-recovery'
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.
+      claude_auth_recovery_execute:
+        type: bool
+        default: false
+        description: Explicit recovery setting; see docs/CLAUDE_AUTH_RECOVERY.md.

@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.13
+
+Add separately scoped private Claude recovery from an explicitly selected same-account archived connector session. Account and organization metadata stay unchanged; validation defaults to no replacement and refresh-capable credentials are copied only on explicit execution.
+
 ## 1.0.12
 
 Document same-account Codex recovery validation, source preservation and protected local audit semantics.
