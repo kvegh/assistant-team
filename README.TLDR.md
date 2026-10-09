@@ -65,3 +65,6 @@ template without overwriting an existing destination. Conflicting paths require 
 First run: attach each role, finish native onboarding, then give the task to the
 orchestrator. Gemini work uses exact Vertex model IDs (for Gemini 3.1 Pro:
 `gemini-3.1-pro-preview`); saved login does not verify model access.
+
+A fresh Antigravity role may require your terms/data-use choice. Deployment and
+saved login do not prove model access; native wake acceptance is pending this step.

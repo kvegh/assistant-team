@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.23.2
+
+Document native Antigravity deployment, container dependency verification and
+symlink-safe private credential seeding. Fresh-role terms/data-use confirmation
+is pending; native model and wake acceptance are not yet claimed. Mark task-model
+selection ON HOLD BUT PRIORITY.
+
 ## 0.23.1
 
 Prevent native-created symlinks from redirecting a private Antigravity token seed.

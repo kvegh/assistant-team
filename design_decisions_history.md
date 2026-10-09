@@ -1198,3 +1198,28 @@ confirmed author and ask correlation, and the waiting orchestrator received
 the response. Thus the existing idle ask wake path works with native approval.
 No claim is made for unattended permission handling, busy-queue recovery or
 tell-only wake behavior; those were not exercised.
+
+## Add personal Antigravity to the existing team architecture
+
+Implementation: `43ee337`; credential/stop-state correction: `f936ccf`.
+
+The personal Gemini profile uses the official native Antigravity CLI, while its
+work counterpart retains Gemini CLI/Vertex. Reusing the existing Gemini container
+image with an exact read-only pinned native executable avoids a second image
+installation while preserving separate account homes. Native MCP configuration
+and lifecycle events are translated to the existing scoped broker and tmux route;
+no ACP migration or broad approval policy is introduced. A partial native Stop
+remains busy, and context is injected once using a per-role cursor.
+
+Only a missing private native token is seeded. Directory-descriptor traversal
+rejects symlinks, exclusive publication prevents replacing refreshed credentials,
+and work ADC, API keys and provider settings are not imported. The separate
+Ansible verification role runs native help in a networkless rootless container
+without credential mounts.
+
+Focused deployment and this native dependency probe passed. All 220 local tests
+and production-profile Ansible lint passed. A disposable private role launched
+with the saved account but awaits the operator's terms/data-use decision. Thus
+actual native model and addressed-wake/reply acceptance are still pending; no
+legal consent or data-collection choice is inferred from authentication evidence.
+Task-specific model selection remains ON HOLD BUT PRIORITY by explicit decision.

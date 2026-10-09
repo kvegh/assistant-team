@@ -13,7 +13,7 @@
   handling only after its scoped design is approved; do not infer it from a test
   that explicitly approves one reply.
 
-- [ ] Select the model used by each native harness for the task it receives,
+- [ ] **ON HOLD BUT PRIORITY:** Select the model used by each native harness for the task it receives,
   balancing cost or subscription allowance with outcome quality. Investigate
   supported model-selection controls, task-based recommendations and evaluation
   of actual results. Respect enabled account profiles and available models;

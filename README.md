@@ -905,3 +905,8 @@ Private Antigravity credential seeding rejects symlinked directories and token
 files. Directory-descriptor traversal and exclusive publication prevent a prior
 role session from redirecting the copy into a shared workspace or outside its
 account boundary. Existing regular role credentials remain authoritative.
+
+The native Antigravity integration is deployed and its isolated dependency probe
+passes. A fresh role still requires the operator's terms and data-use choice; this
+choice is not inferred from saved login tokens or copied onboarding flags. Native
+model access and wake/reply acceptance remain pending until that screen is resolved.
