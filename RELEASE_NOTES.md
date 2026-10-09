@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.10
+
+Document verified capture-only historical label compatibility and unchanged strict destination validation.
+
 ## 1.0.9
 
 Accept three exact historical installation directory labels during source authentication capture only. Fresh destination metadata, provider/flavour checks and work/private boundaries remain strict.
