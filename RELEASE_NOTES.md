@@ -20,6 +20,7 @@ Source tests and lint are checked before publication. Fresh AAP deployment,
 credential transfer, bounded model checks and native team/archive acceptance are
 follow-up verification; this release does not claim those live checks have passed.
 Existing environments require separately authorized migration.
+
 ## 0.32.5
 
 Document Vibe metadata compatibility and successful synthetic six-profile

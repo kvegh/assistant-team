@@ -1566,3 +1566,7 @@ validator now checks this actual installed metadata instead of rejecting an
 otherwise supported source. The fixtures use the same native flavour. All 15
 focused tests, including actual local Ansible preflight, six-profile restore and
 missing-only rerun, passed again using synthetic credentials only.
+
+Release source also includes Vibe metadata compatibility implementation `9a7680c`: native Mistral installations identify their harness flavour as vibe. Synthetic protected Ansible transfer checks verify capture, missing-only restore and rerun preservation without reading live credentials.
+
+The final 1.0.0 source validation passed 283 unit/fixture tests and offline production Ansible lint across 183 files with zero findings, using the pinned certified collection. The test suite includes synthetic protected Ansible authentication preflight/restore/rerun; no live auth data or VM was changed by these source checks. Native AAP/team acceptance follows the published source release.
