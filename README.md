@@ -915,3 +915,8 @@ model access and wake/reply acceptance remain pending until that screen is resol
 and configured model. These are configuration labels, not verified provider model
 versions or entitlement. A missing explicit model is shown as `harness default
 (unverified)`. Status does not run inference, inspect credentials or send terminal input.
+
+`team watch NAME` colors sender/recipient role labels on interactive terminals;
+message text stays plain, and available question correlation IDs remain visible.
+Redirected output, `NO_COLOR` and `TERM=dumb` disable color. Restart only the watch
+viewer to pick up formatter updates; the project team can keep running.

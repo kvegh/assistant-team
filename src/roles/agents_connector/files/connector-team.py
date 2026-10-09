@@ -546,6 +546,38 @@ def deliver_observer_report():
     target.write_bytes(source.read_bytes());target.chmod(0o600)
     print('Private review delivered only to orchestrator workspace; no worker-broker message sent.')
 
+WATCH_ROLE_COLORS = {
+    'orchestrator': '36', 'builder': '32', 'investigator': '34',
+    'challenger': '35', 'summarizer': '33', 'observer': '94',
+    'private-connector': '92', 'corporate-connector': '96',
+    'workers': '90', 'unknown': '37',
+}
+
+
+def watch_uses_color(stream=None, environment=None):
+    stream=sys.stdout if stream is None else stream
+    environment=os.environ if environment is None else environment
+    return stream.isatty() and 'NO_COLOR' not in environment and environment.get('TERM')!='dumb'
+
+
+def format_watch_message(message, color=False):
+    """Color routing labels only; retain IDs, correlation and plain message text."""
+    def label(value):
+        text=value if isinstance(value,str) and re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,63}',value) else 'unknown'
+        if not color:return text
+        code=WATCH_ROLE_COLORS.get(text,WATCH_ROLE_COLORS['unknown'])
+        return '\033['+code+'m'+text+'\033[0m'
+    identifier=message.get('id')
+    identifier=str(identifier) if isinstance(identifier,int) and not isinstance(identifier,bool) else '?'
+    correlation=''
+    ask_id=message.get('ask_id')
+    if isinstance(ask_id,int) and not isinstance(ask_id,bool):correlation=' [ask '+str(ask_id)+']'
+    body=message.get('text','')
+    if not isinstance(body,str):body='[invalid message text]'
+    body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and not 127<=ord(ch)<=159 else '?' for ch in body)
+    return '['+identifier+']'+correlation+' '+label(message.get('from'))+' -> '+label(message.get('to') or 'workers')+': '+body
+
+
 def watch():
     with socket.socket(socket.AF_UNIX) as sock:
         sock.connect(str(ADMIN))
@@ -559,12 +591,13 @@ def watch():
                 data+=chunk
             return data
         print('Live worker discussion. Ctrl-C closes this viewer.',flush=True)
+        color=watch_uses_color()
         while True:
             size=struct.unpack('!I',exact(4))[0]
             if size>1048576:raise ValueError('Oversized stream event')
             event=json.loads(exact(size))
             if event.get('kind')=='stream_event':
-                msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
+                print(format_watch_message(event['message'],color=color),flush=True)
 
 def main():
     if sys.argv[1:2] in [['rename-project'],['destroy'],['archive'],['unarchive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:

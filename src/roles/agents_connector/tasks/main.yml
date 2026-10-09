@@ -9,6 +9,7 @@
     - connector_ipc
     - connector_mcp_results
     - connector_antigravity
+    - connector_watch
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
@@ -22,6 +23,7 @@
     - connector_ipc
     - connector_mcp_results
     - connector_antigravity
+    - connector_watch
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
@@ -35,6 +37,7 @@
     - connector_ipc
     - connector_mcp_results
     - connector_antigravity
+    - connector_watch
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -111,6 +114,7 @@
     - connector_ipc
     - connector_mcp_results
     - connector_antigravity
+    - connector_watch
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"

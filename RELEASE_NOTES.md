@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.25.0
+
+Color sender and recipient role labels independently in interactive `team watch`
+output. Keep message bodies plain and existing IDs/correlation visible; respect
+NO_COLOR, redirected output and dumb terminals. Preserve the existing stream and
+privacy boundaries without restarting the running team or viewer.
+
 ## 0.24.1
 
 Document account/model status semantics, unverified defaults and safe targeted
