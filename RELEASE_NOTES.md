@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.22.11
+
+Document the background-monitoring rule change and its implementation reference.
+
 ## 0.22.10
 
 Document notification-driven background monitoring; remove the fixed 20-second

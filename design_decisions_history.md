@@ -1,5 +1,15 @@
 # Design decisions history
 
+## Prefer background completion notifications over fixed polling
+
+Documentation: `305be6a`.
+
+The user removed fixed 20-second subagent polling because completion is already
+reported automatically and repeated checks add processing overhead. Background
+agents now report by notification; status checks remain available for blockers
+or missing notifications. External jobs without notifications still require
+appropriately spaced checks and verified outcomes.
+
 ## Hold task-specific model selection while retaining its priority
 
 Documentation: `2cf4bcb`.
