@@ -1,0 +1,23 @@
+---
+- name: Resolve project decision log account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Locate existing project directories
+  ansible.builtin.find:
+    paths: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/projects"
+    file_type: directory
+    recurse: false
+  register: __project_decisions_projects
+- name: Inspect project initialization markers
+  ansible.builtin.stat:
+    path: "{{ item.path }}/initialized"
+    follow: false
+  loop: "{{ __project_decisions_projects.files }}"
+  register: __project_decisions_initialized
+- name: Prepare initialized project decision logs
+  ansible.builtin.include_tasks: project.yml
+  when: item.stat.exists and item.stat.isreg | default(false) and not item.stat.islnk | default(false)
+  loop: "{{ __project_decisions_initialized.results }}"
+  loop_control:
+    loop_var: item

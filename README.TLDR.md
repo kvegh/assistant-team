@@ -88,3 +88,15 @@ replies once each. Follow subscribes before taking its history snapshot and skip
 queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
+
+For a concise decision feed, run `tail -f ~/projects/NAME/workspace/DECISIONS.log`.
+The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
+meaningful accepted outcomes, agreed direction changes or blockers requiring
+user input. The orchestrator requests these updates at milestones, without timers.
+The summarizer is the sole intended writer; proposals, repetitive progress,
+credentials, private connector content and hidden-role identities stay out.
+This is an agent instruction policy, not a filesystem enforcement of append-only
+writes: project workspace collaborators retain their existing write permissions.
+Existing user prompts and log content are preserved during deployment. Already
+running harness conversations need an explicit instruction refresh to adopt it;
+updating files alone does not guarantee they re-read their role instructions.

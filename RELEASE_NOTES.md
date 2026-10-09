@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.27.0
+
+Add a project workspace DECISIONS.log and milestone-triggered summarizer workflow.
+Append brief timestamped accepted decisions, agreed direction changes and blockers
+requiring user input. Preserve edited prompts and previous log entries; exclude
+routine progress and private content. No timer or automatic model calls added.
+
 ## 0.26.1
 
 Document watch defaults, explicit follow examples and history/live boundary semantics.

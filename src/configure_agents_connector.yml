@@ -44,6 +44,8 @@
       tags: [project_framework]
     - role: project_workspace
       tags: [project_framework, project_workspace]
+    - role: project_decisions
+      tags: [project_framework, project_decisions]
     - role: vertex_auth
       tags: [vertex_auth]
       vars:

@@ -514,12 +514,60 @@ def project_prompt_template(content):
         output.extend(['[Role: '+role.replace('-',' ').title()+']',body,''])
     return '\n'.join(output)+'\n'
 
+DECISION_LOG_INSTRUCTIONS = {
+    'orchestrator': '''After a meaningful accepted decision, direction change, or blocker requiring user input, ask the summarizer to update /workspace/shared/DECISIONS.log. Include the evidence and whether the outcome is accepted or still proposed. Do not request routine progress entries or repeat unchanged outcomes. The summarizer is the sole intended writer; other roles must not append their own summaries. No timed summarization or paid fallback.''',
+    'summarizer': '''On an orchestrator milestone request, append at most one brief high-level line per new meaningful outcome to /workspace/shared/DECISIONS.log. Format: ISO-8601 timestamp | DECIDED, DIRECTION, or BLOCKED | concise outcome. DECIDED requires explicit evidence of acceptance; DIRECTION requires an agreed change; BLOCKED means user input is required. Proposals are not accepted decisions. Check existing entries and omit unchanged/repeated outcomes. Append only: never replace or truncate this log. You are the sole intended writer. Exclude routine tools, progress chatter, credentials, raw connector content, private instructions and hidden-role identity. Do not use timers or generate entries merely because a summary was requested.''',
+}
+DECISION_BLOCK_START='<!-- AC-Agents decision-log instructions -->'
+DECISION_BLOCK_END='<!-- End AC-Agents decision-log instructions -->'
+
+
+def decision_instruction_block(role):
+    return DECISION_BLOCK_START+'\n'+DECISION_LOG_INSTRUCTIONS[role]+'\n'+DECISION_BLOCK_END+'\n'
+
+
+def update_decision_log_instructions():
+    """Refresh only our owned block; preserve existing user instructions byte-for-byte."""
+    if not PROJECT:raise ValueError('A project is required for decision log instructions')
+    ensure_decision_log()
+    changed=0
+    for role in DECISION_LOG_INSTRUCTIONS:
+        cfg=json.loads((PROFILES/role/'profile.json').read_text())
+        target=role_workspace(role)/{'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
+        if target.is_symlink():raise ValueError('Role instructions must not be symlinks')
+        current=target.read_text()
+        if current.count(DECISION_BLOCK_START)!=current.count(DECISION_BLOCK_END) or current.count(DECISION_BLOCK_START)>1:
+            raise ValueError('Malformed owned decision log instruction block; existing instructions were preserved')
+        block=decision_instruction_block(role)
+        if DECISION_BLOCK_START in current:
+            start=current.index(DECISION_BLOCK_START);end=current.index(DECISION_BLOCK_END,start)+len(DECISION_BLOCK_END)
+            updated=current[:start]+block.rstrip('\n')+current[end:]
+        else:updated=current+('' if current.endswith('\n') else '\n')+'\n'+block
+        if updated!=current:
+            temp=target.with_suffix('.decision-pending');temp.write_text(updated);temp.chmod(0o600);temp.replace(target)
+            changed+=1
+    return changed
+
+
+def ensure_decision_log():
+    """Create an empty shared log once; preserve existing project decisions."""
+    workspace=ROOT/'workspace';target=workspace/'DECISIONS.log'
+    if workspace.is_symlink():raise ValueError('Shared workspace must not be a symlink')
+    workspace.mkdir(mode=0o700,exist_ok=True)
+    try:
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    except FileExistsError:
+        if target.is_symlink() or not target.is_file():raise ValueError('Decision log must be a regular project file')
+    else:os.close(fd)
+
+
 def apply_prompts():
     source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'templates/assistant-prompts.md'
     goal,sections,bracket_format=prompt_sections(source.read_text())
     if bracket_format:
         goal=active_prompt_text(goal)
         sections={role:active_prompt_text(body) for role,body in sections.items()}
+    if PROJECT:ensure_decision_log()
     roster='\n\nCollaboration roles: orchestrator routes and bounds work; builder implements; investigator diagnoses; challenger reviews assumptions; summarizer condenses decisions. Read addressed MCP messages. Distinguish proposals from verified results. Stop completed discussions; pause exhausted subscription work without paid API fallback.\n'
     for role in ALL:
         cfg=json.loads((PROFILES/role/'profile.json').read_text())
@@ -528,6 +576,8 @@ def apply_prompts():
         if PROJECT:
             prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+('Read-only access; evaluate outcomes without modifying shared artifacts.' if role=='observer' else 'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.')+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'
         if role in VISIBLE:prompt+=roster
+        if PROJECT and role in DECISION_LOG_INSTRUCTIONS:
+            prompt+='\n'+decision_instruction_block(role)
         file=role_workspace(role)/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
         temp=file.with_suffix('.pending');temp.write_text(prompt);temp.chmod(0o600);temp.replace(file)
 
