@@ -7,7 +7,7 @@
 
 ## Priority after bug fixes and blocking features
 
-- [ ] Resolve startup/communication permission blocking with operator-controlled
+- [ ] **On hold while completing native introductions:** resolve startup/communication permission blocking with operator-controlled
   per-project/role native policy generated before launch, distinct readiness and
   waiting-approval states, and private out-of-model approval notifications with
   sanitized SQLite correlation. See `docs/PERMISSION_MANAGEMENT.md`. Keep tmux

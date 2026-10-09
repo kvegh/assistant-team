@@ -1013,3 +1013,24 @@ are documented to make this distinction explicit. A proposed shorter verb scheme
 is tracked in TODO only; no command/subcommand renaming is implemented here.
 The live broker-hook SELinux connection blocker remains separately under diagnosis,
 without a claim that the source-only layout or these documentation changes fix it.
+
+
+## Generate scoped permissions and communicate blocked approvals
+
+Proposal documentation: `f6f900b` (0.22.4).
+
+The next permission-management design separates workspace trust and onboarding
+from tool approval. Generate operator-controlled allow/ask/deny policies per
+project and role before launch, permit only authorized broker operations within
+project scope, and preserve private/corporate and hidden-observer boundaries.
+A deterministic private notification relay should correlate sanitized approval
+metadata in SQLite without requiring a blocked model turn. Process launch must
+be distinguished from readiness and waiting for approval. The initial operator
+path remains attaching the exact tmux role; no blind Enter or timeout may approve
+an action. Supported native hooks/protocols and unimplemented transport gaps
+are documented; a unified approval CLI is not claimed.
+
+This is source-only documentation. No policy generator, relay, model call, trust
+acceptance or deployment ran. The user subsequently put implementation on hold
+while completing interactive native introductions. Documentation diff checks
+passed; new runtime behavior was neither implemented nor tested.

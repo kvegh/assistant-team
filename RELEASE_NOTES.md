@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.22.5
+
+Document the permission proposal commit and its implementation hold while native
+introductions are completed. Runtime approvals and the current environment stay
+unchanged.
+
 ## 0.22.4
 
 Document scoped permission policy generation, meaningful native readiness states
