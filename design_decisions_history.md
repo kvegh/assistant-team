@@ -1110,3 +1110,34 @@ provider authentication and from the future tool-approval design. Document how
 to attach and complete those steps before handing the task to the orchestrator;
 do not bypass those controls automatically. Source formatting and production
 lint passed. No runtime sessions were changed by this documentation work.
+
+
+## Keep stock MCP behavior compatible with Gemini JSON promotion
+
+Implementation: `67c5ac4` (0.21.19).
+
+Read-only probes of the installed stock shim confirmed inbox and peer-list tools
+return text content, with no structuredContent field. Its pinned upstream source
+returns arrays serialized as text. The installed Gemini 0.63 compliance transport
+parses the first JSON text block and unconditionally assigns its value to
+structuredContent; Gemini's MCP schema then rejects arrays and scalar values
+because structured content must be an object. The initial suspicion of an invalid
+stock structured-content array was therefore disproved: the promotion occurs in
+the client. See the [MCP structured-content specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#structured-content),
+[stock shim source](https://github.com/Aldenysq/agents-connector/blob/44c195a6ed9e4df608d9fde30e3d8759fc92b900/src/shim/mod.rs)
+and [Gemini transport source](https://github.com/google-gemini/gemini-cli/blob/v0.63.0/packages/core/src/tools/mcp-compliance-transport.ts).
+
+A Gemini-only stdio compatibility adapter wraps successful non-object JSON text
+in an object structured-content envelope while retaining original text, IDs and
+errors. Arrays use items; other scalars use value. Existing structured content,
+objects, notifications and tool definitions remain unchanged. Input bytes and
+child exit codes are forwarded; output is bounded and failures never echo payloads.
+Claude/Codex keep the direct shim. The stock broker and vendor harnesses remain
+unmodified; role authentication and tool approval are not changed.
+
+Ansible reproduces the adapter and Gemini config selection. No active native
+session was restarted, no model was invoked and no deployment occurred during
+this implementation. A future controlled MCP reconnect remains necessary for
+installed acceptance. Validation: all 206 local tests passed, including six new
+transport regressions; production Ansible lint passed with zero failures/warnings
+across 145 files.

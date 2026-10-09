@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.20
+
+Document the Gemini client-side JSON promotion diagnosis, narrow compatibility
+adapter and successful local transport/lint validation. Installed acceptance
+remains pending a controlled reconnect; active teams were preserved.
+
 ## 0.21.19
 
 Shield Gemini CLI's JSON-text promotion bug with a Gemini-only stock-MCP stdio
