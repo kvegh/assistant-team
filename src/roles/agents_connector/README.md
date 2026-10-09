@@ -81,3 +81,9 @@ results and adds object structured-content envelopes for JSON arrays/scalars.
 The `connector_mcp_results` tag copies this adapter and routing code without
 restarting sessions; generated configurations take effect after initialization
 and a separately authorized native MCP reconnect.
+
+For existing teams, supply `agents_connector_repair_gemini_project` and
+`agents_connector_repair_gemini_role` with the `connector_mcp_results` tag.
+This opt-in action repairs only a recognized stock MCP command, saves a private
+backup and preserves other native settings. It does not restart the role; the
+operator must reconnect MCP explicitly to activate it in an existing process.

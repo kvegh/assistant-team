@@ -1,0 +1,27 @@
+---
+- name: Validate the selected Gemini project and role identifiers
+  ansible.builtin.assert:
+    that:
+      - agents_connector_repair_gemini_project is match('^[a-z0-9][a-z0-9_-]{0,39}(?:-[0-9]{10})*$')
+      - agents_connector_repair_gemini_role in ['orchestrator', 'builder', 'investigator', 'challenger', 'summarizer']
+    quiet: true
+- name: Install the guarded native MCP command repair
+  ansible.builtin.copy:
+    src: repair-gemini-mcp.py
+    dest: "{{ __agents_connector_root }}/routing/repair-gemini-mcp.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
+- name: Update only the selected native Gemini MCP command
+  become: true
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ agents_connector_runtime_home }}"
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ __agents_connector_root }}/routing/repair-gemini-mcp.py"
+      - "{{ agents_connector_repair_gemini_project }}"
+      - "{{ agents_connector_repair_gemini_role }}"
+  register: __agents_connector_gemini_mcp_repair
+  changed_when: (__agents_connector_gemini_mcp_repair.stdout | from_json).changed

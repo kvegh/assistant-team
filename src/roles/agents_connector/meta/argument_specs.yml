@@ -27,3 +27,11 @@ argument_specs:
         type: bool
         default: false
         description: Restore launch bookkeeping only after verifying a live native Codex pane; never replace or restart it.
+      agents_connector_repair_gemini_project:
+        type: str
+        default: ''
+        description: Explicit existing project whose Gemini MCP command alone may be repaired.
+      agents_connector_repair_gemini_role:
+        type: str
+        default: challenger
+        description: Existing Gemini collaboration role; native sessions and all other settings remain unchanged.

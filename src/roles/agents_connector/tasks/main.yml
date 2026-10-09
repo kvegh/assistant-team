@@ -190,3 +190,11 @@
     file: repair_codex.yml
     apply:
       tags: [connector_codex_repair, connector_prompt_template]
+
+- name: Configure compatibility only for an explicitly selected Gemini project role
+  tags: [connector_mcp_results]
+  ansible.builtin.include_tasks:
+    file: repair_gemini_mcp.yml
+    apply:
+      tags: [connector_mcp_results]
+  when: agents_connector_repair_gemini_project | length > 0

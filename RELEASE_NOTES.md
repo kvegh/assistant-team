@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.22
+
+Repair an explicitly selected existing Gemini role's MCP command through guarded
+Ansible automation. Preserve model/auth/hooks and other settings, retain a private
+backup and leave the native session running; activation requires MCP reconnect.
+All 211 local tests and production lint pass.
+
 ## 0.21.21
 
 Include all account/path prerequisites in the focused MCP adapter deployment tag.
