@@ -1049,3 +1049,6 @@ Test-clone retirement now requires an exact authorized name in the encrypted
 retirement definition, in addition to exclusive disk ownership and preservation
 checks. Fresh deployment clears recovery addressing and discovers the new clone
 by its own MAC address; it never reuses the retired guest as a recovery target.
+
+Retirement disk inspection reads file metadata only; it does not hash entire
+virtual disks because preservation checks use inode, size and modification time.

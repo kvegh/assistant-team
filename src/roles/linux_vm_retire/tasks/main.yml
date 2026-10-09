@@ -46,12 +46,14 @@
   ansible.builtin.stat:
     path: "{{ linux_vm_retire_disk }}"
     follow: false
+    get_checksum: false
   register: __linux_vm_retire_disk_stat
 
 - name: Inspect the golden image preservation baseline
   ansible.builtin.stat:
     path: "{{ linux_vm_retire_definition.golden_image_path }}"
     follow: false
+    get_checksum: false
   register: __linux_vm_retire_golden_before
 
 - name: Require regular distinct clone and golden files
@@ -114,6 +116,7 @@
       ansible.builtin.stat:
         path: "{{ linux_vm_retire_definition.golden_image_path }}"
         follow: false
+        get_checksum: false
       register: __linux_vm_retire_golden_after
 
     - name: Verify every other domain and the source image remain intact

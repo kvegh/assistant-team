@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.6
+
+Avoid unnecessary whole-disk hashing during retirement metadata safety checks.
+
 ## 0.31.5
 
 Document the exact authorized clone retirement role interface.
