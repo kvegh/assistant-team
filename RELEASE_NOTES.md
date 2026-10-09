@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.29.1 — source only, not deployed
+
+Document passive-reader boundaries, the superseded empty decision log, deferred
+stopped migration and native acceptance requirements. Align subagent monitoring
+with automatic completion notifications.
+
 ## 0.29.0 — source only, not deployed
 
 Make summarizer and observer passive private raw-discussion readers. Register only

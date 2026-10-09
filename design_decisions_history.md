@@ -1297,3 +1297,45 @@ Append-only behavior and writer ownership are role instructions, not a changed
 filesystem security boundary; shared-workspace permissions remain unchanged.
 Validation: 245 unit tests passed, including content preservation, block
 idempotence and unsafe path rejection; production Ansible lint passed.
+
+## Private passive summarizer and observer — source only
+
+Implementation: `6f6141a` (0.29.0), isolated feature branch; no deployment.
+
+The user changed the role design: only orchestrator, builder, investigator and
+challenger participate in team activity. Summarizer and observer read raw
+communication privately, never answer participants or ask the orchestrator for
+management, and never send feedback into the team. This supersedes the earlier
+observer-to-orchestrator stop recommendation and orchestrator-requested summary
+workflow. Private/corporate connectors retain their separate existing scope.
+
+Remove reader registration, worker messaging targets, shared artifact mounts and
+mentions in generated participant rosters. A deterministic host listener uses the
+existing broker stream and message-only SQLite recovery, with short event burst
+coalescing and queued batches while readers are busy. No timed model polling.
+Readers receive private read-only raw context and write individual private drafts;
+private lifecycle callbacks cannot perform broker operations. The host appends
+changed drafts to separate operator-only SUMMARY/ASSESSMENT outputs. Preserve
+existing private mount labels on newly written raw inputs. Initial reader support
+uses Claude profiles, with unsupported assignments rejected explicitly rather
+than silently changing provider. Native approval/onboarding controls remain.
+
+The earlier DECISIONS.log native append verification failed: ownership/mode were
+correct but the Ansible-created file had user_home_t rather than its shared
+workspace's container_file_t label. The narrow label correction was preserved
+as local WIP and not deployed after the user's stop/change instruction. The log
+remains empty; new project creation no longer enables this superseded workflow.
+
+Isolation does not erase old conversation knowledge or conceal framework source
+from a worker explicitly tasked to inspect it. Operator-owned instructions and
+history require a separately reviewed stopped migration. Source tests cannot
+prove native event hooks, entitlement, permission handling or restart behavior
+on a live deployment. Deployment remains explicitly held. Validation: 249 unit
+tests passed, including raw-feed privacy, worker registration, role/mount
+isolation, callback boundaries, busy-event coalescing and report deduplication;
+production Ansible lint passed. Shared installation-prefix checkout unchanged.
+
+Also document the latest collaboration rule: prefer automatic subagent completion
+notifications instead of fixed-interval polling; status checks need a blocker,
+missing notification or task-specific reason. External jobs still need verified
+outcomes. This aligns with the separately documented source-layout session rule.
