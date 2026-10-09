@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.16.1
+
+Record verified named-project archive/destroy behavior and model-free installed
+CLI checks. Disposable fixtures were cleaned; existing projects and account
+profiles were retained.
+
 ## 0.16.0
 
 Add `destroy NAME` and `archive NAME`. Check and stop only the named running team,

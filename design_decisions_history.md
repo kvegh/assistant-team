@@ -790,3 +790,28 @@ tasks with zero failures and the installed detector recognized the saved artifac
 Credential contents and permissions were unchanged; all eight live container
 identities and native pane PIDs remained unchanged. No sign-in, inference or
 credential clearing was performed, and historical diagnostic records were preserved.
+
+## Complete named projects through archive or destroy
+
+Implementation: `7113c71`.
+
+The user defined two explicit completion operations: both check whether the named
+team is running and stop it if necessary; destroy deletes the project and home
+assignment config, while archive moves their whole contents into a private
+project-archive directory. Retirement checks every named service and container,
+handles orphan instances, verifies socket writer quiescence and removes only
+stopped project containers. Shared account profiles, images and systemd templates
+are retained. Unsafe paths and archive/config collisions fail before shutdown.
+Archive moves config into the project before atomic directory rename and rolls
+that config placement back if rename fails. Internal links and file modes are
+retained. Same-project concurrent lifecycle/edit operations are unsupported and
+are explicitly documented. Both actions enter bounded JSON and human diagnostics.
+
+Fifteen behavior regressions and all 133 tests passed; production Ansible lint had
+zero failures or warnings. The targeted original-environment deployment completed
+33 tasks with zero failures. Installed CLI checks created disposable model-free
+projects, verified archive hashes for their full contents and assignment config,
+rejected an archive collision, destroyed named fixtures and cleaned them all up.
+The existing team had separate logged stop operations before fixture creation;
+its unchanged container identities were retained and it was not restarted. No
+existing project was archived/destroyed and no model request was performed.
