@@ -802,3 +802,11 @@ labels and token checks remain in force. This resolves Unix `connectto` denials
 that inode relabeling alone cannot fix. A gateway restart may stop dependent
 containers; coordinate activation with the operator rather than restarting a
 live team merely to apply the change.
+
+`team stop NAME` blocks until the named target, broker, gateway, container service,
+containers and IPC listeners have stopped. It preserves enablement and project
+data. A pending shutdown is completed before `team start NAME` submits a start;
+`team restart NAME` performs a complete stop followed by start. Commands have a
+bounded wait and fail clearly if shutdown cannot be verified. This avoids a fast
+stop/start canceling remaining shutdown jobs. `team status NAME` includes dependent
+service state in its project summary.

@@ -54,3 +54,7 @@ template without overwriting an existing destination. Conflicting paths require 
 `~/team unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
 
 `~/team rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `~/team start NEW`. Never run same-project lifecycle commands concurrently.
+
+`team stop NAME` waits for this project's services, containers and listeners to
+finish stopping. `team restart NAME` completes that stop before starting again.
+If a bounded wait fails, check status before issuing another start.

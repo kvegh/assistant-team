@@ -107,8 +107,86 @@ def user_env():
     env=os.environ.copy();env['XDG_RUNTIME_DIR']='/run/user/'+str(os.getuid());env['DBUS_SESSION_BUS_ADDRESS']='unix:path='+env['XDG_RUNTIME_DIR']+'/bus'
     return env
 
+CONTROL_TIMEOUT = 180
+
+class ProjectStillListening(ValueError):
+    """A verified live endpoint is not a completed stop."""
+
+
+def pending_project_stop(name):
+    units = project_units(name)
+    result = subprocess.run(['systemctl','--user','list-jobs','--no-legend','--no-pager'],
+                            env={**user_env(), 'LC_ALL':'C'}, capture_output=True,text=True)
+    if result.returncode:
+        raise ValueError('Cannot check pending project shutdown jobs; no start was requested')
+    for line in result.stdout.splitlines():
+        if line.strip() == 'No jobs running.':continue
+        fields = line.split()
+        if len(fields) < 4:
+            raise ValueError('Cannot interpret project shutdown jobs; no start was requested')
+        if fields[1] in units and fields[2] in ['stop','restart','try-restart']:
+            return True
+    if any(service_state(unit)['ActiveState']=='deactivating' for unit in units):return True
+    return any(container_phase(name,role) in ['stopping','removing'] for role in ROLES)
+
+
+def container_phase(name,role):
+    container = 'acp-'+name+'-'+role
+    exists = subprocess.run(['podman','container','exists',container],
+                            stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    if exists.returncode == 1:return 'absent'
+    if exists.returncode != 0:raise ValueError('Cannot verify project container shutdown')
+    result = subprocess.run(['podman','inspect','--format','{{.State.Status}}',container],
+                            capture_output=True,text=True)
+    phase = result.stdout.strip()
+    if result.returncode or phase not in ['configured','created','running','stopped','paused','exited','stopping','removing']:
+        raise ValueError('Cannot verify project container shutdown')
+    return phase
+
+
+def wait_project_stopped(name,deadline):
+    while True:
+        states = [service_state(unit)['ActiveState'] for unit in project_units(name)]
+        phases = [container_phase(name,role) for role in ROLES]
+        stopped = all(state in ['inactive','failed'] for state in states)
+        stopped = stopped and not any(phase in ['running','paused','stopping','removing'] for phase in phases)
+        if stopped and not pending_project_stop(name):
+            try:
+                verify_no_project_listener(project_path(name))
+                return
+            except ProjectStillListening:
+                pass
+        if time.monotonic() >= deadline:
+            raise ValueError('Project shutdown did not complete within the wait limit; do not start until shutdown finishes')
+        time.sleep(min(0.2,max(0,deadline-time.monotonic())))
+
+
+def control_command(command,deadline):
+    remaining = deadline-time.monotonic()
+    if remaining <= 0:raise ValueError('Project control wait limit was reached; check shutdown status')
+    try:
+        subprocess.run(command,env=user_env(),check=True,timeout=remaining)
+    except subprocess.TimeoutExpired as error:
+        raise ValueError('Project control timed out; a shutdown job may still be running') from error
+
+
+def stop_project(name,deadline):
+    # A target stop alone can complete before PartOf-dependent service stops.
+    control_command(['systemctl','--user','stop',*project_units(name)],deadline)
+    orphaned = ['acp-'+name+'-'+role for role in ROLES if container_phase(name,role) in ['running','paused']]
+    if orphaned:
+        control_command(['podman','stop','--time','10',*orphaned],deadline)
+    wait_project_stopped(name,deadline)
+
+
 def control(action,name):
-    subprocess.run(['systemctl','--user',action,'assistant-connector@'+name+'.target'],env=user_env(),check=True)
+    deadline = time.monotonic()+CONTROL_TIMEOUT
+    if action in ['stop','restart']:
+        stop_project(name,deadline)
+    elif action == 'start' and pending_project_stop(name):
+        wait_project_stopped(name,deadline)
+    if action in ['start','restart']:
+        control_command(['systemctl','--user','start',project_units(name)[0]],deadline)
 
 def create(name):
     path=project_path(name)
@@ -312,7 +390,7 @@ def verify_no_project_listener(path):
             except (ConnectionRefusedError,FileNotFoundError):continue
             except OSError as error:
                 raise ValueError('Cannot establish project writer state; project files were preserved') from error
-            raise ValueError('A project broker or gateway is still listening; project files were preserved')
+            raise ProjectStillListening('A project broker or gateway is still listening; project files were preserved')
 
 def quiesce_project(name, path):
     units=['assistant-connector@'+name+'.target']+[
@@ -410,8 +488,7 @@ def retire_project(name, archive=False):
 
 def status(name):
     core=load(name)
-    result=subprocess.run(['systemctl','--user','is-active','assistant-connector@'+name+'.target'],env=user_env(),capture_output=True,text=True)
-    print('Project '+name+': '+result.stdout.strip())
+    print('Project '+name+': '+project_summary(name))
     for role in ROLES:
         found=subprocess.run(['podman','inspect','--format','{{.State.Status}}',core.container(role)],capture_output=True,text=True)
         state=found.stdout.strip() if found.returncode==0 else 'not created'

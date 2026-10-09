@@ -185,3 +185,8 @@ or target enablement. Credentials and other native state are preserved.
 
 The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
 from the restored copy when it is a socket; an ordinary file at that path is kept.
+
+Project stop waits for the target, its three dependent services, containers and
+IPC listeners to stop. Project start waits out pending shutdown; restart performs
+a completed stop followed by start. A timeout reports failure rather than
+claiming shutdown completed. Stop preserves unit enablement and project data.

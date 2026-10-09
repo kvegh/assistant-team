@@ -81,3 +81,14 @@ and staging trees; keep the retained archive untouched.
 
 The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
 from the restored copy when it is a socket; an ordinary file at that path is kept.
+
+Project stop requests explicitly include the target and all three dependent
+services and wait for service jobs, native container shutdown and IPC listener
+closure. A target becoming inactive alone is insufficient. Start waits for an
+in-progress shutdown; restart uses completed stop then start rather than a single
+target restart job. Stop preserves configuration, authentication, prompts, stopped
+containers and unit enablement. Runtime status uses the dependent-aware summary.
+
+The focused `project_control` tag installs only the operator control file and
+required account/path facts. It does not render units, reload systemd, restart
+services, rewrite project files or change authentication.

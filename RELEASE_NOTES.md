@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.11
+
+Wait for all four named project units, containers and IPC listeners to stop before
+`team stop` returns. Wait out an existing shutdown before starting, and perform
+restart as completed stop followed by start. Preserve target enablement and project
+state; report dependent-service status instead of only the target state.
+
 ## 0.21.10
 
 Document the listener-label fix, successful disposable enforcing-policy probe,
