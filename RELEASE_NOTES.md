@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.10
+
+Document the listener-label fix, successful disposable enforcing-policy probe,
+and targeted file-only deployment. The running gateway and eight containers
+remain unchanged; activation and actual hook verification await a coordinated
+team stop/start. No installation-layout migration was deployed.
+
 ## 0.21.9
 
 Create gateway listener sockets with the SELinux container socket context so native

@@ -972,3 +972,38 @@ archive digest, enabled-but-stopped target and unchanged other containers; its
 fixtures were cleaned. After the final updater-socket correction, the coordinating
 agent completed the operator's actual restore and verified its enabled target
 and stopped project state. The archive remains retained; no models were started.
+
+## SELinux gateway listener socket identity
+
+Implementation: `9b1fe2a5e8cdd12b298b4b597e99ff843dfe52a9`.
+
+A native startup hook could not connect even though its private socket inode and
+container process had matching MCS mount labels. Sanitized audit metadata showed
+a Unix `connectto` denial against the host gateway listener's kernel socket
+identity. Linux checks that listener identity separately from the filesystem
+inode label; changing file permissions or repeating mount relabeling would not
+resolve the cause.
+
+Use the existing policy's permitted container socket identity only when creating
+each listener. The host process retains its own identity; the thread-local socket
+creation setting is restored immediately before asynchronous or RPC work. Keep
+private mount labels, restrictive permissions, and role token checks. Fail closed
+if context setup/restoration fails. No custom policy, enforcement exception or
+new package is required on the supported host.
+
+An authorized disposable socket probe succeeded from a running container under
+enforcing policy and was removed. Eight focused tests cover ordinary IPC exchange,
+prior-context restoration, failures, resource cleanup and non-SELinux hosts; the
+full 187-test suite and production lint passed. The focused `connector_ipc`
+Ansible deployment installed only the routing file and required path facts.
+Installed-file checksum matched the implementation; the gateway PID and all eight
+running container IDs stayed unchanged.
+
+The installed fix is not yet active in the existing gateway process. Its
+container service depends on the gateway, so an unplanned gateway restart could
+stop native sessions. Coordinate an explicit `team stop NAME`, followed by
+`team start NAME`, with the operator before activating the new listeners.
+Successful live hook authentication remains to be verified after activation.
+
+Technical basis: [Linux SELinux Unix stream connection check](https://github.com/torvalds/linux/blob/master/security/selinux/hooks.c)
+and the [SELinux socket-context API](https://github.com/SELinuxProject/selinux/blob/main/libselinux/include/selinux/selinux.h).
