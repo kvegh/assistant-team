@@ -55,7 +55,7 @@ project directory as `project.NAME.config`. Guides, archives and environment log
 also belong under the installation root. User systemd units and engine-managed
 Podman storage retain their standard locations under the real runtime account.
 
-These layout changes are source-only. Existing deployed environments retain their
+Fresh test deployment of these layout changes is authorized. Existing deployed environments retain their
 old paths and commands until a separately authorized controlled migration or fresh
 deployment. New-layout playbooks refuse legacy artifacts and another installation
 root bound to the same user systemd namespace. See `INSTALLATION_MIGRATION.md`;
@@ -219,7 +219,7 @@ no automatic migration command is claimed or approved by this layout decision.
   feedback to the orchestrator under this updated design.
 - Do not claim absolute concealment: the host operator knows the roles, existing
   sessions/history can retain earlier knowledge, and reviewing this framework's
-  source can reveal its implementation. New role deployment is explicitly held.
+  source can reveal its implementation. Fresh test deployment of the new roles is authorized; the existing environment remains unchanged until separately approved.
 - Connectors are separate private and corporate roles with limited tools; native
   CLI plugins are acceptable, but configuring a role is not proof that its external
   integrations and restrictions are installed and verified.

@@ -41,6 +41,23 @@ operator identities, deployment addresses, credentials or private repository dat
 - Consider developing our own Ansible modules and packaging them as a collection
   when repeated project-specific deployment behavior justifies it.
 
+## Active release acceptance
+
+- [ ] Publish the consolidated 1.0.0 source/tag/release, then run the complete fresh
+  deployment end to end through AAP with the new encrypted destination identity.
+  Preserve the original working environment; retired test resources stay scoped
+  to their exact authorization.
+- [ ] Run selective bootstrap-auth metadata preflight and the explicitly authorized
+  missing-only copy, followed by bounded provider/model checks. Preserve refreshed
+  credentials; never commit any auth material. This transfer is active work,
+  separate from the external-vault design still on hold.
+- [ ] Create and run `project-autotest-1`, verify addressed team replies, shared
+  artifacts, private SUMMARY.md/assessment updates, lifecycle and archive behavior.
+  Investigate and fix scoped failures until acceptance passes; do not claim live
+  success from source tests. Native private-provider legal consent is authorized
+  for this acceptance run; preserve explicit data-use choices and never infer
+  permission to expose credentials or change billing.
+
 ## Priority after bug fixes and blocking features
 
 - [ ] Verify private passive summarizer/observer acceptance on the explicitly
@@ -100,10 +117,9 @@ operator identities, deployment addresses, credentials or private repository dat
   attach as the initial explicit decision path; no blind Enter or timeout approval.
   Structured cross-harness approval transport remains a separate design decision.
 
-- [ ] Resolve the live broker-hook connection failure: SELinux currently denies
-  a container-domain client connecting to the host gateway's unconfined-domain
-  Unix listener. Verify a narrowly scoped existing-policy listener-label solution
-  before any production fix; diagnosis is ongoing, not a completed fix.
+- [ ] Recheck broker-hook connectivity on the fresh deployment. The earlier
+  listener-label failure was addressed in the gateway repair series; verify the
+  current target before describing it as an active failure or claiming acceptance.
 
 - [ ] Agree and implement a consistent verb-only CLI scheme: `team create PROJECT`,
   `team list`, `team start/stop/status/watch PROJECT`, `team attach PROJECT ROLE`,
