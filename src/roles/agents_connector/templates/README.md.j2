@@ -103,7 +103,7 @@ Current command parameters (invoke `team` through the installation's `bin/team`)
 | `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
 | `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
 | `stop-containers PROJECT` | Stop only that project's role containers. |
-| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+| `refresh-observer PROJECT` | Refresh private reader context; observer feedback delivery is disabled. |
 
 Use `--help` for every command, including environment setup and diagnostics.
 The shorter verb-only command scheme is a proposal in TODO, not current behavior.
@@ -160,7 +160,7 @@ metadata, without opening their prompts, databases or credentials. `"$AC_AGENTS_
 profiles instead. Empty or unfinished projects and symlink paths are excluded.
 
 - `{{ assistant_install_root }}/projects/PROJECT/assistant-prompt.md`: project goal and eight editable role sections.
-- `{{ assistant_install_root }}/projects/PROJECT/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
+- `{{ assistant_install_root }}/projects/PROJECT/workspace`: shared artifacts, mounted at `/workspace/shared`; workers and scoped connectors read/write; private readers have no shared mount.
 - `{{ assistant_install_root }}/projects/PROJECT/db.sqlite`: project-local stock broker history.
 - `{{ assistant_install_root }}/projects/PROJECT/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
 
@@ -186,7 +186,7 @@ systemctl --user status assistant-connector@PROJECT.target
 
 ## Private observer
 
-Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `"$AC_AGENTS_ROOT/bin/team" refresh-observer PROJECT` updates its snapshot; `"$AC_AGENTS_ROOT/bin/team" deliver-observer-report PROJECT` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
+Worker-visible broker registration contains only orchestrator, builder, investigator and challenger. Observer and summarizer receive read-only private raw-discussion inputs automatically through the host event listener. Neither has a shared workspace mount or sends messages to the team. Their changed drafts are appended to operator-only ASSESSMENT.log and SUMMARY.md. The legacy report-delivery command refuses to send feedback into team activity.
 
 See `{{ assistant_install_root }}/README.TLDR.md` for condensed commands. Keep both guides current after lasting configuration changes.
 

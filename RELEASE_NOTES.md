@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.2
+
+Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.
+
 ## 0.31.1
 
 Verify complete fresh/portable sandbox and native-provider ordering, resolve Antigravity paths within model-environments, and update model-free deployment checks for private-reader isolation.

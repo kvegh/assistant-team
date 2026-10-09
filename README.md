@@ -421,7 +421,7 @@ participants in that team, not separate projects. `ROLE` selects a participant
 (such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
 
 The selected Agents Connector setup below implements continuously running rootless
-Podman containers with inside-container tmux for the five visible Claude/Codex/Gemini
+Podman containers with inside-container tmux for the four visible Claude/Codex/Gemini
 profiles. Native authenticated sessions require operator login and launch. The
 original foundation launcher remains available for short-lived isolated commands;
 Vibe is not included in the selected connector setup.
@@ -524,7 +524,7 @@ Ansible reruns do not recreate or start the original group. Commands without a
 project name return a helpful error rather than starting shared default containers.
 
 All eight role containers and native sessions belong to the selected project.
-Only five collaboration roles join its worker broker; the observer and private/
+Only four collaboration roles join its worker broker; the observer and private/
 corporate connectors remain separately scoped. Observer snapshots/private report
 delivery remain manual, and external connector tools remain unconfigured.
 The runtime home README starts with a short create/edit/start/attach workflow.
@@ -577,7 +577,7 @@ Current command parameters (invoke `team` through the installation's `bin/team`)
 | `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
 | `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
 | `stop-containers PROJECT` | Stop only that project's role containers. |
-| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+| `refresh-observer PROJECT` | Refresh private reader context; observer feedback delivery is disabled. |
 
 Use `--help` for every command, including environment setup and diagnostics.
 The shorter verb-only command scheme is a proposal in TODO, not current behavior.
@@ -651,7 +651,7 @@ The user target `assistant-connector@PROJECT.target` orders that project's broke
 gateway and native container services. Project targets are not enabled at boot.
 Stop/restart affect only that project and preserve its database and role state;
 restart launches new CLI sessions, without claiming automatic conversation resume.
-Only five collaboration roles join its broker; the observer and connector roles
+Only four collaboration roles join its broker; the observer and connector roles
 remain separately scoped. Observer snapshots/private report delivery remain manual,
 and external connector tools and automated orchestration remain unconfigured.
 Every user-facing lifecycle/viewer/attach command requires a project name.
@@ -679,7 +679,7 @@ authenticated profiles. Work projects require the chosen backend to be ready.
 ### Shared project artifact workspace
 
 Every project has `~/ac-agents/projects/PROJECT/workspace`, mounted at `/workspace/shared`.
-All seven working roles can read/write shared artifacts; the observer can only
+Team workers and scoped connectors can read/write shared artifacts; private readers do not
 read them. Their native homes, credentials and role instruction files remain
 separate. The full prompt file and private connector contexts are not shared.
 Only explicitly authorized project results may be published from connector roles.
