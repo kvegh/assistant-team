@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.21.0
+
+Add `team rename-project OLD NEW`. Stop and forget only the old project,
+rename its directory and config, and regenerate structured/generated identity
+without changing editable prompts, artifacts, conversation history or auth.
+Preserve target enablement while leaving the renamed team stopped. Refuse
+conflicts before shutdown and roll back partial filesystem/render/enable failures.
+Document safe lifecycle use and record readable/JSON rename outcomes.
+
 ## 0.20.1
 
 - Record retained-archive restoration behavior, runtime identity decisions and validation references.

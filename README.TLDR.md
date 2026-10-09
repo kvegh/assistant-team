@@ -59,3 +59,5 @@ remain independent. Deployment preserves operator edits and migrates the old hom
 template without overwriting an existing destination. Conflicting paths require operator review.
 
 `~/team unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
+
+`~/team rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `~/team start NEW`. Never run same-project lifecycle commands concurrently.

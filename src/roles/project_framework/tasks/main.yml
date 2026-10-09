@@ -50,6 +50,13 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
+- name: Install transactional project identity rename helper
+  ansible.builtin.copy:
+    src: project-rename.py
+    dest: "{{ __project_framework_home }}/agents-connector/routing/project-rename.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
 - name: Install strict non-secret environment and assignment configuration
   tags: [native_auth]
   ansible.builtin.copy:

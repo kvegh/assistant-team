@@ -7,7 +7,7 @@ PROJECTS = ACCOUNT_HOME/'projects'
 ROLES = ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']
 PROJECT_ACTIONS = ['create-project','start','stop','restart','status','watch','attach','launch',
                    'apply-prompts','refresh-observer','deliver-observer-report','preflight',
-                   'launch-all','stop-containers','destroy','archive','unarchive']
+                   'launch-all','stop-containers','destroy','archive','unarchive','rename-project']
 GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup','diagnostics']
 HELP = '''Usage: ~/team COMMAND [PARAMETERS]
 
@@ -26,6 +26,7 @@ Projects:
   destroy NAME                       Stop if running, remove its containers, then delete project/config.
   archive NAME                       Stop if running and retain full content/config; always use NAME-ddmmyyhhmm.
   unarchive ARCHIVE                  Copy retained archive to its dated project name; enable target, leave stopped.
+  rename-project OLD NEW             Stop OLD, rename identity/config; preserve enablement, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show this project's target and role/container states.
   watch NAME                         Follow messages; Ctrl-C stops only the viewer.
@@ -442,6 +443,11 @@ def main():
     if sys.argv[1:2]==['diagnostics']:
         if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use ~/team diagnostics --export PATH')
         diagnostics().export(ACCOUNT_HOME,sys.argv[3]);return
+    if action=='rename-project':
+        if len(sys.argv)!=4:raise ValueError('Use ~/team rename-project OLD NEW')
+        spec=importlib.util.spec_from_file_location('project_rename',INSTALL/'routing/project-rename.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module.rename_project(sys.modules[__name__],sys.argv[2],sys.argv[3]);return
     p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
     if a.action in ['destroy','archive','unarchive'] and a.role:p.error(a.action+' takes exactly NAME')
     if a.action=='create-project':create(a.project);return

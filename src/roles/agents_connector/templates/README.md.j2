@@ -160,3 +160,15 @@ the actual Unix socket path limit; use a shorter project base before archiving i
 needed. No model calls or automatic service startup occur during restoration.
 
 Before archiving a restored dated project again, use `rename-project` to choose a new logical name: the retained archive already has its exact current name.
+
+`~/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
+containers and forgets its old named systemd instances, then renames the project
+directory and home assignment config. It updates structured project identity and
+generated role instructions, preserving editable prompts, workspace artifacts,
+conversation history and native authentication. The new target preserves OLD's
+enablement and remains stopped; start it explicitly with `~/team start NEW`.
+Existing new paths/configs, containers, loaded instances or excessive Unix socket
+path lengths refuse the operation before shutdown. Partial rename failures roll
+back directories, config and generated instructions where possible; an incomplete
+rollback reports retained paths rather than overwriting them. Do not run lifecycle
+commands or edit the same project's config concurrently.

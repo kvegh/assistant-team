@@ -436,12 +436,12 @@ def watch():
                 msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
 
 def main():
-    if sys.argv[1:2] in [['destroy'],['archive'],['unarchive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
+    if sys.argv[1:2] in [['rename-project'],['destroy'],['archive'],['unarchive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if not PROJECT:
         project_actions=['create-project','start','stop','restart','status','watch','attach','launch',
                          'apply-prompts','refresh-observer','deliver-observer-report','preflight',
-                         'launch-all','stop-containers','destroy','archive','unarchive']
+                         'launch-all','stop-containers','destroy','archive','unarchive','rename-project']
         if len(sys.argv)==2 and sys.argv[1] in project_actions:
             raise SystemExit('A project name is required for '+sys.argv[1]+'. Use ~/team --help for parameters')
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])

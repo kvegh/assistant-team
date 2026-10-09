@@ -58,3 +58,15 @@ rather than silently becoming `stopped`. `running` is target state, not native
 pane health or provider entitlement; listing never activates services.
 
 The installed unarchive helper copies retained archives transactionally and uses the shared identity helper to update structured config and generated role instructions. Shared name validation checks real Unix socket path lengths before restoration.
+
+`~/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
+containers and forgets its old named systemd instances, then renames the project
+directory and home assignment config. It updates structured project identity and
+generated role instructions, preserving editable prompts, workspace artifacts,
+conversation history and native authentication. The new target preserves OLD's
+enablement and remains stopped; start it explicitly with `~/team start NEW`.
+Existing new paths/configs, containers, loaded instances or excessive Unix socket
+path lengths refuse the operation before shutdown. Partial rename failures roll
+back directories, config and generated instructions where possible; an incomplete
+rollback reports retained paths rather than overwriting them. Do not run lifecycle
+commands or edit the same project's config concurrently.
