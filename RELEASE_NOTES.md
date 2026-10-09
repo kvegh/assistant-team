@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.7
+
+Omit the exact Codex daemon updater socket from restored copies after checking
+its socket type. Preserve ordinary files and other native state, and exercise
+all observed generated links plus a real Unix socket in restore regressions.
+
 ## 0.21.6
 
 Keep the named systemd target separate from the rewritten Codex cache-link target

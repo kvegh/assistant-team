@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import socket
 import subprocess
 import tempfile
 import types
@@ -49,9 +50,11 @@ class UnarchiveTests(unittest.TestCase):
         enabled={'value':False}
         def run(args,**kwargs):
             if 'enable' in args:
-                self.assertEqual(args[-1],'assistant-connector@'+self.name+'.target')
+                self.assertEqual(args[-1],'assistant-connector@sample-0910260800.target')
                 enabled['value']=True
-            if 'disable' in args:enabled['value']=False
+            if 'disable' in args:
+                self.assertEqual(args[-1],'assistant-connector@sample-0910260800.target')
+                enabled['value']=False
             if 'is-enabled' in args:return subprocess.CompletedProcess(args,0 if enabled['value'] else 1,'enabled\n' if enabled['value'] else 'disabled\n','')
             return subprocess.CompletedProcess(args,0,'','')
         self.run=run
@@ -120,8 +123,18 @@ class UnarchiveTests(unittest.TestCase):
         release=cache/'releases/fixture-release';release.mkdir(parents=True)
         (release/'real-codex').write_text('fixture executable');(release/'codex').symlink_to('real-codex')
         (cache/'current').symlink_to('/home/agent/.codex/packages/app-server-daemon/releases/fixture-release')
-        arg0=home/'.codex/tmp/arg0';arg0.mkdir(parents=True);(arg0/'apply_patch').symlink_to('/container-only/tool')
+        arg0=home/'.codex/tmp/arg0';arg0.mkdir(parents=True)
+        for index in range(4):
+            launch=arg0/('codex-arg0-fixture'+str(index));launch.mkdir()
+            for tool in ['apply_patch','applypatch','codex-linux-sandbox','codex-execve-wrapper']:
+                (launch/tool).symlink_to('/container-only/'+tool)
         control=home/'.codex/app-server-control';control.mkdir();(control/'control.sock').symlink_to('/container-only/socket')
+        daemon=home/'.codex/app-server-daemon';daemon.mkdir()
+        listener=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);self.addCleanup(listener.close)
+        cwd=os.getcwd()
+        try:
+            os.chdir(daemon);listener.bind('daemon-updater.sock')
+        finally:os.chdir(cwd)
         before={str(p.relative_to(self.archive)):os.readlink(p) for p in self.archive.rglob('*') if p.is_symlink()}
         name,_=self.restore();restored=self.home/'projects'/name/home.relative_to(self.archive)
         current=restored/'.codex/packages/app-server-daemon/current'
@@ -129,7 +142,15 @@ class UnarchiveTests(unittest.TestCase):
         self.assertTrue(current.resolve().is_relative_to(restored))
         self.assertEqual((current/'codex').read_text(),'fixture executable')
         self.assertFalse((restored/'.codex/tmp/arg0').exists());self.assertFalse((restored/'.codex/app-server-control').exists())
+        self.assertFalse((restored/'.codex/app-server-daemon/daemon-updater.sock').exists())
         self.assertEqual(before,{str(p.relative_to(self.archive)):os.readlink(p) for p in self.archive.rglob('*') if p.is_symlink()})
+
+    def test_ordinary_file_at_codex_updater_path_is_preserved(self):
+        profile=self.archive/'profiles/builder';(profile/'profile.json').write_text('{"flavour":"codex"}')
+        file=profile/'accounts/codex-priv/home/.codex/app-server-daemon/daemon-updater.sock'
+        file.parent.mkdir(parents=True);file.write_text('ordinary user file')
+        name,_=self.restore()
+        self.assertEqual((self.home/'projects'/name/file.relative_to(self.archive)).read_text(),'ordinary user file')
 
     def test_codex_current_cannot_map_to_credentials_or_other_homes(self):
         profile=self.archive/'profiles/builder';(profile/'profile.json').write_text('{"flavour":"codex"}')
@@ -139,6 +160,25 @@ class UnarchiveTests(unittest.TestCase):
         with patch.object(self.helper.subprocess,'run') as run:
             with self.assertRaisesRegex(ValueError,'own retained release cache'):self.helper.restore(self.framework,self.name)
         run.assert_not_called();self.assertFalse((self.home/'projects').exists())
+
+    def test_codex_current_enable_failure_rolls_back_only_exact_named_target(self):
+        profile=self.archive/'profiles/builder';(profile/'profile.json').write_text('{"flavour":"codex"}')
+        cache=profile/'accounts/codex-priv/home/.codex/packages/app-server-daemon'
+        release=cache/'releases/fixture';release.mkdir(parents=True)
+        (cache/'current').symlink_to('/home/agent/.codex/packages/app-server-daemon/releases/fixture')
+        commands=[];target='assistant-connector@sample-0910260800.target'
+        def command(args,**kwargs):
+            commands.append(args)
+            if 'enable' in args:
+                self.assertEqual(args[-1],target)
+                raise subprocess.CalledProcessError(1,args)
+            return self.run(args,**kwargs)
+        with patch.object(self.helper.subprocess,'run',side_effect=command):
+            with self.assertRaises(subprocess.CalledProcessError):self.helper.restore(self.framework,self.name)
+        self.assertIn(['systemctl','--user','disable',target],commands)
+        self.assertEqual(os.readlink(cache/'current'),'/home/agent/.codex/packages/app-server-daemon/releases/fixture')
+        self.assertFalse((self.home/'projects'/self.name).exists())
+        self.assertFalse(self.home.joinpath('projects.'+self.name+'.config').exists())
 
     def test_enable_failure_rolls_back_new_files_and_keeps_archive(self):
         commands=[]

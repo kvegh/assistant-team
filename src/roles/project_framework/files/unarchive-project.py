@@ -46,6 +46,8 @@ def native_codex_cache_plan(framework,archive):
             if not home.exists():continue
             if home.is_symlink():raise ValueError('Archived native home must not be symlinked')
             ephemeral.update([home/'.codex/tmp/arg0',home/'.codex/app-server-control'])
+            updater=home/'.codex/app-server-daemon/daemon-updater.sock'
+            if updater.exists() and stat.S_ISSOCK(updater.lstat().st_mode):ephemeral.add(updater)
             current=home/'.codex/packages/app-server-daemon/current'
             if not current.is_symlink():continue
             target=os.readlink(current)

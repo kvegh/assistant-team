@@ -78,3 +78,6 @@ copy; its release-cache `current` pointer can map from `/home/agent` to a relati
 link within its own retained release directory. Arbitrary absolute/external,
 dangling, cyclic and special-file links remain rejected. Validate both source
 and staging trees; keep the retained archive untouched.
+
+The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
+from the restored copy when it is a socket; an ordinary file at that path is kept.

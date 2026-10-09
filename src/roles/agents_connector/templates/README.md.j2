@@ -182,3 +182,6 @@ archive remains unchanged. An exact daemon `current` pointer under `/home/agent`
 is rewritten to a relative link only when it maps to the same native home's
 retained release-cache directory. The staging tree is checked before publication
 or target enablement. Credentials and other native state are preserved.
+
+The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
+from the restored copy when it is a socket; an ordinary file at that path is kept.
