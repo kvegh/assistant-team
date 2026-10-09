@@ -52,6 +52,8 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
+    setype: container_file_t
+    selevel: s0
 - name: Verify the upstream executable
   become: true
   become_user: "{{ containers.runtime_user }}"

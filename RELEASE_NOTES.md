@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.21.24
+
+Preserve the shared container-readable SELinux label when installing the Gemini
+MCP adapter into an already mounted connector directory.
+
 ## 0.21.23
 
 Document successful old-layout adapter/configuration deployment and installed

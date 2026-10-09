@@ -870,3 +870,8 @@ These steps are separate from provider authentication; saved credentials and
 login status do not prove actual provider requests succeed. Once the roles reach
 their normal prompts, attach the orchestrator to give the project task. Manual
 onboarding does not change the team's tool-approval policy.
+
+The Gemini MCP result adapter uses the shared `container_file_t:s0` file label
+so focused updates work in existing read-only container mounts. Gemini reloads
+MCP clients from its cached startup configuration: after changing the MCP command,
+resume its saved native session before checking the new connection.
