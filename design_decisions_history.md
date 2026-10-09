@@ -1375,3 +1375,19 @@ regression (14 transfer tests total), and production Ansible lint with zero
 findings across 176 files. These were synthetic/local checks, not proof of live
 provider entitlement. Actual transfer and bounded access checks remain pending
 the successful fresh AAP deployment and are not claimed as completed.
+
+## Preserve native JSON across Ansible transport
+
+Fix: `ffd661e`.
+
+A disposable local Ansible acceptance test found that native templating could
+convert captured JSON text into a mapping before passing command stdin. Explicit
+JSON deserialization/serialization keeps the restore helper's supported transport
+format and avoids relying on implicit conversion. Errors report only fixed helper
+diagnostic codes; neither native payloads nor raw exception details are exposed.
+
+Actual model-free Ansible role execution passed metadata-only preflight (six
+profiles present), missing-only restore (six restored) and an idempotent rerun
+(six existing profiles skipped), with temporary helper directories removed. All
+15 focused transfer tests and production lint for the role/playbook passed. These
+checks used synthetic credentials and did not copy or read real authentication.

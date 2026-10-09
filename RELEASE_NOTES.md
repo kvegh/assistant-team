@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.32.3
+
+Document successful synthetic Ansible transport acceptance and the JSON
+serialization correction, preserving protected bootstrap-only transfer scope.
+
 ## 0.32.2
 
 Preserve JSON text across Ansible native templating and protected restore stdin.
