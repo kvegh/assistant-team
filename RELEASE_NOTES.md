@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.4
+
+Document exact retirement authorization and fresh guest discovery.
+
 ## 0.31.3
 
 Require exact encrypted authorization for disposable clone retirement and prepare
