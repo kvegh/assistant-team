@@ -54,7 +54,10 @@ Background execution does not waive validation, outcome monitoring, security rul
 or required approvals.
 
 Use automatic subagent completion notifications rather than fixed-interval polling.
-Check their status only for a blocker, missing notification or task-specific need.
+Every ten minutes during active work, check unfinished subagents for stalled,
+blocked or deferred work and a need to resume. Preserve explicit holds and never
+restart completed work. Share meaningful results and blockers promptly; user
+status requests and task-specific needs can warrant additional checks.
 External jobs without notifications still require appropriately spaced checks and
 verified outcomes; elapsed waiting time is not evidence of completion.
 

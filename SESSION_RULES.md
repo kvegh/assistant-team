@@ -35,8 +35,11 @@ material uncertainty rather than inventing history.
   terms, security bypasses, or destructive actions outside the authorized scope.
   Missing tools require installation permission unless already authorized.
 - Inspect asynchronous outcomes through completion. Rely on automatic subagent
-  completion notifications rather than fixed-interval polling; check status only
-  when a blocker, missing notification or task-specific need warrants it. External
+  completion notifications rather than fixed 20-second polling. Every ten minutes
+  during active work, check unfinished agents for stalls, blockers, deferrals or
+  a need to resume; preserve explicit holds and completed work. Share meaningful
+  results promptly, and check additionally for user status requests or task-specific
+  needs. External
   jobs without notifications still require appropriately spaced outcome checks.
   Give meaningful progress updates and respect explicit stop or pause instructions.
 

@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.22.12
+
+Document ten-minute health checks for unfinished background agents alongside
+immediate completion notifications; preserve explicit holds and completed work.
+
 ## 0.22.11
 
 Document the background-monitoring rule change and its implementation reference.
