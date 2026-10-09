@@ -875,3 +875,8 @@ The Gemini MCP result adapter uses the shared `container_file_t:s0` file label
 so focused updates work in existing read-only container mounts. Gemini reloads
 MCP clients from its cached startup configuration: after changing the MCP command,
 resume its saved native session before checking the new connection.
+
+Installed acceptance confirmed the native Gemini session can read its inbox, list
+participants and reply to its original readiness ask through the adapter. This
+followed a controlled saved-session resume and one-time approvals for those exact
+broker tools; it does not establish automatic wake-up or unattended permissions.

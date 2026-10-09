@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.25
+
+Document successful native Gemini inbox, roster and original rollcall reply after
+a saved-session resume and the adapter-label correction. Automatic wake-up remains
+a separate verification boundary.
+
 ## 0.21.24
 
 Preserve the shared container-readable SELinux label when installing the Gemini

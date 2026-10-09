@@ -1170,3 +1170,19 @@ not yet verified. This limitation is explicit rather than treating deployment as
 proof of end-to-end completion. The source-only installation-layout branch remains
 separate and was not deployed. Validation: all 211 local tests passed and production
 Ansible lint reported zero failures/warnings across 148 files.
+
+## Preserve Gemini adapter access during focused live updates
+
+Implementation: `4a8fc99`.
+
+The newly copied adapter initially retained a home-file SELinux type, so an already
+running container could not read it. The exact adapter file now uses the same
+shared container-readable type as the mounted stock executable; no authentication
+directory is relabeled and SELinux enforcement remains unchanged.
+
+The focused Ansible deployment succeeded. The preserved native Gemini conversation
+was resumed with its existing model, then successfully read messages and the
+roster and posted a reply to its original readiness ask. Broker metadata confirmed
+the recipient authored that correlated reply. One-time approvals covered only
+those exact tools. This proves native protocol compatibility after manual recovery,
+not automatic wake-up, which requires separate verification.
