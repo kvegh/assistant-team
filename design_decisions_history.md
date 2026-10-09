@@ -1,5 +1,18 @@
 # Design decisions history
 
+## Continue the current communication route while evaluating alternatives
+
+Documentation: `dad244c`.
+
+The user explicitly retained agents-connector with tmux as the active development
+route and requested a pending review and decision covering the current design,
+acpx with a replacement coordinator, and their combination. TODO contains the
+comparison, limitations and recommendation: verify the existing route first and,
+if reliability remains inadequate, trial structured delivery with the existing
+broker before deciding on migration. This records a review plan, not acceptance
+of ACP/acpx or a replacement architecture. No runtime changes or new deployment
+automation are introduced by the documentation.
+
 ## Initial project setup
 
 Implementation: `83589382dd6311e87564bdcf5529cf511fca7849`.

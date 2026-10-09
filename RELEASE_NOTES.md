@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.22.7
+
+Document the communication-review commit and the decision to continue current
+tmux development while alternatives await evaluation and an explicit decision.
+
 ## 0.22.6
 
 Document the pending communication architecture review, comparison and recommendation.
