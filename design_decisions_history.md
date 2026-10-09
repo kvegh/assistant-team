@@ -1495,3 +1495,11 @@ outcomes. This aligns with the separately documented source-layout session rule.
 Implementation `a3d4f07` combines the approved prefix layout with the latest runtime fixes. Implementation `eded349` integrates private event-driven readers, the operator-only SUMMARY.md, and the dedicated Codex sandbox role in complete and portable deployment. This provides one current fresh-install configuration while preserving existing environments until their separate migration is approved. The authentication vault, model selection and general permission automation remain on hold. Unit checks cover the merged runtime paths and private-reader boundaries; deployed native acceptance remains a separate verification.
 
 Implementation `7656f7d` aligns native provider verification and disposable deployment checks with the prefix layout and private-reader isolation. This avoids deploying a passing unit-tested source tree with an obsolete shared-observer acceptance check. The existing development VM is not changed by these integrated fresh-install commits.
+
+## Exact disposable-clone retirement and fresh replacement
+
+The encrypted retirement definition now binds its selected name to an explicit
+authorized name; other clones, the original environment and source image remain
+protected. A fresh replacement clears the previous recovery address so provisioning
+discovers only the new guest. Implementation: `4a67ef7`. Four focused retirement
+safety tests passed.

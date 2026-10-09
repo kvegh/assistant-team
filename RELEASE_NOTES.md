@@ -1,5 +1,22 @@
 # Release notes
 
+## 0.31.6
+
+Avoid unnecessary whole-disk hashing during retirement metadata safety checks.
+
+## 0.31.5
+
+Document the exact authorized clone retirement role interface.
+
+## 0.31.4
+
+Document exact retirement authorization and fresh guest discovery.
+
+## 0.31.3
+
+Require exact encrypted authorization for disposable clone retirement and prepare
+a new fresh clone without stale recovery addressing.
+
 ## 0.31.2
 
 Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.

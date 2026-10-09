@@ -114,3 +114,8 @@ replies once each. Follow subscribes before taking its history snapshot and skip
 queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
+
+Test-clone retirement now requires an exact authorized name in the encrypted
+retirement definition, in addition to exclusive disk ownership and preservation
+checks. Fresh deployment clears recovery addressing and discovers the new clone
+by its own MAC address; it never reuses the retired guest as a recovery target.

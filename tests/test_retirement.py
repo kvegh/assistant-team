@@ -14,6 +14,7 @@ class RetirementSafetyTests(unittest.TestCase):
         variables = {
             "linux_vm_retire_definition": {
                 "vm_name": name,
+                "retire_authorized_vm_name": "example-3",
                 "vm_dir": "/example/vms",
                 "golden_image_path": "/example/golden.qcow2",
             },
@@ -38,8 +39,11 @@ class RetirementSafetyTests(unittest.TestCase):
     def test_original_clone_cannot_be_retired(self):
         self.assert_rejected("example-1")
 
+    def test_other_test_clone_cannot_be_retired(self):
+        self.assert_rejected("example-4")
+
     def test_source_image_cannot_be_removed(self):
-        self.assert_rejected("example-2", disk="/example/golden.qcow2")
+        self.assert_rejected("example-3", disk="/example/golden.qcow2")
 
     def test_check_mode_cannot_bypass_live_preflight(self):
-        self.assert_rejected("example-2", check=True)
+        self.assert_rejected("example-3", check=True)
