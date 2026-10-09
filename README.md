@@ -818,3 +818,10 @@ interactive npm update attempt inside a read-only container. Existing operator
 TOML is preserved, and the command override applies without rewriting it. Native
 host wrappers use the same policy to preserve their managed installation version.
 See the [official Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+Authentication troubleshooting: saved credentials or a successful `codex login
+status` do not prove the provider accepts a session's actual requests. A sign-in
+screen or HTTP 401 needs operator authentication/access investigation; re-login
+may be necessary, and controls must not be bypassed. Native first-run onboarding
+(such as theme or workspace trust) is separate from provider login and from tool
+approvals. Inspect the affected tmux pane locally without exposing credentials.

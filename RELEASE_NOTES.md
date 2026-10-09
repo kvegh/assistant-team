@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.14
+
+Document the managed Codex update policy and its regression results. Clarify that
+saved credentials or login status do not prove provider requests succeed; a 401
+needs authentication/access investigation. Changes remain source-only pending
+coordinated deployment.
+
 ## 0.21.13
 
 Disable Codex startup update checks in newly generated role configs and managed

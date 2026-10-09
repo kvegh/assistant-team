@@ -1035,3 +1035,31 @@ implementation, fixture files were removed, and existing running container IDs
 stayed unchanged. Only the control file and path facts were installed; no live
 team was stopped, no provider was invoked and no installation-layout migration
 was deployed.
+
+## Keep Codex updates under deployment control
+
+Implementation: `82ba8a6`.
+
+A Codex startup update prompt attempted a global npm update inside a read-only
+container and exited on the resulting filesystem error. Disable the documented
+`check_for_update_on_startup` option for centrally managed installations rather
+than granting installation writes to running agents. Fresh role configs include
+the top-level setting; launch arguments enforce it while preserving existing
+operator TOML byte-for-byte. The managed native host wrapper uses the same option
+so its pinned installation metadata remains consistent. Version updates continue
+through Ansible and image rebuilds. Sandbox, approval, MCP and authentication
+settings are unchanged.
+
+Three focused regressions check parsed top-level TOML, preservation of existing
+configs and effective container launch arguments with existing security flags.
+Native wrapper tests check the update override alongside device authentication
+and the credential-file store. The full 200-test suite and production lint passed.
+These changes are source-only pending coordinated deployment; no native session
+was launched or altered by this work.
+
+A separate provider sign-in/401 issue is not solved by this update setting. Saved
+credentials and login-status output describe local state, not acceptance of an
+actual provider request. Keep operator login and native first-run onboarding
+distinct from tool-approval design, and do not bypass access controls.
+
+Technical basis: [official Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
