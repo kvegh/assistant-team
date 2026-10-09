@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.17
+
+Document the exact Gemini 3.1 Pro Vertex model ID and per-role manual first-run
+onboarding. Distinguish saved authentication from provider/model access and keep
+workspace/hook trust separate from tool-approval policy. Updated runtime guide
+templates reproduce these instructions without storing provider credentials.
+
 ## 0.21.16
 
 Document the verified container-only Codex direct-session choice and its

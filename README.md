@@ -831,3 +831,20 @@ lifecycle and does not need a shared background server. This supported CLI mode
 was verified during native startup troubleshooting. It does not replace login,
 hook trust, sandbox or approval checks. Host native wrappers retain their normal
 daemon behavior.
+
+For Gemini work on Vertex, enter the exact provider model ID. The current
+Gemini 3.1 Pro identifier is `gemini-3.1-pro-preview`, including the suffix;
+`gemini-3.1-pro` is not the published identifier. Confirm model availability for
+your project/location in the [official Google model reference](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-pro).
+The login prompt checks identifier format, not remote model access. Keep the
+selected ID in the local work profile's `.vertex.json`; work role launches copy
+that configuration into the selected role home. Provider authentication files
+remain outside Git.
+
+Before handing over the first project task, attach each role with
+`~/team attach NAME ROLE` and finish its native first-run screens. Review theme,
+workspace trust, hook trust or requested tool permissions in that role's CLI.
+These steps are separate from provider authentication; saved credentials and
+login status do not prove actual provider requests succeed. Once the roles reach
+their normal prompts, attach the orchestrator to give the project task. Manual
+onboarding does not change the team's tool-approval policy.

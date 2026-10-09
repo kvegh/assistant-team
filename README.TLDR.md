@@ -61,3 +61,7 @@ template without overwriting an existing destination. Conflicting paths require 
 `~/team unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
 
 `~/team rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `~/team start NEW`. Never run same-project lifecycle commands concurrently.
+
+First run: attach each role, finish native onboarding, then give the task to the
+orchestrator. Gemini work uses exact Vertex model IDs (for Gemini 3.1 Pro:
+`gemini-3.1-pro-preview`); saved login does not verify model access.
