@@ -1,44 +1,25 @@
 # Release notes
 
-## 0.31.6
+## 1.0.0
 
-Avoid unnecessary whole-disk hashing during retirement metadata safety checks.
+Consolidate the current deployment and agent-team features into one release:
 
-## 0.31.5
+- Reproducible RHEL VM setup through Ansible/AAP, full updates, root filesystem growth, certified Podman configuration and guarded disposable-VM retirement.
+- One PREFIX/ac-agents environment with dedicated commands, configuration/templates, native model profiles, projects, archives and metadata logs.
+- Native Claude, Codex and Gemini team sessions with work/private profile separation; standalone Mistral support and Antigravity personal Gemini integration remain subject to provider access and native onboarding.
+- Per-project SQLite communication, addressed handoffs, shared workspaces, colored historical/live watch output and model/profile status.
+- Private event-driven summarizer/observer, excluded from team participation, with growing operator-only SUMMARY.md and assessment output.
+- Project creation, start/stop/restart, archive/unarchive and rename, preserving independent project state and retained archives.
+- Dedicated constrained Codex SELinux sandbox, current MCP/provider compatibility fixes and secret-free deployment diagnostics.
+- Explicit selective bootstrap-auth transfer through protected Ansible transport, metadata-only preflight, missing-only restoration and a file/field manifest for a future external vault. Model credentials never enter Git, including encrypted Git files.
+- A review-only backlog of thirteen older-snapshot findings; no automatic implementation of those claims.
 
-Document the exact authorized clone retirement role interface.
-
-## 0.31.4
-
-Document exact retirement authorization and fresh guest discovery.
-
-## 0.31.3
-
-Require exact encrypted authorization for disposable clone retirement and prepare
-a new fresh clone without stale recovery addressing.
-## 0.31.4
-
-Document the team-review backlog decision and its implementation commit without changing runtime behavior.
-
-## 0.31.3
-
-Document thirteen team-review items for reassessment against current source, distinguish already changed designs from unresolved claims, and retain rejected findings outside the active defect list. No fixes or runtime changes are included.
-
-## 0.31.2
-
-Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.
-
-## 0.31.1
-
-Verify complete fresh/portable sandbox and native-provider ordering, resolve Antigravity paths within model-environments, and update model-free deployment checks for private-reader isolation.
-
-## 0.31.0
-
-Integrate private event-driven summarizer and observer with the fresh installation layout. The four participating roles remain visible; private readers use raw communication and append operator-only SUMMARY.md and ASSESSMENT.log. Preserve current Codex sandbox protection, native provider adapters, model status and flexible colored watch commands. Fresh and portable deployment now install the dedicated Codex sandbox domain. Existing environments are not automatically migrated.
-
-## 0.30.0
-
-Integrate the approved PREFIX/ac-agents installation layout with the current runtime fixes. Projects keep their own config, native profiles stay under model-environments, and shared configuration/templates and commands have dedicated directories.
+This consolidates parallel development snapshots; matching earlier numbers below
+can describe separate branch changes rather than separate published releases.
+Source tests and lint are checked before publication. Fresh AAP deployment,
+credential transfer, bounded model checks and native team/archive acceptance are
+follow-up verification; this release does not claim those live checks have passed.
+Existing environments require separately authorized migration.
 
 ## 0.32.3
 
@@ -63,6 +44,43 @@ Add selective bootstrap authentication transfer through a dedicated Ansible/AAP
 playbook. Preflight enabled profiles, preserve existing target credentials, enforce
 provider/file allowlists and publish a secret-free future-vault material manifest.
 Actual transfer and bounded access checks wait for fresh deployment readiness.
+
+## 0.31.6
+
+Avoid unnecessary whole-disk hashing during retirement metadata safety checks.
+
+## 0.31.5
+
+Document the exact authorized clone retirement role interface.
+
+## 0.31.4
+
+Document exact retirement authorization and fresh guest discovery.
+
+Document the team-review backlog decision and its implementation commit without changing runtime behavior.
+
+## 0.31.3
+
+Require exact encrypted authorization for disposable clone retirement and prepare
+a new fresh clone without stale recovery addressing.
+
+Document thirteen team-review items for reassessment against current source, distinguish already changed designs from unresolved claims, and retain rejected findings outside the active defect list. No fixes or runtime changes are included.
+
+## 0.31.2
+
+Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.
+
+## 0.31.1
+
+Verify complete fresh/portable sandbox and native-provider ordering, resolve Antigravity paths within model-environments, and update model-free deployment checks for private-reader isolation.
+
+## 0.31.0
+
+Integrate private event-driven summarizer and observer with the fresh installation layout. The four participating roles remain visible; private readers use raw communication and append operator-only SUMMARY.md and ASSESSMENT.log. Preserve current Codex sandbox protection, native provider adapters, model status and flexible colored watch commands. Fresh and portable deployment now install the dedicated Codex sandbox domain. Existing environments are not automatically migrated.
+
+## 0.30.0
+
+Integrate the approved PREFIX/ac-agents installation layout with the current runtime fixes. Projects keep their own config, native profiles stay under model-environments, and shared configuration/templates and commands have dedicated directories.
 
 ## 0.28.3
 
@@ -163,6 +181,88 @@ Add native personal Antigravity team support for the challenger, using the exist
 scoped MCP broker and tmux architecture. Preserve private role refresh state, keep
 work credentials separate, and verify native container dependencies without auth
 or inference. Installed model and wake acceptance follows deployment.
+
+## 0.22.13
+
+Document the background health-check decision and its implementation commit.
+
+## 0.22.12
+
+Document ten-minute health checks for unfinished background agents alongside
+immediate completion notifications; preserve explicit holds and completed work.
+
+## 0.22.11
+
+Document the background-monitoring rule change and its implementation reference.
+
+## 0.22.10
+
+Document notification-driven background monitoring; remove the fixed 20-second
+subagent polling rule while retaining outcome verification for external jobs.
+
+## 0.22.9
+
+Document the model-selection hold commit and the user's retained priority.
+
+## 0.22.8
+
+Document that task-specific model selection for cost and quality is on hold,
+while retaining its priority when work resumes.
+
+## 0.22.7
+
+Document the communication-review commit and the decision to continue current
+tmux development while alternatives await evaluation and an explicit decision.
+
+## 0.22.6
+
+Document the pending communication architecture review, comparison and recommendation.
+Continue the current tmux route; ACP/acpx migration remains undecided and no runtime
+configuration changes are made by this documentation update.
+
+## 0.22.5
+
+Document the permission proposal commit and its implementation hold while native
+introductions are completed. Runtime approvals and the current environment stay
+unchanged.
+
+## 0.22.4
+
+Document scoped permission policy generation, meaningful native readiness states
+and private approval notifications as the next startup/communication work. Clarify
+supported harness capabilities and current transport gaps; no permission automation,
+trust acceptance, model invocation or deployment is implemented by this proposal.
+
+## 0.22.3
+
+Document the model-authentication replication plan, exact credential-file manifest
+and existing implementation references. Mark vault implementation on hold; no
+credentials are exported and no runtime configuration changes.
+
+## 0.22.2
+
+Document that each project owns one team and its roles are participants; clarify
+current project/role/archive parameters in source and generated operator guides.
+Add a proposed verb-only CLI transition and the unresolved live broker-hook blocker
+to TODO. Existing commands and the current environment remain unchanged.
+
+## 0.22.1
+
+Document the canonical installation-layout implementation and its local verification.
+Fresh-install support is source-only; existing-environment deployment and executable
+controlled migration remain pending explicit work.
+
+## 0.22.0
+
+Add a canonical `PREFIX/ac-agents` installation root with destination-home default,
+scoped model environments, project-local configuration, installation-local tools
+and central path helpers. Rebase lifecycle and auth helpers, user units and
+Ansible roles; refuse legacy or conflicting installations before creating overlap.
+Keep standard systemd and Podman storage locations. Document controlled migration
+prerequisites; this source-only release is not deployed to the existing environment.
+
+Validation: all 191 local tests passed; production Ansible lint reported zero
+failures or warnings. No model calls, credential migration or target deployment ran.
 
 ## 0.21.27
 
@@ -287,87 +387,6 @@ context immediately, keep private mount labels and role authorization, and fail
 closed on labeling errors. No new SELinux policy or enforcement exception is used.
 The live model-free socket probe passed; activation is coordinated separately
 because restarting the gateway can stop dependent containers.
-## 0.22.13
-
-Document the background health-check decision and its implementation commit.
-
-## 0.22.12
-
-Document ten-minute health checks for unfinished background agents alongside
-immediate completion notifications; preserve explicit holds and completed work.
-
-## 0.22.11
-
-Document the background-monitoring rule change and its implementation reference.
-
-## 0.22.10
-
-Document notification-driven background monitoring; remove the fixed 20-second
-subagent polling rule while retaining outcome verification for external jobs.
-
-## 0.22.9
-
-Document the model-selection hold commit and the user's retained priority.
-
-## 0.22.8
-
-Document that task-specific model selection for cost and quality is on hold,
-while retaining its priority when work resumes.
-
-## 0.22.7
-
-Document the communication-review commit and the decision to continue current
-tmux development while alternatives await evaluation and an explicit decision.
-
-## 0.22.6
-
-Document the pending communication architecture review, comparison and recommendation.
-Continue the current tmux route; ACP/acpx migration remains undecided and no runtime
-configuration changes are made by this documentation update.
-
-## 0.22.5
-
-Document the permission proposal commit and its implementation hold while native
-introductions are completed. Runtime approvals and the current environment stay
-unchanged.
-
-## 0.22.4
-
-Document scoped permission policy generation, meaningful native readiness states
-and private approval notifications as the next startup/communication work. Clarify
-supported harness capabilities and current transport gaps; no permission automation,
-trust acceptance, model invocation or deployment is implemented by this proposal.
-
-## 0.22.3
-
-Document the model-authentication replication plan, exact credential-file manifest
-and existing implementation references. Mark vault implementation on hold; no
-credentials are exported and no runtime configuration changes.
-
-## 0.22.2
-
-Document that each project owns one team and its roles are participants; clarify
-current project/role/archive parameters in source and generated operator guides.
-Add a proposed verb-only CLI transition and the unresolved live broker-hook blocker
-to TODO. Existing commands and the current environment remain unchanged.
-
-## 0.22.1
-
-Document the canonical installation-layout implementation and its local verification.
-Fresh-install support is source-only; existing-environment deployment and executable
-controlled migration remain pending explicit work.
-
-## 0.22.0
-
-Add a canonical `PREFIX/ac-agents` installation root with destination-home default,
-scoped model environments, project-local configuration, installation-local tools
-and central path helpers. Rebase lifecycle and auth helpers, user units and
-Ansible roles; refuse legacy or conflicting installations before creating overlap.
-Keep standard systemd and Podman storage locations. Document controlled migration
-prerequisites; this source-only release is not deployed to the existing environment.
-
-Validation: all 191 local tests passed; production Ansible lint reported zero
-failures or warnings. No model calls, credential migration or target deployment ran.
 
 ## 0.21.8
 

@@ -43,11 +43,11 @@ operator identities, deployment addresses, credentials or private repository dat
 
 ## Priority after bug fixes and blocking features
 
-- [ ] **SOURCE ONLY — DO NOT DEPLOY:** Review and explicitly approve the stopped
-  migration to private passive summarizer/observer readers. Verify native callback
-  readiness, event batching, quota/approval handling, private output append and
-  restart recovery before claiming live acceptance. Preserve existing history and
-  user prompts; old conversations cannot retroactively forget former roles.
+- [ ] Verify private passive summarizer/observer acceptance on the explicitly
+  authorized fresh test deployment: native callback readiness, event batching,
+  quota/approval handling, private output append and restart recovery. Existing
+  home-level environments remain unchanged pending separately approved migration;
+  preserve their history and user prompts, which cannot retroactively forget roles.
 
 - [ ] Extend installed communication acceptance beyond the verified idle ask/reply
   roundtrip: test tell-only wake-up, delivery while a native role is busy, recovery

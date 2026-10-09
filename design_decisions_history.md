@@ -1549,3 +1549,7 @@ checks used synthetic credentials and did not copy or read real authentication.
 ## Preserve source-review findings for later assessment
 
 Implementation `5eb9f18` adds thirteen review-only backlog items from the team review of snapshot `12ac41f` (0.28.1). The purpose is to preserve evidence and open questions without approving fixes or carrying rejected claims into the active defect list. Current-source reassessment and live verification are required because the installation and private-reader design have changed since that snapshot. Only generic findings were retained; raw conversation and environment information were excluded. Validation: documentation diff check passed; no runtime or system change was made.
+
+## Consolidate parallel development for version 1.0.0
+
+The release integrates `511c76c` (fresh definition and guarded retirement), `288abfb` (selective authentication transfer, including its synthetic Ansible transport validation), and `43f476b` (review-only backlog) with integrated source `7b84c4d`. Branch release-note collisions were combined without rewriting their original commit histories. The final release snapshot is 1.0.0; these integration/documentation commits belong to that same consolidation rather than claiming separate released versions. Subsequent fixes resume patch increments. Existing environments remain unchanged by source publication. Provider auth material is excluded from Git; encrypted deployment definitions are permitted. Live AAP, auth and team acceptance remain separate checks after publication.

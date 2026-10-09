@@ -1,5 +1,7 @@
 # assistant-team
 
+Version 1.0.0 consolidates the approved deployment, environment layout, native team communication and private-reader features. See [release notes](RELEASE_NOTES.md#100) for scope and live-verification limits. Existing deployments are not automatically migrated.
+
 Current communication development continues with agents-connector and tmux.
 The [communication architecture review in TODO](TODO.md) compares this route,
 acpx with a replacement coordinator, and their combination; no migration is agreed.

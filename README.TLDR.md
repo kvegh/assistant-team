@@ -1,5 +1,7 @@
 # Assistant team: commands
 
+Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
+
 Communication stays on agents-connector + tmux; alternatives await review and
 decision in [TODO](TODO.md).
 
