@@ -910,3 +910,8 @@ The native Antigravity integration is deployed and its isolated dependency probe
 passes. A fresh role still requires the operator's terms and data-use choice; this
 choice is not inferred from saved login tokens or copied onboarding flags. Native
 model access and wake/reply acceptance remain pending until that screen is resolved.
+
+`team status NAME` includes each role’s account profile (for example `gemini-priv`)
+and configured model. These are configuration labels, not verified provider model
+versions or entitlement. A missing explicit model is shown as `harness default
+(unverified)`. Status does not run inference, inspect credentials or send terminal input.

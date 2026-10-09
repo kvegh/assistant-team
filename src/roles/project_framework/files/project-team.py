@@ -28,7 +28,7 @@ Projects:
   unarchive ARCHIVE                  Copy retained archive to its dated project name; enable target, leave stopped.
   rename-project OLD NEW             Stop OLD, rename identity/config; preserve enablement, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
-  status NAME                        Show this project's target and role/container states.
+  status NAME                        Show target/role states, work/priv profiles and configured models.
   watch NAME                         Follow messages; Ctrl-C stops only the viewer.
   attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
   launch NAME ROLE                   Launch one role after checking project authentication.
@@ -493,13 +493,60 @@ def retire_project(name, archive=False):
         config.unlink()
         print('Destroyed project '+name+'; account profiles, images and other projects were preserved.')
 
+def role_model_metadata(core, role):
+    """Inspect allowlisted configuration only; never probe models or read auth files."""
+    def read_json(path):
+        try:
+            fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+            with os.fdopen(fd) as stream:
+                data=stream.read(131073)
+            if len(data)>131072:return {}
+            value=json.loads(data)
+            return value if isinstance(value,dict) else {}
+        except (OSError,ValueError):return {}
+    def model(value):
+        return value if isinstance(value,str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,127}',value) else None
+    cfg=read_json(core.PROFILES/role/'profile.json')
+    vendor=cfg.get('flavour')
+    profile=cfg.get('account_profile') or cfg.get('auth_directory') or {
+        'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}.get(vendor)
+    if profile not in {v+'-'+context for v in ['claude','codex','gemini','mistral'] for context in ['work','priv']}:
+        return 'unknown','unknown (configuration unavailable)'
+    home=core.role_home(role)
+    homes=[home]
+    # Once launched, operator login defaults can differ from the running role.
+    if not (core.PROFILES/role/'launched').exists():homes.append(ACCOUNT_HOME/profile)
+    for home in homes:
+        selected=None
+        if vendor=='claude':
+            selected=model(read_json(home/'settings.json').get('model')) or model(read_json(home/'.claude/settings.json').get('model'))
+            if not selected and profile=='claude-work':selected=model(read_json(home/'.vertex.json').get('ANTHROPIC_MODEL'))
+        elif vendor=='gemini':
+            if profile=='gemini-priv':config=read_json(home/'.gemini/antigravity-cli/settings.json')
+            else:config=read_json(home/'.gemini/settings.json')
+            selected=model(config.get('model',{}).get('name')) if isinstance(config.get('model'),dict) else model(config.get('model'))
+            if not selected and profile=='gemini-work':selected=model(read_json(home/'.vertex.json').get('GEMINI_MODEL'))
+        elif vendor=='codex':
+            try:
+                fd=os.open(home/'.codex/config.toml',os.O_RDONLY|os.O_NOFOLLOW)
+                with os.fdopen(fd) as stream:text=stream.read(131073)
+                # Only the top-level model applies; ignore unrelated TOML sections.
+                top=re.split(r'^\s*\[',text,maxsplit=1,flags=re.MULTILINE)[0] if len(text)<=131072 else ''
+                match=re.search(r'^model\s*=\s*[\"\']([^\"\']+)[\"\']\s*(?:#.*)?$',top,re.MULTILINE)
+                if match:selected=model(match.group(1))
+            except OSError:pass
+        if selected:return profile,selected+' (configured)'
+    return profile,'harness default (unverified)'
+
+
 def status(name):
     core=load(name)
     print('Project '+name+': '+project_summary(name))
     for role in ROLES:
         found=subprocess.run(['podman','inspect','--format','{{.State.Status}}',core.container(role)],capture_output=True,text=True)
         state=found.stdout.strip() if found.returncode==0 else 'not created'
-        print(role+': '+state+(' / native launch requested' if (core.PROFILES/role/'launched').exists() else ''))
+        profile,model=role_model_metadata(core,role)
+        print(role+': '+state+' / '+profile+' / model: '+model+(' / native launch requested' if (core.PROFILES/role/'launched').exists() else ''))
 
 def unarchive(archive):
     spec=importlib.util.spec_from_file_location('project_unarchive',INSTALL/'routing/unarchive-project.py')

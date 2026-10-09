@@ -43,7 +43,7 @@
     mode: "0600"
 
 - name: Install project-scoped operator control
-  tags: [connector_prompt_template, project_control, connector_antigravity]
+  tags: [connector_prompt_template, project_control, connector_antigravity, project_status]
   ansible.builtin.copy:
     src: project-team.py
     dest: "{{ __project_framework_home }}/agents-connector/routing/project-team.py"

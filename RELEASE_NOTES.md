@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.24.0
+
+Show each role’s work/private account profile and configured model in `team status`.
+Preserve lifecycle state and distinguish configuration from verified provider
+identity; missing model selections are reported as unverified harness defaults.
+No credentials or model inference are used to obtain status.
+
 ## 0.23.2
 
 Document native Antigravity deployment, container dependency verification and

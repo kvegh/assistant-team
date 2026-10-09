@@ -68,3 +68,8 @@ orchestrator. Gemini work uses exact Vertex model IDs (for Gemini 3.1 Pro:
 
 A fresh Antigravity role may require your terms/data-use choice. Deployment and
 saved login do not prove model access; native wake acceptance is pending this step.
+
+`team status NAME` includes each role’s account profile (for example `gemini-priv`)
+and configured model. These are configuration labels, not verified provider model
+versions or entitlement. A missing explicit model is shown as `harness default
+(unverified)`. Status does not run inference, inspect credentials or send terminal input.
