@@ -1,11 +1,17 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Resolve work Vertex account
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define work-only Vertex paths
   ansible.builtin.set_fact:
-    __vertex_auth_root: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/claude-work"
+    __vertex_auth_root: "{{ assistant_profiles_root }}/claude-work"
 - name: Inspect local Google Cloud CLI
   ansible.builtin.stat:
     path: "{{ __vertex_auth_root }}/.install/google-cloud-sdk/bin/gcloud"

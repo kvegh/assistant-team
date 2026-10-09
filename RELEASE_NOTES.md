@@ -209,6 +209,87 @@ context immediately, keep private mount labels and role authorization, and fail
 closed on labeling errors. No new SELinux policy or enforcement exception is used.
 The live model-free socket probe passed; activation is coordinated separately
 because restarting the gateway can stop dependent containers.
+## 0.22.13
+
+Document the background health-check decision and its implementation commit.
+
+## 0.22.12
+
+Document ten-minute health checks for unfinished background agents alongside
+immediate completion notifications; preserve explicit holds and completed work.
+
+## 0.22.11
+
+Document the background-monitoring rule change and its implementation reference.
+
+## 0.22.10
+
+Document notification-driven background monitoring; remove the fixed 20-second
+subagent polling rule while retaining outcome verification for external jobs.
+
+## 0.22.9
+
+Document the model-selection hold commit and the user's retained priority.
+
+## 0.22.8
+
+Document that task-specific model selection for cost and quality is on hold,
+while retaining its priority when work resumes.
+
+## 0.22.7
+
+Document the communication-review commit and the decision to continue current
+tmux development while alternatives await evaluation and an explicit decision.
+
+## 0.22.6
+
+Document the pending communication architecture review, comparison and recommendation.
+Continue the current tmux route; ACP/acpx migration remains undecided and no runtime
+configuration changes are made by this documentation update.
+
+## 0.22.5
+
+Document the permission proposal commit and its implementation hold while native
+introductions are completed. Runtime approvals and the current environment stay
+unchanged.
+
+## 0.22.4
+
+Document scoped permission policy generation, meaningful native readiness states
+and private approval notifications as the next startup/communication work. Clarify
+supported harness capabilities and current transport gaps; no permission automation,
+trust acceptance, model invocation or deployment is implemented by this proposal.
+
+## 0.22.3
+
+Document the model-authentication replication plan, exact credential-file manifest
+and existing implementation references. Mark vault implementation on hold; no
+credentials are exported and no runtime configuration changes.
+
+## 0.22.2
+
+Document that each project owns one team and its roles are participants; clarify
+current project/role/archive parameters in source and generated operator guides.
+Add a proposed verb-only CLI transition and the unresolved live broker-hook blocker
+to TODO. Existing commands and the current environment remain unchanged.
+
+## 0.22.1
+
+Document the canonical installation-layout implementation and its local verification.
+Fresh-install support is source-only; existing-environment deployment and executable
+controlled migration remain pending explicit work.
+
+## 0.22.0
+
+Add a canonical `PREFIX/ac-agents` installation root with destination-home default,
+scoped model environments, project-local configuration, installation-local tools
+and central path helpers. Rebase lifecycle and auth helpers, user units and
+Ansible roles; refuse legacy or conflicting installations before creating overlap.
+Keep standard systemd and Podman storage locations. Document controlled migration
+prerequisites; this source-only release is not deployed to the existing environment.
+
+Validation: all 191 local tests passed; production Ansible lint reported zero
+failures or warnings. No model calls, credential migration or target deployment ran.
 
 ## 0.21.8
 
@@ -423,7 +504,7 @@ deployment is paused at the operator's request; installed implementation is 0.12
 
 ## 0.12.0
 
-Add complete `~/team --help` with commands, parameters and explanations. Unknown
+Add complete `~/ac-agents/bin/team --help` with commands, parameters and explanations. Unknown
 commands explicitly report `Invalid command`; missing project arguments remain
 a distinct error. Help needs no auth or service actions, environment commands
 route with or without a selected project, and all 90 tests pass.
@@ -434,9 +515,9 @@ Record verified project listing deployment and both successful runtime aliases.
 
 ## 0.11.0
 
-Add `~/team --list` and `~/team list-projects` for sorted initialized project names
+Add `~/ac-agents/bin/team --list` and `~/ac-agents/bin/team list-projects` for sorted initialized project names
 without authentication, database/prompt reads or service actions. Exclude partial,
-invalid and symlink paths; account profile listing remains `~/team setup --list`.
+invalid and symlink paths; account profile listing remains `~/ac-agents/bin/team setup --list`.
 Update both operator guides. All 86 tests and production lint pass.
 
 ## 0.10.3

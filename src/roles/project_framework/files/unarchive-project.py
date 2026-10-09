@@ -92,10 +92,10 @@ def restore_plan(framework,archive_name):
     parent=framework.ACCOUNT_HOME/'project-archive';archive=parent/archive_name
     if framework.ACCOUNT_HOME.is_symlink() or parent.is_symlink() or archive.is_symlink() or not archive.is_dir():
         raise ValueError('Archive must be a directory within the account archive parent')
-    configs=list(archive.glob('projects.*.config'))
+    configs=list(archive.glob('project.*.config'))
     if len(configs)!=1 or configs[0].is_symlink() or not configs[0].is_file() or configs[0].stat().st_size>65536:
         raise ValueError('Archive must contain exactly one regular project configuration')
-    config=configs[0];match=re.fullmatch(r'projects\.(.+)\.config',config.name)
+    config=configs[0];match=re.fullmatch(r'project\.(.+)\.config',config.name)
     old=match.group(1);framework.project_path(old)
     data=json.loads(config.read_text())
     if not isinstance(data,dict) or set(data)!={'version','project','roles'} or data['version']!=1 or data['project']!=old or not isinstance(data['roles'],dict) or set(data['roles'])!=set(framework.ROLES):
@@ -111,7 +111,7 @@ def restore_plan(framework,archive_name):
             raise ValueError('Archive name and recorded timestamp disagree')
         new=archive_name
     else:raise ValueError('Archive name does not match its embedded project identity')
-    destination=framework.project_path(new);new_config=framework.ACCOUNT_HOME/('projects.'+new+'.config')
+    destination=framework.project_path(new);new_config=framework.paths(framework.ACCOUNT_HOME).project_config(new)
     if destination.exists() or destination.is_symlink() or new_config.exists() or new_config.is_symlink():
         raise ValueError('Restored project or configuration already exists; archive was retained')
     for required in ['initialized','db.sqlite','assistant-prompt.md']:
@@ -151,7 +151,7 @@ def restore(framework,archive_name):
     archive,embedded,old,new,destination,new_config,ephemeral,rewrites=restore_plan(framework,archive_name)
     framework.PROJECTS.mkdir(mode=0o700,exist_ok=True)
     staging=pathlib.Path(tempfile.mkdtemp(prefix='.unarchive-',dir=framework.PROJECTS))
-    copied=staging/'project';published=False;config_created=False;enable_attempted=False
+    copied=staging/'project';published=False;enable_attempted=False
     target=framework.project_units(new)[0]
     try:
         def ignore(directory,names):
@@ -170,8 +170,7 @@ def restore(framework,archive_name):
         # Destination metadata is generated structurally, never by replacing
         # substrings in user prompts, workspaces, credentials or conversations.
         data=json.loads(embedded.read_text());data['project']=new
-        descriptor=os.open(new_config,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
-        config_created=True
+        descriptor=os.open(copied/new_config.name,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
         with os.fdopen(descriptor,'w') as file:json.dump(data,file,indent=2);file.write('\n')
         if destination.exists() or destination.is_symlink():raise ValueError('Restore destination appeared during copying')
         copied.rename(destination);published=True
@@ -188,7 +187,7 @@ def restore(framework,archive_name):
         if enable_attempted:
             result=subprocess.run(['systemctl','--user','disable',target],env=framework.user_env(),capture_output=True,text=True)
             if result.returncode:rollback.append('target enablement')
-        for operation,needed in [(lambda:shutil.rmtree(destination),published),(lambda:new_config.unlink(),config_created)]:
+        for operation,needed in [(lambda:shutil.rmtree(destination),published)]:
             if needed:
                 try:operation()
                 except OSError:rollback.append('restored files')

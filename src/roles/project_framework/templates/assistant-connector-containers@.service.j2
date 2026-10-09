@@ -4,15 +4,16 @@ PartOf=assistant-connector@%i.target
 Requires=assistant-connector-gateway@%i.service
 After=assistant-connector-gateway@%i.service
 [Service]
-Environment=HOME={{ __project_framework_home }}
+Environment={{ ('HOME=' + assistant_runtime_home) | replace('%', '%%') | to_json }}
+Environment={{ ('AC_AGENTS_ROOT=' + assistant_install_root) | replace('%', '%%') | to_json }}
 Environment=ASSISTANT_PROJECT=%i
 Environment=XDG_RUNTIME_DIR=/run/user/{{ __project_framework_uid }}
 Type=oneshot
 RemainAfterExit=yes
 KillMode=process
 UMask=0077
-ExecStart={{ __project_framework_home }}/agents-connector/routing/project-team.py launch-all %i
-ExecStop={{ __project_framework_home }}/agents-connector/routing/project-team.py stop-containers %i
-ExecStopPost={{ __project_framework_home }}/agents-connector/routing/project-team.py stop-containers %i
+ExecStart={{ (assistant_connector_root + '/routing/project-team.py') | replace('%', '%%') | to_json }} launch-all %i
+ExecStop={{ (assistant_connector_root + '/routing/project-team.py') | replace('%', '%%') | to_json }} stop-containers %i
+ExecStopPost={{ (assistant_connector_root + '/routing/project-team.py') | replace('%', '%%') | to_json }} stop-containers %i
 TimeoutStartSec=180
 TimeoutStopSec=90

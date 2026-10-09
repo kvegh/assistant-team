@@ -1,0 +1,30 @@
+---
+- name: Inspect managed project unit ownership without changing units
+  ansible.builtin.stat:
+    path: "{{ __install_layout_candidate_home }}/.config/systemd/user/{{ item }}"
+    follow: false
+  loop: [assistant-connector@.target, assistant-connector-broker@.service, assistant-connector-gateway@.service, assistant-connector-containers@.service]
+  register: __install_layout_unit_paths
+- name: Require regular managed unit files
+  ansible.builtin.assert:
+    that:
+      - not (item.stat.islnk | default(false))
+      - not item.stat.exists or item.stat.isreg | default(false)
+    quiet: true
+    fail_msg: Managed project unit paths must be regular files; no unit was replaced.
+  loop: "{{ __install_layout_unit_paths.results }}"
+- name: Read existing managed service declarations only
+  ansible.builtin.slurp:
+    src: "{{ item.stat.path }}"
+  when: item.stat.exists
+  loop: "{{ __install_layout_unit_paths.results }}"
+  register: __install_layout_existing_units
+  no_log: true
+- name: Refuse another installation root using this user service namespace
+  ansible.builtin.assert:
+    that:
+      - "(('AC_AGENTS_ROOT=' + __install_layout_candidate_root) | replace('%', '%%') | to_json) in (item.content | b64decode)"
+    quiet: true
+    fail_msg: Existing project services belong to another or legacy install root; use a separate user or controlled migration.
+  loop: "{{ __install_layout_existing_units.results | selectattr('content', 'defined') | list }}"
+  no_log: true

@@ -113,3 +113,4 @@ writes succeeded; writes into the writable outer home and protected `.git`,
 `.agents`, `.codex` and `.aws` paths failed, and network socket creation failed.
 Outer capabilities stayed zero, no-new-privileges and seccomp stayed enabled,
 and the dedicated domain retained nonzero MCS categories.
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

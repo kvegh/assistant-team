@@ -26,3 +26,4 @@ The login prompt checks identifier format, not remote model access. Keep the
 selected ID in the local work profile's `.vertex.json`; work role launches copy
 that configuration into the selected role home. Provider authentication files
 remain outside Git.
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

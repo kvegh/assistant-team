@@ -11,23 +11,39 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 
 class PortableDeploymentTests(unittest.TestCase):
-    def run_fixture(self,local):
+    def run_fixture(self,local,prefix=None):
         with tempfile.TemporaryDirectory() as home:
             root=pathlib.Path(home);vault=root/'destination.vault';vault.write_text('$ANSIBLE_VAULT;fixture')
             password=root/'vpf';password.write_text('fixture-only')
             args=['deploy','--vault-file',str(vault),'--vault-password-file',str(password),'--log-dir',str(root/'logs')]+(['--local'] if local else [])
+            if prefix is not None:args.extend(['--prefix',prefix])
             with patch('sys.argv',args),patch.object(module.shutil,'which',return_value='/fixture/tool'),patch.object(module.subprocess,'check_output',return_value='a'*40),patch.object(module.subprocess,'run',side_effect=[Mock(returncode=17),Mock(returncode=23)]) as execute:
                 code=module.main()
             self.assertEqual(code,17)
             first=execute.call_args_list[0].args[0]
             extra=json.loads(first[first.index('-e')+1])
             self.assertEqual(extra['assistant_local'],local)
+            transfer=execute.call_args_list[1].args[0]
+            transferred=json.loads(transfer[transfer.index('-e')+1])
+            for values in [extra,transferred]:
+                if prefix is None:self.assertNotIn('assistant_install_prefix',values)
+                else:self.assertEqual(values['assistant_install_prefix'],prefix)
             self.assertNotIn('fixture-only',str(first))
             run=next((root/'logs').iterdir());summary=json.loads((run/'summary.json').read_text())
             self.assertEqual(summary['exit_code'],17)
 
     def test_local_connection_is_additive_and_exit_code_survives_transfer_failure(self):self.run_fixture(True)
     def test_remote_connection_remains_available(self):self.run_fixture(False)
+
+    def test_explicit_destination_prefix_reaches_deployment_and_log_transfer(self):
+        for local in [False,True]:
+            with self.subTest(local=local):self.run_fixture(local,'/srv/agent installations')
+
+    def test_destination_prefix_rejects_controller_relative_paths_and_traversal(self):
+        for value in ['relative','~/agents','/srv/../other','/srv/agents\n']:
+            with self.subTest(value=value),self.assertRaises(module.argparse.ArgumentTypeError):
+                module.destination_prefix(value)
+        self.assertEqual(module.destination_prefix('/srv/agents'),pathlib.Path('/srv/agents'))
 
     def test_export_ignores_raw_output_and_rejects_unknown_fields(self):
         with tempfile.TemporaryDirectory() as home:

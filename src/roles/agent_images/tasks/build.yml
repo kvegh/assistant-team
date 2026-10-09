@@ -38,10 +38,10 @@
     tag: "{{ harness.version }}"
     state: build
     force: "{{ agent_images_rebuild_images | bool }}"
-    path: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build"
+    path: "{{ assistant_connector_root }}/build/native"
     validate_certs: true
     build:
-      file: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/{{ harness.containerfile }}"
+      file: "{{ assistant_connector_root }}/build/native/{{ harness.containerfile }}"
       cache: true
       extra_args: >-
         --build-arg BASE_IMAGE={{ harness.base }}

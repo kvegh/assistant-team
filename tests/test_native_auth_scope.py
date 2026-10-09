@@ -12,9 +12,9 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
     def exercise(self, flavour, login=True):
         with tempfile.TemporaryDirectory() as temp:
             base = pathlib.Path(temp)
-            directory = base / 'provider'
+            directory = base / 'ac-agents/model-environments' / (flavour+'-priv')
             caller = base / 'caller-home'
-            directory.mkdir()
+            directory.mkdir(parents=True)
             caller.mkdir()
             prefix = directory / '.install/bin'
             prefix.mkdir(parents=True)
@@ -25,6 +25,10 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
             capture.write_text(capture.read_text()+ '\np=pathlib.Path(os.environ[\"HOME\"])/'+repr(credential[0])+';p.parent.mkdir(parents=True,exist_ok=True);p.write_text('+repr(json.dumps(credential[1]))+')\n')
             shutil.copyfile(LAUNCHER.parent/'login-result.py', directory/'.login-result.py')
             shutil.copyfile(LAUNCHER, directory / '.native-cli.py')
+            shutil.copyfile(LAUNCHER.parents[3]/'lib/install-paths.py',directory/'.install-paths.py')
+            diagnostics=directory.parents[1]/'agent-connector/routing'
+            diagnostics.mkdir(parents=True)
+            shutil.copyfile(LAUNCHER.parents[2]/'project_framework/files/environment-diagnostics.py',diagnostics/'environment-diagnostics.py')
             (directory / '.native-cli.py').chmod(0o700)
             (directory / 'login').symlink_to('.native-cli.py')
             (directory / '.native-install.json').write_text(json.dumps({'flavour': flavour, 'entrypoint': 'bin/native'}))
@@ -40,6 +44,11 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
             self.assertTrue((directory / 'saved-config').exists())
             self.assertFalse((caller / 'saved-config').exists())
             self.assertEqual(environment['HOME'], str(caller))
+            event=json.loads((directory.parents[1]/'environment-logs/events.jsonl').read_text())
+            self.assertEqual(event['action'],'login')
+            self.assertEqual(event['result'],'credentials_saved')
+            self.assertFalse((directory.parent/'environment-logs').exists())
+            self.assertFalse((caller/'environment-logs').exists())
             return output
 
     def test_claude_login_and_mutable_paths_are_local(self):

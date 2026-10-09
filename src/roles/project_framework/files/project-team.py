@@ -9,7 +9,7 @@ PROJECT_ACTIONS = ['create-project','start','stop','restart','status','watch','a
                    'apply-prompts','refresh-observer','deliver-observer-report','preflight',
                    'launch-all','stop-containers','destroy','archive','unarchive','rename-project']
 GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup','diagnostics']
-HELP = '''Usage: ~/team COMMAND [PARAMETERS]
+HELP = '''Usage: team COMMAND [PARAMETERS]
 
 Environment and discovery:
   --help | -h | help                  Show all supported commands; no project required.
@@ -46,6 +46,14 @@ Account profile listing uses setup --list; project listing uses --list.
 Archive: always NAME-ddmmyyhhmm (local 24-hour time); collisions fail before stopping.
 An existing exact-name archive requires team rename-project OLD NEW first.
 '''
+
+def paths(root):
+    source=pathlib.Path(__file__).resolve().with_name('install-paths.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/install-paths.py'
+    spec=importlib.util.spec_from_file_location('installation_paths',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.Paths(root)
+
 
 def settings():
     spec=importlib.util.spec_from_file_location('environment_config',INSTALL/'routing/environment-config.py')
@@ -194,7 +202,7 @@ def create(name):
     PROJECTS.mkdir(mode=0o700,exist_ok=True);path.mkdir(mode=0o700)
     (path/'workspace').mkdir(mode=0o700)
     core=load(name)
-    prompts=core.project_prompt_template((ACCOUNT_HOME/'templates/assistant-prompts.md').read_text())
+    prompts=core.project_prompt_template((paths(ACCOUNT_HOME).template).read_text())
     (path/'assistant-prompt.md').write_text(prompts)
     for role in ROLES:
         p=path/'profiles'/role
@@ -233,9 +241,9 @@ def required_auth(name):
             core.antigravity_executable(role)
             relative='.gemini/antigravity-cli/antigravity-oauth-token'
         if flavour in ['claude','gemini'] and boundary==flavour+'-work':
-            provider_path=ACCOUNT_HOME/boundary/'.vertex.json'
+            provider_path=paths(ACCOUNT_HOME).model(boundary)/'.vertex.json'
             adc=core.role_home(role)/'.config/gcloud/application_default_credentials.json'
-            if not adc.is_file():adc=ACCOUNT_HOME/boundary/'.config/gcloud/application_default_credentials.json'
+            if not adc.is_file():adc=paths(ACCOUNT_HOME).model(boundary)/'.config/gcloud/application_default_credentials.json'
             try:
                 provider=json.loads(provider_path.read_text());data=json.loads(adc.read_text())
                 allowed=({'CLAUDE_CODE_USE_VERTEX','CLOUD_ML_REGION','ANTHROPIC_VERTEX_PROJECT_ID','ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL'} if flavour=='claude' else {'GOOGLE_GENAI_USE_VERTEXAI','GOOGLE_CLOUD_PROJECT','GOOGLE_CLOUD_LOCATION','GEMINI_MODEL'})
@@ -247,7 +255,7 @@ def required_auth(name):
             continue
         # Existing role credentials can have their own native refresh state.
         credential=core.role_home(role)/relative
-        if not credential.is_file():credential=ACCOUNT_HOME/boundary/relative
+        if not credential.is_file():credential=paths(ACCOUNT_HOME).model(boundary)/relative
         try:
             data=json.loads(credential.read_text())
             if flavour=='claude':valid=isinstance(data.get('claudeAiOauth'),dict) and bool(data['claudeAiOauth'].get('accessToken'))
@@ -258,7 +266,7 @@ def required_auth(name):
             else:valid=bool(data.get('access_token') or data.get('refresh_token'))
         except (OSError,ValueError,TypeError):valid=False
         if not valid and boundary not in missing:missing.append(boundary)
-    if missing:raise ValueError('Authentication required before starting ANY project service: '+', '.join('cd ~/'+b+' && ./login' for b in missing))
+    if missing:raise ValueError('Authentication required before starting ANY project service: '+', '.join('cd '+str(paths(ACCOUNT_HOME).model(b))+' && ./login' for b in missing))
     return core
 
 def verify_project(name):
@@ -300,7 +308,7 @@ def list_projects():
             if files_complete and workspace_complete:
                 names.append(path.name)
     if not names:
-        print('No initialized projects. Use: ~/team create-project NAME');return
+        print('No initialized projects. Use: team create-project NAME');return
     width=max(4,max(map(len,names)))
     print('NAME'.ljust(width)+'  STATUS')
     summaries=[(name,project_summary(name)) for name in names]
@@ -346,16 +354,13 @@ def plan_archive(name, path, when):
     return {'destination':destination,'archived_at':when.isoformat(timespec='seconds')}
 
 def lifecycle_paths(name, archive=False, when=None):
-    path=verify_project(name);config=ACCOUNT_HOME/('projects.'+name+'.config')
+    path=verify_project(name);config=paths(ACCOUNT_HOME).project_config(name)
     if not archive and not shutil.rmtree.avoids_symlink_attacks:
         raise ValueError('This platform cannot safely remove a project directory')
     if ACCOUNT_HOME.is_symlink() or config.is_symlink() or not config.is_file():
         raise ValueError('Project configuration must be a regular file inside the account home')
     plan=None
     if archive:
-        embedded=path/config.name
-        if embedded.exists() or embedded.is_symlink():
-            raise ValueError('Archive configuration destination already exists; project was not stopped')
         metadata=path/ARCHIVE_METADATA
         if metadata.exists() or metadata.is_symlink():
             raise ValueError('Reserved archive metadata already exists; project was not stopped')
@@ -466,21 +471,19 @@ def retire_project(name, archive=False):
     if archive:
         destination=plan['destination']
         destination.parent.mkdir(mode=0o700,exist_ok=True);destination.parent.chmod(0o700)
-        embedded=path/config.name;metadata=path/ARCHIVE_METADATA
-        moved_config=False;created_metadata=False
+        metadata=path/ARCHIVE_METADATA
+        created_metadata=False
         try:
-            config.rename(embedded);moved_config=True
             with metadata.open('x') as file:
                 created_metadata=True
                 os.fchmod(file.fileno(),0o600)
                 json.dump({'version':1,'archived_at':plan['archived_at'],'timestamp_basis':'operation_start'},file)
                 file.write('\n')
-            embedded.chmod(0o600);path.chmod(0o700)
+            config.chmod(0o600);path.chmod(0o700)
             path.rename(destination)
         except OSError as error:
             rollback_errors=[]
-            for operation,needed in [(lambda:metadata.unlink(),created_metadata),
-                                     (lambda:embedded.rename(config),moved_config)]:
+            for operation,needed in [(lambda:metadata.unlink(),created_metadata)]:
                 if needed:
                     try:operation()
                     except OSError:rollback_errors.append(True)
@@ -490,7 +493,6 @@ def retire_project(name, archive=False):
         print('Archived project '+name+' to '+str(destination)+'; account profiles and other projects were preserved.')
     else:
         shutil.rmtree(path)
-        config.unlink()
         print('Destroyed project '+name+'; account profiles, images and other projects were preserved.')
 
 def role_model_metadata(core, role):
@@ -563,26 +565,26 @@ def watch_project_arguments(arguments):
 
 def main():
     action=sys.argv[1] if len(sys.argv)>1 else None
-    if action is None:raise ValueError('A command is required. Use ~/team --help')
+    if action is None:raise ValueError('A command is required. Use team --help')
     if action not in PROJECT_ACTIONS+GLOBAL_ACTIONS:
-        raise ValueError('Invalid command: '+action+'. Use ~/team --help for supported commands')
+        raise ValueError('Invalid command: '+action+'. Use team --help for supported commands')
     if action in ['--help','-h','help']:
-        if len(sys.argv)!=2:raise ValueError('Use ~/team --help without additional arguments')
+        if len(sys.argv)!=2:raise ValueError('Use team --help without additional arguments')
         print(HELP,end='');return
     if sys.argv[1:2] in [['--list'],['list-projects']]:
-        if len(sys.argv)!=2:raise ValueError('Use ~/team --list or ~/team list-projects without a project name')
+        if len(sys.argv)!=2:raise ValueError('Use team --list or team list-projects without a project name')
         list_projects();return
     os.umask(0o077)
     if sys.argv[1:]==['version']:
         print((INSTALL/'build-info.json').read_text().strip());return
     if len(sys.argv)>1 and sys.argv[1]=='setup':
-        if sys.argv[2:] not in [[],['--list']]:raise ValueError('Use ~/team setup or ~/team setup --list')
+        if sys.argv[2:] not in [[],['--list']]:raise ValueError('Use team setup or team setup --list')
         settings().setup(ACCOUNT_HOME,listing=sys.argv[2:]==['--list']);return
     if sys.argv[1:2]==['diagnostics']:
-        if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use ~/team diagnostics --export PATH')
+        if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use team diagnostics --export PATH')
         diagnostics().export(ACCOUNT_HOME,sys.argv[3]);return
     if action=='rename-project':
-        if len(sys.argv)!=4:raise ValueError('Use ~/team rename-project OLD NEW')
+        if len(sys.argv)!=4:raise ValueError('Use team rename-project OLD NEW')
         spec=importlib.util.spec_from_file_location('project_rename',INSTALL/'routing/project-rename.py')
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         module.rename_project(sys.modules[__name__],sys.argv[2],sys.argv[3]);return

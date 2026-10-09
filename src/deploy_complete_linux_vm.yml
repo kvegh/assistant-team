@@ -43,6 +43,7 @@
   tags: [guest_config]
   vars:
     provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+    assistant_install_prefix: "{{ hostvars.localhost.fresh_definition.install_prefix | default('') }}"
     containers:
       runtime_user: "{{ hostvars.localhost.fresh_definition.runtime_user }}"
     assistant_source_user: "{{ containers.runtime_user }}"

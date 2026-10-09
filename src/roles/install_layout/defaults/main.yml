@@ -1,0 +1,3 @@
+---
+# Destination parent; empty means the runtime account's real home, never controller HOME.
+assistant_install_prefix: ''  # noqa var-naming[no-role-prefix]

@@ -33,3 +33,4 @@ can claim verified model entitlement without an explicit model check.
 Managed Codex wrappers pass `-c check_for_update_on_startup=false` for the pinned
 Ansible-managed installation. CLI version changes are made through deployment,
 not interactive self-update prompts. Login and model permissions are unaffected.
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

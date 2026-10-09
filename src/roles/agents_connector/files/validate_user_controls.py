@@ -5,8 +5,8 @@ root=pathlib.Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('team',root/'routing/connector-team.py');team=importlib.util.module_from_spec(spec);spec.loader.exec_module(team)
 assert not any((team.PROFILES/n/'launched').exists() for n in team.ALL),'Do not inject fixtures during active native sessions'
 assert (root.parent/'README.md').is_file()
-assert (root.parent/'templates/assistant-prompts.md').is_file()
-assert (root.parent/'team').is_file()
+assert (root.parent/'conf/templates/assistant.prompt.md.template').is_file()
+assert (root.parent/'bin/team').is_file()
 for name in team.ALL:
     c=team.container(name)
     data=json.loads(subprocess.check_output(['podman','inspect',c],text=True))[0]
@@ -18,14 +18,14 @@ for name in team.ALL:
         assert not (team.PROFILES/name/'home/mcp.json').exists()
         assert not (team.PROFILES/name/'ipc/agent.sock').exists()
     if name=='observer':assert any(m['Destination']=='/context' and not m['RW'] for m in data['Mounts'])
-for directory,cli in [('claude-work','claude'),('claude-priv','claude'),('gemini','gemini'),('codex','codex'),('mistral','vibe')]:
-    p=root.parent/directory
+for directory,cli in [('claude-work','claude'),('claude-priv','claude'),('gemini-work','gemini'),('gemini-priv','gemini'),('codex-priv','codex'),('codex-work','codex'),('mistral-work','vibe'),('mistral-priv','vibe')]:
+    p=root.parent/'model-environments'/directory
     assert (p/'.native-install.json').is_file() and (p/'login').is_file()
     for sub in ['.config','.cache','.local/share','.local/state','tmp']:assert (p/sub).is_dir()
 for global_path in ['.claude.json','.claude','.codex','.gemini','.vibe']:
     assert not (root.parent/global_path).exists(),'Provider state escaped a scoped directory'
 # Confirm actual stock event subscription and hidden report exclusion.
-viewer=subprocess.Popen([str(root.parent/'team'),'watch'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+viewer=subprocess.Popen([str(root.parent/'bin/team'),'watch'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 fixture='OFFLINE_USER_VIEW_FIXTURE'
 try:
     selector=selectors.DefaultSelector();selector.register(viewer.stdout,selectors.EVENT_READ)

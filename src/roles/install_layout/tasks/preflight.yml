@@ -1,0 +1,58 @@
+---
+- name: Inspect destination runtime account before installation changes
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+    fail_key: false
+- name: Select an existing runtime account for legacy checks
+  ansible.builtin.set_fact:
+    __install_layout_existing_account: "{{ ansible_facts.getent_passwd.get(containers.runtime_user) }}"
+- name: Inspect legacy environment markers without reading authentication
+  ansible.builtin.stat:
+    path: "{{ __install_layout_existing_account[4] }}/{{ item }}"
+    follow: false
+  loop:
+    - agents-connector
+    - environment.config
+    - team
+    - .local/share/assistant-team/instances
+    - .local/share/assistant-team/build
+    - claude-work/.native-install.json
+    - claude-priv/.native-install.json
+    - codex-work/.native-install.json
+    - codex-priv/.native-install.json
+    - gemini-work/.native-install.json
+    - gemini-priv/.native-install.json
+    - mistral-work/.native-install.json
+    - mistral-priv/.native-install.json
+  when: __install_layout_existing_account is not none
+  register: __install_layout_legacy_markers
+- name: Inspect legacy home-level project configuration names only
+  ansible.builtin.find:
+    paths: "{{ __install_layout_existing_account[4] }}"
+    patterns: 'projects.*.config'
+    recurse: false
+    file_type: any
+    follow: false
+  when: __install_layout_existing_account is not none
+  register: __install_layout_legacy_configs
+- name: Refuse implicit migration or duplicate legacy environments
+  ansible.builtin.assert:
+    that:
+      - __install_layout_legacy_markers.results | default([]) | selectattr('stat', 'defined') | selectattr('stat.exists') | list | length == 0
+      - __install_layout_legacy_configs.matched | default(0) | int == 0
+    quiet: true
+    fail_msg: >-
+      A legacy home-level environment exists. The new install-prefix layout is for fresh installs;
+      controlled migration is separately required. Existing authentication, projects and services were not migrated.
+- name: Resolve an existing account's proposed service namespace before host changes
+  ansible.builtin.set_fact:
+    __install_layout_candidate_home: "{{ __install_layout_existing_account[4] }}"
+    __install_layout_candidate_root: >-
+      {{ ((assistant_install_prefix | default('') | length > 0)
+          | ternary(assistant_install_prefix, __install_layout_existing_account[4]))
+          | regex_replace('/+$', '') }}/ac-agents
+  when: __install_layout_existing_account is not none
+- name: Refuse another root before changing an existing runtime account or host
+  ansible.builtin.include_tasks: namespace.yml
+  when: __install_layout_existing_account is not none

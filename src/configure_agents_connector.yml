@@ -24,6 +24,7 @@
   no_log: true
   vars:
     provisioning: "{{ hostvars['localhost'].assistant_environment.provisioning }}"
+    assistant_install_prefix: "{{ hostvars['localhost'].assistant_environment.agent_connector.install_prefix | default('') }}"
     assistant_source_user: "{{ hostvars['localhost'].assistant_environment.containers.runtime_user }}"
     containers:
       runtime_user: "{{ hostvars['localhost'].assistant_environment.agent_connector.runtime_user }}"

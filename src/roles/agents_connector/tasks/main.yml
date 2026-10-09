@@ -1,4 +1,10 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Inspect dedicated account for focused configuration reruns
   tags:
     - connector_services
@@ -39,7 +45,7 @@
     - connector_antigravity
     - connector_watch
   ansible.builtin.set_fact:
-    __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
+    __agents_connector_root: "{{ assistant_connector_root }}"
 - name: Create connector directories in the dedicated home
   ansible.builtin.file:
     path: "{{ __agents_connector_root }}/{{ item }}"
@@ -97,6 +103,13 @@
   ansible.builtin.command:
     argv: ["{{ __agents_connector_root }}/bin/agents-connector", --version]
   changed_when: false
+- name: Install canonical runtime layout helper
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../lib/install-paths.py"
+    dest: "{{ assistant_connector_root }}/routing/install-paths.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
 - name: Install shared project name and socket path validator
   ansible.builtin.copy:
     src: "{{ role_path }}/../../lib/project-names.py"
@@ -163,7 +176,7 @@
 - name: Seed the single editable prompt file without overwriting operator edits
   tags: [auth_sources, connector_services, connector_prompt_template]
   ansible.builtin.copy:
-    dest: "{{ agents_connector_runtime_home }}/templates/assistant-prompts.md"
+    dest: "{{ assistant_install_root }}/conf/templates/assistant.prompt.md.template"
     content: |
       # Edit the body under each [Role: Name] section; # lines are comments.
       # Examples below are inactive. Write instructions below them or remove '# Example:'.
@@ -183,7 +196,7 @@
   tags: [auth_sources, connector_services]
   ansible.builtin.file:
     src: "{{ __agents_connector_root }}/routing/connector-team.py"
-    dest: "{{ agents_connector_runtime_home }}/team"
+    dest: "{{ assistant_install_root }}/bin/team"
     state: link
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
@@ -226,7 +239,7 @@
   tags: [auth_sources, connector_services]
   ansible.builtin.template:
     src: README.md.j2
-    dest: "{{ agents_connector_runtime_home }}/README.md"
+    dest: "{{ assistant_install_root }}/README.md"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"

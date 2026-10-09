@@ -14,6 +14,13 @@
       - containers.runtime_user != provisioning.guest_ssh_user
       - containers.runtime_user != 'root'
 
+- name: Refuse legacy environment changes before host setup
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    tasks_from: preflight
+    apply:
+      tags: [always]
 - name: Check free space before installing and building
   ansible.builtin.command:
     argv: [df, -B1, --output=avail, /]
@@ -51,6 +58,12 @@
     podman_host_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     podman_host_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 
+- name: Resolve protected installation paths after account creation
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Verify subordinate IDs exist for rootless Podman
   ansible.builtin.command:
     argv: [grep, -E, "^{{ containers.runtime_user }}:[0-9]+:[0-9]+$", /etc/subuid, /etc/subgid]
@@ -60,12 +73,12 @@
 
 - name: Create protected runtime directories
   ansible.builtin.file:
-    path: "{{ podman_host_runtime_home }}/{{ item }}"
+    path: "{{ assistant_connector_root }}/{{ item }}"
     state: directory
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
-  loop: [.local/share/assistant-team, .local/share/assistant-team/instances, .local/share/assistant-team/build]
+  loop: [instances, build, build/native]
 
 - name: Configure Podman through certified Red Hat content
   ansible.builtin.include_role:

@@ -13,8 +13,17 @@ PROFILES = {vendor+'-'+context: {'vendor': vendor, 'context': context,
 DEFAULTS = dict(zip(ROLES, ['claude-work','codex-priv','claude-work','gemini-work','claude-work','claude-work','claude-priv','claude-work']))
 
 
+def paths(root):
+    source=pathlib.Path(__file__).resolve().with_name('install-paths.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/install-paths.py'
+    spec=importlib.util.spec_from_file_location('installation_paths',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.Paths(root)
+
+
 def atomic(path, data):
     path = pathlib.Path(path)
+    path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
     temporary = path.with_name(path.name+'.tmp-'+str(os.getpid()))
     descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
@@ -26,12 +35,12 @@ def atomic(path, data):
 
 
 def environment(home):
-    path = pathlib.Path(home)/'environment.config'
+    path = paths(home).environment
     if not path.exists():
-        atomic(path, {'version': 1, 'profiles': {name: {'enabled': (path.parent/name/'.native-install.json').is_file()} for name in PROFILES}})
+        atomic(path, {'version': 1, 'profiles': {name: {'enabled': (paths(home).model(name)/'.native-install.json').is_file()} for name in PROFILES}})
     data = json.loads(path.read_text())
     if set(data) != {'version','profiles'} or data['version'] != 1 or set(data['profiles']) != set(PROFILES):
-        raise ValueError('environment.config must contain version 1 and the eight supported profiles')
+        raise ValueError('conf/environment.conf must contain version 1 and the eight supported profiles')
     if any(set(value) != {'enabled'} or type(value['enabled']) is not bool for value in data['profiles'].values()):
         raise ValueError('Each environment profile must contain only a boolean enabled field')
     return data
@@ -47,7 +56,7 @@ def project_name_validator():
 
 def project(home, name, create=False):
     project_name_validator()(name,home)
-    path = pathlib.Path(home)/('projects.'+name+'.config')
+    path = paths(home).project_config(name)
     env = environment(home)
     if not path.exists():
         enabled = [p for p in PROFILES if env['profiles'][p]['enabled']]
@@ -86,12 +95,12 @@ def assignments(home, name):
         elif PROFILES[profile]['vendor']=='mistral':errors.append(role+': Mistral team adapter is not implemented; use Claude/Codex/Gemini')
         elif PROFILES[profile]['vendor']!=PROFILES[DEFAULTS[role]]['vendor']:errors.append(role+': current role adapter requires '+PROFILES[DEFAULTS[role]]['vendor']+'; choose its enabled work/priv profile')
         elif role in ['observer','private-connector','corporate-connector'] and PROFILES[profile]['vendor']!='claude':errors.append(role+': current restricted role requires Claude')
-    if errors:raise ValueError('Edit projects.'+name+'.config: '+'; '.join(errors))
+    if errors:raise ValueError('Edit projects/'+name+'/project.'+name+'.config: '+'; '.join(errors))
     return data['roles']
 
 
 def saved(home, profile):
-    root = pathlib.Path(home)/profile
+    root = paths(home).model(profile)
     helper = root/'.login-result.py'
     if not helper.is_file():return False
     spec = importlib.util.spec_from_file_location('login_evidence',helper)
@@ -106,7 +115,7 @@ def setup(home, listing=False):
     env = environment(home)
     if listing:
         for name, definition in PROFILES.items():
-            installed=(pathlib.Path(home)/name/'.native-install.json').is_file()
+            installed=(paths(home).model(name)/'.native-install.json').is_file()
             print(name+' | '+definition['vendor']+' | '+definition['auth']+' | '+('enabled' if env['profiles'][name]['enabled'] else 'disabled')+' | '+('installed' if installed else 'not installed')+' | '+('credentials saved; model access unverified' if saved(home,name) else 'credentials not confirmed'))
         return
     print('Select enabled profiles. Disabled credentials and running projects are preserved.')
@@ -115,8 +124,8 @@ def setup(home, listing=False):
         answer=input(name+' enable? ['+('Y/n' if current else 'y/N')+'] ').strip().lower()
         if answer not in ['', 'y','yes','n','no']:raise ValueError('Answer yes or no; configuration was not changed')
         if answer:env['profiles'][name]['enabled']=answer in ['y','yes']
-    atomic(pathlib.Path(home)/'environment.config',env)
+    atomic(paths(home).environment,env)
     for name in PROFILES:
         if not env['profiles'][name]['enabled']:continue
         if input('Run native login for '+name+' now? [y/N] ').strip().lower() in ['y','yes']:
-            subprocess.run([str(pathlib.Path(home)/name/'login')],check=False)
+            subprocess.run([str(paths(home).model(name)/'login')],check=False)

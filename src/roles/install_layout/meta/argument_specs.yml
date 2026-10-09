@@ -1,0 +1,16 @@
+---
+argument_specs:
+  main:
+    short_description: Resolve and protect the canonical fresh-install layout
+    options:
+      assistant_install_prefix:
+        type: str
+        default: ''
+        description: Absolute destination parent; empty selects destination runtime HOME.
+      containers:
+        type: dict
+        required: true
+        options:
+          runtime_user:
+            type: str
+            required: true

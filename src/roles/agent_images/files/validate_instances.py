@@ -7,11 +7,13 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-loader = importlib.machinery.SourceFileLoader('assistant_instance', '/usr/local/bin/assistant-instance')
+connector = next(parent for parent in Path(__file__).resolve().parents if parent.name == 'agent-connector')
+installation = connector.parent
+loader = importlib.machinery.SourceFileLoader('assistant_instance', str(installation/'bin/assistant-instance'))
 spec = importlib.util.spec_from_loader(loader.name, loader)
 launcher = importlib.util.module_from_spec(spec)
 loader.exec_module(launcher)
-versions = json.loads(Path('/etc/assistant-team/images.json').read_text())
+versions = json.loads((installation/'conf/images.json').read_text())
 
 
 def execute(instance, name, flavour, mode, command=None):
@@ -26,7 +28,7 @@ def execute(instance, name, flavour, mode, command=None):
     return result.stdout
 
 
-with tempfile.TemporaryDirectory(prefix='instance-validation-', dir=Path.home() / '.local/share/assistant-team') as temporary:
+with tempfile.TemporaryDirectory(prefix='instance-validation-', dir=installation/'agent-connector') as temporary:
     root = Path(temporary)
     role = root / 'role.md'
     role.write_text('Read supplied workspace material and summarize it. Request approval before actions.\n')

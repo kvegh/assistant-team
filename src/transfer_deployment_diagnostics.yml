@@ -23,14 +23,21 @@
   become: true
   gather_facts: false
   no_log: true
+  vars:
+    containers:
+      runtime_user: "{{ hostvars.localhost.destination.runtime_user }}"
+    assistant_install_prefix: "{{ hostvars.localhost.destination.install_prefix | default('') }}"
   tasks:
+    - name: Resolve canonical diagnostic installation paths
+      ansible.builtin.include_role:
+        name: install_layout
     - name: Resolve the runtime account
       ansible.builtin.getent:
         database: passwd
         key: "{{ hostvars.localhost.destination.runtime_user }}"
     - name: Define protected runtime paths
       ansible.builtin.set_fact:
-        diagnostic_home: "{{ ansible_facts.getent_passwd[hostvars.localhost.destination.runtime_user][4] }}"
+        diagnostic_home: "{{ assistant_install_root }}"
     - name: Prepare protected runtime paths
       ansible.builtin.file:
         path: "{{ diagnostic_home }}/environment-logs"

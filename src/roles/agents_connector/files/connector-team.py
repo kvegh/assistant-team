@@ -4,6 +4,14 @@ import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 
+def paths(root):
+    source=pathlib.Path(__file__).resolve().with_name('install-paths.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/install-paths.py'
+    spec=importlib.util.spec_from_file_location('installation_paths',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.Paths(root)
+
+
 def project_name_validator():
     source=pathlib.Path(__file__).resolve().with_name('project-names.py')
     if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/project-names.py'
@@ -343,7 +351,7 @@ def seed_auth(name):
     flavour=cfg['flavour']
     source_name=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[flavour])
     if source_name not in [flavour+'-work',flavour+'-priv']:raise ValueError('unsupported provider auth boundary')
-    source=(ACCOUNT_HOME if PROJECT else ROOT.parent)/source_name
+    source=paths(ACCOUNT_HOME).model(source_name)
     if antigravity_executable(name) is not None:
         relative='.gemini/antigravity-cli/antigravity-oauth-token'
         src=source/relative;dst=role_home(name)/relative
@@ -564,7 +572,7 @@ def ensure_decision_log():
 
 
 def apply_prompts():
-    source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'templates/assistant-prompts.md'
+    source=ROOT/'assistant-prompt.md' if PROJECT else paths(ACCOUNT_HOME).template
     goal,sections,bracket_format=prompt_sections(source.read_text())
     if bracket_format:
         goal=active_prompt_text(goal)
@@ -700,11 +708,11 @@ def main():
                          'apply-prompts','refresh-observer','deliver-observer-report','preflight',
                          'launch-all','stop-containers','destroy','archive','unarchive','rename-project']
         if len(sys.argv)==2 and sys.argv[1] in project_actions:
-            raise SystemExit('A project name is required for '+sys.argv[1]+'. Use ~/team --help for parameters')
+            raise SystemExit('A project name is required for '+sys.argv[1]+'. Use team --help for parameters')
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if pathlib.Path(sys.argv[0]).name=='tmux':wake(sys.argv[1:]);return
     if len(sys.argv)>1 and sys.argv[1] not in ['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']:
-        raise SystemExit('Invalid command: '+sys.argv[1]+'. Use ~/team --help for supported commands')
+        raise SystemExit('Invalid command: '+sys.argv[1]+'. Use team --help for supported commands')
     if PROJECT:project_name_validator()(PROJECT,ACCOUNT_HOME)
     if sys.argv[1:2]==['watch']:
         limit,follow=watch_history_limit(sys.argv[2:]);watch(limit=limit,follow=follow);return

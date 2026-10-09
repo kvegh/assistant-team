@@ -37,7 +37,7 @@ def restore_rendered(records):
 
 
 def rebase(framework,name,old_name=None):
-    config=framework.ACCOUNT_HOME/('projects.'+name+'.config')
+    config=framework.paths(framework.ACCOUNT_HOME).project_config(name)
     if config.is_symlink() or not config.is_file():raise ValueError('Restored configuration must be regular')
     data=json.loads(config.read_text())
     if not isinstance(data,dict) or set(data)!={'version','project','roles'} or data['version']!=1 or data['project'] not in [name,old_name] or not isinstance(data['roles'],dict) or set(data['roles'])!=set(framework.ROLES):

@@ -22,8 +22,8 @@ class ProjectRetirementTests(unittest.TestCase):
         self.core.ACCOUNT_HOME=self.home;self.core.PROJECTS=self.home/'projects'
         self.forget=patch.object(self.core,'forget_project_units');self.forget_mock=self.forget.start();self.addCleanup(self.forget.stop)
         self.project=self.fixture('example');self.other=self.fixture('other')
-        self.config=self.home/'projects.example.config';self.config.write_text('fixture assignments')
-        self.home.joinpath('projects.other.config').write_text('untouched')
+        self.config=self.project/'project.example.config';self.config.write_text('fixture assignments')
+        self.other.joinpath('project.other.config').write_text('untouched')
         self.account=self.home/'codex-priv';self.account.mkdir();self.account.joinpath('state').write_text('untouched')
 
     def fixture(self,name):
@@ -43,7 +43,7 @@ class ProjectRetirementTests(unittest.TestCase):
         stop.assert_called_once_with('example',self.project)
         self.assertFalse(self.project.exists());self.assertFalse(self.config.exists())
         self.assertTrue(self.other.exists());self.assertTrue(self.account.joinpath('state').is_file())
-        self.assertEqual(self.home.joinpath('projects.other.config').read_text(),'untouched')
+        self.assertEqual(self.other.joinpath('project.other.config').read_text(),'untouched')
 
     def test_archive_preserves_entire_project_and_external_config_privately(self):
         self.retire(True);destination=next((self.home/'project-archive').iterdir())
@@ -51,10 +51,10 @@ class ProjectRetirementTests(unittest.TestCase):
         for filename in ['db.sqlite','db.sqlite-wal','db.sqlite-shm','assistant-prompt.md']:
             self.assertEqual((destination/filename).read_text(),'fixture '+filename)
         self.assertEqual((destination/'workspace/artifact').read_text(),'fixture artifact')
-        self.assertEqual((destination/'projects.example.config').read_text(),'fixture assignments')
+        self.assertEqual((destination/'project.example.config').read_text(),'fixture assignments')
         self.assertEqual(destination.stat().st_mode&0o777,0o700)
         self.assertEqual(destination.parent.stat().st_mode&0o777,0o700)
-        self.assertEqual((destination/'projects.example.config').stat().st_mode&0o777,0o600)
+        self.assertEqual((destination/'project.example.config').stat().st_mode&0o777,0o600)
         self.assertTrue(self.other.exists());self.assertTrue(self.account.exists())
 
     def test_collision_and_symlink_preflight_never_stop_project(self):
@@ -88,13 +88,12 @@ class ProjectRetirementTests(unittest.TestCase):
         with patch.object(self.core,'quiesce_project'),patch.object(Path,'rename',rename):
             with self.assertRaises(OSError):self.core.retire_project('example',True)
         self.assertTrue(self.project.exists());self.assertEqual(self.config.read_text(),'fixture assignments')
-        self.assertFalse(self.project.joinpath(self.config.name).exists())
 
     def test_archive_and_destroy_never_follow_internal_links(self):
         link=self.project/'workspace/external';link.symlink_to(self.account,target_is_directory=True)
         self.retire(True);archived=next((self.home/'project-archive').iterdir())/'workspace/external'
         self.assertTrue(archived.is_symlink());self.assertTrue(self.account.joinpath('state').is_file())
-        self.project=self.fixture('example');self.config.write_text('fixture assignments')
+        self.project=self.fixture('example');self.config=self.project/'project.example.config';self.config.write_text('fixture assignments')
         self.project.joinpath('workspace/external').symlink_to(self.account,target_is_directory=True)
         self.retire();self.assertEqual(self.account.joinpath('state').read_text(),'untouched')
 
@@ -136,13 +135,6 @@ class ProjectRetirementTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'still listening'):
             self.core.verify_no_project_listener(self.project)
 
-    def test_embedded_configuration_collision_does_not_stop_or_overwrite(self):
-        embedded=self.project/self.config.name;embedded.write_text('existing project content')
-        with patch.object(self.core,'quiesce_project') as stop:
-            with self.assertRaisesRegex(ValueError,'configuration destination already exists'):
-                self.core.retire_project('example',True)
-        stop.assert_not_called();self.assertEqual(embedded.read_text(),'existing project content')
-
     def test_service_remaining_active_prevents_container_removal(self):
         state={'ActiveState':'active','LoadState':'loaded','UnitFileState':'disabled'}
         with patch.object(self.core,'service_state',return_value=state), \
@@ -176,7 +168,7 @@ class ProjectRetirementTests(unittest.TestCase):
             return self.retire(True)
 
     def recreate(self,content):
-        self.project=self.fixture('example');self.config.write_text(content)
+        self.project=self.fixture('example');self.config=self.project/'project.example.config';self.config.write_text(content)
         self.project.joinpath('workspace/artifact').write_text(content)
 
     def test_every_archive_is_dated_and_preserves_each_config(self):
@@ -186,8 +178,8 @@ class ProjectRetirementTests(unittest.TestCase):
         self.assertEqual(json.loads((old/self.core.ARCHIVE_METADATA).read_text())['archived_at'],first.isoformat())
         self.recreate('second');self.archive_at(second)
         self.assertFalse((parent/'example').exists())
-        self.assertEqual((old/'projects.example.config').read_text(),'fixture assignments')
-        self.assertEqual((parent/'example-0201261347/projects.example.config').read_text(),'second')
+        self.assertEqual((old/'project.example.config').read_text(),'fixture assignments')
+        self.assertEqual((parent/'example-0201261347/project.example.config').read_text(),'second')
 
     def test_same_minute_rejects_before_stop_and_preserves_old_and_incoming(self):
         when=datetime.datetime(2026,1,2,13,45,tzinfo=datetime.timezone.utc)

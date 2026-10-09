@@ -1,5 +1,45 @@
 # Design decisions history
 
+## Check unfinished background work every ten minutes
+
+Documentation: `54f38c9`.
+
+The user refined notification-driven monitoring with a ten-minute health check for
+unfinished agents that may be blocked, deferred, stalled or need resuming. Results
+and blockers are still shared promptly when reported. Explicit holds and completed
+tasks must remain undisturbed; the old fixed 20-second polling rule stays removed.
+
+## Prefer background completion notifications over fixed polling
+
+Documentation: `305be6a`.
+
+The user removed fixed 20-second subagent polling because completion is already
+reported automatically and repeated checks add processing overhead. Background
+agents now report by notification; status checks remain available for blockers
+or missing notifications. External jobs without notifications still require
+appropriately spaced checks and verified outcomes.
+
+## Hold task-specific model selection while retaining its priority
+
+Documentation: `2cf4bcb`.
+
+The user put cost- and quality-based task-specific model selection on hold,
+but explicitly retained its priority when resumed. No model-selection behavior
+or runtime configuration changed.
+
+## Continue the current communication route while evaluating alternatives
+
+Documentation: `dad244c`.
+
+The user explicitly retained agents-connector with tmux as the active development
+route and requested a pending review and decision covering the current design,
+acpx with a replacement coordinator, and their combination. TODO contains the
+comparison, limitations and recommendation: verify the existing route first and,
+if reliability remains inadequate, trial structured delivery with the existing
+broker before deciding on migration. This records a review plan, not acceptance
+of ACP/acpx or a replacement architecture. No runtime changes or new deployment
+automation are introduced by the documentation.
+
 ## Initial project setup
 
 Implementation: `83589382dd6311e87564bdcf5529cf511fca7849`.
@@ -1347,3 +1387,64 @@ helpers and operator guides; running model sessions need no restart.
 Validation: 250 tests passed, including both reported commands and parser failure
 cases. Production-profile offline ansible-lint passed across 169 files using the
 already available certified collection path.
+
+## Canonical installation root without migrating the running environment
+
+Implementation: `2cf98a7` (0.22.0).
+
+A single `PREFIX/ac-agents` root makes future fresh installations easier to locate,
+reproduce and inspect. The prefix is a parent directory and defaults to the destination
+runtime user's real home. Tools live in `bin`, connector code in `agent-connector`,
+account profiles in `model-environments`, and environment/template configuration in
+`conf`. Each project's singular `project.NAME.config` lives beside its editable prompt.
+Central path helpers drive runtime, authentication, lifecycle and Ansible references
+so profile discovery and authentication clearing remain within the correct scope.
+
+Systemd user units and Podman engine storage retain their standard real-home locations;
+units explicitly reference the installation root. Existing parent directory ownership
+is preserved. Fresh-install preflight refuses legacy layouts, unsafe ancestors and
+conflicting same-user service namespaces rather than creating an overlapping environment.
+Native profile credential isolation and validated archive-link/cache handling remain
+unchanged. Deeper paths are checked against actual Unix socket byte limits.
+
+The user explicitly prohibited deployment to the current environment. This change is
+therefore source-only: no target deployment, credential migration or model call ran.
+Controlled migration prerequisites are documented separately; an executable migration
+procedure and fresh installed acceptance remain future work, not verified deliverables.
+
+Validation: Python 3.12 executed all 191 local tests without skips; production Ansible
+lint reported zero failures and warnings across 149 files. Regression tests cover
+project-local configuration and lifecycle rebasing, profile-auth copy scope, actual
+socket limits, destination-prefix forwarding and rendered systemd path quoting.
+
+
+## Clarify project ownership and defer CLI renaming
+
+The installation-layout implementation `2cf98a7` retains the existing command
+behavior. Operator documentation now calls its named unit `PROJECT`: one project
+owns one team, and roles identify participants within it. Current command parameters
+are documented to make this distinction explicit. A proposed shorter verb scheme
+is tracked in TODO only; no command/subcommand renaming is implemented here.
+The live broker-hook SELinux connection blocker remains separately under diagnosis,
+without a claim that the source-only layout or these documentation changes fix it.
+
+
+## Generate scoped permissions and communicate blocked approvals
+
+Proposal documentation: `f6f900b` (0.22.4).
+
+The next permission-management design separates workspace trust and onboarding
+from tool approval. Generate operator-controlled allow/ask/deny policies per
+project and role before launch, permit only authorized broker operations within
+project scope, and preserve private/corporate and hidden-observer boundaries.
+A deterministic private notification relay should correlate sanitized approval
+metadata in SQLite without requiring a blocked model turn. Process launch must
+be distinguished from readiness and waiting for approval. The initial operator
+path remains attaching the exact tmux role; no blind Enter or timeout may approve
+an action. Supported native hooks/protocols and unimplemented transport gaps
+are documented; a unified approval CLI is not claimed.
+
+This is source-only documentation. No policy generator, relay, model call, trust
+acceptance or deployment ran. The user subsequently put implementation on hold
+while completing interactive native introductions. Documentation diff checks
+passed; new runtime behavior was neither implemented nor tested.

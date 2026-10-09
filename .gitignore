@@ -1,4 +1,6 @@
 # Password files and local decrypted material
+# Model-authentication bundles are forbidden in Git, even when encrypted.
+agent-secret-vault.yml*
 vpf
 **/vpf
 .vault-password*
@@ -12,3 +14,6 @@ vault-password*
 local/
 output/
 __pycache__/
+
+# Generated installation roots may contain native authentication; never track them.
+**/ac-agents/

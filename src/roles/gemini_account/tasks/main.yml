@@ -1,11 +1,17 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Resolve Gemini account directory owner
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define work Gemini migration home
   ansible.builtin.set_fact:
-    __gemini_account_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    __gemini_account_home: "{{ assistant_profiles_root }}"
 - name: Safely migrate the old Gemini directory without changing its contents
   become: true
   become_user: "{{ containers.runtime_user }}"

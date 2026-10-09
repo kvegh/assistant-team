@@ -27,7 +27,7 @@ class RenameProjectTests(unittest.TestCase):
         self.rendered=self.path/'profiles/builder/workspace/AGENTS.md';self.rendered.parent.mkdir(parents=True)
         self.rendered.write_text('generated old identity')
         (self.path/'profiles/builder/launched').touch()
-        self.config=self.home/'projects.old.config'
+        self.config=self.path/'project.old.config'
         self.original=json.dumps({'version':1,'project':'old','roles':dict.fromkeys(self.roles,'codex-priv')})
         self.config.write_text(self.original)
         self.calls=[]
@@ -35,7 +35,8 @@ class RenameProjectTests(unittest.TestCase):
             if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,50}',name):raise ValueError('Invalid project name')
             return self.home/'projects'/name
         self.framework=types.SimpleNamespace(ACCOUNT_HOME=self.home,ROLES=self.roles,project_path=project_path,
-            lifecycle_paths=lambda name:(project_path(name),self.home/('projects.'+name+'.config'),None),
+            paths=lambda root:types.SimpleNamespace(project_config=lambda name:project_path(name)/('project.'+name+'.config')),
+            lifecycle_paths=lambda name:(project_path(name),project_path(name)/('project.'+name+'.config'),None),
             loaded_project_units=lambda name:[],project_container_state=lambda name,role:None,
             service_state=lambda unit:{'UnitFileState':'enabled'},user_env=lambda:{},
             quiesce_project=lambda name,path:self.calls.append(('stop',name)),
@@ -44,7 +45,7 @@ class RenameProjectTests(unittest.TestCase):
         def restore(records):
             for path,data in records:path.write_bytes(data)
         def rebase(framework,name,old_name=None):
-            config=self.home/('projects.'+name+'.config');data=json.loads(config.read_text());data['project']=name
+            config=project_path(name)/('project.'+name+'.config');data=json.loads(config.read_text());data['project']=name
             config.write_text(json.dumps(data));(project_path(name)/self.rendered.relative_to(self.path)).write_text('generated '+name+' identity')
         self.helper=types.SimpleNamespace(snapshot_rendered=snapshot,restore_rendered=restore,rebase=rebase)
 
@@ -57,7 +58,7 @@ class RenameProjectTests(unittest.TestCase):
     def test_rename_preserves_user_content_and_rebases_only_generated_identity(self):
         self.run_rename();new=self.home/'projects/new'
         self.assertFalse(self.path.exists());self.assertFalse(self.config.exists())
-        self.assertEqual(json.loads((self.home/'projects.new.config').read_text())['project'],'new')
+        self.assertEqual(json.loads((new/'project.new.config').read_text())['project'],'new')
         self.assertEqual((new/'workspace/artifact').read_text(),'old user text remains old')
         self.assertEqual((new/'assistant-prompt.md').read_text(),'old original editable prompt')
         self.assertEqual((new/'db.sqlite').read_bytes(),b'old conversation unchanged')
@@ -70,9 +71,7 @@ class RenameProjectTests(unittest.TestCase):
     def test_existing_new_project_config_or_units_do_not_stop_old(self):
         destination=self.home/'projects/new';destination.mkdir()
         with self.assertRaises(ValueError):self.run_rename()
-        destination.rmdir();self.home.joinpath('projects.new.config').symlink_to(self.home/'missing')
-        with self.assertRaises(ValueError):self.run_rename()
-        self.home.joinpath('projects.new.config').unlink()
+        destination.rmdir()
         self.framework.loaded_project_units=lambda name:['assistant-connector@new.target']
         with self.assertRaises(ValueError):self.run_rename()
         self.assertEqual(self.calls,[])
@@ -139,7 +138,7 @@ class RenameProjectTests(unittest.TestCase):
     def test_config_move_failure_rolls_directory_back(self):
         original_rename=Path.rename
         def rename(path,target):
-            if path==self.config:raise OSError('fixture config move')
+            if path.name=='project.old.config':raise OSError('fixture config move')
             return original_rename(path,target)
         with patch.object(Path,'rename',rename),self.assertRaisesRegex(OSError,'config move'):self.run_rename()
         self.assertTrue(self.path.exists());self.assertEqual(self.config.read_text(),self.original)

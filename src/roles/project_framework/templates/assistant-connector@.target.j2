@@ -1,3 +1,4 @@
+# Install root: {{ ('AC_AGENTS_ROOT=' + assistant_install_root) | replace('%', '%%') | to_json }}
 [Unit]
 Description=Native assistant project %i
 Requires=assistant-connector-broker@%i.service assistant-connector-gateway@%i.service assistant-connector-containers@%i.service

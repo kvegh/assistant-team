@@ -1,8 +1,14 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Copy build contexts
   ansible.builtin.copy:
     src: containers/
-    dest: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/"
+    dest: "{{ assistant_connector_root }}/build/native/"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"
@@ -44,32 +50,32 @@
 - name: Install the constrained instance launcher
   ansible.builtin.copy:
     src: assistant-instance.py
-    dest: /usr/local/bin/assistant-instance
-    owner: root
-    group: root
+    dest: "{{ assistant_install_root }}/bin/assistant-instance"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
     mode: "0755"
 
 - name: Create launcher configuration directory
   ansible.builtin.file:
-    path: /etc/assistant-team
+    path: "{{ assistant_install_root }}/conf"
     state: directory
-    owner: root
-    group: root
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
     mode: "0755"
 
 - name: Publish verified local image versions
   ansible.builtin.copy:
-    dest: /etc/assistant-team/images.json
+    dest: "{{ assistant_install_root }}/conf/images.json"
     content: "{{ dict(__agent_images_harnesses | map(attribute='flavour') | zip(__agent_images_harnesses | map(attribute='version'))) | to_nice_json }}\n"
-    owner: root
-    group: root
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
     mode: "0644"
 
 - name: Copy offline instance validation utility
   tags: [instance_validation]
   ansible.builtin.copy:
     src: validate_instances.py
-    dest: "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"
+    dest: "{{ assistant_connector_root }}/build/native/validate_instances.py"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
@@ -83,5 +89,5 @@
     XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
   ansible.builtin.command:
-    argv: [python3, "{{ podman_host_runtime_home }}/.local/share/assistant-team/build/validate_instances.py"]
+    argv: [python3, "{{ assistant_connector_root }}/build/native/validate_instances.py"]
   changed_when: false

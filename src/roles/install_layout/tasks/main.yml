@@ -1,0 +1,81 @@
+---
+- name: Protect existing home-level environments before resolving new paths
+  ansible.builtin.import_tasks: preflight.yml
+- name: Require the destination runtime account
+  ansible.builtin.assert:
+    that: __install_layout_existing_account is not none
+    quiet: true
+    fail_msg: Create the destination runtime account before installing environment content.
+- name: Define real home and destination parent independently  # noqa var-naming[no-role-prefix]
+  ansible.builtin.set_fact:
+    assistant_runtime_home: "{{ __install_layout_existing_account[4] }}"
+    assistant_install_prefix_resolved: >-
+      {{ (assistant_install_prefix | default('') | length > 0)
+         | ternary(assistant_install_prefix, __install_layout_existing_account[4]) }}
+- name: Require an absolute normalized destination parent
+  ansible.builtin.assert:
+    that:
+      - assistant_install_prefix_resolved is string
+      - assistant_install_prefix_resolved is match('^/')
+      - "'..' not in assistant_install_prefix_resolved.split('/')"
+      - "'.' not in assistant_install_prefix_resolved.split('/')"
+      - assistant_install_prefix_resolved is not search('[\\x00-\\x1f\\x7f]')
+    quiet: true
+    fail_msg: Install prefix must be an absolute destination parent without traversal or control characters.
+- name: Define canonical environment roots  # noqa var-naming[no-role-prefix]
+  ansible.builtin.set_fact:
+    assistant_install_root: "{{ assistant_install_prefix_resolved | regex_replace('/+$', '') }}/ac-agents"
+- name: Define model and connector roots  # noqa var-naming[no-role-prefix]
+  ansible.builtin.set_fact:
+    assistant_profiles_root: "{{ assistant_install_root }}/model-environments"
+    assistant_connector_root: "{{ assistant_install_root }}/agent-connector"
+    __install_layout_ancestor_paths: ['/']
+- name: Enumerate existing ancestor paths for safe installation
+  ansible.builtin.set_fact:
+    __install_layout_ancestor_paths: "{{ __install_layout_ancestor_paths + ['/' + (assistant_install_root.split('/')[1:item] | join('/'))] }}"
+  loop: "{{ range(2, assistant_install_root.split('/') | length + 1) | list }}"
+- name: Inspect install ancestors without following links
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop: "{{ __install_layout_ancestor_paths }}"
+  register: __install_layout_ancestors
+- name: Require ordinary install directories
+  ansible.builtin.assert:
+    that:
+      - not (item.stat.islnk | default(false))
+      - not item.stat.exists or item.stat.isdir | default(false)
+    quiet: true
+    fail_msg: Installation paths must not traverse symlinks or existing non-directory entries.
+  loop: "{{ __install_layout_ancestors.results }}"
+- name: Create protected fresh-install parent when absent
+  ansible.builtin.file:
+    path: "{{ assistant_install_root | dirname }}"
+    state: directory
+    follow: false
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
+  when: not __install_layout_ancestors.results[-2].stat.exists
+- name: Inspect canonical subdirectories without following links
+  ansible.builtin.stat:
+    path: "{{ assistant_install_root }}/{{ item }}"
+    follow: false
+  loop: [bin, agent-connector, model-environments, projects, project-archive, environment-logs, conf, conf/templates]
+  register: __install_layout_directories
+- name: Refuse linked or conflicting canonical subdirectories
+  ansible.builtin.assert:
+    that:
+      - not (item.stat.islnk | default(false))
+      - not item.stat.exists or item.stat.isdir | default(false)
+    quiet: true
+  loop: "{{ __install_layout_directories.results }}"
+- name: Create canonical protected environment directories
+  ansible.builtin.file:
+    path: "{{ assistant_install_root }}/{{ item }}"
+    state: directory
+    follow: false
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
+  loop: ['', bin, agent-connector, model-environments, projects, project-archive, environment-logs, conf, conf/templates]

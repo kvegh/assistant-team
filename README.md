@@ -1,5 +1,19 @@
 # assistant-team
 
+Current communication development continues with agents-connector and tmux.
+The [communication architecture review in TODO](TODO.md) compares this route,
+acpx with a replacement coordinator, and their combination; no migration is agreed.
+
+Model-authentication vault work is on hold. See the
+[replication plan and pushed-code references](docs/AUTH_REPLICATION.md); no secret
+bundle or save/restore automation has been created.
+
+Source-only layout change: these new-prefix instructions describe future fresh installs. The running environment keeps its current home-level commands and paths; do not deploy this layout to it yet. See [migration prerequisites](INSTALLATION_MIGRATION.md).
+
+Permission management is a scoped design proposal, not implemented automation:
+[generated policies and private approval notifications](docs/PERMISSION_MANAGEMENT.md).
+Current roles retain native approvals; a running process alone does not prove readiness.
+
 For another working session, start with [the reusable session rules](SESSION_RULES.md)
 and `AGENTS.md`. The rules collect our collaboration, security, deployment, design,
 and versioning decisions without including environment credentials.
@@ -359,6 +373,10 @@ automatically switching to paid API usage.
 
 ### Persistent, attachable native sessions
 
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
 The selected Agents Connector setup below implements continuously running rootless
 Podman containers with inside-container tmux for the five visible Claude/Codex/Gemini
 profiles. Native authenticated sessions require operator login and launch. The
@@ -385,10 +403,10 @@ Generic native inbound transport across all harnesses remains unverified.
 installation, account migration, Vertex authentication and project framework
 roles. Run the container foundation first,
 then this playbook; it reuses the existing pinned native images. Guest/account
-details stay in Vault. The complete operator guide is installed as `~/README.md`
+details stay in Vault. The complete operator guide is installed as `~/ac-agents/README.md`
 in the dedicated account's home, from
 [its template](src/roles/agents_connector/templates/README.md.j2). A condensed
-`~/README.TLDR.md` provides the minimum operator commands. Keep both guides
+`~/ac-agents/README.TLDR.md` provides the minimum operator commands. Keep both guides
 current when behavior changes.
 
 ```bash
@@ -411,10 +429,10 @@ Vibe uses checksum-pinned Astral Python Build Standalone 3.12.15 to support the
 guest's libc. No global CLI, npm, pip, gcloud or libc shim is installed.
 
 ```bash
-cd ~/claude-priv && ./login
-cd ~/gemini-priv && ./login
-cd ~/codex-priv && ./login
-cd ~/mistral-priv && ./login
+cd ~/ac-agents/model-environments/claude-priv && ./login
+cd ~/ac-agents/model-environments/gemini-priv && ./login
+cd ~/ac-agents/model-environments/codex-priv && ./login
+cd ~/ac-agents/model-environments/mistral-priv && ./login
 ```
 
 Private Claude uses native OAuth login. Private Gemini selects personal Google
@@ -484,23 +502,44 @@ The separate `project_framework` Ansible role installs project-scoped control an
 systemd instance units without restarting existing sessions. As the runtime user:
 
 ```bash
-~/team setup
-~/team setup --list
-~/team --help                    # all commands and required parameters
-~/team --list                    # project names + runtime status, without auth or DB reads
-~/team create-project my-project
-${EDITOR:-vi} ~/projects.my-project.config
-${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
+~/ac-agents/bin/team setup
+~/ac-agents/bin/team setup --list
+~/ac-agents/bin/team --help                    # all commands and required parameters
+~/ac-agents/bin/team --list                    # project names + runtime status, without auth or DB reads
+~/ac-agents/bin/team create-project my-project
+${EDITOR:-vi} ~/ac-agents/projects/my-project/project.my-project.config
+${EDITOR:-vi} ~/ac-agents/projects/my-project/assistant-prompt.md
 # Fill [Project] and [Role: Name] with active instructions; # lines are inactive examples.
-~/team start my-project
-~/team status my-project
-~/team attach my-project orchestrator
-~/team watch my-project
-~/team stop my-project
-~/team restart my-project
+~/ac-agents/bin/team start my-project
+~/ac-agents/bin/team status my-project
+~/ac-agents/bin/team attach my-project orchestrator
+~/ac-agents/bin/team watch my-project
+~/ac-agents/bin/team stop my-project
+~/ac-agents/bin/team restart my-project
 ```
 
-There is one environment per Linux user. `~/environment.config` records which
+Current command parameters (invoke `team` through the installation's `bin/team`):
+
+| Command | Meaning |
+| --- | --- |
+| `create-project PROJECT` | Create one project, its team configuration and database. |
+| `--list` / `list-projects` | List projects; no project parameter. |
+| `start PROJECT` / `stop PROJECT` / `restart PROJECT` | Control that project's whole team. |
+| `status PROJECT` / `watch PROJECT` | Inspect runtime state or follow its messages. |
+| `attach PROJECT ROLE` | Attach one role's native session; detach with Ctrl-B D. |
+| `archive PROJECT` / `destroy PROJECT` | Retain the stopped project as an archive or delete it. |
+| `unarchive ARCHIVE` | Copy a retained archive into its dated project name, leaving it stopped. |
+| `rename-project PROJECT NEW_PROJECT` | Rename a project and its identity; leave it stopped. |
+| `apply-prompts PROJECT` | Render role instructions for the next native launch. |
+| `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
+| `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
+| `stop-containers PROJECT` | Stop only that project's role containers. |
+| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+
+Use `--help` for every command, including environment setup and diagnostics.
+The shorter verb-only command scheme is a proposal in TODO, not current behavior.
+
+There is one environment per Linux user. `~/ac-agents/conf/environment.conf` records which
 of the eight profiles are enabled; setup selects those profiles before offering
 native logins. Listing distinguishes enabled, installed and locally saved
 credentials, without making model requests. Disabling a profile preserves its
@@ -513,7 +552,7 @@ Podman query failed and includes a bus/access suggestion. `running` describes th
 target, not individual pane health or verified model access. Listing starts no
 service and reads no project database, prompt or authentication contents.
 
-Project completion commands are `~/team archive NAME` and `~/team destroy NAME`.
+Project completion commands are `~/ac-agents/bin/team archive PROJECT` and `~/ac-agents/bin/team destroy PROJECT`.
 Both first check the named target, broker, gateway and containers, stop them only
 if running, and verify that no project writer remains. Stopped containers are
 removed without deleting images or shared model account profiles. A failed stop
@@ -521,12 +560,12 @@ leaves project data and configuration in place; an inactive project needs no
 native harness or login to complete either operation.
 
 Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
-prompts and role state—to `~/project-archive/NAME-ddmmyyhhmm`, with its former home-level
-`projects.NAME.config` inside. Every archive uses the operation-start local time
+prompts and role state—to `~/ac-agents/project-archive/PROJECT-ddmmyyhhmm`, with its project-local
+`project.PROJECT.config` inside. Every archive uses the operation-start local time
 (day, month, two-digit year, 24-hour hour/minute), saved in private timestamp metadata.
 Same-minute destination collisions fail before stopping; no archive is overwritten.
 An archive matching the current project name exactly also blocks shutdown: use
-`~/team rename-project OLD NEW` before retrying (provided by the rename feature). Archive directories are private (0700), the assignment config is 0600,
+`~/ac-agents/bin/team rename-project OLD NEW` before retrying (provided by the rename feature). Archive directories are private (0700), the assignment config is 0600,
 and internal file modes and symlinks are preserved. Archives can include private
 role-local authentication copies and must stay outside Git. Restore is not provided.
 Destroy permanently deletes the project directory and its home-level config.
@@ -536,7 +575,7 @@ before files are moved/deleted. If a reference prevents collection, files remain
 Shared systemd templates and other instances remain.
 Do not start, restart or edit the same project concurrently with either operation.
 
-`~/projects.NAME.config` is the sole authority for role-to-profile assignments.
+`~/ac-agents/projects/PROJECT/project.PROJECT.config` is the sole authority for role-to-profile assignments.
 Both configuration files use JSON and contain no authentication secrets. Project
 assignments must select enabled profiles. Connector roles whose required account
 is unavailable need an explicit assignment before startup; they do not silently
@@ -545,7 +584,7 @@ roles currently require Claude. The collaboration roles retain their current nat
 enabled work/private profile; changing the role’s vendor adapter is not implemented. Mistral profiles support standalone login and
 CLI use; assigning them to team roles is refused until its adapter is implemented.
 
-Creation uses the stock broker to initialize `~/projects/NAME/db.sqlite` and its
+Creation uses the stock broker to initialize `~/ac-agents/projects/PROJECT/db.sqlite` and its
 five-worker registry. Eight profiles have separate native homes, workspaces, IPC
 and container names. Native role state is separated by assigned account profile,
 so changing accounts does not reuse another profile's credentials. Stop an active
@@ -565,7 +604,7 @@ Native onboarding, workspace trust and Codex hook approval are not bypassed.
 Native Mistral team support is tracked as required future work, including an
 upstream agents-connector pull request.
 
-The user target `assistant-connector@NAME.target` orders that project's broker,
+The user target `assistant-connector@PROJECT.target` orders that project's broker,
 gateway and native container services. Project targets are not enabled at boot.
 Stop/restart affect only that project and preserve its database and role state;
 restart launches new CLI sessions, without claiming automatic conversation resume.
@@ -596,7 +635,7 @@ authenticated profiles. Work projects require the chosen backend to be ready.
 
 ### Shared project artifact workspace
 
-Every project has `~/projects/NAME/workspace`, mounted at `/workspace/shared`.
+Every project has `~/ac-agents/projects/PROJECT/workspace`, mounted at `/workspace/shared`.
 All seven working roles can read/write shared artifacts; the observer can only
 read them. Their native homes, credentials and role instruction files remain
 separate. The full prompt file and private connector contexts are not shared.
@@ -637,7 +676,7 @@ for the current VM.
 
 The portable user-operated deployment path supports the same roles for local and
 remote Ansible connections. That path and unified target-side
-`~/environment-logs` are being implemented. Diagnostics will cover deployment,
+`~/ac-agents/environment-logs` are being implemented. Diagnostics will cover deployment,
 setup, authentication outcomes and service/container lifecycle using protected
 operational metadata. They must exclude credentials, conversations, prompts and
 raw model output. Failures before a target connection exists require a protected
@@ -657,7 +696,7 @@ the default templates and Mistral team support—from optional custom account
 contexts and multiple environments. Multiple environments are not supported now;
 use separate Linux users for isolated environments.
 
-Personal Gemini uses the official pinned Antigravity CLI in `~/gemini-priv`:
+Personal Gemini uses the official pinned Antigravity CLI in `~/ac-agents/model-environments/gemini-priv`:
 run `./login`, complete its personal Google browser/code authorization yourself,
 then exit the CLI to see the saved-auth result. The detector recognizes the native
 nested OAuth token file. An interrupted TUI reports saved/unverified only when new
@@ -704,7 +743,7 @@ The root-growth role passed an unchanged rerun on the expanded guest and ran dur
 
 ## Work Vertex login
 
-The approved local Google Cloud CLI 588.0.0 is installed in both work profiles with separate Cloud SDK configuration/ADC paths and shared immutable program files. Run `cd ~/claude-work; ./login` or `cd ~/gemini-work; ./login` to enter your own project, region and enabled model ID, then complete native ADC authentication. No login, API enablement, billing change or model call ran during installation. Gemini's native selected/enforced auth type becomes Vertex after completed ADC login, preserving unrelated hooks/settings.
+The approved local Google Cloud CLI 588.0.0 is installed in both work profiles with separate Cloud SDK configuration/ADC paths and shared immutable program files. Run `cd ~/ac-agents/model-environments/claude-work; ./login` or `cd ~/ac-agents/model-environments/gemini-work; ./login` to enter your own project, region and enabled model ID, then complete native ADC authentication. No login, API enablement, billing change or model call ran during installation. Gemini's native selected/enforced auth type becomes Vertex after completed ADC login, preserving unrelated hooks/settings.
 
 The immutable versioned SDK archive is checksum-pinned. Its payload was verified identical to Google's rolling archive that matches the published checksum, avoiding use of one archive's checksum for a differently packaged tarball. SDK verification checks the installed release exactly and removes the owned staging download. Independent deployments install this selected dependency only when their encrypted operator configuration enables it.
 
@@ -764,22 +803,22 @@ heading text to active plain text, and comments out the known rough-template gui
 It writes a protected backup beside the project prompt before atomic replacement.
 The default empty list leaves every existing project unchanged; no sessions restart.
 
-Human-readable runtime diagnostics are in `~/environment-logs/events.log`, alongside
-`events.jsonl`. Follow them with `tail -f ~/environment-logs/events.log`. Both use
+Human-readable runtime diagnostics are in `~/ac-agents/environment-logs/events.log`, alongside
+`events.jsonl`. Follow them with `tail -f ~/ac-agents/environment-logs/events.log`. Both use
 matching event IDs, protected permissions, and a 1 MiB rotation with three backups.
 Failure guidance is fixed safe text, not raw native output; use the user journal
 for detailed service diagnostics. Deployment transfers also provide protected
 `deployment-<run-id>.log` alongside JSON, retaining up to 32 runs. Diagnostic exports
 remain validated JSON-only; arbitrary text files are never exported.
 
-The editable default template for new projects is `~/templates/assistant-prompts.md`.
+The editable default template for new projects is `~/ac-agents/conf/templates/assistant.prompt.md.template`.
 Creation copies its role instructions into the new project; existing project prompts
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
 
 ### Restore a retained archive
 
-Run `~/team unarchive example-0910260800` using the archive directory name.
+Run `~/ac-agents/bin/team unarchive example-0910260800` using the archive directory name.
 This copies its complete project state to the same dated project name and keeps
 the original archive unchanged. The exact target is enabled but left stopped;
 start it explicitly when ready. Structured configuration and generated role
@@ -795,12 +834,12 @@ needed. No model calls or automatic service startup occur during restoration.
 
 Before archiving a restored dated project again, use `rename-project` to choose a new logical name: the retained archive already has its exact current name.
 
-`~/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
+`~/ac-agents/bin/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
 containers and forgets its old named systemd instances, then renames the project
 directory and home assignment config. It updates structured project identity and
 generated role instructions, preserving editable prompts, workspace artifacts,
 conversation history and native authentication. The new target preserves OLD's
-enablement and remains stopped; start it explicitly with `~/team start NEW`.
+enablement and remains stopped; start it explicitly with `~/ac-agents/bin/team start NEW`.
 Existing new paths/configs, containers, loaded instances or excessive Unix socket
 path lengths refuse the operation before shutdown. Partial rename failures roll
 back directories, config and generated instructions where possible; an incomplete
@@ -869,7 +908,7 @@ that configuration into the selected role home. Provider authentication files
 remain outside Git.
 
 Before handing over the first project task, attach each role with
-`~/team attach NAME ROLE` and finish its native first-run screens. Review theme,
+`~/ac-agents/bin/team attach NAME ROLE` and finish its native first-run screens. Review theme,
 workspace trust, hook trust or requested tool permissions in that role's CLI.
 These steps are separate from provider authentication; saved credentials and
 login status do not prove actual provider requests succeed. Once the roles reach
@@ -933,7 +972,7 @@ queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
 
-For a concise decision feed, run `tail -f ~/projects/NAME/workspace/DECISIONS.log`.
+For a concise decision feed, run `tail -f ~/ac-agents/projects/NAME/workspace/DECISIONS.log`.
 The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
 meaningful accepted outcomes, agreed direction changes or blockers requiring
 user input. The orchestrator requests these updates at milestones, without timers.
@@ -970,3 +1009,4 @@ writes succeeded; writes into the writable outer home and protected `.git`,
 `.agents`, `.codex` and `.aws` paths failed, and network socket creation failed.
 Outer capabilities stayed zero, no-new-privileges and seccomp stayed enabled,
 and the dedicated domain retained nonzero MCS categories.
+The approved install-prefix layout is currently **source only**. The existing deployment remains on its earlier home-level layout; do not apply these playbooks to it yet. Fresh installs use `PARENT/ac-agents`, with PARENT defaulting to the destination runtime HOME. `--prefix /absolute/parent` selects a destination parent for both local and remote deployment; AAP uses `assistant_install_prefix` or its encrypted definition. See [INSTALLATION_MIGRATION.md](INSTALLATION_MIGRATION.md) before any legacy migration.

@@ -11,7 +11,7 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class EnvironmentConfigTests(unittest.TestCase):
     def environment(self, home, enabled):
-        module.atomic(pathlib.Path(home)/'environment.config',{'version':1,'profiles':{p:{'enabled':p in enabled} for p in module.PROFILES}})
+        module.atomic(pathlib.Path(home)/'conf/environment.conf',{'version':1,'profiles':{p:{'enabled':p in enabled} for p in module.PROFILES}})
 
     def test_selected_subset_does_not_assign_disabled_accounts(self):
         with tempfile.TemporaryDirectory() as home:
@@ -25,7 +25,7 @@ class EnvironmentConfigTests(unittest.TestCase):
     def test_custom_profile_and_secret_fields_are_rejected(self):
         with tempfile.TemporaryDirectory() as home:
             self.environment(home,[])
-            path=pathlib.Path(home)/'environment.config';value=json.loads(path.read_text())
+            path=pathlib.Path(home)/'conf/environment.conf';value=json.loads(path.read_text())
             value['profiles']['claude-priv']['token']='fixture'
             module.atomic(path,value)
             with self.assertRaises(ValueError):module.environment(home)
@@ -35,7 +35,7 @@ class EnvironmentConfigTests(unittest.TestCase):
             self.environment(home,module.PROFILES)
             first=module.project(home,'one');second=module.project(home,'two')
             first['roles']['challenger']='gemini-priv'
-            module.atomic(pathlib.Path(home)/'projects.one.config',first)
+            module.atomic(pathlib.Path(home)/'projects/one/project.one.config',first)
             self.assertEqual(module.project(home,'one')['roles']['challenger'],'gemini-priv')
             self.assertEqual(module.project(home,'two')['roles']['challenger'],'gemini-work')
 
@@ -43,12 +43,12 @@ class EnvironmentConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as home:
             self.environment(home,module.PROFILES)
             value=module.project(home,'one');value['roles']['challenger']='gemini-priv'
-            module.atomic(pathlib.Path(home)/'projects.one.config',value)
+            module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
             self.assertEqual(module.assignments(home,'one')['challenger'],'gemini-priv')
 
     def test_mistral_profile_available_but_team_assignment_rejected(self):
         with tempfile.TemporaryDirectory() as home:
             self.environment(home,module.PROFILES)
             value=module.project(home,'one');value['roles']['builder']='mistral-priv'
-            module.atomic(pathlib.Path(home)/'projects.one.config',value)
+            module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
             with self.assertRaisesRegex(ValueError,'adapter'):module.assignments(home,'one')

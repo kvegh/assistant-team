@@ -1,16 +1,22 @@
+Set the installed root before running commands:
+
+```sh
+AC_AGENTS_ROOT={{ assistant_install_root | quote }}
+```
+
 # Assistant team operator guide
 
-Run commands as the dedicated runtime user. After entering that user’s shell, `~/team` supplies the user-systemd environment automatically.
+Run commands as the dedicated runtime user. After entering that user’s shell, `"$AC_AGENTS_ROOT/bin/team"` supplies the user-systemd environment automatically.
 
 ## Quick start
 
-1. Run `~/team setup --list` to inspect profiles, then `~/team setup` to select enabled profiles. Login is optional and runs only when you choose it.
+1. Run `"$AC_AGENTS_ROOT/bin/team" setup --list` to inspect profiles, then `"$AC_AGENTS_ROOT/bin/team" setup` to select enabled profiles. Login is optional and runs only when you choose it.
 2. Authenticate selected profiles using their local `./login` commands.
-3. Create a project: `~/team create-project example`.
-4. Edit `~/projects.example.config` to assign enabled profiles to roles. Edit `~/projects/example/assistant-prompt.md` for the goal, boundaries and role instructions.
-5. Run `~/team start example`, then `~/team attach example orchestrator` and give the orchestrator a bounded task.
-6. In another terminal, `~/team watch example` shows worker messages. Ctrl-C stops only the viewer.
-7. `~/team status example`, `~/team stop example` and `~/team restart example` control that project only.
+3. Create a project: `"$AC_AGENTS_ROOT/bin/team" create-project example`.
+4. Edit `{{ assistant_install_root }}/projects/example/project.example.config` to assign enabled profiles to roles. Edit `{{ assistant_install_root }}/projects/example/assistant-prompt.md` for the goal, boundaries and role instructions.
+5. Run `"$AC_AGENTS_ROOT/bin/team" start example`, then `"$AC_AGENTS_ROOT/bin/team" attach example orchestrator` and give the orchestrator a bounded task.
+6. In another terminal, `"$AC_AGENTS_ROOT/bin/team" watch example` shows worker messages. Ctrl-C stops only the viewer.
+7. `"$AC_AGENTS_ROOT/bin/team" status example`, `"$AC_AGENTS_ROOT/bin/team" stop example` and `"$AC_AGENTS_ROOT/bin/team" restart example` control that project only.
 
 ## Authentication and account isolation
 
@@ -18,14 +24,14 @@ Each directory contains its own installation, configuration, credentials, cache 
 
 | Profile directory | Native authentication |
 | --- | --- |
-| `~/claude-work` | Vertex ADC; guided project, location and enabled model ID |
-| `~/claude-priv` | Claude account with a plan supporting Claude Code |
-| `~/gemini-work` | Vertex ADC; guided project, location and enabled model ID |
-| `~/gemini-priv` | Personal Google OAuth through Antigravity; displayed browser/code flow |
-| `~/codex-work`, `~/codex-priv` | ChatGPT device login; isolated file credential stores |
-| `~/mistral-work`, `~/mistral-priv` | Native Vibe setup/account login |
+| `"$AC_AGENTS_ROOT/model-environments/claude-work"` | Vertex ADC; guided project, location and enabled model ID |
+| `"$AC_AGENTS_ROOT/model-environments/claude-priv"` | Claude account with a plan supporting Claude Code |
+| `"$AC_AGENTS_ROOT/model-environments/gemini-work"` | Vertex ADC; guided project, location and enabled model ID |
+| `"$AC_AGENTS_ROOT/model-environments/gemini-priv"` | Personal Google OAuth through Antigravity; displayed browser/code flow |
+| `"$AC_AGENTS_ROOT/model-environments/codex-work"`, `"$AC_AGENTS_ROOT/model-environments/codex-priv"` | ChatGPT device login; isolated file credential stores |
+| `"$AC_AGENTS_ROOT/model-environments/mistral-work"`, `"$AC_AGENTS_ROOT/model-environments/mistral-priv"` | Native Vibe setup/account login |
 
-For example: `cd ~/gemini-priv` then `./login`. No `gcloud` is needed for personal Gemini. The supported native CLI is Antigravity (`./agy`). After personal Google sign-in, exit it to see the saved-auth result. Its normal SSH/container token fallback uses scoped files protected by 0700 directories and umask 077; this is not encryption at rest and does not protect against root/sudo. No desktop/keyring packages are required. Model access remains unverified and its agents-connector team adapter is pending; use Gemini work for roles. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: the operator enables that selected dependency in encrypted deployment settings. The wrapper fails clearly if it is unavailable. No API enablement, billing changes or model probes occur during deployment.
+For example: `cd "$AC_AGENTS_ROOT/model-environments/gemini-priv"` then `./login`. No `gcloud` is needed for personal Gemini. The supported native CLI is Antigravity (`./agy`). After personal Google sign-in, exit it to see the saved-auth result. Its normal SSH/container token fallback uses scoped files protected by 0700 directories and umask 077; this is not encryption at rest and does not protect against root/sudo. No desktop/keyring packages are required. Model access remains unverified and its agents-connector team adapter is pending; use Gemini work for roles. No client-ID bypass or paid fallback is configured. Work Vertex login requires the locally installed Google Cloud SDK: the operator enables that selected dependency in encrypted deployment settings. The wrapper fails clearly if it is unavailable. No API enablement, billing changes or model probes occur during deployment.
 
 At session end, `./login` reports **Failed or cancelled** or **Credentials saved; model access unverified**. Interactive exit without new credential evidence is not treated as successful login. Native account status and saved JSON do not prove model entitlement. No model check runs automatically; this setup does not yet expose a universal opt-in model verifier.
 
@@ -35,9 +41,31 @@ Mistral profiles work as standalone native CLI installations. Vibe participation
 
 ## Configuration
 
-There is one environment per Linux user. `~/environment.config` is strict JSON containing eight profile enablement flags. `~/team setup --list` distinguishes enabled, installed and locally saved credentials without printing identities or tokens. Disabling a profile preserves its files and does not stop running projects.
 
-Each `~/projects.NAME.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-work"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
+Current command parameters (invoke `team` through the installation's `bin/team`):
+
+| Command | Meaning |
+| --- | --- |
+| `create-project PROJECT` | Create one project, its team configuration and database. |
+| `--list` / `list-projects` | List projects; no project parameter. |
+| `start PROJECT` / `stop PROJECT` / `restart PROJECT` | Control that project's whole team. |
+| `status PROJECT` / `watch PROJECT` | Inspect runtime state or follow its messages. |
+| `attach PROJECT ROLE` | Attach one role's native session; detach with Ctrl-B D. |
+| `archive PROJECT` / `destroy PROJECT` | Retain the stopped project as an archive or delete it. |
+| `unarchive ARCHIVE` | Copy a retained archive into its dated project name, leaving it stopped. |
+| `rename-project PROJECT NEW_PROJECT` | Rename a project and its identity; leave it stopped. |
+| `apply-prompts PROJECT` | Render role instructions for the next native launch. |
+| `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
+| `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
+| `stop-containers PROJECT` | Stop only that project's role containers. |
+| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+
+Use `--help` for every command, including environment setup and diagnostics.
+The shorter verb-only command scheme is a proposal in TODO, not current behavior.
+
+There is one environment per Linux user. `{{ assistant_install_root }}/conf/environment.conf` is strict JSON containing eight profile enablement flags. `"$AC_AGENTS_ROOT/bin/team" setup --list` distinguishes enabled, installed and locally saved credentials without printing identities or tokens. Disabling a profile preserves its files and does not stop running projects.
+
+Each `{{ assistant_install_root }}/projects/PROJECT/project.PROJECT.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-work"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
 
 Changing a role account requires stopping and starting that project. Separate per-profile role homes and sessions prevent previous-account credentials carrying over. Native provider approvals remain enabled. Codex uses workspace-write/on-request; observer tools are restricted and connector general tools disabled. Connector service credentials/plugins are not configured.
 
@@ -48,7 +76,7 @@ Podman query failed and includes a bus/access suggestion. `running` describes th
 target, not individual pane health or verified model access. Listing starts no
 service and reads no project database, prompt or authentication contents.
 
-Project completion commands are `~/team archive NAME` and `~/team destroy NAME`.
+Project completion commands are `"$AC_AGENTS_ROOT/bin/team" archive PROJECT` and `"$AC_AGENTS_ROOT/bin/team" destroy PROJECT`.
 Both first check the named target, broker, gateway and containers, stop them only
 if running, and verify that no project writer remains. Stopped containers are
 removed without deleting images or shared model account profiles. A failed stop
@@ -56,12 +84,12 @@ leaves project data and configuration in place; an inactive project needs no
 native harness or login to complete either operation.
 
 Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
-prompts and role state—to `~/project-archive/NAME-ddmmyyhhmm`, with its former home-level
-`projects.NAME.config` inside. Every archive uses the operation-start local time
+prompts and role state—to `{{ assistant_install_root }}/project-archive/PROJECT-ddmmyyhhmm`, with its project-local
+`project.PROJECT.config` inside. Every archive uses the operation-start local time
 (day, month, two-digit year, 24-hour hour/minute), saved in private timestamp metadata.
 Same-minute destination collisions fail before stopping; no archive is overwritten.
 An archive matching the current project name exactly also blocks shutdown: use
-`~/team rename-project OLD NEW` before retrying (provided by the rename feature). Archive directories are private (0700), the assignment config is 0600,
+`"$AC_AGENTS_ROOT/bin/team" rename-project OLD NEW` before retrying (provided by the rename feature). Archive directories are private (0700), the assignment config is 0600,
 and internal file modes and symlinks are preserved. Archives can include private
 role-local authentication copies and must stay outside Git. Restore is not provided.
 Destroy permanently deletes the project directory and its home-level config.
@@ -73,19 +101,23 @@ Do not start, restart or edit the same project concurrently with either operatio
 
 ## Project files and sessions
 
-`~/team --help` shows every supported command, required parameters and a brief
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
+`"$AC_AGENTS_ROOT/bin/team" --help` shows every supported command, required parameters and a brief
 explanation without reading authentication or starting services. Unknown commands
 explicitly report `Invalid command`; missing required parameters are a separate error.
-Use `create-project NAME`, not `create NAME`.
+Use `create-project PROJECT`, not `create PROJECT`.
 
-`~/team --list` (or `~/team list-projects`) lists initialized project names and runtime status using read-only service/container
-metadata, without opening their prompts, databases or credentials. `~/team setup --list` lists account
+`"$AC_AGENTS_ROOT/bin/team" --list` (or `"$AC_AGENTS_ROOT/bin/team" list-projects`) lists initialized project names and runtime status using read-only service/container
+metadata, without opening their prompts, databases or credentials. `"$AC_AGENTS_ROOT/bin/team" setup --list` lists account
 profiles instead. Empty or unfinished projects and symlink paths are excluded.
 
-- `~/projects/NAME/assistant-prompt.md`: project goal and eight editable role sections.
-- `~/projects/NAME/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
-- `~/projects/NAME/db.sqlite`: project-local stock broker history.
-- `~/projects/NAME/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
+- `{{ assistant_install_root }}/projects/PROJECT/assistant-prompt.md`: project goal and eight editable role sections.
+- `{{ assistant_install_root }}/projects/PROJECT/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
+- `{{ assistant_install_root }}/projects/PROJECT/db.sqlite`: project-local stock broker history.
+- `{{ assistant_install_root }}/projects/PROJECT/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
 
 New project templates use `[Project]` and role markers such as `[Role: Investigator]`,
 `[Role: Private Connector]` and `[Role: Corporate Connector]`. All `#` lines are
@@ -95,29 +127,29 @@ Blank roles are allowed; examples do not become automatic fallback instructions.
 Existing legacy `# Role: canonical-name` files retain their previous interpretation
 and are not rewritten. Duplicate, missing or unknown roles are rejected before rendering.
 
-`~/team apply-prompts NAME` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
+`"$AC_AGENTS_ROOT/bin/team" apply-prompts PROJECT` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
 
-`~/team start NAME` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `~/team attach NAME ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
+`"$AC_AGENTS_ROOT/bin/team" start PROJECT` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `"$AC_AGENTS_ROOT/bin/team" attach PROJECT ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
 
-The per-project systemd target is `assistant-connector@NAME.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
+The per-project systemd target is `assistant-connector@PROJECT.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
 
 ```sh
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
-systemctl --user status assistant-connector@NAME.target
+systemctl --user status assistant-connector@PROJECT.target
 ```
 
 ## Private observer
 
-Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `~/team refresh-observer NAME` updates its snapshot; `~/team deliver-observer-report NAME` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
+Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `"$AC_AGENTS_ROOT/bin/team" refresh-observer PROJECT` updates its snapshot; `"$AC_AGENTS_ROOT/bin/team" deliver-observer-report PROJECT` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
 
-See `~/README.TLDR.md` for condensed commands. Keep both guides current after lasting configuration changes.
+See `{{ assistant_install_root }}/README.TLDR.md` for condensed commands. Keep both guides current after lasting configuration changes.
 
 ## Environment diagnostics and version
 
-`~/environment-logs` holds protected bounded deployment and runtime metadata, including login outcomes and project lifecycle results. It excludes credentials, prompts, conversations, databases and raw CLI output. Deployment controller failures before connectivity retain a local protected spool; the user-operated runner transfers safe metadata when reachable.
+`{{ assistant_install_root }}/environment-logs` holds protected bounded deployment and runtime metadata, including login outcomes and project lifecycle results. It excludes credentials, prompts, conversations, databases and raw CLI output. Deployment controller failures before connectivity retain a local protected spool; the user-operated runner transfers safe metadata when reachable.
 
-`~/team diagnostics --export /private/environment-metadata.tar.gz` creates an explicit sanitized bundle for manual sharing. `~/team version` prints installed VERSION/build metadata. No automatic diagnostic replication or coding-agent access to a fresh authenticated deployment is configured.
+`"$AC_AGENTS_ROOT/bin/team" diagnostics --export /private/environment-metadata.tar.gz` creates an explicit sanitized bundle for manual sharing. `"$AC_AGENTS_ROOT/bin/team" version` prints installed VERSION/build metadata. No automatic diagnostic replication or coding-agent access to a fresh authenticated deployment is configured.
 
 ## VM storage
 
@@ -130,22 +162,22 @@ Claude work login requires a full enabled Vertex model ID, for example
 `claude-opus-5`; `Opus` and `Opus-5` are not full IDs. Availability depends on
 your Google project and location. The login helper does not probe model access.
 
-Human-readable runtime diagnostics are in `~/environment-logs/events.log`, alongside
-`events.jsonl`. Follow them with `tail -f ~/environment-logs/events.log`. Both use
+Human-readable runtime diagnostics are in `{{ assistant_install_root }}/environment-logs/events.log`, alongside
+`events.jsonl`. Follow them with `tail -f {{ assistant_install_root }}/environment-logs/events.log`. Both use
 matching event IDs, protected permissions, and a 1 MiB rotation with three backups.
 Failure guidance is fixed safe text, not raw native output; use the user journal
 for detailed service diagnostics. Deployment transfers also provide protected
 `deployment-<run-id>.log` alongside JSON, retaining up to 32 runs. Diagnostic exports
 remain validated JSON-only; arbitrary text files are never exported.
 
-The editable default template for new projects is `~/templates/assistant-prompts.md`.
+The editable default template for new projects is `{{ assistant_install_root }}/conf/templates/assistant.prompt.md.template`.
 Creation copies its role instructions into the new project; existing project prompts
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
 
 ### Restore a retained archive
 
-Run `~/team unarchive example-0910260800` using the archive directory name.
+Run `"$AC_AGENTS_ROOT/bin/team" unarchive example-0910260800` using the archive directory name.
 This copies its complete project state to the same dated project name and keeps
 the original archive unchanged. The exact target is enabled but left stopped;
 start it explicitly when ready. Structured configuration and generated role
@@ -161,12 +193,12 @@ needed. No model calls or automatic service startup occur during restoration.
 
 Before archiving a restored dated project again, use `rename-project` to choose a new logical name: the retained archive already has its exact current name.
 
-`~/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
+`"$AC_AGENTS_ROOT/bin/team" rename-project OLD NEW` stops OLD when necessary, removes only its stopped
 containers and forgets its old named systemd instances, then renames the project
 directory and home assignment config. It updates structured project identity and
 generated role instructions, preserving editable prompts, workspace artifacts,
 conversation history and native authentication. The new target preserves OLD's
-enablement and remains stopped; start it explicitly with `~/team start NEW`.
+enablement and remains stopped; start it explicitly with `"$AC_AGENTS_ROOT/bin/team" start NEW`.
 Existing new paths/configs, containers, loaded instances or excessive Unix socket
 path lengths refuse the operation before shutdown. Partial rename failures roll
 back directories, config and generated instructions where possible; an incomplete

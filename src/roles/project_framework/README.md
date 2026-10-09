@@ -1,12 +1,12 @@
 # project_framework
 
 Install project-scoped control, strict configs, services and concise operator guides.
-`~/team --list` and `~/team list-projects` list initialized project names with read-only runtime status without
-opening project data or requiring authentication; account profiles use `~/team setup --list`.
+`~/ac-agents/bin/team --list` and `~/ac-agents/bin/team list-projects` list initialized project names with read-only runtime status without
+opening project data or requiring authentication; account profiles use `~/ac-agents/bin/team setup --list`.
 
 ## Interface
 
-`~/team --help` describes all public commands. Unknown commands explicitly report
+`~/ac-agents/bin/team --help` describes all public commands. Unknown commands explicitly report
 `Invalid command`; missing project arguments remain distinct. Help needs no auth
 and starts no service.
 
@@ -59,12 +59,12 @@ pane health or provider entitlement; listing never activates services.
 
 The installed unarchive helper copies retained archives transactionally and uses the shared identity helper to update structured config and generated role instructions. Shared name validation checks real Unix socket path lengths before restoration.
 
-`~/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
+`~/ac-agents/bin/team rename-project OLD NEW` stops OLD when necessary, removes only its stopped
 containers and forgets its old named systemd instances, then renames the project
 directory and home assignment config. It updates structured project identity and
 generated role instructions, preserving editable prompts, workspace artifacts,
 conversation history and native authentication. The new target preserves OLD's
-enablement and remains stopped; start it explicitly with `~/team start NEW`.
+enablement and remains stopped; start it explicitly with `~/ac-agents/bin/team start NEW`.
 Existing new paths/configs, containers, loaded instances or excessive Unix socket
 path lengths refuse the operation before shutdown. Partial rename failures roll
 back directories, config and generated instructions where possible; an incomplete
@@ -92,3 +92,4 @@ containers and unit enablement. Runtime status uses the dependent-aware summary.
 The focused `project_control` tag installs only the operator control file and
 required account/path facts. It does not render units, reload systemd, restart
 services, rewrite project files or change authentication.
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

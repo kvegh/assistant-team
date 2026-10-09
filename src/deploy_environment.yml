@@ -24,6 +24,7 @@
   gather_facts: true
   no_log: true
   vars:
+    assistant_install_prefix: "{{ hostvars.localhost.destination.install_prefix | default('') }}"
     containers:
       runtime_user: "{{ hostvars.localhost.destination.runtime_user }}"
     provisioning:

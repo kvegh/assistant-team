@@ -43,12 +43,13 @@ class ProjectListingTests(unittest.TestCase):
         return output.getvalue()
 
     def install_router(self):
-        routing = self.home / 'agents-connector' / 'routing'
+        routing = self.home / 'agent-connector' / 'routing'
         routing.mkdir(parents=True)
         shutil.copyfile(FRAMEWORK, routing / 'project-team.py')
         shutil.copyfile(ROUTER, routing / 'connector-team.py')
         shutil.copyfile(REPOSITORY/'src/lib/project-names.py', routing/'project-names.py')
-        self.home.joinpath('team').symlink_to(routing / 'connector-team.py')
+        shutil.copyfile(REPOSITORY/'src/lib/install-paths.py', routing/'install-paths.py')
+        self.home.joinpath('bin').mkdir();self.home.joinpath('bin/team').symlink_to(routing / 'connector-team.py')
         tools=self.home/'tools';tools.mkdir()
         for name,body in [('systemctl',"print('ActiveState=inactive\\nLoadState=not-found\\nUnitFileState=')"),('podman','import sys;sys.exit(1)')]:
             command=tools/name;command.write_text('#!/usr/bin/env python3\n'+body+'\n');command.chmod(0o700)
@@ -59,7 +60,7 @@ class ProjectListingTests(unittest.TestCase):
         environment['PATH']=str(self.home/'tools')+os.pathsep+environment.get('PATH','')
         if project is not None:
             environment['ASSISTANT_PROJECT'] = project
-        return subprocess.run([sys.executable, str(self.home / 'team'), *arguments],
+        return subprocess.run([sys.executable, str(self.home / 'bin/team'), *arguments],
                               capture_output=True, text=True, env=environment, check=False)
 
     def test_empty_listing_does_not_create_project_directory(self):
@@ -130,7 +131,7 @@ class ProjectListingTests(unittest.TestCase):
                     result = self.run_router(arguments, project)
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn('Invalid command: ' + arguments[0], result.stderr)
-                    self.assertIn('~/team --help', result.stderr)
+                    self.assertIn('team --help', result.stderr)
                     self.assertNotIn('project name is required', result.stderr)
         self.assertFalse(self.projects.exists())
 
