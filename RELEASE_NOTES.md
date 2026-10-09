@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.22.13
+
+Document the background health-check decision and its implementation commit.
+
 ## 0.22.12
 
 Document ten-minute health checks for unfinished background agents alongside

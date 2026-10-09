@@ -1,5 +1,14 @@
 # Design decisions history
 
+## Check unfinished background work every ten minutes
+
+Documentation: `54f38c9`.
+
+The user refined notification-driven monitoring with a ten-minute health check for
+unfinished agents that may be blocked, deferred, stalled or need resuming. Results
+and blockers are still shared promptly when reported. Explicit holds and completed
+tasks must remain undisturbed; the old fixed 20-second polling rule stays removed.
+
 ## Prefer background completion notifications over fixed polling
 
 Documentation: `305be6a`.
