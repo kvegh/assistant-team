@@ -1,5 +1,13 @@
 # Design decisions history
 
+## Hold task-specific model selection while retaining its priority
+
+Documentation: `2cf4bcb`.
+
+The user put cost- and quality-based task-specific model selection on hold,
+but explicitly retained its priority when resumed. No model-selection behavior
+or runtime configuration changed.
+
 ## Continue the current communication route while evaluating alternatives
 
 Documentation: `dad244c`.

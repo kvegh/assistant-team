@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.22.9
+
+Document the model-selection hold commit and the user's retained priority.
+
 ## 0.22.8
 
 Document that task-specific model selection for cost and quality is on hold,
