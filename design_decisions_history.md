@@ -1555,3 +1555,14 @@ Implementation `5eb9f18` adds thirteen review-only backlog items from the team r
 The release integrates `511c76c` (fresh definition and guarded retirement), `288abfb` (selective authentication transfer, including its synthetic Ansible transport validation), and `43f476b` (review-only backlog) with integrated source `7b84c4d`. Branch release-note collisions were combined without rewriting their original commit histories. The final release snapshot is 1.0.0; these integration/documentation commits belong to that same consolidation rather than claiming separate released versions. Subsequent fixes resume patch increments. Existing environments remain unchanged by source publication. Provider auth material is excluded from Git; encrypted deployment definitions are permitted. Live AAP, auth and team acceptance remain separate checks after publication.
 
 Release implementation `160385d` reconciles the 1.0.0 source scope and incremental branch history. Documentation `09515b3` updates the active acceptance plan. The active fresh-install/transfer/native-team acceptance plan replaces obsolete fresh-test holds, while existing environment migration, external auth vault and broad permission automation remain separately constrained.
+
+## Match Mistral's native Vibe installation metadata
+
+Fix: `54434f5`.
+
+Mistral work/private directories retain their public profile names, while the
+installed vendor harness identifies its flavour as `vibe`. The bootstrap transfer
+validator now checks this actual installed metadata instead of rejecting an
+otherwise supported source. The fixtures use the same native flavour. All 15
+focused tests, including actual local Ansible preflight, six-profile restore and
+missing-only rerun, passed again using synthetic credentials only.
