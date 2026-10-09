@@ -91,6 +91,53 @@ class UnarchiveTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.helper.restore(self.framework,self.name)
         run.assert_not_called();self.assertTrue(self.archive.exists())
 
+    def test_relative_native_file_and_directory_links_are_preserved_without_following(self):
+        native=self.archive/'profiles/builder/home/native'
+        native.mkdir(parents=True);(native/'cache').mkdir();(native/'cache/state').write_text('fixture state')
+        (native/'state-link').symlink_to('cache/state')
+        (native/'cache-link').symlink_to('cache',target_is_directory=True)
+        before=(native/'cache/state').read_bytes()
+        name,_=self.restore();restored=self.home/'projects'/name/'profiles/builder/home/native'
+        self.assertTrue((restored/'state-link').is_symlink())
+        self.assertTrue((restored/'cache-link').is_symlink())
+        self.assertEqual((restored/'state-link').read_bytes(),before)
+        self.assertEqual((native/'cache/state').read_bytes(),before)
+
+    def test_escaping_absolute_dangling_and_cyclic_links_fail_before_copy_or_enable(self):
+        for target in ['../../outside','/outside/private','missing','link']:
+            with self.subTest(target=target):
+                link=self.archive/'workspace/link';link.symlink_to(target)
+                with patch.object(self.helper.subprocess,'run') as run:
+                    with self.assertRaises(ValueError):self.helper.restore(self.framework,self.name)
+                run.assert_not_called();self.assertTrue(self.archive.exists())
+                self.assertFalse((self.home/'projects').exists());link.unlink()
+
+    def test_codex_cache_rewrites_only_own_current_and_omits_regenerated_state(self):
+        profile=self.archive/'profiles/builder';(profile/'profile.json').write_text('{"flavour":"codex"}')
+        home=profile/'accounts/codex-priv/home';cache=home/'.codex/packages/app-server-daemon'
+        release=cache/'releases/fixture-release';release.mkdir(parents=True)
+        (release/'real-codex').write_text('fixture executable');(release/'codex').symlink_to('real-codex')
+        (cache/'current').symlink_to('/home/agent/.codex/packages/app-server-daemon/releases/fixture-release')
+        arg0=home/'.codex/tmp/arg0';arg0.mkdir(parents=True);(arg0/'apply_patch').symlink_to('/container-only/tool')
+        control=home/'.codex/app-server-control';control.mkdir();(control/'control.sock').symlink_to('/container-only/socket')
+        before={str(p.relative_to(self.archive)):os.readlink(p) for p in self.archive.rglob('*') if p.is_symlink()}
+        name,_=self.restore();restored=self.home/'projects'/name/home.relative_to(self.archive)
+        current=restored/'.codex/packages/app-server-daemon/current'
+        self.assertEqual(os.readlink(current),'releases/fixture-release')
+        self.assertTrue(current.resolve().is_relative_to(restored))
+        self.assertEqual((current/'codex').read_text(),'fixture executable')
+        self.assertFalse((restored/'.codex/tmp/arg0').exists());self.assertFalse((restored/'.codex/app-server-control').exists())
+        self.assertEqual(before,{str(p.relative_to(self.archive)):os.readlink(p) for p in self.archive.rglob('*') if p.is_symlink()})
+
+    def test_codex_current_cannot_map_to_credentials_or_other_homes(self):
+        profile=self.archive/'profiles/builder';(profile/'profile.json').write_text('{"flavour":"codex"}')
+        home=profile/'accounts/codex-priv/home';cache=home/'.codex/packages/app-server-daemon';cache.mkdir(parents=True)
+        (home/'private').mkdir();(home/'private/auth.json').write_text('fixture credentials')
+        (cache/'current').symlink_to('/home/agent/private')
+        with patch.object(self.helper.subprocess,'run') as run:
+            with self.assertRaisesRegex(ValueError,'own retained release cache'):self.helper.restore(self.framework,self.name)
+        run.assert_not_called();self.assertFalse((self.home/'projects').exists())
+
     def test_enable_failure_rolls_back_new_files_and_keeps_archive(self):
         commands=[]
         def run(args,**kwargs):

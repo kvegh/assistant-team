@@ -70,3 +70,11 @@ path lengths refuse the operation before shutdown. Partial rename failures roll
 back directories, config and generated instructions where possible; an incomplete
 rollback reports retained paths rather than overwriting them. Do not run lifecycle
 commands or edit the same project's config concurrently.
+
+
+Restore allows relocatable internal relative links. Codex's generated arg0
+launch shims and app-server-control state are omitted only from the restored
+copy; its release-cache `current` pointer can map from `/home/agent` to a relative
+link within its own retained release directory. Arbitrary absolute/external,
+dangling, cyclic and special-file links remain rejected. Validate both source
+and staging trees; keep the retained archive untouched.

@@ -781,3 +781,13 @@ rollback reports retained paths rather than overwriting them. Do not run lifecyc
 commands or edit the same project's config concurrently.
 
 Project rename also rolls back unexpected rendering failures and terminal interruption; the restored old project remains stopped.
+
+
+Unarchive preserves existing relative links only when their targets stay inside
+the retained project. It rejects other external, dangling or cyclic links. In
+Codex native homes only, the regenerated `.codex/tmp/arg0` and
+`.codex/app-server-control` scopes are omitted from the restored copy; the
+archive remains unchanged. An exact daemon `current` pointer under `/home/agent`
+is rewritten to a relative link only when it maps to the same native home's
+retained release-cache directory. The staging tree is checked before publication
+or target enablement. Credentials and other native state are preserved.

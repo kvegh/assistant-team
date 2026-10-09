@@ -34,6 +34,56 @@ def archival_timestamp(framework,archive):
     except (ValueError,TypeError,KeyError) as error:raise ValueError('Archive timestamp metadata is invalid') from error
 
 
+def native_codex_cache_plan(framework,archive):
+    ephemeral=set();rewrites={}
+    for role in framework.ROLES:
+        profile=archive/'profiles'/role;config=profile/'profile.json'
+        if config.is_symlink() or not config.is_file():raise ValueError('Archived role config must be a regular file')
+        value=json.loads(config.read_text())
+        if value.get('flavour')!='codex':continue
+        homes=[profile/'home']+[profile/'accounts'/account/'home' for account in ['codex-work','codex-priv']]
+        for home in homes:
+            if not home.exists():continue
+            if home.is_symlink():raise ValueError('Archived native home must not be symlinked')
+            ephemeral.update([home/'.codex/tmp/arg0',home/'.codex/app-server-control'])
+            current=home/'.codex/packages/app-server-daemon/current'
+            if not current.is_symlink():continue
+            target=os.readlink(current)
+            if not target.startswith('/home/agent/'):continue
+            mapped=home/target[len('/home/agent/'):]
+            try:resolved=mapped.resolve(strict=True)
+            except (OSError,RuntimeError) as error:raise ValueError('Codex daemon cache pointer has no safe retained target') from error
+            releases=(home/'.codex/packages/app-server-daemon/releases').resolve()
+            if not resolved.is_relative_to(releases) or not resolved.is_relative_to(home.resolve()) or not resolved.is_dir():
+                raise ValueError('Codex daemon cache pointer is outside its own retained release cache')
+            rewrites[current]=(target,os.path.relpath(resolved,current.parent))
+    return ephemeral,rewrites
+
+
+def validate_archive_tree(archive,ephemeral,rewrites=None):
+    """Preserve only relocatable links to existing ordinary in-archive targets."""
+    root=archive.resolve();rewrites=rewrites or {}
+    for directory,dirs,files in os.walk(archive,followlinks=False):
+        dirs[:]=[entry for entry in dirs if pathlib.Path(directory)/entry not in ephemeral]
+        for entry in dirs+files:
+            path=pathlib.Path(directory)/entry
+            if path in ephemeral or path in rewrites:continue
+            mode=path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                if pathlib.PurePath(os.readlink(path)).is_absolute():
+                    raise ValueError('Archive absolute links are not restored; archive was retained')
+                try:target=path.resolve(strict=True)
+                except (OSError,RuntimeError) as error:
+                    raise ValueError('Archive has a dangling or cyclic link; archive was retained') from error
+                if not target.is_relative_to(root) or target in ephemeral:
+                    raise ValueError('Archive link escapes its retained project or references obsolete runtime state')
+                target_mode=target.stat().st_mode
+                if not (stat.S_ISREG(target_mode) or stat.S_ISDIR(target_mode)):
+                    raise ValueError('Archive link references an unsupported special file')
+            elif not (stat.S_ISDIR(mode) or stat.S_ISREG(mode) or stat.S_ISSOCK(mode) and path in ephemeral):
+                raise ValueError('Archive contains an unsupported special file')
+
+
 def restore_plan(framework,archive_name):
     if not isinstance(archive_name,str) or '/' in archive_name or archive_name in ['','.','..']:
         raise ValueError('Use the archive directory name, not a path')
@@ -81,12 +131,9 @@ def restore_plan(framework,archive_name):
                 if not {'agents','messages','asks','replies'}<=tables:raise ValueError('Archive broker database schema is incomplete')
     except sqlite3.DatabaseError as error:raise ValueError('Archive broker database is invalid; nothing was restored') from error
     ephemeral={archive/'broker.sock'}|{archive/'profiles'/role/'ipc/agent.sock' for role in framework.ROLES}
-    for directory,dirs,files in os.walk(archive,followlinks=False):
-        for entry in dirs+files:
-            path=pathlib.Path(directory)/entry;mode=path.lstat().st_mode
-            if stat.S_ISLNK(mode):raise ValueError('Archive symlinks are not restored; no external authentication or files were copied')
-            if not (stat.S_ISDIR(mode) or stat.S_ISREG(mode) or stat.S_ISSOCK(mode) and path in ephemeral):
-                raise ValueError('Archive contains an unsupported special file')
+    native_ephemeral,rewrites=native_codex_cache_plan(framework,archive)
+    ephemeral|=native_ephemeral
+    validate_archive_tree(archive,ephemeral,rewrites)
     identity_module().rendered_paths(framework,archive)
     if framework.loaded_project_units(new):raise ValueError('Restored name already has loaded systemd instances')
     if any(framework.project_container_state(new,role) is not None for role in framework.ROLES):
@@ -95,11 +142,11 @@ def restore_plan(framework,archive_name):
     state=subprocess.run(['systemctl','--user','is-enabled',target],env=framework.user_env(),capture_output=True,text=True)
     if state.stdout.strip() not in ['disabled','not-found',''] or state.returncode not in [1,4]:
         raise ValueError('Restored target is already enabled or its state cannot be established')
-    return archive,config,old,new,destination,new_config,ephemeral
+    return archive,config,old,new,destination,new_config,ephemeral,rewrites
 
 
 def restore(framework,archive_name):
-    archive,embedded,old,new,destination,new_config,ephemeral=restore_plan(framework,archive_name)
+    archive,embedded,old,new,destination,new_config,ephemeral,rewrites=restore_plan(framework,archive_name)
     framework.PROJECTS.mkdir(mode=0o700,exist_ok=True)
     staging=pathlib.Path(tempfile.mkdtemp(prefix='.unarchive-',dir=framework.PROJECTS))
     copied=staging/'project';published=False;config_created=False;enable_attempted=False
@@ -108,6 +155,12 @@ def restore(framework,archive_name):
         def ignore(directory,names):
             return [name for name in names if pathlib.Path(directory)/name in ephemeral]
         shutil.copytree(archive,copied,symlinks=True,ignore=ignore)
+        for source,(original,target) in rewrites.items():
+            link=copied/source.relative_to(archive)
+            if not link.is_symlink() or os.readlink(link)!=original:
+                raise ValueError('Codex cache pointer changed during restoration; archive was retained')
+            link.unlink();link.symlink_to(target)
+        validate_archive_tree(copied,set())
         copied.chmod(0o700)
         (copied/framework.ARCHIVE_METADATA).unlink(missing_ok=True)
         (copied/embedded.name).unlink()

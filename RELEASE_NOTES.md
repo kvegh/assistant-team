@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.5
+
+Restore safe relative internal links while keeping external/dangling links blocked.
+Omit only regenerated Codex arg0/control state from the restored copy and rebase
+its verified own-release daemon pointer. Validate staging before publishing;
+retained archives, credentials and the existing installation layout remain intact.
+
 ## 0.21.4
 
 Document the deferred installation-layout cleanup, including configurable prefix,
