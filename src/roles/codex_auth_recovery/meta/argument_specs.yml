@@ -1,0 +1,37 @@
+argument_specs:
+  main:
+    short_description: Recover only an explicitly selected same-account private Codex
+      credential stream.
+    options:
+      codex_auth_recovery_source_host:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_source_role:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_source_home:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_destination_profiles_root:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_destination_environment_config:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_runtime_user:
+        type: str
+        default: ''
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_report_directory:
+        type: str
+        default: '{{ codex_auth_recovery_destination_profiles_root | dirname }}/environment-logs/auth-recovery'
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.
+      codex_auth_recovery_execute:
+        type: bool
+        default: false
+        description: Explicit recovery setting; see docs/CODEX_AUTH_RECOVERY.md.

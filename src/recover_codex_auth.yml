@@ -1,0 +1,11 @@
+---
+- name: Recover one explicitly authorized same-account private Codex stream
+  hosts: native_auth_destinations
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../vars/environment.vault.yml
+    - "{{ codex_auth_recovery_config_file | default('../vars/environment.vault.yml') }}"
+  roles:
+    - role: codex_auth_recovery
+      tags: [codex_auth_recovery]

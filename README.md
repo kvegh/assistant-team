@@ -1086,3 +1086,5 @@ An optional encrypted deployment `enabled_profiles` list seeds the initial envir
 `project_framework_reconcile_profiles: true` is an explicit operator opt-in to replace the existing selection with the provided nonempty list. It is false by default and is never inferred from source authentication or enabled automatically. Confirm ownership of current configuration before choosing it; credentials and projects are not copied or restarted by this task.
 
 Personal Antigravity bootstrap installs its shared scoped launcher and required helpers before publishing agy/gemini/login symlinks. This works for fresh native_auth deployment and standalone antigravity_auth execution without forcing dangling links or reading authentication.
+
+A rejected private Codex bootstrap cache can be recovered explicitly from a known same-account archived builder session using [the focused recovery guide](docs/CODEX_AUTH_RECOVERY.md). Validation-only is the default; replacement needs explicit execution and refuses mismatched identities, contexts, unsafe paths and active credential writers. No source cache is changed and model access remains unverified until a separate bounded check.

@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.11
+
+Add explicit same-account Codex-private recovery from a selected archived builder cache. Protected Ansible validation defaults to no replacement; execution replaces only the existing matching-account credential and audits secret-free provenance.
+
 ## 1.0.10
 
 Document verified capture-only historical label compatibility and unchanged strict destination validation.

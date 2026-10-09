@@ -1,0 +1,9 @@
+---
+codex_auth_recovery_source_host: ''
+codex_auth_recovery_source_role: ''
+codex_auth_recovery_source_home: ''
+codex_auth_recovery_destination_profiles_root: ''
+codex_auth_recovery_destination_environment_config: ''
+codex_auth_recovery_runtime_user: ''
+codex_auth_recovery_report_directory: "{{ codex_auth_recovery_destination_profiles_root | dirname }}/environment-logs/auth-recovery"
+codex_auth_recovery_execute: false
