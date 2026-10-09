@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.32.5
+
+Document Vibe metadata compatibility and successful synthetic six-profile
+authentication transfer acceptance before the fresh deployment release.
+
 ## 0.32.4
 
 Recognize the installed native Vibe flavour for Mistral bootstrap authentication

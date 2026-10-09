@@ -1391,3 +1391,14 @@ profiles present), missing-only restore (six restored) and an idempotent rerun
 (six existing profiles skipped), with temporary helper directories removed. All
 15 focused transfer tests and production lint for the role/playbook passed. These
 checks used synthetic credentials and did not copy or read real authentication.
+
+## Match Mistral's native Vibe installation metadata
+
+Fix: `54434f5`.
+
+Mistral work/private directories retain their public profile names, while the
+installed vendor harness identifies its flavour as `vibe`. The bootstrap transfer
+validator now checks this actual installed metadata instead of rejecting an
+otherwise supported source. The fixtures use the same native flavour. All 15
+focused tests, including actual local Ansible preflight, six-profile restore and
+missing-only rerun, passed again using synthetic credentials only.
