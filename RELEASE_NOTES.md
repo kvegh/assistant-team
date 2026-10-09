@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.16
+
+Document the verified container-only Codex direct-session choice and its
+regressions. Native host wrappers retain daemon defaults. The committed change
+is source-only; no running native session was restarted.
+
 ## 0.21.15
 
 Launch Codex container sessions with `--no-daemon`, using the supported direct

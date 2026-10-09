@@ -1063,3 +1063,25 @@ actual provider request. Keep operator login and native first-run onboarding
 distinct from tool-approval design, and do not bypass access controls.
 
 Technical basis: [official Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+## Container-owned Codex session lifecycle
+
+Implementation: `c48cab5`.
+
+During authorized startup recovery, normal Codex startup still displayed sign-in
+after explicit role authentication, while the installed CLI's supported
+`--no-daemon` mode reached the normal prompt after operator hook-trust steps.
+The specific upstream shared-server authentication cause remains unproven.
+
+Persist direct mode only for Codex role container launches: a per-role container
+and tmux session already own the process lifecycle, so a reused shared background
+server is unnecessary in this setup. Retain the native host wrapper's daemon
+default. This selects a supported session mode; it does not authenticate users,
+trust hooks automatically, bypass sandboxing or change tool approvals.
+
+Launch regression checks include direct mode together with the managed update
+setting, workspace-write sandbox and on-request approval policy. Native wrapper
+regression checks confirm direct mode does not leak into host launches. All 200
+tests and production lint passed. The change remains source-only pending
+coordinated deployment; the running builder and other native sessions were not
+modified by this implementation.
