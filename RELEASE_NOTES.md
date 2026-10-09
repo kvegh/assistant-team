@@ -20,6 +20,10 @@ Source tests and lint are checked before publication. Fresh AAP deployment,
 credential transfer, bounded model checks and native team/archive acceptance are
 follow-up verification; this release does not claim those live checks have passed.
 Existing environments require separately authorized migration.
+## 0.32.4
+
+Recognize the installed native Vibe flavour for Mistral bootstrap authentication
+while preserving independent work/private profile names and dotenv allowlists.
 
 ## 0.32.3
 

@@ -1069,3 +1069,8 @@ metadata-only preflight, six-context missing-only restore and idempotent rerun.
 Explicit JSON serialization preserves native credential documents across Ansible
 templating. These disposable checks do not access real model authentication.
 The [team review backlog](TODO.md#team-source-review--review-only-not-approved-fixes) preserves findings from an older pinned source snapshot for reassessment against current code. These are review items, not approved implementations or a complete audit.
+
+Mistral bootstrap profiles use the installed native Vibe harness metadata; the
+transfer accepts its `vibe` flavour while keeping `mistral-work` and
+`mistral-priv` credential boundaries separate. Mistral team integration remains
+a separate unfinished task.
