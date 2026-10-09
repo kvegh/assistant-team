@@ -935,3 +935,10 @@ failure. Installed disposable fixtures verified conflict preservation, old/new
 config identity, unchanged user content and database bytes, retained native
 fixture state, enabled but stopped new target, and human/JSON lifecycle logs.
 The fixtures were cleaned; no real project was renamed and no model was invoked.
+
+Rename rollback follow-up: implementation `7ec7121` (0.21.2) also handles
+unexpected renderer exceptions and terminal interruption, because transactional
+protection must cover these failures as well as ordinary filesystem/systemd
+errors. The old directory, exact config and generated instructions are restored
+and remain stopped. All 11 focused rename tests pass, including both unexpected
+error and interruption regression cases; no Ansible content changed in this fix.

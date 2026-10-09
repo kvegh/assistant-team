@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.21.3
+
+Record the unexpected-error/interruption rename rollback fix and its focused
+regression validation.
+
 ## 0.21.2
 
 Roll back project rename on unexpected renderer exceptions or interruption too,
