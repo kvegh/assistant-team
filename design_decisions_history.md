@@ -1580,3 +1580,9 @@ Full validation passed 284 tests and production Ansible lint across 183 files wi
 ## Resume an existing clone without provisioning again
 
 Implementation `5284ae6` fills only the encrypted recovery guest address in the current test definition. The clone already existed when preflight failed; a guest_config rerun registers it from the recovery context and skips image cloning/provisioning. A future fresh run must select an unused clone identity and an empty recovery address in a separate definition. Encryption roundtrip and structural comparison verified that no other environment values changed. Ten focused portable-deployment tests and the documentation diff check passed. No VM or model authentication was changed by this source update.
+
+## Reproduce enabled account selection on fresh deployment
+
+Implementation `5c4d683` adds an optional explicit enabled-profile list to Ansible deployment. Previously the runtime initialized absent environment.conf by enabling every installed native profile, which differed from the intended selected-account environment. A nonempty known unique list seeds the exact existing eight-profile schema with private permissions; empty/default keeps previous behavior. Existing operator edits are preserved unless reconciliation is explicitly enabled. The encrypted test definition selects six profiles independently of source auth state. Real Ansible tests verify default no-op, exact schema/mode, rerun preservation, explicit replacement and invalid-list refusal. No credentials are copied and no services are restarted by this selection task.
+
+Full validation passed 287 tests and offline production Ansible lint across 186 files with zero findings before publication. Target application remains an explicitly authorized separate AAP operation.

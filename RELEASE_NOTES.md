@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.6
+
+Document explicit initial account selection and optional operator-requested reconciliation, including its implementation reference and protected Ansible regression checks.
+
 ## 1.0.5
 
 Support explicit initial enabled-account selection in Ansible deployment. Validate known unique profiles and seed only missing protected environment configuration; preserve operator edits and the existing empty/default behavior. Replacing an existing selection requires explicit reconciliation opt-in.
