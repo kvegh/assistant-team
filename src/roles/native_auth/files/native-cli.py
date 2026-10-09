@@ -18,6 +18,7 @@ else:
     env['PYTHONHOME']=str(prefix)
     env['LD_LIBRARY_PATH']=str(prefix/'lib')+os.pathsep+env.get('LD_LIBRARY_PATH','')
     command=[str(prefix/'bin/python3.12'),str(prefix/config['entrypoint'])]
+if f=='codex':command += ['-c','check_for_update_on_startup=false']
 args=sys.argv[1:]
 status_spec=importlib.util.spec_from_file_location('login_result',root/'.login-result.py')
 status=importlib.util.module_from_spec(status_spec);status_spec.loader.exec_module(status)

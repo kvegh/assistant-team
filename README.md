@@ -810,3 +810,11 @@ data. A pending shutdown is completed before `team start NAME` submits a start;
 bounded wait and fail clearly if shutdown cannot be verified. This avoids a fast
 stop/start canceling remaining shutdown jobs. `team status NAME` includes dependent
 service state in its project summary.
+
+Codex CLI updates are centrally managed through pinned Ansible installations and
+image rebuilds. Generated role configs and managed launch commands disable the
+startup update check using `check_for_update_on_startup=false`; this avoids an
+interactive npm update attempt inside a read-only container. Existing operator
+TOML is preserved, and the command override applies without rewriting it. Native
+host wrappers use the same policy to preserve their managed installation version.
+See the [official Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).

@@ -61,3 +61,9 @@ Use the focused `connector_ipc` tag to install only the routing utility and its
 path facts. It does not restart units, launch native sessions, rebuild images or
 rewrite prompts/authentication. Activation of a currently running gateway remains
 a separate coordinated operation.
+
+Codex role launch passes `-c check_for_update_on_startup=false` and fresh generated
+TOML includes the corresponding top-level setting. Existing TOML remains
+byte-for-byte unchanged. Updates must come through the managed image build; a
+read-only container must not try an interactive global npm update. This policy
+does not modify sandbox, approval, MCP or authentication settings.

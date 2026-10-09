@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.21.13
+
+Disable Codex startup update checks in newly generated role configs and managed
+CLI launch arguments. Existing role TOML stays unchanged; the launch override
+prevents update prompts from attempting npm writes inside read-only containers.
+CLI versions continue to be managed through Ansible. Sandbox and approval
+settings remain enabled.
+
 ## 0.21.12
 
 Document verified shutdown completion and the installed-helper acceptance test:

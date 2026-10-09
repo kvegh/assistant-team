@@ -29,3 +29,7 @@ OAuth token structure is supported. A TUI interrupt with newly persisted valid
 evidence is reported as saved/unverified; cancellation without new evidence stays
 failed/cancelled. Unchanged existing evidence is described separately. No outcome
 can claim verified model entitlement without an explicit model check.
+
+Managed Codex wrappers pass `-c check_for_update_on_startup=false` for the pinned
+Ansible-managed installation. CLI version changes are made through deployment,
+not interactive self-update prompts. Login and model permissions are unaffected.
