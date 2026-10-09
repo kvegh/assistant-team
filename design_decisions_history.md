@@ -1297,3 +1297,38 @@ Append-only behavior and writer ownership are role instructions, not a changed
 filesystem security boundary; shared-workspace permissions remain unchanged.
 Validation: 245 unit tests passed, including content preservation, block
 idempotence and unsafe path rejection; production Ansible lint passed.
+
+## Confined Codex native sandbox compatibility
+
+Implementation: `96eec40` (0.28.0).
+
+The native Bubblewrap sandbox could not start inside the original constrained
+rootless container on enforcing SELinux. A dedicated Codex-only domain preserves
+the relevant standard container permissions, MCS confinement and original outer
+controls. Its additional filesystem permissions permit private devpts mounting
+and device/tmpfs remounts required by native readonly masking. Those grants apply
+to filesystem types, not individual paths or only readonly directions; rootless
+namespace and inherited mount locks remain important bounds. The standard
+container domain is unchanged. No outside-sandbox tool approval was granted.
+
+Use the already installed certified RHEL system roles module loader instead of
+adding development packages. Its module transaction suppresses activation, so an
+explicit reload handler and handler flush make the new policy active before
+container creation. The separate role intentionally requires the supported
+SELinux-enforcing host configuration and existing policy tools.
+
+Actual model-free native sandbox checks passed for ordinary execution and shared
+workspace writes. Writes into the writable outer home and protected workspace
+metadata directories failed readonly, network creation failed with EPERM, and
+outer capabilities remained zero with no-new-privileges, seccomp and MCS active.
+A guarded builder-only replacement verified and resumed the exact saved native
+conversation; all seven sibling container identities/start times stayed intact.
+The original shared checkin completed exactly once and produced a correlated
+broker reply after one specific reply approval. No other task was introduced.
+
+Validation: 246 tests passed under Python 3.12, followed by all three focused
+container-scope/saved-session guards; production-profile offline ansible-lint
+passed with zero findings across 168 files. Ansible policy activation and guarded
+builder deployment succeeded. The current conversation returned to its native
+prompt. Hidden-role architecture and installation-prefix changes remain separate
+source-only work and were not deployed by this fix.

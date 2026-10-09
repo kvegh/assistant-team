@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.28.1
+
+Document the scoped SELinux permissions, explicit module activation, preserved
+container/native restrictions and successful saved-session write/reply acceptance.
+
 ## 0.28.0
 
 Restore Codex native workspace-write execution on enforcing SELinux using a
