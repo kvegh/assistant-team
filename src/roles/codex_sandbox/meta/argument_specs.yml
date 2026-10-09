@@ -1,0 +1,5 @@
+---
+argument_specs:
+  main:
+    short_description: Preserve native Codex sandboxing inside a constrained SELinux container domain
+    options: {}

@@ -1,0 +1,5 @@
+---
+- name: Reload dedicated Codex SELinux policy
+  ansible.builtin.command:
+    argv: [/usr/sbin/semodule, -R]
+  changed_when: true

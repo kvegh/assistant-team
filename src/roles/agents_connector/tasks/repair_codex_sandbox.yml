@@ -1,0 +1,32 @@
+---
+- name: Validate the explicit sandbox repair selection
+  ansible.builtin.assert:
+    that:
+      - agents_connector_repair_codex_sandbox_project is match('^[a-z0-9][a-z0-9_-]{0,39}$')
+      - agents_connector_repair_codex_sandbox_session is match('^[a-f0-9-]{36}$')
+    quiet: true
+
+- name: Install the guarded sandbox repair and current container launcher
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ __agents_connector_root }}/routing/{{ item }}"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: '0700'
+  loop: [connector-team.py, repair-codex-sandbox.py]
+
+- name: Resume the selected saved builder conversation within its dedicated domain
+  become: true
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ agents_connector_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ agents_connector_runtime_uid }}"
+    ASSISTANT_PROJECT: "{{ agents_connector_repair_codex_sandbox_project }}"
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ __agents_connector_root }}/routing/repair-codex-sandbox.py"
+      - --session-id
+      - "{{ agents_connector_repair_codex_sandbox_session }}"
+  register: agents_connector_sandbox_resume_result
+  changed_when: "'\"changed\": true' in agents_connector_sandbox_resume_result.stdout"

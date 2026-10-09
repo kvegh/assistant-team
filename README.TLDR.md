@@ -100,3 +100,5 @@ writes: project workspace collaborators retain their existing write permissions.
 Existing user prompts and log content are preserved during deployment. Already
 running harness conversations need an explicit instruction refresh to adopt it;
 updating files alone does not guarantee they re-read their role instructions.
+
+Codex containers require the dedicated enforcing-SELinux sandbox policy. Native workspace-write confinement remains active; no outside-sandbox approval is needed for ordinary shared-workspace writes.

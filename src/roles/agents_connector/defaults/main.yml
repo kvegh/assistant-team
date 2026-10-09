@@ -18,6 +18,8 @@ agents_connector_image_flavours: [claude, codex, gemini]
 agents_connector_image_force: false
 agents_connector_repair_codex_project: ''
 agents_connector_repair_codex_restore_marker_only: false
+agents_connector_repair_codex_sandbox_project: ''
+agents_connector_repair_codex_sandbox_session: ''
 
 agents_connector_repair_gemini_project: ''
 agents_connector_repair_gemini_role: challenger

@@ -321,6 +321,8 @@ def start_container(name):
         return
     uid=os.getuid()
     cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(role_home(name))+':/home/agent:Z','-v',str(role_workspace(name))+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent && exec sleep infinity']
+    if spec['flavour']=='codex':
+        cmd[3:3]=['--security-opt=label=type:ac_agents_codex.process']
     agy=antigravity_executable(name)
     if agy is not None:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])

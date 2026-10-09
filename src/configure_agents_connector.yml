@@ -30,6 +30,8 @@
   roles:
     - role: podman_host
       tags: [connector_host]
+    - role: codex_sandbox
+      tags: [codex_sandbox]
     - role: retire_legacy
       tags: [retire_legacy]
     - role: agents_connector

@@ -1,0 +1,47 @@
+---
+- name: Verify the existing SELinux policy module loader
+  ansible.builtin.stat:
+    path: /usr/sbin/semodule
+  register: codex_sandbox_loader
+
+- name: Require the supported SELinux host policy
+  ansible.builtin.assert:
+    that:
+      - ansible_selinux.status == 'enabled'
+      - ansible_selinux.mode == 'enforcing'
+      - codex_sandbox_loader.stat.exists
+    fail_msg: Codex sandbox compatibility requires the existing enforcing SELinux host and policy tools.
+
+- name: Create the protected Codex policy source directory
+  ansible.builtin.file:
+    path: /var/lib/ac-agents/selinux
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the dedicated constrained Codex domain source
+  ansible.builtin.copy:
+    src: ac_agents_codex.cil
+    dest: /var/lib/ac-agents/selinux/ac_agents_codex.cil
+    owner: root
+    group: root
+    mode: '0644'
+  register: codex_sandbox_policy_source
+
+- name: Inspect installed SELinux modules
+  ansible.builtin.command:
+    argv: [/usr/sbin/semodule, -l]
+  changed_when: false
+  register: codex_sandbox_modules
+
+- name: Load only the dedicated Codex compatibility module
+  redhat.rhel_system_roles.local_semodule:
+    path: /var/lib/ac-agents/selinux/ac_agents_codex.cil
+    state: enabled
+    priority: 400
+  notify: Reload dedicated Codex SELinux policy
+  when: codex_sandbox_policy_source.changed or 'ac_agents_codex' not in codex_sandbox_modules.stdout
+
+- name: Activate the dedicated policy before container startup
+  ansible.builtin.meta: flush_handlers

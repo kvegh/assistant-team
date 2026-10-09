@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.28.0
+
+Restore Codex native workspace-write execution on enforcing SELinux using a
+dedicated constrained container domain. Preserve rootless, MCS, seccomp, dropped
+capabilities, read-only root, protected paths and network restrictions. Add a
+guarded builder-only replacement that resumes the exact saved conversation.
+
 ## 0.27.1
 
 Document decision-feed ownership, preservation, privacy and active-session refresh.

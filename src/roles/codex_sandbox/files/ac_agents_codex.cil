@@ -1,0 +1,33 @@
+; Constrained-container definition from the installed vendor Udica base template.
+; Keep standard container-domain and MCS constraints; never inherit unconfined.
+(block ac_agents_codex
+    (type process)
+    (type socket)
+    (roletype system_r process)
+    (typeattributeset domain (process))
+    (typeattributeset container_domain (process))
+    (typeattributeset container_net_domain (process))
+    (typeattributeset container_user_domain (process))
+    (typeattributeset svirt_sandbox_domain (process))
+    (typeattributeset mcs_constrained_type (process))
+    (typeattributeset file_type (socket))
+    (allow process socket (sock_file (create open getattr setattr read write rename link unlink ioctl lock append)))
+    (allow process proc_type (file (getattr open read)))
+    (allow process cpu_online_t (file (getattr open read)))
+    (allow container_runtime_t process (key (create link read search setattr view write)))
+    ; Preserve the original container_t access to the existing scoped gateway.
+    (allow process container_t (unix_stream_socket (connectto)))
+    (allow process proc_t (filesystem (remount)))
+    (allow process container_file_t (filesystem (mount remount unmount)))
+    ; Standard container template transitions keep private tmpfs files labeled.
+    (typetransition process tmpfs_t dir container_file_t)
+    (typetransition process tmpfs_t file container_file_t)
+    (typetransition process tmpfs_t lnk_file container_file_t)
+    ; Bubblewrap creates a private PTY filesystem in its nested mount namespace.
+    ; This grant applies to this domain only; container_t remains unchanged.
+    (allow process devpts_t (filesystem (mount)))
+    ; Native readonly socket masking remounts only the private namespace mount.
+    ; This is filesystem-class scope; rootless kernel mount locks still apply.
+    (allow process device_t (filesystem (remount)))
+    (allow process tmpfs_t (filesystem (remount)))
+)

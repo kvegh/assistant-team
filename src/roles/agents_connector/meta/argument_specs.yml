@@ -27,6 +27,14 @@ argument_specs:
         type: bool
         default: false
         description: Restore launch bookkeeping only after verifying a live native Codex pane; never replace or restart it.
+      agents_connector_repair_codex_sandbox_project:
+        type: str
+        default: ''
+        description: Explicit project whose sandbox-blocked Codex builder alone may be replaced in the dedicated SELinux domain.
+      agents_connector_repair_codex_sandbox_session:
+        type: str
+        default: ''
+        description: Exact verified saved conversation to resume after the guarded builder replacement.
       agents_connector_repair_gemini_project:
         type: str
         default: ''

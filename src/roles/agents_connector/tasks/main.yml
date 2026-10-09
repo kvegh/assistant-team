@@ -239,6 +239,14 @@
     apply:
       tags: [connector_codex_repair, connector_prompt_template]
 
+- name: Resume only an explicitly selected sandbox-blocked Codex builder
+  tags: [connector_codex_repair]
+  when: agents_connector_repair_codex_sandbox_project | length > 0
+  ansible.builtin.include_tasks:
+    file: repair_codex_sandbox.yml
+    apply:
+      tags: [connector_codex_repair]
+
 - name: Configure compatibility only for an explicitly selected Gemini project role
   tags: [connector_mcp_results, connector_antigravity]
   ansible.builtin.include_tasks:
