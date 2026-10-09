@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.15.5
+
+Record successful Codex-only rebuild and native-session repair. The actual builder
+process stayed alive and all seven sibling containers remained unchanged. Document
+the rule that model authentication stays outside Git, including encrypted Git files.
+
 ## 0.15.4
 
 Include `ps` in connector runtime images so Codex can start its managed app server.

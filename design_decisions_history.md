@@ -726,3 +726,26 @@ converted to eight bracket role sections and has one protected backup; custom
 instructions were preserved by migration validation. Live checks verified readable
 and JSON log correlation and 0600 file permissions. Authentication files and active
 sessions were not changed or restarted. No prompt contents were included in reports.
+
+## Supply Codex process inspection and repair only its failed builder
+
+Implementation: `c1806f8`.
+
+The real authenticated Codex session exposed a runtime dependency missed by CLI
+version checks: its managed app server invokes `ps`. The tmux image extension now
+includes `procps`, and image validation executes process inspection in a temporary
+container without credentials or networking. The certified image module supports
+selected flavour rebuilds. An explicit repair refuses live or non-Codex builder
+panes, replaces only the failed builder container and preserves mounted private
+state and shared artifacts. No work prompt is supplied on restart.
+
+The targeted original-environment Ansible run rebuilt only Codex, passed image
+process inspection and repaired the dead builder: 23 successful tasks, zero
+failures. Its actual native process and tmux pane remained alive in three checks
+over 10 seconds. All seven sibling container IDs and start times were unchanged.
+Four focused repair safety tests passed within the full 110-test suite, and
+production Ansible lint passed with zero failures or warnings.
+
+The user also established a stricter storage rule: model authentication material
+must never enter Git, even encrypted. Deployment configuration may continue using
+Ansible Vault. No new secret manager or credential migration was introduced.
