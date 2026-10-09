@@ -942,3 +942,33 @@ protection must cover these failures as well as ordinary filesystem/systemd
 errors. The old directory, exact config and generated instructions are restored
 and remain stopped. All 11 focused rename tests pass, including both unexpected
 error and interruption regression cases; no Ansible content changed in this fix.
+
+
+## Restore native cache state safely within the existing layout
+
+Implementations: `d687ceb`, `489aa88`, `22fd447`.
+
+A native Codex archive included regenerated launch/control links, a daemon cache
+pointer referring to its container home, and a daemon updater socket. Blanket
+link rejection prevented restoration. Relative links to ordinary internal targets
+are now preserved. Only Codex arg0/control scopes and its exact updater socket
+(after a socket-type check) are omitted from the restored copy. Ordinary files
+at the updater pathname are preserved. A verified own-release cache pointer is
+rewritten to a relative link. Other absolute/external, dangling, cyclic and
+special-file links remain rejected; the complete staging tree is checked before
+publication and target enablement. Retained archive data is never rewritten.
+
+Installed testing exposed a rewritten-cache-target variable overwriting the
+named systemd target; the follow-up separates those values and verifies exact
+enable/disable arguments, including failure rollback and legacy archive names.
+The initial isolated full suite passed 177 tests and production Ansible lint;
+a strengthened full suite passed 178 tests. Final focused checks passed all
+13 restore tests, including all 19 observed link shapes, a real Unix updater
+socket and preservation of ordinary files.
+
+Pinned old-layout Ansible deployment succeeded without migration. Disposable
+installed acceptance verified link rebasing, narrow cache omissions, unchanged
+archive digest, enabled-but-stopped target and unchanged other containers; its
+fixtures were cleaned. After the final updater-socket correction, the coordinating
+agent completed the operator's actual restore and verified its enabled target
+and stopped project state. The archive remains retained; no models were started.

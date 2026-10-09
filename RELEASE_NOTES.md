@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.8
+
+Document verified old-layout restore fixes and successful restoration of the
+operator project. Its target is enabled but stopped; the archive remains retained.
+No installation-layout migration or automatic model startup was performed.
+
 ## 0.21.7
 
 Omit the exact Codex daemon updater socket from restored copies after checking
