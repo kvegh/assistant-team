@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.20.1
+
+- Record retained-archive restoration behavior, runtime identity decisions and validation references.
+
 ## 0.20.0
 
 - Add unarchive: copy a retained archive to its dated project identity, enable the exact target and leave it stopped.

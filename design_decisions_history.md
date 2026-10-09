@@ -880,3 +880,31 @@ unit without authentication or inference, confirmed all four instances unloaded,
 verified dated content/config permissions and both collision guards, and cleaned
 the fixtures. Shared templates and unrelated container states were unchanged.
 The real project was not archived, deleted or started.
+
+## Restore retained archives as dated projects
+
+Implementation: `9cc9321` (0.20.0).
+
+The operator chose copying rather than moving archived projects: the full retained
+archive remains unchanged and restoration explicitly reports that fact. The dated
+archive directory becomes the restored logical project name. Older plain archives
+use their recorded archive time or documented directory-mtime fallback. Structured
+configuration and generated role instructions are rebased; user-authored prompts,
+artifacts, provider state and conversation history are preserved. Stock broker
+project session identity is supplied by the new runtime instance, not a stored
+project column requiring conversation rewriting.
+
+Restoration enables only its exact target and leaves services stopped. Preflight
+rejects destination/configuration conflicts, existing instances or containers,
+unsafe links, malformed metadata and invalid broker databases. SQLite validation
+uses a private snapshot to avoid changing retained WAL sidecars. Failed publication
+or enablement rolls back the new copy and target enablement. Known stale launch
+markers, IPC sockets and archive metadata are excluded only from the restored copy.
+Shared name validation permits bounded timestamp suffixes and checks actual Unix
+socket byte limits before project operations. Re-archiving a restored project first
+requires a new logical name because its original retained archive already has the
+exact current name.
+
+Validation: all 162 unit tests passed; production Ansible lint reported zero
+failures or warnings across the content processed. Live deployment verification
+is reported separately after completion.
