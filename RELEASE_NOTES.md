@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.31.0
+
+Integrate private event-driven summarizer and observer with the fresh installation layout. The four participating roles remain visible; private readers use raw communication and append operator-only SUMMARY.md and ASSESSMENT.log. Preserve current Codex sandbox protection, native provider adapters, model status and flexible colored watch commands. Fresh and portable deployment now install the dedicated Codex sandbox domain. Existing environments are not automatically migrated.
+
+## 0.30.0
+
+Integrate the approved PREFIX/ac-agents installation layout with the current runtime fixes. Projects keep their own config, native profiles stay under model-environments, and shared configuration/templates and commands have dedicated directories.
+
+
 ## 0.28.3
 
 Document flexible watch argument ordering and compact history/follow syntax.
@@ -20,6 +29,20 @@ Restore Codex native workspace-write execution on enforcing SELinux using a
 dedicated constrained container domain. Preserve rootless, MCS, seccomp, dropped
 capabilities, read-only root, protected paths and network restrictions. Add a
 guarded builder-only replacement that resumes the exact saved conversation.
+## 0.29.1 — source only, not deployed
+
+Document passive-reader boundaries, the superseded empty decision log, deferred
+stopped migration and native acceptance requirements. Align subagent monitoring
+with automatic completion notifications.
+
+## 0.29.0 — source only, not deployed
+
+Make summarizer and observer passive private raw-discussion readers. Register only
+the orchestrator and three working agents; remove private readers from worker MCP,
+message targets and shared workspace mounts. Host event dispatch coalesces analysis
+turns and appends changed drafts to operator-only SUMMARY/ASSESSMENT logs. No
+feedback is sent to team members. Supersede the unverified DECISIONS.log workflow.
+Deployment and native lifecycle acceptance remain explicitly held.
 
 ## 0.27.1
 

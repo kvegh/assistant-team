@@ -28,7 +28,7 @@ for name in team.ALL:
     proc=subprocess.check_output(['podman','exec',c,'cat','/proc/1/status'],text=True)
     assert 'CapEff:\t0000000000000000' in proc and 'NoNewPrivs:\t1' in proc
     text=(p/'workspace'/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[f]).read_text()
-    if name in team.VISIBLE:assert 'observer' not in text.lower() and 'evaluator' not in text.lower()
+    if name in team.VISIBLE:assert all(hidden not in text.lower() for hidden in ['observer','evaluator','summarizer'])
     if name not in team.VISIBLE:assert not (p/'home/mcp.json').exists() and not (p/'ipc/agent.sock').exists()
     print(name+': native CLI/tmux/isolation and applicable IPC checks passed')
 # Verify stock native hook delivery through the filter and SQLite persistence.

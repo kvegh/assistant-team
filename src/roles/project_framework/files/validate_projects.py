@@ -35,7 +35,7 @@ def main():
    run([TEAM,'create-project',name],stdout=subprocess.DEVNULL);made.append(name)
    path=ACCOUNT_HOME/'projects'/name
    with sqlite3.connect(path/'db.sqlite') as db:
-    assert db.execute('select count(*) from agents').fetchone()[0]==5
+    assert db.execute('select count(*) from agents where removed_at IS NULL').fetchone()[0]==4
     assert db.execute('select count(*) from messages').fetchone()[0]==0
    assert (path/'assistant-prompt.md').is_file()
    for role in ['orchestrator','builder','investigator','challenger','summarizer']:
@@ -76,18 +76,21 @@ for role in c.ALL:
   for name in NAMES:
    run(['systemctl','--user','start','assistant-connector@'+name+'.target']);wait_state(name,True)
   a,b=NAMES
-  # Shared artifacts are writable by all workers, read-only to the observer.
-  for role in ['orchestrator','builder','investigator','challenger','summarizer','private-connector','corporate-connector']:
+  # Shared artifacts are writable by workers; private readers have no shared mount.
+  for role in ['orchestrator','builder','investigator','challenger','private-connector','corporate-connector']:
    run(['podman','exec','acp-'+a+'-'+role,'sh','-c','printf offline-shared > /workspace/shared/'+role])
   read=subprocess.check_output(['podman','exec','acp-'+a+'-investigator','cat','/workspace/shared/builder'],env=ENV,text=True);assert read=='offline-shared'
-  observed=subprocess.check_output(['podman','exec','acp-'+a+'-observer','cat','/workspace/shared/builder'],env=ENV,text=True);assert observed=='offline-shared'
-  denied=subprocess.run(['podman','exec','acp-'+a+'-observer','sh','-c','echo forbidden > /workspace/shared/observer-write'],env=ENV,capture_output=True);assert denied.returncode!=0
-  assert not (ACCOUNT_HOME/'projects'/a/'workspace/observer-write').exists()
+  for reader in ['observer','summarizer']:
+   data=json.loads(subprocess.check_output(['podman','inspect','acp-'+a+'-'+reader],env=ENV,text=True))[0]
+   assert not any(m['Destination']=='/workspace/shared' for m in data['Mounts'])
+   assert any(m['Destination']=='/context' and not m['RW'] for m in data['Mounts'])
+   assert not (ACCOUNT_HOME/'projects'/a/'profiles'/reader/'home/mcp.json').exists()
+  assert (ACCOUNT_HOME/'projects'/a/'operator-reports/SUMMARY.md').is_file()
   assert not (ACCOUNT_HOME/'projects'/b/'workspace/builder').exists()
   private=ACCOUNT_HOME/'projects'/a/'profiles/private-connector/home/private-fixture';private.write_text('offline-private')
   hidden=subprocess.run(['podman','exec','acp-'+a+'-builder','test','-e','/workspace/shared/private-fixture'],env=ENV);assert hidden.returncode!=0
   assert os.stat(ACCOUNT_HOME/'projects'/a/'db.sqlite').st_ino!=os.stat(ACCOUNT_HOME/'projects'/b/'db.sqlite').st_ino
-  watcher=subprocess.Popen([str(TEAM),'watch',a],env=ENV,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
+  watcher=subprocess.Popen([str(TEAM),'watch',a,'-f'],env=ENV,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
   sel=selectors.DefaultSelector();sel.register(watcher.stdout,selectors.EVENT_READ)
   assert sel.select(5);assert 'Live worker discussion' in watcher.stdout.readline()
   # Snapshot streaming start; request delivery uses admin only within our test broker.
@@ -99,7 +102,7 @@ for role in c.ALL:
   with sqlite3.connect(ACCOUNT_HOME/'projects'/a/'db.sqlite') as db:assert db.execute('select count(*) from messages').fetchone()[0]==1
   remaining=subprocess.check_output(['podman','ps','--format','{{.Names}}'],env=ENV,text=True)
   assert set(baseline.splitlines())<=set(remaining.splitlines())
-  print('Two stock-schema projects, missing-auth refusal, eight dummy harnesses per project, shared read/write and observer read-only, live stream, stop/restart isolation and persistent SQLite passed; no native provider or model invoked.')
+  print('Two stock-schema projects, missing-auth refusal, eight dummy harnesses per project, shared read/write and private reader isolation, live stream, stop/restart isolation and persistent SQLite passed; no native provider or model invoked.')
  finally:
   if watcher:
    watcher.terminate()

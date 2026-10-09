@@ -49,7 +49,7 @@ class ModelStatusTests(unittest.TestCase):
 
     def test_operator_fallback_only_before_launch(self):
         self.config('claude','claude-priv')
-        self.write(self.home/'claude-priv/.claude/settings.json',{'model':'personal-model'})
+        self.write(self.home/'model-environments/claude-priv/.claude/settings.json',{'model':'personal-model'})
         self.assertEqual(self.metadata()[1],'personal-model (configured)')
         (self.role/'launched').touch()
         self.assertEqual(self.metadata()[1],'harness default (unverified)')

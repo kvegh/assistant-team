@@ -3,7 +3,22 @@
 Communication stays on agents-connector + tmux; alternatives await review and
 decision in [TODO](TODO.md).
 
-Source-only layout change: these new-prefix instructions describe future fresh installs. The running environment keeps its current home-level commands and paths; do not deploy this layout to it yet. See [migration prerequisites](INSTALLATION_MIGRATION.md).
+Fresh installs use PREFIX/ac-agents. Existing home-level installations require a separately approved migration; see [migration prerequisites](INSTALLATION_MIGRATION.md).
+## Private passive readers
+
+Team: orchestrator + builder/investigator/challenger. Summarizer/observer
+privately read raw communication, never join or answer the team, and produce
+operator-only SUMMARY.md/ASSESSMENT.log outside the shared workspace. Event-driven
+host dispatch; no timed model polling. Claude profiles supported initially.
+Existing sessions remain unchanged. Native reader acceptance must be verified after deployment.
+The superseded DECISIONS.log remains empty after its SELinux access failure.
+
+Read the private output:
+
+```sh
+tail -f ~/ac-agents/projects/NAME/operator-reports/SUMMARY.md
+tail -f ~/ac-agents/projects/NAME/operator-reports/ASSESSMENT.log
+```
 
 Run as the runtime user. One environment per user; credentials stay local.
 
@@ -99,20 +114,3 @@ replies once each. Follow subscribes before taking its history snapshot and skip
 queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
-
-For a concise decision feed, run `tail -f ~/ac-agents/projects/NAME/workspace/DECISIONS.log`.
-The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
-meaningful accepted outcomes, agreed direction changes or blockers requiring
-user input. The orchestrator requests these updates at milestones, without timers.
-The summarizer is the sole intended writer; proposals, repetitive progress,
-credentials, private connector content and hidden-role identities stay out.
-This is an agent instruction policy, not a filesystem enforcement of append-only
-writes: project workspace collaborators retain their existing write permissions.
-Existing user prompts and log content are preserved during deployment. Already
-running harness conversations need an explicit instruction refresh to adopt it;
-updating files alone does not guarantee they re-read their role instructions.
-
-Codex containers require the dedicated enforcing-SELinux sandbox policy. Native workspace-write confinement remains active; no outside-sandbox approval is needed for ordinary shared-workspace writes.
-`~/ac-agents/bin/team rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `~/ac-agents/bin/team start NEW`. Never run same-project lifecycle commands concurrently.
-
-The approved install-prefix layout is currently **source only**. The existing deployment remains on its earlier home-level layout; do not apply these playbooks to it yet. Fresh installs use `PARENT/ac-agents`, with PARENT defaulting to the destination runtime HOME. `--prefix /absolute/parent` selects a destination parent for both local and remote deployment; AAP uses `assistant_install_prefix` or its encrypted definition. See [INSTALLATION_MIGRATION.md](INSTALLATION_MIGRATION.md) before any legacy migration.

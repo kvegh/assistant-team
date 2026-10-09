@@ -16,6 +16,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_passive_readers
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
@@ -30,6 +31,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_passive_readers
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
@@ -44,6 +46,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_passive_readers
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ assistant_connector_root }}"
 - name: Create connector directories in the dedicated home
@@ -128,6 +131,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_passive_readers
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"
@@ -135,6 +139,26 @@
     group: "{{ containers.runtime_user }}"
     mode: "0700"
   register: __agents_connector_utility
+
+- name: Install private event-driven reader host helpers
+  tags:
+    - connector_services
+    - auth_sources
+    - connector_images
+    - connector_codex_repair
+    - connector_prompt_template
+    - connector_ipc
+    - connector_mcp_results
+    - connector_antigravity
+    - connector_watch
+    - connector_passive_readers
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ __agents_connector_root }}/routing/{{ item }}"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
+  loop: [passive-readers.py, passive-reader-hook.py]
 
 - name: Route broker wake commands through the constrained tmux adapter
   ansible.builtin.file:

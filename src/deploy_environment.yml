@@ -33,6 +33,7 @@
     vertex_auth_install_sdk: "{{ hostvars.localhost.destination.install_google_cloud_sdk | default(false) }}"
   roles:
     - podman_host
+    - codex_sandbox
     - agent_images
     - agents_connector
     - native_auth

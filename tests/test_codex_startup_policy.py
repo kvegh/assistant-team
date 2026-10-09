@@ -20,7 +20,7 @@ class CodexStartupPolicyTests(unittest.TestCase):
         builder=self.profiles/'builder';builder.mkdir()
         (builder/'profile.json').write_text(json.dumps({'flavour':'codex','account_profile':'codex-priv'}))
         self.home=builder/'accounts/codex-priv/home';self.home.mkdir(parents=True)
-        patcher=patch.multiple(team,PROFILES=self.profiles,STATE=root/'state',VISIBLE=['builder'])
+        patcher=patch.multiple(team,PROFILES=self.profiles,STATE=root/'state',VISIBLE=['builder'],READERS=[])
         patcher.start();self.addCleanup(patcher.stop)
 
     def initialize(self):

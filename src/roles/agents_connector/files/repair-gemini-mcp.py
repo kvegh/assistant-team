@@ -12,7 +12,7 @@ import tempfile
 def configure(home, project, role):
     if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}(?:-[0-9]{10})*', project):
         raise ValueError('Invalid project identifier')
-    if role not in ('orchestrator', 'builder', 'investigator', 'challenger', 'summarizer'):
+    if role not in ('orchestrator', 'builder', 'investigator', 'challenger'):
         raise ValueError('Unsupported collaboration role')
     profile = Path(home) / 'projects' / project / 'profiles' / role
     metadata = profile / 'profile.json'

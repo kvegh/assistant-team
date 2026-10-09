@@ -71,7 +71,7 @@ class AntigravityProviderTests(unittest.TestCase):
     def test_pinned_provider_seed_preserves_role_refresh_and_excludes_vertex(self):
         with tempfile.TemporaryDirectory() as temporary:
             home=pathlib.Path(temporary);profiles=home/'project/profiles'
-            source=home/'gemini-priv';binary=source/'.install/antigravity/1.3.1/antigravity'
+            source=home/'model-environments/gemini-priv';binary=source/'.install/antigravity/1.3.1/antigravity'
             binary.parent.mkdir(parents=True);binary.write_text('fixture-binary')
             (source/'.native-install.json').write_text(json.dumps({'provider':'antigravity','version':'1.3.1','entrypoint':'antigravity/1.3.1/antigravity'}))
             relative=pathlib.Path('.gemini/antigravity-cli/antigravity-oauth-token')

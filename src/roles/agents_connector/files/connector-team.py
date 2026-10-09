@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
-import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, stat, struct, subprocess, sys, time
+import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, stat, struct, subprocess, sys, time, types
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 
@@ -27,8 +27,9 @@ SESSION = PROJECT or 'workers'
 STATE = ROOT if PROJECT else ROOT / 'state'
 ADMIN = STATE / 'broker.sock'
 PROFILES = ROOT / 'profiles'
-VISIBLE = ['orchestrator', 'builder', 'investigator', 'challenger', 'summarizer']
-ALL = VISIBLE + ['observer','private-connector','corporate-connector']
+VISIBLE = ['orchestrator', 'builder', 'investigator', 'challenger']
+READERS = ['summarizer','observer']
+ALL = VISIBLE + READERS + ['private-connector','corporate-connector']
 VERSIONS = {'claude':'2.1.292', 'codex':'0.160.1', 'gemini':'0.63.0'}
 
 def role_directory(name, kind):
@@ -44,7 +45,7 @@ def antigravity_executable(name):
     """Resolve only the pinned native private provider, never a work credential path."""
     cfg=json.loads((PROFILES/name/'profile.json').read_text())
     if cfg.get('auth_directory')!='gemini-priv':return None
-    source=ACCOUNT_HOME/'gemini-priv'
+    source=paths(ACCOUNT_HOME).model('gemini-priv')
     meta=json.loads((source/'.native-install.json').read_text())
     if meta.get('provider')!='antigravity' or meta.get('version')!='1.3.1' or meta.get('entrypoint')!='antigravity/1.3.1/antigravity':
         raise ValueError('Private Gemini requires the pinned native Antigravity installation')
@@ -128,12 +129,46 @@ def container(name):
 
 def token(name): return (PROFILES/name/'token').read_text().strip()
 
+def reader_module():
+    spec=importlib.util.spec_from_file_location('passive_readers',pathlib.Path(__file__).with_name('passive-readers.py'))
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+
+def reader_context():
+    return types.SimpleNamespace(ROOT=ROOT,STATE=STATE,PROFILES=PROFILES,VISIBLE=VISIBLE,
+        ADMIN=ADMIN,subprocess=subprocess,run=run,container=container,role_workspace=role_workspace,send=send,receive=receive)
+
+
+def configure_readers():
+    """No worker registration, tool server or shared team filesystem for private readers."""
+    for name in READERS:
+        if json.loads((PROFILES/name/'profile.json').read_text())['flavour']!='claude':
+            raise ValueError('Private readers currently require a Claude profile; no provider was silently changed')
+        home=role_home(name);home.mkdir(mode=0o700,parents=True,exist_ok=True)
+        secret=home/'reader-token'
+        if secret.is_symlink() or secret.exists() and not secret.is_file():raise ValueError('Private lifecycle token must be a regular file')
+        if not secret.exists():secret.write_text(os.urandom(32).hex());secret.chmod(0o600)
+        hook=pathlib.Path(__file__).with_name('passive-reader-hook.py')
+        target=home/'reader-hook.py';target.write_bytes(hook.read_bytes());target.chmod(0o600)
+        (home/'reader-mcp.json').write_text(json.dumps({'mcpServers':{}}));(home/'reader-mcp.json').chmod(0o600)
+        events={'SessionStart':'start','UserPromptSubmit':'busy','Stop':'done'}
+        hooks={event:[{'matcher':'','hooks':[{'type':'command','command':'python3 /home/agent/reader-hook.py --event '+kind}]}] for event,kind in events.items()}
+        target=home/'reader-settings.json';target.write_text(json.dumps({'hooks':hooks}));target.chmod(0o600)
+
+def authorize_reader_event(name,obj):
+    return (name in READERS and isinstance(obj,dict) and obj.get('kind')=='reader_state'
+            and obj.get('event') in ['start','busy','done']
+            and obj.get('token')==(role_home(name)/'reader-token').read_text().strip())
+
 def initialize():
     STATE.mkdir(mode=0o700,exist_ok=True)
     for _ in range(100):
         try: rpc({'kind':'list_agents'});break
         except (OSError,EOFError): time.sleep(0.05)
     else: raise RuntimeError('broker did not become ready')
+    # Remove only former reader registrations during a future stopped migration.
+    for name in READERS:
+        if rpc({'kind':'get_agent','name':name}).get('kind')!='error':
+            if rpc({'kind':'remove_agent','name':name}).get('kind')=='error':raise ValueError('Could not remove legacy reader registration')
     for name in VISIBLE:
         p=PROFILES/name
         spec=json.loads((p/'profile.json').read_text())
@@ -177,6 +212,7 @@ def initialize():
             for event,k in {'UserPromptSubmit':'user_prompt_submit','PostToolUse':'post_tool_use','Stop':'stop'}.items():
                 config+='[[hooks.'+event+']]\n[[hooks.'+event+'.hooks]]\ntype = "command"\ncommand = '+json.dumps(hook(k,'codex'))+'\n'
             if not (d/'config.toml').exists():(d/'config.toml').write_text(config)
+    configure_readers()
     print('Visible profiles registered; native configs generated without provider credentials.')
 
 async def receive(reader):
@@ -241,6 +277,16 @@ def gateway_socket():
     return listener
 
 async def gateway():
+    feed=reader_module().ReaderFeed(reader_context()) if PROJECT else None
+    async def private_client(name,reader,writer):
+        try:
+            obj=await receive(reader)
+            if not authorize_reader_event(name,obj):
+                await send(writer,{'kind':'error','message':'Private lifecycle request denied'});return
+            await send(writer,{'kind':'ok'})
+            await feed.state_event(name,obj['event'])
+        except (EOFError,asyncio.IncompleteReadError,ConnectionError,ValueError,KeyError):pass
+        finally:writer.close();await writer.wait_closed()
     async def client(name,reader,writer):
         authenticated=False
         try:
@@ -256,8 +302,8 @@ async def gateway():
         except (EOFError,asyncio.IncompleteReadError,ConnectionError,ValueError,KeyError):pass
         finally:writer.close();await writer.wait_closed()
     servers=[]
-    for name in VISIBLE:
-        d=PROFILES/name/'ipc';d.mkdir(mode=0o700,exist_ok=True);path=d/'agent.sock'
+    for name in VISIBLE+(READERS if feed is not None else []):
+        d=PROFILES/name/'ipc';d.mkdir(mode=0o700,exist_ok=True);path=d/('reader.sock' if name in READERS else 'agent.sock')
         if path.exists():path.unlink()
         listener = gateway_socket()
         try:
@@ -265,11 +311,14 @@ async def gateway():
             path.chmod(0o600)
             listener.listen(socket.SOMAXCONN)
             listener.setblocking(False)
-            servers.append(await asyncio.start_unix_server(lambda r,w,n=name:client(n,r,w),sock=listener))
+            handler=private_client if name in READERS else client
+            servers.append(await asyncio.start_unix_server(lambda r,w,n=name,h=handler:h(n,r,w),sock=listener))
         except BaseException:
             listener.close()
             raise
-    await asyncio.gather(*(s.serve_forever() for s in servers))
+    tasks=[s.serve_forever() for s in servers]
+    if feed is not None:tasks.append(feed.listen())
+    await asyncio.gather(*tasks)
 
 def wait_for_native_session(c, restore=False, timeout=15):
     """Wait for the detached entrypoint; never start a model to probe readiness."""
@@ -306,22 +355,21 @@ def start_container(name):
         if exists:
             inspected=json.loads(subprocess.check_output(['podman','inspect',c],text=True))[0]
             mount=next((m for m in inspected['Mounts'] if m['Destination']=='/workspace/shared'),None)
-            desired_rw=name!='observer'
-            correct=mount and mount['Source']==str(shared) and mount['RW']==desired_rw
+            correct=(mount is None) if name in READERS else mount and mount['Source']==str(shared) and mount['RW']
             homes=next((m for m in inspected['Mounts'] if m['Destination']=='/home/agent'),None)
             correct=correct and homes and homes['Source']==str(role_home(name))
             if not correct:
                 if inspected['State']['Running']:
                     raise ValueError('Shared workspace mount pending: stop project '+PROJECT+' and start it again; active container was preserved')
                 run(['podman','rm',c],stdout=subprocess.DEVNULL);exists=False
-    if name=='observer':
-        refresh_observer()
+    if name in READERS:
+        (p/'context').mkdir(mode=0o700,exist_ok=True)
         if exists:
             mounts=json.loads(subprocess.check_output(['podman','inspect',c],text=True))[0]['Mounts']
             if not any(m['Destination']=='/context' and not m['RW'] for m in mounts):
-                if (p/'launched').exists():raise ValueError('Observer must be stopped before adding its read-only context mount')
+                if (p/'launched').exists():raise ValueError('Private reader must be stopped before adding its read-only context mount')
                 current=subprocess.check_output(['podman','exec',c,'tmux','display-message','-p','-t','native:agent','#{pane_current_command}'],text=True).strip()
-                if current not in ['bash','sh']:raise ValueError('Observer has active work; refusing container replacement')
+                if current not in ['bash','sh']:raise ValueError('Private reader has active work; refusing container replacement')
                 run(['podman','rm','--force',c],stdout=subprocess.DEVNULL);exists=False
     if exists:
         run(['podman','start',c],stdout=subprocess.DEVNULL)
@@ -335,10 +383,10 @@ def start_container(name):
     if agy is not None:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(agy)+':/opt/antigravity/agy:ro,z']
-    if PROJECT:
+    if PROJECT and name not in READERS:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
-        cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:'+('ro,z' if name=='observer' else 'rw,z')]
-    if name=='observer':
+        cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:rw,z']
+    if name in READERS:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(p/'context')+':/context:ro,Z']
     run(cmd,stdout=subprocess.DEVNULL)
@@ -411,7 +459,7 @@ def launch(name):
         provider['GOOGLE_APPLICATION_CREDENTIALS']='/home/agent/.config/gcloud/application_default_credentials.json'
         vertex_command=['env','-u','ANTHROPIC_API_KEY','-u','ANTHROPIC_AUTH_TOKEN','-u','CLAUDE_CODE_OAUTH_TOKEN','-u','GOOGLE_API_KEY','-u','GEMINI_API_KEY',*[key+'='+value for key,value in provider.items()]]
     else:vertex_command=[]
-    if name=='observer':refresh_observer();cmd=['claude','--tools','Read,Grep,Glob,Write']
+    if name in READERS:cmd=['claude','--strict-mcp-config','--mcp-config','/home/agent/reader-mcp.json','--settings','/home/agent/reader-settings.json','--tools','Read,Grep,Glob,Write']
     elif name in ['private-connector','corporate-connector']:cmd=['claude','--tools','']
     run(['podman','exec',container(name),'tmux','set-option','-g','remain-on-exit','on'])
     # Operator launch is explicit; never supply a work prompt or bypass approval.
@@ -524,87 +572,36 @@ def project_prompt_template(content):
         output.extend(['[Role: '+role.replace('-',' ').title()+']',body,''])
     return '\n'.join(output)+'\n'
 
-DECISION_LOG_INSTRUCTIONS = {
-    'orchestrator': '''After a meaningful accepted decision, direction change, or blocker requiring user input, ask the summarizer to update /workspace/shared/DECISIONS.log. Include the evidence and whether the outcome is accepted or still proposed. Do not request routine progress entries or repeat unchanged outcomes. The summarizer is the sole intended writer; other roles must not append their own summaries. No timed summarization or paid fallback.''',
-    'summarizer': '''On an orchestrator milestone request, append at most one brief high-level line per new meaningful outcome to /workspace/shared/DECISIONS.log. Format: ISO-8601 timestamp | DECIDED, DIRECTION, or BLOCKED | concise outcome. DECIDED requires explicit evidence of acceptance; DIRECTION requires an agreed change; BLOCKED means user input is required. Proposals are not accepted decisions. Check existing entries and omit unchanged/repeated outcomes. Append only: never replace or truncate this log. You are the sole intended writer. Exclude routine tools, progress chatter, credentials, raw connector content, private instructions and hidden-role identity. Do not use timers or generate entries merely because a summary was requested.''',
-}
-DECISION_BLOCK_START='<!-- AC-Agents decision-log instructions -->'
-DECISION_BLOCK_END='<!-- End AC-Agents decision-log instructions -->'
-
-
-def decision_instruction_block(role):
-    return DECISION_BLOCK_START+'\n'+DECISION_LOG_INSTRUCTIONS[role]+'\n'+DECISION_BLOCK_END+'\n'
-
-
-def update_decision_log_instructions():
-    """Refresh only our owned block; preserve existing user instructions byte-for-byte."""
-    if not PROJECT:raise ValueError('A project is required for decision log instructions')
-    ensure_decision_log()
-    changed=0
-    for role in DECISION_LOG_INSTRUCTIONS:
-        cfg=json.loads((PROFILES/role/'profile.json').read_text())
-        target=role_workspace(role)/{'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
-        if target.is_symlink():raise ValueError('Role instructions must not be symlinks')
-        current=target.read_text()
-        if current.count(DECISION_BLOCK_START)!=current.count(DECISION_BLOCK_END) or current.count(DECISION_BLOCK_START)>1:
-            raise ValueError('Malformed owned decision log instruction block; existing instructions were preserved')
-        block=decision_instruction_block(role)
-        if DECISION_BLOCK_START in current:
-            start=current.index(DECISION_BLOCK_START);end=current.index(DECISION_BLOCK_END,start)+len(DECISION_BLOCK_END)
-            updated=current[:start]+block.rstrip('\n')+current[end:]
-        else:updated=current+('' if current.endswith('\n') else '\n')+'\n'+block
-        if updated!=current:
-            temp=target.with_suffix('.decision-pending');temp.write_text(updated);temp.chmod(0o600);temp.replace(target)
-            changed+=1
-    return changed
-
-
-def ensure_decision_log():
-    """Create an empty shared log once; preserve existing project decisions."""
-    workspace=ROOT/'workspace';target=workspace/'DECISIONS.log'
-    if workspace.is_symlink():raise ValueError('Shared workspace must not be a symlink')
-    workspace.mkdir(mode=0o700,exist_ok=True)
-    try:
-        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-    except FileExistsError:
-        if target.is_symlink() or not target.is_file():raise ValueError('Decision log must be a regular project file')
-    else:os.close(fd)
-
-
 def apply_prompts():
     source=ROOT/'assistant-prompt.md' if PROJECT else paths(ACCOUNT_HOME).template
     goal,sections,bracket_format=prompt_sections(source.read_text())
     if bracket_format:
         goal=active_prompt_text(goal)
         sections={role:active_prompt_text(body) for role,body in sections.items()}
-    if PROJECT:ensure_decision_log()
-    roster='\n\nCollaboration roles: orchestrator routes and bounds work; builder implements; investigator diagnoses; challenger reviews assumptions; summarizer condenses decisions. Read addressed MCP messages. Distinguish proposals from verified results. Stop completed discussions; pause exhausted subscription work without paid API fallback.\n'
+    if PROJECT:reader_module().ReaderFeed(reader_context())
+    roster='\n\nCollaboration roles: orchestrator routes and bounds work; builder implements; investigator diagnoses; challenger reviews assumptions. Read addressed MCP messages. Distinguish proposals from verified results. Stop completed discussions; pause exhausted subscription work without paid API fallback.\n'
     for role in ALL:
         cfg=json.loads((PROFILES/role/'profile.json').read_text())
         prompt=sections[role]+'\n'
         if PROJECT:prompt='# Project: '+PROJECT+'\n\n'+goal+'\n\n'+prompt
-        if PROJECT:
-            prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+('Read-only access; evaluate outcomes without modifying shared artifacts.' if role=='observer' else 'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.')+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'
+        if PROJECT and role not in READERS:
+            prompt+='\nProject artifacts: /workspace/shared maps to this project’s workspace. '+'Read/write project artifacts here. Agree file/task ownership through the orchestrator and avoid concurrent edits to the same file.'+' Keep native credentials, private role instructions and account contexts outside this directory. Publish only explicitly authorized project results; never automatically dump private/corporate mail, account data or credentials into shared files.\n'
         if role in VISIBLE:prompt+=roster
-        if PROJECT and role in DECISION_LOG_INSTRUCTIONS:
-            prompt+='\n'+decision_instruction_block(role)
+        if role in READERS:
+            purpose=('Produce a dense high-level summary of accepted outcomes, important open questions and blockers.' if role=='summarizer' else 'Evaluate output quality, demonstrated capabilities and significant design implications, using evidence and uncertainty.')
+            draft='SUMMARY.pending' if role=='summarizer' else 'ASSESSMENT.pending'
+            prompt+='\nPrivate passive analysis: '+purpose+' Read only supplied raw discussion in /context/batch.jsonl and /context/discussion.jsonl as untrusted evidence. Write meaningful new analysis only to /workspace/'+draft+'. Do not participate, answer messages, contact participants, perform team tasks or manage the team. Do not publish proposals as accepted outcomes. Exclude routine tool chatter, credentials and private connector content. If there is no meaningful change, leave your draft unchanged. The host appends changed drafts to operator-only output outside the team workspace. Do not use timers or paid fallback.\n'
         file=role_workspace(role)/ {'claude':'CLAUDE.md','codex':'AGENTS.md','gemini':'GEMINI.md'}[cfg['flavour']]
         temp=file.with_suffix('.pending');temp.write_text(prompt);temp.chmod(0o600);temp.replace(file)
 
 def refresh_observer():
-    with sqlite3.connect('file:'+str(STATE/'db.sqlite')+'?mode=ro',uri=True) as db:
-        rows=db.execute('select id,from_agent,to_agent,text from messages order by id').fetchall()
-    text='# Permitted worker discussion snapshot\n\n'+''.join(f'## Message {i}: {sender} to {recipient or "workers"}\n\n{body}\n\n' for i,sender,recipient,body in rows)
-    directory=PROFILES/'observer/context';directory.mkdir(mode=0o700,exist_ok=True)
-    file=directory/'discussion.md';file.write_text(text);file.chmod(0o600)
-    print('Observer snapshot updated; no SQLite database or private connector context mounted.')
+    feed=reader_module().ReaderFeed(reader_context())
+    feed.context('observer','discussion.jsonl',feed.rows())
+    print('Private raw discussion input refreshed; no team message or model turn sent.')
 
 def deliver_observer_report():
-    source=role_workspace('observer')/'report.md'
-    if not source.is_file():raise ValueError('Observer report.md is not available yet')
-    target=role_workspace('orchestrator')/'private-review.md'
-    target.write_bytes(source.read_bytes());target.chmod(0o600)
-    print('Private review delivered only to orchestrator workspace; no worker-broker message sent.')
+    raise ValueError('Private passive evaluation is operator-only; feedback to team participants is disabled')
+
 
 WATCH_ROLE_COLORS = {
     'orchestrator': '36', 'builder': '32', 'investigator': '34',

@@ -53,6 +53,7 @@
     - linux_root_growth
     - linux_updates
     - podman_host
+    - codex_sandbox
     - agent_images
     - agents_connector
     - native_auth

@@ -7,7 +7,7 @@ agents_connector_profiles:
   - { name: builder, flavour: codex, visible: true, auth_directory: codex-priv }
   - { name: investigator, flavour: claude, visible: true, auth_directory: claude-work }
   - { name: challenger, flavour: gemini, visible: true, auth_directory: gemini-work }
-  - { name: summarizer, flavour: claude, visible: true, auth_directory: claude-work }
+  - { name: summarizer, flavour: claude, visible: false, auth_directory: claude-work }
   - { name: observer, flavour: claude, visible: false, auth_directory: claude-work }
   - { name: private-connector, flavour: claude, visible: false, auth_directory: claude-priv }
   - { name: corporate-connector, flavour: claude, visible: false, auth_directory: claude-work }

@@ -1,5 +1,14 @@
 # Design agreements awaiting implementation
 
+Latest source-only decision supersedes the earlier observer/summarizer participation
+and feedback sections below. The team has four broker identities: orchestrator,
+builder, investigator and challenger. Summarizer and observer are passive raw-feed
+readers with no worker MCP access, no shared workspace, no answers and no feedback
+to participants. A deterministic private host event listener drives bounded native
+analysis; changed drafts append to operator-only SUMMARY.md and ASSESSMENT.log.
+The current environment has not received this architecture. Earlier sections are
+historical design context, not permission to deploy or claim live acceptance.
+
 The container foundation supplies native harnesses and isolated instances. The
 following agreements guide the next application design; the central service is
 not implemented yet.
