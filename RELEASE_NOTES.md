@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.14
+
+Document private Claude recovery account/organization boundaries, refresh-capable credential validation and unchanged metadata semantics.
+
 ## 1.0.13
 
 Add separately scoped private Claude recovery from an explicitly selected same-account archived connector session. Account and organization metadata stay unchanged; validation defaults to no replacement and refresh-capable credentials are copied only on explicit execution.
