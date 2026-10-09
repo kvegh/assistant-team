@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.4
+
+Document the deferred installation-layout cleanup, including configurable prefix,
+project-local singular configuration files, scoped model environments and the
+default prompt template. Runtime paths remain unchanged.
+
 ## 0.21.3
 
 Record the unexpected-error/interruption rename rollback fix and its focused
