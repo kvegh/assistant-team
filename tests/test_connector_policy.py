@@ -56,7 +56,8 @@ class ConnectorPolicyTests(unittest.TestCase):
             path = self.profiles / name
             (path / 'workspace').mkdir(parents=True, exist_ok=True)
             (path / 'profile.json').write_text(__import__('json').dumps({'flavour': 'claude'}))
-        source = root.parent / 'assistant-prompts.md'
+        source = root.parent / 'templates/assistant-prompts.md'
+        source.parent.mkdir(mode=0o700)
         original = '\n'.join('# Role: ' + n + '\n' + ('hidden-secret' if n not in team.VISIBLE else 'own-' + n) for n in team.ALL)
         source.write_text(original)
         with mock.patch.object(team, 'ROOT', root):

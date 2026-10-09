@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.18.0
+
+Move the editable new-project default to `~/templates/assistant-prompts.md`.
+Preserve operator bytes and project-specific prompts, reject linked/conflicting
+paths, and verify the copied file before removing its old home-level location.
+Project creation and prompt helpers use the canonical template directory.
+
 ## 0.17.1
 
 Record verified installed project-status listing. Runtime queries preserve existing

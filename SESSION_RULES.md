@@ -205,6 +205,9 @@ material uncertainty rather than inventing history.
 
 ## Documentation, Git, and releases
 
+- Use "Document" rather than "Record" for documentation-only commit subjects and
+  version summaries. Preserve existing Git history.
+
 - For every lasting change, update relevant READMEs, deployed home guides, and
   `design_decisions_history.md`. Record plain-language behavior, rationale, and
   the implementation commit ID; avoid code patches and invented explanations.

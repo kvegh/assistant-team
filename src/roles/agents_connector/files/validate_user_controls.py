@@ -5,7 +5,7 @@ root=pathlib.Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('team',root/'routing/connector-team.py');team=importlib.util.module_from_spec(spec);spec.loader.exec_module(team)
 assert not any((team.PROFILES/n/'launched').exists() for n in team.ALL),'Do not inject fixtures during active native sessions'
 assert (root.parent/'README.md').is_file()
-assert (root.parent/'assistant-prompts.md').is_file()
+assert (root.parent/'templates/assistant-prompts.md').is_file()
 assert (root.parent/'team').is_file()
 for name in team.ALL:
     c=team.container(name)

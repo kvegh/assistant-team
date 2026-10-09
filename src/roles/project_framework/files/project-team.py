@@ -105,7 +105,7 @@ def create(name):
     PROJECTS.mkdir(mode=0o700,exist_ok=True);path.mkdir(mode=0o700)
     (path/'workspace').mkdir(mode=0o700)
     core=load(name)
-    prompts=core.project_prompt_template((ACCOUNT_HOME/'assistant-prompts.md').read_text())
+    prompts=core.project_prompt_template((ACCOUNT_HOME/'templates/assistant-prompts.md').read_text())
     (path/'assistant-prompt.md').write_text(prompts)
     for role in ROLES:
         p=path/'profiles'/role

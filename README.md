@@ -738,3 +738,8 @@ Failure guidance is fixed safe text, not raw native output; use the user journal
 for detailed service diagnostics. Deployment transfers also provide protected
 `deployment-<run-id>.log` alongside JSON, retaining up to 32 runs. Diagnostic exports
 remain validated JSON-only; arbitrary text files are never exported.
+
+The editable default template for new projects is `~/templates/assistant-prompts.md`.
+Creation copies its role instructions into the new project; existing project prompts
+remain independent. Deployment preserves operator edits and migrates the old home-level
+template without overwriting an existing destination. Conflicting paths require operator review.

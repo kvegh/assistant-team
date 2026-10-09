@@ -1,16 +1,16 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -51,7 +51,7 @@
     argv: ["{{ __agents_connector_root }}/bin/agents-connector", --version]
   changed_when: false
 - name: Install constrained lifecycle and IPC routing utility
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"
@@ -93,10 +93,13 @@
     group: "{{ containers.runtime_user }}"
     mode: "0600"
   loop: "{{ agents_connector_profiles }}"
+- name: Safely migrate the editable default template
+  tags: [auth_sources, connector_services, connector_prompt_template]
+  ansible.builtin.import_tasks: prompt_template.yml
 - name: Seed the single editable prompt file without overwriting operator edits
-  tags: [auth_sources, connector_services]
+  tags: [auth_sources, connector_services, connector_prompt_template]
   ansible.builtin.copy:
-    dest: "{{ agents_connector_runtime_home }}/assistant-prompts.md"
+    dest: "{{ agents_connector_runtime_home }}/templates/assistant-prompts.md"
     content: |
       # Edit the body under each [Role: Name] section; # lines are comments.
       # Examples below are inactive. Write instructions below them or remove '# Example:'.
@@ -165,9 +168,9 @@
     mode: "0600"
 
 - name: Repair only an explicitly selected failed Codex builder
-  tags: [connector_codex_repair]
+  tags: [connector_codex_repair, connector_prompt_template]
   when: agents_connector_repair_codex_project | length > 0
   ansible.builtin.include_tasks:
     file: repair_codex.yml
     apply:
-      tags: [connector_codex_repair]
+      tags: [connector_codex_repair, connector_prompt_template]

@@ -55,6 +55,10 @@ or required approvals.
 
 ## Release versions
 
+Use "Document" rather than "Record" in documentation-only commit subjects and
+release-note summaries. Existing Git commit subjects are historical and must not
+be rewritten just to change this wording.
+
 After the verified initial 0.0.1 release, every commit increments VERSION. Feature
 commits increment the minor version and reset patch; all other commits, including
 documentation/history commits, increment patch. Use `python3 src/bump-version.py`

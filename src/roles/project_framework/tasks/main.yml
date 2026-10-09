@@ -1,11 +1,11 @@
 ---
 - name: Resolve runtime account for project framework
-  tags: [operator_docs]
+  tags: [operator_docs, connector_prompt_template]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define project framework paths
-  tags: [operator_docs]
+  tags: [operator_docs, connector_prompt_template]
   ansible.builtin.set_fact:
     __project_framework_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     __project_framework_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
@@ -35,6 +35,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0700"
 - name: Install project-scoped operator control
+  tags: [connector_prompt_template]
   ansible.builtin.copy:
     src: project-team.py
     dest: "{{ __project_framework_home }}/agents-connector/routing/project-team.py"

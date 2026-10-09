@@ -377,7 +377,7 @@ def project_prompt_template(content):
     return '\n'.join(output)+'\n'
 
 def apply_prompts():
-    source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'assistant-prompts.md'
+    source=ROOT/'assistant-prompt.md' if PROJECT else ROOT.parent/'templates/assistant-prompts.md'
     goal,sections,bracket_format=prompt_sections(source.read_text())
     if bracket_format:
         goal=active_prompt_text(goal)

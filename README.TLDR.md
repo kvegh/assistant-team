@@ -49,3 +49,8 @@ Existing prompt conversion is opt-in through Ansible; it preserves instructions 
 Human-readable diagnostics: `tail -f ~/environment-logs/events.log` (safe metadata only).
 
 The disposable fresh deployment passed in one full AAP run at version 0.9.1; newer source changes are outside that snapshot. See [DEPLOYMENT_TEST_RESULTS.md](DEPLOYMENT_TEST_RESULTS.md).
+
+The editable default template for new projects is `~/templates/assistant-prompts.md`.
+Creation copies its role instructions into the new project; existing project prompts
+remain independent. Deployment preserves operator edits and migrates the old home-level
+template without overwriting an existing destination. Conflicting paths require operator review.
