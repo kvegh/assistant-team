@@ -12,7 +12,7 @@ spec.loader.exec_module(module)
 class LoginOutcomeTests(unittest.TestCase):
     def test_clear_rejects_config_symlink_before_removing_any_credentials(self):
         with tempfile.TemporaryDirectory() as home:
-            root=pathlib.Path(home)/'claude-priv';(root/'.claude').mkdir(parents=True)
+            root=pathlib.Path(home)/'ac-agents/model-environments/claude-priv';(root/'.claude').mkdir(parents=True)
             credential=root/'.claude/.credentials.json';credential.write_text('fixture')
             unrelated=pathlib.Path(home)/'unrelated';unrelated.write_text('preserved')
             (root/'.env').symlink_to(unrelated)
@@ -20,11 +20,11 @@ class LoginOutcomeTests(unittest.TestCase):
             self.assertTrue(credential.exists());self.assertEqual(unrelated.read_text(),'preserved')
     def test_clear_removes_only_selected_profile_auth_and_preserves_provider_and_settings(self):
         with tempfile.TemporaryDirectory() as home:
-            root=pathlib.Path(home)/'gemini-priv';root.mkdir()
+            root=pathlib.Path(home)/'ac-agents/model-environments/gemini-priv';root.mkdir(parents=True)
             (root/'.gemini').mkdir();(root/'.gemini/oauth_creds.json').write_text('{"refresh_token":"fixture"}')
             (root/'.vertex.json').write_text('{"nonsecret":"preserve"}')
             (root/'.env').write_text('GEMINI_API_KEY=fixture\nUNRELATED=preserve\n')
-            other=pathlib.Path(home)/'gemini-work';other.mkdir();(other/'untouched').write_text('preserve')
+            other=pathlib.Path(home)/'ac-agents/model-environments/gemini-work';other.mkdir();(other/'untouched').write_text('preserve')
             module.clear_profile(root,'gemini')
             self.assertFalse((root/'.gemini/oauth_creds.json').exists())
             self.assertTrue((root/'.vertex.json').exists())
@@ -43,7 +43,7 @@ class LoginOutcomeTests(unittest.TestCase):
             self.assertIn('hooks',value)
     def test_antigravity_uses_only_its_own_saved_token(self):
         with tempfile.TemporaryDirectory() as directory:
-            root=pathlib.Path(directory);path=root/'.gemini/antigravity-cli'
+            root=pathlib.Path(directory)/'ac-agents/model-environments/gemini-priv';path=root/'.gemini/antigravity-cli'
             path.mkdir(parents=True)
             (root/'.gemini/oauth_creds.json').write_text('{"refresh_token":"old-gemini-fixture"}')
             self.assertIsNone(module.credential_snapshot(root,'gemini','antigravity'))
@@ -55,7 +55,7 @@ class LoginOutcomeTests(unittest.TestCase):
 
     def test_antigravity_native_nested_oauth_token_is_detected_without_identity_fields(self):
         with tempfile.TemporaryDirectory() as directory:
-            root=pathlib.Path(directory);path=root/'.gemini/antigravity-cli'
+            root=pathlib.Path(directory)/'ac-agents/model-environments/gemini-priv';path=root/'.gemini/antigravity-cli'
             path.mkdir(parents=True)
             for token in [{'access_token':'fixture-access','refresh_token':'fixture-refresh',
                            'token_type':'Bearer','expiry':'2000-01-01T00:00:00Z'},
@@ -153,3 +153,35 @@ class LoginDisplayTests(unittest.TestCase):
             self.assertEqual(result.returncode,0)
             self.assertEqual(result.stdout,'')
             self.assertNotEqual(env.get('BROWSER'),os.environ.get('BROWSER'))
+
+    def test_clear_reaches_only_matching_copies_below_custom_installation_root(self):
+        import json
+        import subprocess
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as parent:
+            install=pathlib.Path(parent)/'custom/ac-agents'
+            root=install/'model-environments/codex-priv'
+            primary=root/'.codex/auth.json';primary.parent.mkdir(parents=True);primary.write_text('fixture auth')
+            role=install/'projects/example/profiles/builder'
+            role.mkdir(parents=True);(role/'profile.json').write_text(json.dumps({'flavour':'codex','account_profile':'codex-priv'}))
+            copy=role/'accounts/codex-priv/home/.codex/auth.json'
+            copy.parent.mkdir(parents=True);copy.write_text('fixture copy')
+            other=install/'model-environments/codex-work/.codex/auth.json'
+            other.parent.mkdir(parents=True);other.write_text('untouched fixture')
+            with patch.object(module,'require_idle'),patch.object(module.subprocess,'run',return_value=subprocess.CompletedProcess([],1)):
+                self.assertEqual(module.clear_profile(root,'codex'),1)
+            self.assertFalse(primary.exists());self.assertFalse(copy.exists())
+            self.assertEqual(other.read_text(),'untouched fixture')
+
+    def test_active_matching_copy_blocks_clear_with_new_model_directory(self):
+        import json
+        import subprocess
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as parent:
+            install=pathlib.Path(parent)/'ac-agents';root=install/'model-environments/codex-priv'
+            primary=root/'.codex/auth.json';primary.parent.mkdir(parents=True);primary.write_text('fixture')
+            role=install/'projects/example/profiles/builder';role.mkdir(parents=True)
+            (role/'profile.json').write_text(json.dumps({'flavour':'codex','account_profile':'codex-priv'}))
+            with patch.object(module,'require_idle'),patch.object(module.subprocess,'run',return_value=subprocess.CompletedProcess([],0,'true\n','')):
+                with self.assertRaisesRegex(ValueError,'stop project first'):module.clear_profile(root,'codex')
+            self.assertEqual(primary.read_text(),'fixture')

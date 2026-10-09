@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Opt-in disposable, dummy-harness project lifecycle checks; never provider calls."""
-import importlib.util,json,os,pathlib,selectors,shutil,socket,sqlite3,struct,subprocess,sys,time,uuid
+import importlib.util,json,os,pathlib,selectors,shutil,socket,sqlite3,struct,subprocess,sys,time,uuid,pwd,tempfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME=ROOT.parent
-TEAM=ACCOUNT_HOME/'team'
-UNIT_DIR=ACCOUNT_HOME/'.config/systemd/user'
+TEAM=ACCOUNT_HOME/'bin/team'
+UNIT_DIR=pathlib.Path(pwd.getpwuid(os.getuid()).pw_dir)/'.config/systemd/user'
 NAMES=['offline-a-'+uuid.uuid4().hex[:8],'offline-b-'+uuid.uuid4().hex[:8]]
 ENV=os.environ.copy();ENV['XDG_RUNTIME_DIR']='/run/user/'+str(os.getuid());ENV['DBUS_SESSION_BUS_ADDRESS']='unix:path='+ENV['XDG_RUNTIME_DIR']+'/bus'
 def run(args,**kw):return subprocess.run([str(a) for a in args],env=ENV,check=True,**kw)
@@ -29,7 +29,7 @@ def wait_state(name,running):
  raise AssertionError('Eight project containers did not reach expected state')
 def main():
  baseline=subprocess.check_output(['podman','ps','--format','{{.Names}}'],env=ENV,text=True)
- made=[];dropins=[];watcher=None
+ made=[];dropins=[];watcher=None;sandbox=None
  try:
   for name in NAMES:
    run([TEAM,'create-project',name],stdout=subprocess.DEVNULL);made.append(name)
@@ -44,7 +44,7 @@ def main():
    # Model-free substitution only on these freshly created test instances.
    fixture=path/'fixture-launch.py'
    fixture.write_text('''import importlib.util,pathlib,os,subprocess
-root=pathlib.Path(__file__).resolve().parents[2]/"agents-connector"
+root=pathlib.Path(__file__).resolve().parents[2]/"agent-connector"
 spec=importlib.util.spec_from_file_location("fixture_core",root/"routing/connector-team.py")
 c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
 c.apply_prompts()
@@ -58,16 +58,19 @@ for role in c.ALL:
     ('containers','[Service]\nExecStart=\nExecStart=/usr/bin/python3 '+str(fixture)+'\n')]:
     d=UNIT_DIR/('assistant-connector-'+unit+'@'+name+'.service.d');d.mkdir(mode=0o700);(d/'offline-fixture.conf').write_text(override);dropins.append(d)
   # Missing-auth check runs in an isolated home; no real credentials are copied.
-  sandbox=ACCOUNT_HOME/'projects'/NAMES[0]/'missing-auth-sandbox'
-  (sandbox/'agents-connector/routing').mkdir(parents=True)
-  shutil.copy2(ROOT/'routing/connector-team.py',sandbox/'agents-connector/routing/connector-team.py')
-  shutil.copy2(ROOT/'routing/project-team.py',sandbox/'agents-connector/routing/project-team.py')
-  shutil.copy2(ROOT/'routing/environment-config.py',sandbox/'agents-connector/routing/environment-config.py')
-  (sandbox/'environment.config').write_text(json.dumps({'version':1,'profiles':{v+'-'+a:{'enabled':True} for v in ['claude','gemini','codex','mistral'] for a in ['work','priv']}}))
+  sandbox=pathlib.Path(tempfile.mkdtemp(prefix='ac-auth-',dir='/tmp'))
+  (sandbox/'agent-connector/routing').mkdir(parents=True)
+  shutil.copy2(ROOT/'routing/connector-team.py',sandbox/'agent-connector/routing/connector-team.py')
+  shutil.copy2(ROOT/'routing/project-team.py',sandbox/'agent-connector/routing/project-team.py')
+  shutil.copy2(ROOT/'routing/environment-config.py',sandbox/'agent-connector/routing/environment-config.py')
+  (sandbox/'conf').mkdir(mode=0o700)
+  for helper in ['install-paths.py','project-names.py']:
+   shutil.copy2(ROOT/'routing'/helper,sandbox/'agent-connector/routing'/helper)
+  (sandbox/'conf/environment.conf').write_text(json.dumps({'version':1,'profiles':{v+'-'+a:{'enabled':True} for v in ['claude','gemini','codex','mistral'] for a in ['work','priv']}}))
   p=sandbox/'projects/sample';(p/'profiles').mkdir(parents=True);(p/'initialized').touch()
   for role in ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']:
    q=p/'profiles'/role;q.mkdir();shutil.copy2(ROOT/'profiles'/role/'profile.json',q/'profile.json')
-  result=subprocess.run(['python3',sandbox/'agents-connector/routing/project-team.py','start','sample'],env=ENV,capture_output=True,text=True)
+  result=subprocess.run(['python3',sandbox/'agent-connector/routing/project-team.py','start','sample'],env=ENV,capture_output=True,text=True)
   assert result.returncode!=0 and 'Authentication required before starting ANY' in result.stderr
   run(['systemctl','--user','daemon-reload'])
   for name in NAMES:
@@ -111,5 +114,5 @@ for role in c.ALL:
   subprocess.run(['systemctl','--user','daemon-reload'],env=ENV,check=True)
   for name in made:
    shutil.rmtree(ACCOUNT_HOME/'projects'/name)
-   (ACCOUNT_HOME/('projects.'+name+'.config')).unlink(missing_ok=True)
+  if sandbox is not None:shutil.rmtree(sandbox)
 if __name__=='__main__':main()

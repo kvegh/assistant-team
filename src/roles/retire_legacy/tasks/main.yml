@@ -1,4 +1,10 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Resolve runtime account for default-group retirement
   ansible.builtin.getent:
     database: passwd

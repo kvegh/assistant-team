@@ -1,11 +1,17 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Resolve project workspace account
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Locate existing initialized project directories
   ansible.builtin.find:
-    paths: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/projects"
+    paths: "{{ assistant_install_root }}/projects"
     file_type: directory
     recurse: false
   register: __project_workspace_projects

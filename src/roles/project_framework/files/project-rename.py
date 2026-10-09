@@ -20,7 +20,7 @@ def rename_paths(framework,old,new):
     if old==new:raise ValueError('Choose a different project name')
     path,config,_=framework.lifecycle_paths(old)
     destination=framework.project_path(new)
-    new_config=framework.ACCOUNT_HOME/('projects.'+new+'.config')
+    new_config=framework.paths(framework.ACCOUNT_HOME).project_config(new)
     if destination.exists() or destination.is_symlink() or new_config.exists() or new_config.is_symlink():
         raise ValueError('New project or configuration already exists; old project was not stopped')
     if framework.loaded_project_units(new):
@@ -58,7 +58,7 @@ def rename_project(framework,old,new):
         framework.quiesce_project(old,path);framework.forget_project_units(old)
         rename_paths(framework,old,new)
         path.rename(destination);moved_project=True
-        config.rename(new_config);moved_config=True
+        (destination/config.name).rename(new_config);moved_config=True
         helper.rebase(framework,new,old_name=old)
         # Stash only obsolete process bookkeeping, never native authentication or history.
         candidates=[destination/'broker.sock']
@@ -91,9 +91,10 @@ def rename_project(framework,old,new):
             except OSError:failures.append(True)
         if moved_config:
             try:
-                if config.exists() or config.is_symlink():raise ValueError('Old config path was recreated during rename')
-                new_config.rename(config)
-                with config.open('wb') as file:
+                rollback_config=destination/config.name
+                if rollback_config.exists() or rollback_config.is_symlink():raise ValueError('Old config path was recreated during rename')
+                new_config.rename(rollback_config)
+                with rollback_config.open('wb') as file:
                     file.write(original);os.fchmod(file.fileno(),config_mode)
             except (OSError,ValueError):failures.append(True)
         if moved_project:
@@ -108,4 +109,4 @@ def rename_project(framework,old,new):
         if not isinstance(error,(OSError,ValueError,subprocess.CalledProcessError)):
             raise ValueError('Rename interrupted or rendering failed; old project identity was restored and remains stopped') from error
         raise
-    print('Renamed project '+old+' to '+new+'; it remains stopped. Start with: ~/team start '+new)
+    print('Renamed project '+old+' to '+new+'; it remains stopped. Start with: team start '+new)

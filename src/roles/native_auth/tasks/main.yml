@@ -1,4 +1,10 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Resolve the dedicated native installation account
   tags: [native_auth_helpers]
   ansible.builtin.getent:
@@ -7,7 +13,7 @@
 - name: Define dedicated local installation paths
   tags: [native_auth_helpers]
   ansible.builtin.set_fact:
-    __native_auth_native_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    __native_auth_native_home: "{{ assistant_profiles_root }}"
     __native_auth_native_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Install supported personal Antigravity before maintaining shared launchers
   ansible.builtin.include_role:
@@ -43,6 +49,15 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
+  loop: "{{ native_auth_native_auth_dirs }}"
+- name: Maintain profile-local canonical layout helpers
+  tags: [native_auth_helpers]
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../lib/install-paths.py"
+    dest: "{{ __native_auth_native_home }}/{{ item.directory }}/.install-paths.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
   loop: "{{ native_auth_native_auth_dirs }}"
 - name: Verify every installed native version including recovered contexts
   become: true

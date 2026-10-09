@@ -44,3 +44,5 @@ builder, set `agents_connector_repair_codex_restore_marker_only: true` with the
 explicit project and run only `connector_codex_repair`. This checks that tmux has
 a live native Codex command and touches its marker without rebuilding images,
 replacing containers or respawning any pane. Dead or idle-shell panes are rejected.
+
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

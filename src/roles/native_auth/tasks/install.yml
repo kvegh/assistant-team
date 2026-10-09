@@ -42,7 +42,7 @@
     cmd: |
       set -o pipefail
       runuser -u {{ containers.runtime_user | quote }} -- env \
-        HOME={{ __native_auth_native_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ __native_auth_native_uid }} \
+        HOME={{ assistant_runtime_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ __native_auth_native_uid }} \
         podman run --rm --network=none localhost/assistant-connector-{{ native.flavour }}:{{ native.version }} \
         tar -C /usr/local -cf - lib/node_modules/{{ native.package }} \
         {{ (native.flavour == 'codex') | ternary('bin/node', '') }} |
@@ -153,6 +153,13 @@
   ansible.builtin.copy:
     dest: "{{ __native_auth_native_home }}/{{ native.directory }}/.native-install.json"
     content: "{{ native | to_nice_json }}\n"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
+- name: Install profile-local canonical layout helper before native bootstrap
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../lib/install-paths.py"
+    dest: "{{ __native_auth_native_home }}/{{ native.directory }}/.install-paths.py"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"

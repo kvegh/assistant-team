@@ -50,17 +50,17 @@ class ConnectorPolicyTests(unittest.TestCase):
         self.assertFalse(team.authorize('builder', {'kind': 'post_reply', 'ask_id': 1, 'from': 'builder', 'text': 'forged'}))
 
     def test_prompt_sections_exclude_hidden_roles_and_preserve_source(self):
-        root = pathlib.Path(self.directory.name) / 'agents-connector'
+        root = pathlib.Path(self.directory.name) / 'agent-connector'
         root.mkdir()
         for name in team.ALL:
             path = self.profiles / name
             (path / 'workspace').mkdir(parents=True, exist_ok=True)
             (path / 'profile.json').write_text(__import__('json').dumps({'flavour': 'claude'}))
-        source = root.parent / 'templates/assistant-prompts.md'
-        source.parent.mkdir(mode=0o700)
+        source = root.parent / 'conf/templates/assistant.prompt.md.template'
+        source.parent.mkdir(mode=0o700,parents=True)
         original = '\n'.join('# Role: ' + n + '\n' + ('hidden-secret' if n not in team.VISIBLE else 'own-' + n) for n in team.ALL)
         source.write_text(original)
-        with mock.patch.object(team, 'ROOT', root):
+        with mock.patch.object(team, 'ROOT', root),mock.patch.object(team,'ACCOUNT_HOME',root.parent):
             team.apply_prompts()
         self.assertEqual(source.read_text(), original)
         for name in team.VISIBLE:
@@ -70,22 +70,22 @@ class ConnectorPolicyTests(unittest.TestCase):
 
     def test_credentials_seed_only_the_selected_boundary_and_preserve_refresh(self):
         import json
-        root = pathlib.Path(self.directory.name) / 'agents-connector'
+        root = pathlib.Path(self.directory.name) / 'agent-connector'
         root.mkdir()
         for boundary, value in [('claude-work', 'work-fixture'), ('claude-priv', 'private-fixture')]:
-            directory = root.parent / boundary / '.claude'
+            directory = root.parent / 'model-environments' / boundary / '.claude'
             directory.mkdir(parents=True)
             (directory / '.credentials.json').write_text(value)
             (directory / '.claude.json').write_text(json.dumps({'oauthAccount': {'fixture': True}, 'mcpServers': {'forbidden': {}}}))
         vertex = {'CLAUDE_CODE_USE_VERTEX':'1','CLOUD_ML_REGION':'global','ANTHROPIC_VERTEX_PROJECT_ID':'fixture-project','ANTHROPIC_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_OPUS_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_SONNET_MODEL':'claude-fixture','ANTHROPIC_DEFAULT_HAIKU_MODEL':'claude-fixture'}
-        (root.parent / 'claude-work/.vertex.json').write_text(json.dumps(vertex))
-        adc = root.parent / 'claude-work/.config/gcloud'
+        (root.parent / 'model-environments/claude-work/.vertex.json').write_text(json.dumps(vertex))
+        adc = root.parent / 'model-environments/claude-work/.config/gcloud'
         adc.mkdir(parents=True);(adc/'application_default_credentials.json').write_text('work-fixture')
         for name, boundary in [('investigator', 'claude-work'), ('private-connector', 'claude-priv')]:
             path = self.profiles / name
             (path / 'home').mkdir(parents=True, exist_ok=True)
             (path / 'profile.json').write_text(json.dumps({'flavour': 'claude', 'auth_directory': boundary}))
-        with mock.patch.object(team, 'ROOT', root):
+        with mock.patch.object(team, 'ROOT', root),mock.patch.object(team,'ACCOUNT_HOME',root.parent):
             team.seed_auth('investigator')
             team.seed_auth('private-connector')
             saved = self.profiles / 'investigator/home/.config/gcloud/application_default_credentials.json'

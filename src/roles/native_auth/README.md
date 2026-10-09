@@ -29,3 +29,5 @@ OAuth token structure is supported. A TUI interrupt with newly persisted valid
 evidence is reported as saved/unverified; cancellation without new evidence stays
 failed/cancelled. Unchanged existing evidence is described separately. No outcome
 can claim verified model entitlement without an explicit model check.
+
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

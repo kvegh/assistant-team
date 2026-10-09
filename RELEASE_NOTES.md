@@ -1,5 +1,17 @@
 # Release notes
 
+## 0.22.0
+
+Add a canonical `PREFIX/ac-agents` installation root with destination-home default,
+scoped model environments, project-local configuration, installation-local tools
+and central path helpers. Rebase lifecycle and auth helpers, user units and
+Ansible roles; refuse legacy or conflicting installations before creating overlap.
+Keep standard systemd and Podman storage locations. Document controlled migration
+prerequisites; this source-only release is not deployed to the existing environment.
+
+Validation: all 191 local tests passed; production Ansible lint reported zero
+failures or warnings. No model calls, credential migration or target deployment ran.
+
 ## 0.21.8
 
 Document verified old-layout restore fixes and successful restoration of the

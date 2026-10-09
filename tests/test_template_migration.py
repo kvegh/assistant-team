@@ -1,4 +1,4 @@
-"""Exercise template migration with real local Ansible; no model or host access."""
+"""Exercise canonical template path protection with real local Ansible; no model or host access."""
 import json
 import os
 import pathlib
@@ -12,19 +12,19 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 @unittest.skipUnless(shutil.which('ansible-playbook'), 'Ansible is required')
-class TemplateMigrationTests(unittest.TestCase):
+class CanonicalTemplateTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.home = pathlib.Path(self.temp.name)
         self.old = self.home / 'assistant-prompts.md'
-        self.new = self.home / 'templates/assistant-prompts.md'
+        self.new = self.home / 'conf/templates/assistant.prompt.md.template'
 
     def run_migration(self):
         play = [{
             'name': 'Test local template migration', 'hosts': 'localhost',
             'connection': 'local', 'gather_facts': False,
-            'vars': {'agents_connector_runtime_home': str(self.home),
+            'vars': {'assistant_install_root': str(self.home),
                      'containers': {'runtime_user': pwd.getpwuid(os.getuid()).pw_name}},
             'tasks': [{'name': 'Run migration tasks', 'ansible.builtin.import_tasks':
                        str(ROOT / 'src/roles/agents_connector/tasks/prompt_template.yml')}],
@@ -39,7 +39,8 @@ class TemplateMigrationTests(unittest.TestCase):
 
     def test_preserves_operator_bytes_and_is_idempotent(self):
         original = b'[Role: Investigator]\nEdited operator text\n'
-        self.old.write_bytes(original)
+        self.new.parent.mkdir(parents=True)
+        self.new.write_bytes(original)
         first = self.run_migration()
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         self.assertFalse(self.old.exists())
@@ -50,24 +51,26 @@ class TemplateMigrationTests(unittest.TestCase):
         self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
         self.assertIn('changed=0', second.stdout)
 
-    def test_conflicting_destination_preserves_both_files(self):
+    def test_canonical_template_symlink_preserves_legacy_and_external_files(self):
         self.old.write_text('original')
-        self.new.parent.mkdir()
-        self.new.write_text('different')
+        self.new.parent.mkdir(parents=True)
+        outside=self.home/'outside-template';outside.write_text('different')
+        self.new.symlink_to(outside)
         result = self.run_migration()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Template paths are unsafe', result.stdout)
+        self.assertIn('Canonical template', result.stdout)
         self.assertEqual(self.old.read_text(), 'original')
         self.assertEqual(self.new.read_text(), 'different')
 
     def test_linked_template_directory_is_rejected(self):
         outside = self.home / 'outside'
         outside.mkdir()
+        self.new.parent.parent.mkdir()
         self.new.parent.symlink_to(outside, target_is_directory=True)
         self.old.write_text('original')
         result = self.run_migration()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Template paths are unsafe', result.stdout)
+        self.assertIn('Canonical template', result.stdout)
         self.assertTrue(self.old.exists())
         self.assertFalse((outside / self.new.name).exists())
 

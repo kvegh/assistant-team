@@ -38,6 +38,24 @@ material uncertainty rather than inventing history.
   every 20 seconds and give meaningful progress updates at least every minute.
   Respect explicit stop or pause instructions.
 
+## Approved installation layout: source only until explicitly deployed
+
+The canonical fresh-install root is `PREFIX/ac-agents`, with PREFIX defaulting to
+the destination runtime user's real HOME. `--prefix` selects an absolute destination
+parent; it never defaults to the controller user's HOME. Code is in
+`agent-connector`, the entrypoint is `bin/team`, native account profiles are in
+`model-environments`, config is `conf/environment.conf`, and the editable default
+is `conf/templates/assistant.prompt.md.template`. Project config lives inside its
+project directory as `project.NAME.config`. Guides, archives and environment logs
+also belong under the installation root. User systemd units and engine-managed
+Podman storage retain their standard locations under the real runtime account.
+
+These layout changes are source-only. Existing deployed environments retain their
+old paths and commands until a separately authorized controlled migration or fresh
+deployment. New-layout playbooks refuse legacy artifacts and another installation
+root bound to the same user systemd namespace. See `INSTALLATION_MIGRATION.md`;
+no automatic migration command is claimed or approved by this layout decision.
+
 ## Access and secrets
 
 - The repository is private. Privacy does not replace encryption.
@@ -124,7 +142,7 @@ material uncertainty rather than inventing history.
   supported individual authentication. Codex work is prepared but disabled for
   the current operator. Mistral work is disabled for now.
 - Keep each profile's install, HOME, configuration, cache, temporary files, and
-  authentication state inside its own work directory. Do not scatter native
+  authentication state inside `<installation>/model-environments/PROFILE`. Do not scatter native
   harness configuration into the user's general home.
 - Authenticate each profile once through its host-side `./login` wrapper; do not
   require repetitive interactive login inside every role container.
@@ -134,7 +152,7 @@ material uncertainty rather than inventing history.
   unconfirmed result. Saved credentials alone do not prove model access.
 - Do not fall back automatically to paid API access when a subscription allowance
   is exhausted. Wait for allowance renewal or let the user choose another option.
-- Track enabled profiles in `~/environment.config`; the setup command must list
+- Track enabled profiles in `<installation>/conf/environment.conf`; the setup command must list
   enabled profiles and guide authentication. Role account choices are explicit
   per project and must match enabled, supported profiles.
 - Keep current instructions compatible with the provider's supported clients.
@@ -145,10 +163,9 @@ material uncertainty rather than inventing history.
 
 ## Projects and communication
 
-- Projects live in `~/projects/<name>/`. Project creation prepares the directory,
+- Projects live in `<installation>/projects/<name>/`. Project creation prepares the directory,
   its own SQLite database, `assistant-prompt.md`, and a shared `workspace/`.
-- Store the project's authoritative configuration in `~/projects.<name>.config`,
-  next to `~/environment.config`. Project prompts are independently editable and
+- Store the project's authoritative configuration in `<installation>/projects/<name>/project.<name>.config`. Project prompts are independently editable and
   contain that project's goal and role prompts in one human-friendly file.
 - Start the entire eight-role team together for a project, with its separate
   database and workspace. Allow different projects to run in parallel.
@@ -163,7 +180,7 @@ material uncertainty rather than inventing history.
   separately per project; the watch command provides operator visibility.
   Do not confuse outbound MCP tools with a native harness accepting inbound MCP.
 - The user steers through the orchestrator session and can follow communication
-  with the watch command. Keep the command reference in the runtime user's
+  with the watch command. Keep the command reference in the installation root's
   `README.md` and a maintained, minimal `README.TLDR.md`.
 - Record connector actions in the project's SQLite database for correlation,
   using metadata such as the action, time, and result. Do not store all retrieved

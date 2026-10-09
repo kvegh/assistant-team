@@ -5,7 +5,7 @@ def module():
  s=importlib.util.spec_from_file_location('framework_test',SOURCE);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
 class ProjectFrameworkTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory();self.root=pathlib.Path(self.tmp.name);self.m=module();self.m.ACCOUNT_HOME=self.root;self.m.PROJECTS=self.root/'projects';self.m.INSTALL=self.root/'agents-connector'
+  self.tmp=tempfile.TemporaryDirectory();self.root=pathlib.Path(self.tmp.name);self.m=module();self.m.ACCOUNT_HOME=self.root;self.m.PROJECTS=self.root/'projects';self.m.INSTALL=self.root/'agent-connector'
  def tearDown(self):self.tmp.cleanup()
  def test_invalid_or_symlink_names_never_escape_project_parent(self):
   for name in ['../escape','a/b','UPPER','-bad','a\nunit','a'*41]:
@@ -50,7 +50,7 @@ class ProjectFrameworkTests(unittest.TestCase):
   core=type('Core',(),{'PROFILES':self.root/'profiles','role_home':lambda _self,role:self.root/'profiles'/role/'home'})()
   for name in self.m.ROLES:
    p=core.PROFILES/name;p.mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"codex"}')
-  (self.root/'codex/.codex').mkdir(parents=True);(self.root/'codex/.codex/auth.json').write_text('{"OPENAI_API_KEY":"dummy"}')
+  (self.root/'model-environments/codex-priv/.codex').mkdir(parents=True);(self.root/'model-environments/codex-priv/.codex/auth.json').write_text('{"OPENAI_API_KEY":"dummy"}')
   with patch.object(self.m,'configure_roles'),patch.object(self.m,'load',return_value=core):
    with self.assertRaises(ValueError):self.m.required_auth('sample')
  def test_existing_native_refreshed_auth_takes_precedence(self):

@@ -12,3 +12,6 @@ vault-password*
 local/
 output/
 __pycache__/
+
+# Generated installation roots may contain native authentication; never track them.
+**/ac-agents/

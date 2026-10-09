@@ -32,7 +32,17 @@ def validate_record(record,summary=False):
 
 
 def destination_vars(args):
-    return {'assistant_destination_vault':str(args.vault_file.resolve()),'assistant_local':args.local}
+    values={'assistant_destination_vault':str(args.vault_file.resolve()),'assistant_local':args.local}
+    if args.prefix is not None:values['assistant_install_prefix']=str(args.prefix)
+    return values
+
+
+def destination_prefix(value):
+    """A destination path must never be expanded against the controller's home."""
+    path=pathlib.Path(value)
+    if not path.is_absolute() or '..' in path.parts or any(ord(character)<32 for character in value):
+        raise argparse.ArgumentTypeError('--prefix must be an absolute destination directory without parent traversal')
+    return path
 
 
 def transfer_command(args,safe,run_id):
@@ -83,6 +93,7 @@ def main():
     p.add_argument('--init-vault',action='store_true')
     p.add_argument('--syntax-check',action='store_true')
     p.add_argument('--local',action='store_true',help='Deploy on this same machine using Ansible local connection, without SSH')
+    p.add_argument('--prefix',type=destination_prefix,help='Destination parent directory for ac-agents; default: destination runtime user home (not the controller home)')
     p.add_argument('--log-dir',type=pathlib.Path,default=pathlib.Path.home()/'.local/state/assistant-team/deployment-logs')
     p.add_argument('--export',type=pathlib.Path)
     p.add_argument('--run-directory',type=pathlib.Path)
@@ -156,7 +167,7 @@ def main():
         transfer=transfer_command(a,safe,run_id)
         with (directory/'protected-transfer.log').open('w') as output:
             moved=subprocess.run(transfer,env=env,cwd=REPOSITORY,stdout=output,stderr=subprocess.STDOUT)
-        print('Target diagnostic metadata '+('persisted in runtime ~/environment-logs' if moved.returncode==0 else 'remains in local spool: target unavailable or runtime account not yet created'))
+        print('Target diagnostic metadata '+('persisted in the destination installation environment-logs directory' if moved.returncode==0 else 'remains in local spool: target unavailable or runtime account not yet created'))
     print('Deployment '+summary['status']+'; exit '+str(result.returncode)+'. Protected local diagnostics: '+str(directory))
     print('Review protected-output.log locally. Share only an explicit metadata export; it excludes output, target details and credentials.')
     return result.returncode

@@ -15,20 +15,13 @@
 
 ## Required later
 
-- [ ] Consolidate the installation layout under `PREFIX/ac-agents`, with
-  `--prefix` defaulting to the installing user's home directory. Put the `team`
-  executable in `bin/`, connector code in `agent-connector/`, native account
-  profiles in `model-environments/`, and projects, project archives and environment
-  logs in their own subdirectories. Keep environment configuration at
-  `conf/environment.conf`, the default prompt template at
-  `conf/templates/assistant.prompt.md.template`, and each project's configuration
-  alongside its prompt at `projects/NAME/project.NAME.config` (singular `project`).
-  Centralize path definitions and review Ansible, runtime/authentication helpers,
-  systemd references, lifecycle commands, tests and operator documentation.
-  Provide fresh-install support and a controlled existing-installation migration
-  preserving projects, archives and credentials. Keep user units in systemd's
-  standard configuration directory and the future authentication vault outside
-  the installation and Git. Deferred: do not change the current layout yet.
+- [ ] Deploy and accept the source-implemented installation layout on an explicitly
+  authorized fresh environment. Source now supports `PREFIX/ac-agents`, destination
+  home as default parent, canonical paths and project-local singular configuration.
+  The existing environment remains unchanged by explicit instruction. Implement
+  and test a controlled migration before migrating any existing installation;
+  `INSTALLATION_MIGRATION.md` currently documents its design only. Keep any future
+  authentication vault outside the installation and Git.
 
 - [ ] Define a reusable post-deployment acceptance suite with documented test cases
   and a command or AAP verification job to run them after installation. Build on

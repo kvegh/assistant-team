@@ -30,7 +30,7 @@ class UnarchiveTests(unittest.TestCase):
         self.framework.settings=lambda:settings
         self.name='sample-0910260800';self.archive=self.home/'project-archive'/self.name;self.archive.mkdir(parents=True)
         self.config={'version':1,'project':'sample','roles':{role:'claude-work' for role in self.framework.ROLES}}
-        (self.archive/'projects.sample.config').write_text(json.dumps(self.config))
+        (self.archive/'project.sample.config').write_text(json.dumps(self.config))
         (self.archive/'.assistant-archive.json').write_text(json.dumps({'version':1,'archived_at':'2026-10-09T08:00:00+00:00','timestamp_basis':'operation_start'}))
         (self.archive/'initialized').touch();(self.archive/'assistant-prompt.md').write_text('PRIVATE CUSTOM GOAL')
         with sqlite3.connect(self.archive/'db.sqlite') as db:db.execute('CREATE TABLE messages (text TEXT)');db.execute('INSERT INTO messages VALUES (?)',('PRESERVE CONVERSATION',));db.execute('CREATE TABLE agents (name TEXT)');db.execute('CREATE TABLE asks (text TEXT)');db.execute('CREATE TABLE replies (text TEXT)')
@@ -73,13 +73,13 @@ class UnarchiveTests(unittest.TestCase):
         self.assertEqual((destination/'assistant-prompt.md').read_text(),'PRIVATE CUSTOM GOAL')
         self.assertEqual((destination/'workspace/artifact').read_text(),'USER DATA')
         self.assertFalse((destination/'.assistant-archive.json').exists())
-        self.assertFalse((destination/'projects.sample.config').exists())
-        self.assertEqual(json.loads((self.home/('projects.'+name+'.config')).read_text())['project'],name)
+        self.assertFalse((destination/'project.sample.config').exists())
+        self.assertEqual(json.loads((destination/('project.'+name+'.config')).read_text())['project'],name)
         for role in self.framework.ROLES:
             self.assertFalse((destination/'profiles'/role/'launched').exists())
             self.assertIn(name,(destination/'profiles'/role/'workspace/CLAUDE.md').read_text())
         self.assertEqual(destination.stat().st_mode&0o777,0o700)
-        self.assertEqual((self.home/('projects.'+name+'.config')).stat().st_mode&0o777,0o600)
+        self.assertEqual((destination/('project.'+name+'.config')).stat().st_mode&0o777,0o600)
         with sqlite3.connect(destination/'db.sqlite') as db:self.assertEqual(db.execute('SELECT text FROM messages').fetchone()[0],'PRESERVE CONVERSATION')
 
     def test_legacy_plain_archive_gets_recorded_timestamp_name(self):
@@ -189,13 +189,13 @@ class UnarchiveTests(unittest.TestCase):
         with patch.object(self.helper.subprocess,'run',side_effect=run):
             with self.assertRaises(subprocess.CalledProcessError):self.helper.restore(self.framework,self.name)
         self.assertTrue(self.archive.exists());self.assertFalse(self.home.joinpath('projects',self.name).exists())
-        self.assertFalse(self.home.joinpath('projects.'+self.name+'.config').exists())
+        self.assertFalse(self.home.joinpath('projects',self.name,'project.'+self.name+'.config').exists())
         self.assertTrue(any('disable' in cmd for cmd in commands));self.assertFalse(any('start' in cmd for cmd in commands))
 
     def test_mismatched_identity_and_loaded_units_refuse_before_changes(self):
-        self.config['project']='different';(self.archive/'projects.sample.config').write_text(json.dumps(self.config))
+        self.config['project']='different';(self.archive/'project.sample.config').write_text(json.dumps(self.config))
         with self.assertRaises(ValueError):self.restore()
-        self.config['project']='sample';(self.archive/'projects.sample.config').write_text(json.dumps(self.config))
+        self.config['project']='sample';(self.archive/'project.sample.config').write_text(json.dumps(self.config))
         self.framework.loaded_project_units=lambda name:['existing']
         with self.assertRaises(ValueError):self.restore()
         self.assertTrue(self.archive.exists())

@@ -134,7 +134,8 @@ def main():
     args = parser.parse_args()
     if os.geteuid() == 0:
         parser.error("Run as the unprivileged runtime account.")
-    root = Path.home() / ".local/share/assistant-team/instances"
+    installation = Path(__file__).resolve().parents[1]
+    root = installation / "agent-connector/instances"
     try:
         if args.action == "init":
             initialize(root, args.name, args.flavour, args.role_file, args.participants_file)
@@ -142,7 +143,7 @@ def main():
             return
         instance = root / args.name
         flavour = json.loads((instance / "instance.json").read_text())["flavour"]
-        versions = json.loads(Path("/etc/assistant-team/images.json").read_text())
+        versions = json.loads((installation / "conf/images.json").read_text())
         if flavour not in versions:
             raise ValueError("Unknown native harness.")
         result = subprocess.run(podman_command(instance, args.name, flavour, versions[flavour],

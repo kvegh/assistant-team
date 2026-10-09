@@ -81,3 +81,5 @@ and staging trees; keep the retained archive untouched.
 
 The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
 from the restored copy when it is a socket; an ordinary file at that path is kept.
+
+Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.

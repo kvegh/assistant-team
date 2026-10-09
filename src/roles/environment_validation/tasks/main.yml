@@ -1,4 +1,10 @@
 ---
+- name: Resolve protected destination installation layout
+  tags: [always]
+  ansible.builtin.include_role:
+    name: install_layout
+    apply:
+      tags: [always]
 - name: Inspect the complete root filesystem allocation
   ansible.builtin.command:
     argv: [df, -B1, "--output=size,avail", /]
@@ -18,7 +24,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
   ansible.builtin.command:
-    argv: [python3, "{{ podman_host_runtime_home }}/agents-connector/routing/validate_projects.py"]
+    argv: [python3, "{{ assistant_connector_root }}/routing/validate_projects.py"]
   changed_when: false
   when: environment_validation_run_projects | bool
 - name: Publish verified installation metadata without account authentication

@@ -29,11 +29,16 @@ if pathlib.Path(sys.argv[0]).name=='login':
         status.require_idle(root)
     except (BlockingIOError,ValueError) as error:raise SystemExit(status.display(str(error)))
 def diagnostic(action,result,code=0):
-    path=root.parent/'agents-connector/routing/environment-diagnostics.py'
+    source=root/'.install-paths.py'
+    if not source.is_file():return
+    paths_spec=importlib.util.spec_from_file_location('native_install_paths',source)
+    paths_module=importlib.util.module_from_spec(paths_spec);paths_spec.loader.exec_module(paths_module)
+    installation=paths_module.for_profile(root)
+    path=installation.vendor/'routing/environment-diagnostics.py'
     if not path.is_file():return
     spec=importlib.util.spec_from_file_location('environment_diagnostics',path)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-    try:module.record(root.parent,action,result,code)
+    try:module.record(installation.root,action,result,code)
     except (ValueError,OSError):pass
 if config.get('provider')=='antigravity':
     env=status.personal_antigravity(env)

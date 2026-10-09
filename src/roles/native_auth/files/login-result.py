@@ -1,5 +1,6 @@
 """Local credential evidence only: never verifies model entitlement."""
 import hashlib
+import importlib.util
 import json
 import pathlib
 import subprocess
@@ -118,8 +119,16 @@ def result(exit_code, before, after, interactive=False):
     return 'Credentials saved; model access unverified'
 
 
+def installation_for_profile(root):
+    source=pathlib.Path(root)/'.install-paths.py'
+    if not source.is_file():source=pathlib.Path(__file__).resolve().parents[3]/'lib/install-paths.py'
+    spec=importlib.util.spec_from_file_location('native_install_paths',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.for_profile(root)
+
+
 def clear_profile(root, flavour, provider=None):
-    root=pathlib.Path(root).resolve();account=root.name;home=root.parent
+    root=pathlib.Path(root).resolve();account=root.name;home=installation_for_profile(root).root
     require_idle(root)
     copies=[];projects=[]
     for project in (home/'projects').glob('*'):
@@ -135,7 +144,7 @@ def clear_profile(root, flavour, provider=None):
     for project,role in projects:
         check=subprocess.run(['podman','inspect','--format','{{.State.Running}}','acp-'+project+'-'+role],capture_output=True,text=True)
         if check.returncode==0 and check.stdout.strip()=='true':
-            raise ValueError('Credentials were preserved: stop project first with ~/team stop '+project)
+            raise ValueError('Credentials were preserved: stop project first with team stop '+project)
     # Validate every destination before mutation, including parent paths and config/env files.
     files=['.claude/.credentials.json','.codex/auth.json','.gemini/oauth_creds.json',
            '.gemini/google_accounts.json','.gemini/mcp-oauth-tokens.json','.gemini/gemini-credentials.json',
