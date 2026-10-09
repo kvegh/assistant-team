@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.18.1
+
+Document verified template migration, preserved operator and project prompts,
+and successful new-project creation from the canonical templates directory.
+
 ## 0.18.0
 
 Move the editable new-project default to `~/templates/assistant-prompts.md`.

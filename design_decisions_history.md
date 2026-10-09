@@ -834,3 +834,24 @@ Ansible deployment completed 33 tasks with zero failures. The installed list com
 returned NAME/STATUS columns and reported the independently stopped existing team
 as stopped. All eight existing container identities, states and start times were
 unchanged by listing, and existing project/config files were retained.
+
+## Move the editable default into the templates directory
+
+Implementation: `db1c663`.
+
+The user requested that the default new-project prompt live in
+`~/templates/assistant-prompts.md` rather than the home directory. Project
+creation and default prompt helpers now use that canonical path. Migration uses
+Ansible built-in file operations: reject symlinks and conflicting destinations,
+copy without overwriting, verify unchanged bytes, then remove the legacy source.
+Operator edits and existing project prompts remain independent. The directory is
+private and the template writable only by its owner. Focused deployment neither
+rebuilds images nor starts or restarts teams.
+
+All 141 tests passed, including actual local Ansible migration, idempotence,
+conflict preservation and linked-path rejection. The targeted deployment
+completed 28 target tasks with no failures. Installed verification confirmed the
+old file was absent, the new file retained its exact previous checksum, and the
+existing project prompt was unchanged. A disposable model-free project was
+created from the moved template and destroyed successfully; no credentials were
+read and no inference was performed. The stopped original team was not started.
