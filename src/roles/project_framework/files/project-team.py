@@ -29,7 +29,7 @@ Projects:
   rename-project OLD NEW             Stop OLD, rename identity/config; preserve enablement, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show target/role states, work/priv profiles and configured models.
-  watch NAME                         Follow messages; Ctrl-C stops only the viewer.
+  watch NAME [-NUMBER] [-f]          Last 50 then exit; -NUMBER changes count; -f alone follows new.
   attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
   launch NAME ROLE                   Launch one role after checking project authentication.
   preflight NAME                     Validate enabled role assignments and saved authentication.
@@ -579,6 +579,11 @@ def main():
         spec=importlib.util.spec_from_file_location('project_rename',INSTALL/'routing/project-rename.py')
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         module.rename_project(sys.modules[__name__],sys.argv[2],sys.argv[3]);return
+    if action=='watch':
+        if len(sys.argv)<3:raise ValueError('Use team watch NAME [-NUMBER] [-f]')
+        verify_project(sys.argv[2]);core=load(sys.argv[2])
+        limit,follow=core.watch_history_limit(sys.argv[3:])
+        core.watch(limit=limit,follow=follow);return
     p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
     if a.action in ['destroy','archive','unarchive'] and a.role:p.error(a.action+' takes exactly NAME')
     if a.action=='create-project':create(a.project);return

@@ -75,3 +75,13 @@ versions or entitlement. A missing explicit model is shown as `harness default
 message text stays plain, and available question correlation IDs remain visible.
 Redirected output, `NO_COLOR` and `TERM=dumb` disable color. Restart only the watch
 viewer to pick up formatter updates; the project team can keep running.
+
+`team watch NAME` now prints the last 50 communication entries and exits.
+`team watch NAME -20` prints the last 20 and exits. `team watch NAME -f` follows
+only new entries; `team watch NAME -20 -f` prints the last 20 then follows.
+Counts are 0–10000; either flag order works. This changes the earlier bare-watch
+live-follow default. History is chronological by message ID, including asks and
+replies once each. Follow subscribes before taking its history snapshot and skips
+queued events already included in that snapshot. The existing upstream live
+stream can drop notifications for an excessively slow viewer; it is not a durable
+subscription. History reads only the project’s message table, with no model calls.

@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.26.0
+
+Add tail-style watch history: default last 50 and exit; -NUMBER selects a snapshot;
+-f alone follows new entries; -NUMBER -f shows history then follows. Preserve role
+colors and ask/reply correlation. Subscribe before the history snapshot and skip
+queued events already covered by its message-ID boundary.
+
 ## 0.25.1
 
 Document watch color behavior, plain-output controls and safe viewer-only refresh.

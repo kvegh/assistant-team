@@ -572,13 +572,42 @@ def format_watch_message(message, color=False):
     correlation=''
     ask_id=message.get('ask_id')
     if isinstance(ask_id,int) and not isinstance(ask_id,bool):correlation=' [ask '+str(ask_id)+']'
+    reply_to=message.get('in_reply_to')
+    if isinstance(reply_to,int) and not isinstance(reply_to,bool):correlation+=' [reply to ask '+str(reply_to)+']'
     body=message.get('text','')
     if not isinstance(body,str):body='[invalid message text]'
     body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and not 127<=ord(ch)<=159 else '?' for ch in body)
     return '['+identifier+']'+correlation+' '+label(message.get('from'))+' -> '+label(message.get('to') or 'workers')+': '+body
 
 
-def watch():
+def watch_history_limit(arguments):
+    limit=None;follow=False
+    for argument in arguments:
+        if argument=='-f' and not follow:follow=True
+        elif re.fullmatch(r'-(?:0|[1-9][0-9]{0,4})',argument) and limit is None:
+            limit=int(argument[1:])
+            if limit>10000:raise ValueError('watch history limit must be 0..10000')
+        else:raise ValueError('Use team watch NAME [-NUMBER] [-f]; specify each option once. Default: last 50 and exit; -f alone follows only new entries.')
+    return (0 if follow else 50) if limit is None else limit,follow
+
+
+def watch_snapshot(limit):
+    database=STATE/'db.sqlite'
+    if database.is_symlink():raise ValueError('Project discussion database must not be a symlink')
+    with sqlite3.connect('file:'+str(database)+'?mode=ro',uri=True) as db:
+        db.row_factory=sqlite3.Row
+        db.execute('BEGIN')
+        cutoff=db.execute('SELECT COALESCE(MAX(id),0) FROM messages').fetchone()[0]
+        rows=db.execute('SELECT id,from_agent AS "from",to_agent AS "to",text,ask_id,in_reply_to FROM messages WHERE id<=? ORDER BY id DESC LIMIT ?',(cutoff,limit)).fetchall()
+    return [dict(row) for row in reversed(rows)],cutoff
+
+
+def watch(limit=50,follow=False):
+    color=watch_uses_color()
+    if not follow:
+        messages,_=watch_snapshot(limit)
+        for message in messages:print(format_watch_message(message,color=color),flush=True)
+        return
     with socket.socket(socket.AF_UNIX) as sock:
         sock.connect(str(ADMIN))
         # Stock broker streaming subscription, not SQLite or inbox polling.
@@ -590,14 +619,21 @@ def watch():
                 if not chunk:raise EOFError('Broker stream ended')
                 data+=chunk
             return data
-        print('Live worker discussion. Ctrl-C closes this viewer.',flush=True)
-        color=watch_uses_color()
-        while True:
+        def frame():
             size=struct.unpack('!I',exact(4))[0]
             if size>1048576:raise ValueError('Oversized stream event')
-            event=json.loads(exact(size))
+            return json.loads(exact(size))
+        # The upstream acknowledgement confirms registration before the read snapshot.
+        if frame().get('kind')!='ok':raise ValueError('Broker did not acknowledge the watch subscription')
+        messages,cutoff=watch_snapshot(limit)
+        for message in messages:print(format_watch_message(message,color=color),flush=True)
+        print('Live worker discussion. Ctrl-C closes this viewer.',flush=True)
+        while True:
+            event=frame()
             if event.get('kind')=='stream_event':
-                print(format_watch_message(event['message'],color=color),flush=True)
+                message=event['message']
+                if isinstance(message.get('id'),int) and message['id']>cutoff:
+                    print(format_watch_message(message,color=color),flush=True)
 
 def main():
     if sys.argv[1:2] in [['rename-project'],['destroy'],['archive'],['unarchive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
@@ -613,6 +649,8 @@ def main():
     if len(sys.argv)>1 and sys.argv[1] not in ['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']:
         raise SystemExit('Invalid command: '+sys.argv[1]+'. Use ~/team --help for supported commands')
     if PROJECT:project_name_validator()(PROJECT,ACCOUNT_HOME)
+    if sys.argv[1:2]==['watch']:
+        limit,follow=watch_history_limit(sys.argv[2:]);watch(limit=limit,follow=follow);return
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']);parser.add_argument('name',nargs='?',choices=ALL)
     a=parser.parse_args()
     if a.action=='init':initialize()
