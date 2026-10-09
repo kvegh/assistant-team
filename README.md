@@ -1,5 +1,9 @@
 # assistant-team
 
+Current communication development continues with agents-connector and tmux.
+The [communication architecture review in TODO](TODO.md) compares this route,
+acpx with a replacement coordinator, and their combination; no migration is agreed.
+
 Model-authentication vault work is on hold. See the
 [replication plan and pushed-code references](docs/AUTH_REPLICATION.md); no secret
 bundle or save/restore automation has been created.

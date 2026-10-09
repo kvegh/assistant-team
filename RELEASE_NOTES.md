@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.22.6
+
+Document the pending communication architecture review, comparison and recommendation.
+Continue the current tmux route; ACP/acpx migration remains undecided and no runtime
+configuration changes are made by this documentation update.
+
 ## 0.22.5
 
 Document the permission proposal commit and its implementation hold while native

@@ -1,5 +1,8 @@
 # Assistant team: commands
 
+Communication stays on agents-connector + tmux; alternatives await review and
+decision in [TODO](TODO.md).
+
 Source-only layout change: these new-prefix instructions describe future fresh installs. The running environment keeps its current home-level commands and paths; do not deploy this layout to it yet. See [migration prerequisites](INSTALLATION_MIGRATION.md).
 
 Run as the runtime user. One environment per user; credentials stay local.
