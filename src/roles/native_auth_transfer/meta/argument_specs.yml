@@ -1,0 +1,33 @@
+---
+argument_specs:
+  main:
+    short_description: Selectively transfer operator-authorized native bootstrap authentication without persistent payload staging.
+    options:
+      native_auth_transfer_execute:
+        type: bool
+        default: false
+        description: Explicitly authorize credential capture and missing-only restore; otherwise inspect metadata only.
+      native_auth_transfer_runtime_user:
+        type: str
+        required: true
+        description: Existing dedicated runtime account on both inventory hosts.
+      native_auth_transfer_source_host:
+        type: str
+        required: true
+        description: Existing authorized inventory source host; never a model-authentication credential.
+      native_auth_transfer_source_profiles_root:
+        type: path
+        required: true
+      native_auth_transfer_source_environment_config:
+        type: path
+        required: true
+      native_auth_transfer_destination_profiles_root:
+        type: path
+        required: true
+      native_auth_transfer_destination_environment_config:
+        type: path
+        required: true
+      native_auth_transfer_report_directory:
+        type: path
+        required: true
+        description: Destination-local private directory for secret-free transfer results and the future-vault material manifest.

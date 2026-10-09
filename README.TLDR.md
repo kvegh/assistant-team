@@ -104,3 +104,8 @@ running harness conversations need an explicit instruction refresh to adopt it;
 updating files alone does not guarantee they re-read their role instructions.
 
 Codex containers require the dedicated enforcing-SELinux sandbox policy. Native workspace-write confinement remains active; no outside-sandbox approval is needed for ordinary shared-workspace writes.
+
+Bootstrap auth replication: `src/transfer_native_auth.yml` via AAP, metadata-only
+by default; missing-only restore after explicit authorization. See
+[AUTH_TRANSFER.md](docs/AUTH_TRANSFER.md). Existing credentials and projects stay
+unchanged. External vault implementation is a later task.

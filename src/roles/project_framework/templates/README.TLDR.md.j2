@@ -101,3 +101,10 @@ running harness conversations need an explicit instruction refresh to adopt it;
 updating files alone does not guarantee they re-read their role instructions.
 
 Codex containers require the dedicated enforcing-SELinux sandbox policy. Native workspace-write confinement remains active; no outside-sandbox approval is needed for ordinary shared-workspace writes.
+
+Bootstrap authentication replication is an operator-run Ansible/AAP operation,
+not a team command. It preflights enabled profiles and can restore only missing
+allowlisted credentials to a fresh environment. Target-local
+`environment-logs/auth-transfer/latest.json` reports safe status and the exact
+future-vault material manifest. It does not prove provider access or copy project
+role sessions; no credentials belong in Git, even encrypted.

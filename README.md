@@ -970,3 +970,12 @@ writes succeeded; writes into the writable outer home and protected `.git`,
 `.agents`, `.codex` and `.aws` paths failed, and network socket creation failed.
 Outer capabilities stayed zero, no-new-privileges and seccomp stayed enabled,
 and the dedicated domain retained nonzero MCS categories.
+
+## Selective bootstrap authentication replication
+
+A dedicated Ansible/AAP playbook can preflight and selectively restore enabled
+bootstrap profiles into a fresh installation without replacing existing target
+credentials. See [the transfer guide](docs/AUTH_TRANSFER.md) for the exact file and
+config-field manifest, encrypted endpoint bindings and separate bounded model
+checks. Model authentication never belongs in Git, even encrypted. The future
+external vault remains a separate task; no automatic credential archive is built.

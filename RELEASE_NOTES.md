@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.32.0
+
+Add selective bootstrap authentication transfer through a dedicated Ansible/AAP
+playbook. Preflight enabled profiles, preserve existing target credentials, enforce
+provider/file allowlists and publish a secret-free future-vault material manifest.
+Actual transfer and bounded access checks wait for fresh deployment readiness.
+
 ## 0.28.3
 
 Document flexible watch argument ordering and compact history/follow syntax.

@@ -1,0 +1,114 @@
+---
+- name: Require explicit inventory endpoints and existing installation paths
+  ansible.builtin.assert:
+    that:
+      - native_auth_transfer_source_host in hostvars
+      - native_auth_transfer_source_host != inventory_hostname
+      - native_auth_transfer_source_profiles_root is match('^/')
+      - native_auth_transfer_source_environment_config is match('^/')
+      - native_auth_transfer_destination_profiles_root is match('^/')
+      - native_auth_transfer_destination_environment_config is match('^/')
+      - native_auth_transfer_report_directory is match('^/')
+    quiet: true
+
+- name: Capture and restore only the selected bootstrap allowlist
+  no_log: true
+  become: true
+  become_user: "{{ native_auth_transfer_runtime_user }}"
+  block:
+    - name: Create a private source helper directory without secret payloads
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ac-auth-transfer-
+      delegate_to: "{{ native_auth_transfer_source_host }}"
+      register: native_auth_transfer_source_temporary
+
+    - name: Install the source capture helper without authentication material
+      ansible.builtin.copy:
+        src: native-auth-transfer.py
+        dest: "{{ native_auth_transfer_source_temporary.path }}/native-auth-transfer.py"
+        mode: '0700'
+      delegate_to: "{{ native_auth_transfer_source_host }}"
+
+    - name: Create a private destination helper directory without secret payloads
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ac-auth-transfer-
+      register: native_auth_transfer_destination_temporary
+
+    - name: Install the destination restore helper without authentication material
+      ansible.builtin.copy:
+        src: native-auth-transfer.py
+        dest: "{{ native_auth_transfer_destination_temporary.path }}/native-auth-transfer.py"
+        mode: '0700'
+
+    - name: Capture an in-memory allowlisted bootstrap snapshot or metadata preflight
+      ansible.builtin.command:
+        argv: >-
+          {{ ['python3', native_auth_transfer_source_temporary.path + '/native-auth-transfer.py',
+          'capture', '--profiles-root', native_auth_transfer_source_profiles_root,
+          '--environment-config', native_auth_transfer_source_environment_config]
+          + (native_auth_transfer_execute | bool | ternary([], ['--metadata-only'])) }}
+      delegate_to: "{{ native_auth_transfer_source_host }}"
+      changed_when: false
+      register: native_auth_transfer_capture
+
+    - name: Restore missing native credentials through protected module stdin
+      when: native_auth_transfer_execute | bool
+      ansible.builtin.command:
+        argv:
+          - python3
+          - "{{ native_auth_transfer_destination_temporary.path }}/native-auth-transfer.py"
+          - restore
+          - --profiles-root
+          - "{{ native_auth_transfer_destination_profiles_root }}"
+          - --environment-config
+          - "{{ native_auth_transfer_destination_environment_config }}"
+        stdin: "{{ native_auth_transfer_capture.stdout }}"
+        stdin_add_newline: false
+      register: native_auth_transfer_restore
+      changed_when: "'\"status\": \"restored\"' in native_auth_transfer_restore.stdout"
+
+    - name: Keep only the helper's sanitized result for operator reporting
+      ansible.builtin.set_fact:
+        native_auth_transfer_public_result: >-
+          {{ (native_auth_transfer_execute | bool |
+          ternary(native_auth_transfer_restore.stdout | default('{}'), native_auth_transfer_capture.stdout))
+          | from_json | dict2items | rejectattr('key', 'equalto', 'entries') | items2dict }}
+        cacheable: false
+
+    - name: Create the private destination-local metadata report directory
+      ansible.builtin.file:
+        path: "{{ native_auth_transfer_report_directory }}"
+        state: directory
+        mode: '0700'
+
+    - name: Save secret-free results and the exact future-vault material manifest
+      diff: false
+      ansible.builtin.copy:
+        content: "{{ native_auth_transfer_public_result | to_nice_json }}\n"
+        dest: "{{ native_auth_transfer_report_directory }}/latest.json"
+        mode: '0600'
+
+  always:
+    - name: Discard controller facts containing the transient authentication payload
+      ansible.builtin.set_fact:
+        native_auth_transfer_capture: {}
+        native_auth_transfer_restore: {}
+        cacheable: false
+    - name: Remove only the source helper directory created by this operation
+      when: native_auth_transfer_source_temporary.path is defined
+      ansible.builtin.file:
+        path: "{{ native_auth_transfer_source_temporary.path }}"
+        state: absent
+      delegate_to: "{{ native_auth_transfer_source_host }}"
+
+    - name: Remove only the destination helper directory created by this operation
+      when: native_auth_transfer_destination_temporary.path is defined
+      ansible.builtin.file:
+        path: "{{ native_auth_transfer_destination_temporary.path }}"
+        state: absent
+
+- name: Report safe profile outcomes without proving model entitlement
+  ansible.builtin.debug:
+    msg: "{{ native_auth_transfer_public_result }}"
