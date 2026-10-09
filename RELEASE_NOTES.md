@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.22.3
+
+Document the model-authentication replication plan, exact credential-file manifest
+and existing implementation references. Mark vault implementation on hold; no
+credentials are exported and no runtime configuration changes.
+
 ## 0.22.2
 
 Document that each project owns one team and its roles are participants; clarify

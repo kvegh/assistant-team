@@ -1,5 +1,9 @@
 # assistant-team
 
+Model-authentication vault work is on hold. See the
+[replication plan and pushed-code references](docs/AUTH_REPLICATION.md); no secret
+bundle or save/restore automation has been created.
+
 Source-only layout change: these new-prefix instructions describe future fresh installs. The running environment keeps its current home-level commands and paths; do not deploy this layout to it yet. See [migration prerequisites](INSTALLATION_MIGRATION.md).
 
 For another working session, start with [the reusable session rules](SESSION_RULES.md)

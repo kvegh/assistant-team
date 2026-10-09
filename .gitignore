@@ -1,4 +1,6 @@
 # Password files and local decrypted material
+# Model-authentication bundles are forbidden in Git, even when encrypted.
+agent-secret-vault.yml*
 vpf
 **/vpf
 .vault-password*

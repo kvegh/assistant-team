@@ -27,6 +27,14 @@
 
 ## Required later
 
+- [ ] **On hold:** external model-authentication vault and save/restore automation.
+  Analysis and the exact provider-file manifest are documented in
+  `docs/AUTH_REPLICATION.md`, including pushed-code references for resuming later.
+  No secret export or vault has been created. Keep `agent-secret-vault.yml` and
+  its backups outside Git, preserve bootstrap and project-role stream identities,
+  require consistent capture, and never overwrite refreshed runtime credentials
+  with an older seed. Resume only when requested by the user.
+
 - [ ] Deploy and accept the source-implemented installation layout on an explicitly
   authorized fresh environment. Source now supports `PREFIX/ac-agents`, destination
   home as default parent, canonical paths and project-local singular configuration.
