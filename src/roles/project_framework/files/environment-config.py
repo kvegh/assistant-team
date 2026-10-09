@@ -37,8 +37,16 @@ def environment(home):
     return data
 
 
+def project_name_validator():
+    source=pathlib.Path(__file__).resolve().with_name('project-names.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/project-names.py'
+    spec=importlib.util.spec_from_file_location('project_names',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.validate
+
+
 def project(home, name, create=False):
-    if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}', name):raise ValueError('Invalid project name')
+    project_name_validator()(name,home)
     path = pathlib.Path(home)/('projects.'+name+'.config')
     env = environment(home)
     if not path.exists():

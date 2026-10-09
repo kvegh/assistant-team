@@ -9,7 +9,7 @@ import tarfile
 import tempfile
 import uuid
 
-ACTIONS={'broker_init','gateway','containers_prepare','containers_stop','deployment','setup','login','clear','create-project','start','stop','restart','status','preflight','launch-all','launch','apply-prompts','refresh-observer','deliver-observer-report','stop-containers','watch','attach','destroy','archive'}
+ACTIONS={'broker_init','gateway','containers_prepare','containers_stop','deployment','setup','login','clear','create-project','start','stop','restart','status','preflight','launch-all','launch','apply-prompts','refresh-observer','deliver-observer-report','stop-containers','watch','attach','destroy','archive','unarchive'}
 RESULTS={'started','completed','failed','cancelled','credentials_saved','credentials_unconfirmed','archive_collision'}
 MODULES={'unknown','redhat.rhel_system_roles.podman_image'}|{'ansible.builtin.'+name for name in ['setup','assert','include_vars','add_host','getent','set_fact','file','copy','template','command','shell','stat','user','dnf','unarchive','get_url','include_role','include_tasks','systemd_service','slurp']}
 

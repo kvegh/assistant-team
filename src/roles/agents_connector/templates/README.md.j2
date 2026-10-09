@@ -142,3 +142,21 @@ The editable default template for new projects is `~/templates/assistant-prompts
 Creation copies its role instructions into the new project; existing project prompts
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
+
+### Restore a retained archive
+
+Run `~/team unarchive example-0910260800` using the archive directory name.
+This copies its complete project state to the same dated project name and keeps
+the original archive unchanged. The exact target is enabled but left stopped;
+start it explicitly when ready. Structured configuration and generated role
+instructions use the new identity; user prompts, artifacts, provider state and
+conversation history are preserved. Broker sessions use the new instance name at
+startup; stored agent identities and container-internal MCP paths remain valid.
+Legacy plain archives gain their recorded archive timestamp, or directory mtime
+when no metadata exists. Existing destinations, unsafe links, malformed archives,
+and existing instances/containers refuse restoration before publication. Failed
+restores roll back new files and enablement. Long dated names are checked against
+the actual Unix socket path limit; use a shorter project base before archiving if
+needed. No model calls or automatic service startup occur during restoration.
+
+Before archiving a restored dated project again, use `rename-project` to choose a new logical name: the retained archive already has its exact current name.

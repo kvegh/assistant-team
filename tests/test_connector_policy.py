@@ -105,7 +105,7 @@ class ConnectorPolicyTests(unittest.TestCase):
             path = self.profiles / name
             path.mkdir(exist_ok=True)
             (path / 'launched').touch()
-        with mock.patch.object(team, 'PROJECT', 'sample'), mock.patch.object(sys, 'argv', ['connector-team.py', 'stop']), mock.patch.object(team.subprocess, 'run') as exists, mock.patch.object(team, 'run') as execute:
+        with mock.patch.object(team, 'PROJECT', 'sample'), mock.patch.object(team, 'ACCOUNT_HOME', self.profiles.parent), mock.patch.object(sys, 'argv', ['connector-team.py', 'stop']), mock.patch.object(team.subprocess, 'run') as exists, mock.patch.object(team, 'run') as execute:
             exists.return_value.returncode = 0
             team.main()
             command = execute.call_args.args[0]

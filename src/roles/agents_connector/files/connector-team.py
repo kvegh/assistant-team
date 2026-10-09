@@ -3,9 +3,16 @@
 import argparse, asyncio, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
+
+def project_name_validator():
+    source=pathlib.Path(__file__).resolve().with_name('project-names.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/project-names.py'
+    spec=importlib.util.spec_from_file_location('project_names',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.validate
+
 PROJECT = os.environ.get('ASSISTANT_PROJECT')
-if PROJECT and not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}', PROJECT):
-    raise ValueError('Invalid project name')
+if PROJECT:project_name_validator()(PROJECT)
 ROOT = ACCOUNT_HOME / 'projects' / PROJECT if PROJECT else INSTALL_ROOT
 BIN = INSTALL_ROOT / 'bin/agents-connector'
 SESSION = PROJECT or 'workers'
@@ -429,18 +436,19 @@ def watch():
                 msg=event['message'];body=''.join(ch if ch in '\n\t' or ord(ch)>=32 and ord(ch)!=127 else '?' for ch in msg['text']);print(f"[{msg['id']}] {msg['from']} -> {msg.get('to') or 'workers'}: {body}",flush=True)
 
 def main():
-    if sys.argv[1:2] in [['destroy'],['archive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
+    if sys.argv[1:2] in [['destroy'],['archive'],['unarchive'],['--list'],['list-projects'],['--help'],['-h'],['version'],['setup'],['diagnostics']] or sys.argv[1:]==['help']:
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if not PROJECT:
         project_actions=['create-project','start','stop','restart','status','watch','attach','launch',
                          'apply-prompts','refresh-observer','deliver-observer-report','preflight',
-                         'launch-all','stop-containers','destroy','archive']
+                         'launch-all','stop-containers','destroy','archive','unarchive']
         if len(sys.argv)==2 and sys.argv[1] in project_actions:
             raise SystemExit('A project name is required for '+sys.argv[1]+'. Use ~/team --help for parameters')
         os.execv(sys.executable,[sys.executable,str(INSTALL_ROOT/'routing/project-team.py'),*sys.argv[1:]])
     if pathlib.Path(sys.argv[0]).name=='tmux':wake(sys.argv[1:]);return
     if len(sys.argv)>1 and sys.argv[1] not in ['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']:
         raise SystemExit('Invalid command: '+sys.argv[1]+'. Use ~/team --help for supported commands')
+    if PROJECT:project_name_validator()(PROJECT,ACCOUNT_HOME)
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['init','gateway','prepare','stop','launch','attach','login','help','check','watch','apply-prompts','refresh-observer','deliver-observer-report']);parser.add_argument('name',nargs='?',choices=ALL)
     a=parser.parse_args()
     if a.action=='init':initialize()

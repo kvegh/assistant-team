@@ -50,6 +50,13 @@
   ansible.builtin.command:
     argv: ["{{ __agents_connector_root }}/bin/agents-connector", --version]
   changed_when: false
+- name: Install shared project name and socket path validator
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../lib/project-names.py"
+    dest: "{{ __agents_connector_root }}/routing/project-names.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
 - name: Install constrained lifecycle and IPC routing utility
   tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
   ansible.builtin.copy:
@@ -59,6 +66,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0700"
   register: __agents_connector_utility
+
 - name: Route broker wake commands through the constrained tmux adapter
   ansible.builtin.file:
     src: "{{ __agents_connector_root }}/routing/connector-team.py"

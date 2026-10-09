@@ -7,7 +7,7 @@ PROJECTS = ACCOUNT_HOME/'projects'
 ROLES = ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']
 PROJECT_ACTIONS = ['create-project','start','stop','restart','status','watch','attach','launch',
                    'apply-prompts','refresh-observer','deliver-observer-report','preflight',
-                   'launch-all','stop-containers','destroy','archive']
+                   'launch-all','stop-containers','destroy','archive','unarchive']
 GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup','diagnostics']
 HELP = '''Usage: ~/team COMMAND [PARAMETERS]
 
@@ -25,6 +25,7 @@ Projects:
   stop NAME                          Stop this project's target and services.
   destroy NAME                       Stop if running, remove its containers, then delete project/config.
   archive NAME                       Stop if running and retain full content/config; always use NAME-ddmmyyhhmm.
+  unarchive ARCHIVE                  Copy retained archive to its dated project name; enable target, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show this project's target and role/container states.
   watch NAME                         Follow messages; Ctrl-C stops only the viewer.
@@ -80,9 +81,16 @@ def configure_roles(name):
         cfg.update(account_profile=account,auth_directory=account,flavour=module.PROFILES[account]['vendor'])
         module.atomic(p/'profile.json',cfg)
 
+def project_name_validator():
+    source=pathlib.Path(__file__).resolve().with_name('project-names.py')
+    if not source.exists():source=pathlib.Path(__file__).resolve().parents[3]/'lib/project-names.py'
+    spec=importlib.util.spec_from_file_location('project_names',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.validate
+
+
 def project_path(name):
-    if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}',name):
-        raise ValueError('Use 1–40 lowercase letters/digits, underscores or hyphens; start with a letter/digit')
+    project_name_validator()(name,ACCOUNT_HOME)
     path=PROJECTS/name
     if PROJECTS.is_symlink() or path.is_symlink():raise ValueError('Project paths must not be symlinks')
     return path
@@ -408,6 +416,12 @@ def status(name):
         state=found.stdout.strip() if found.returncode==0 else 'not created'
         print(role+': '+state+(' / native launch requested' if (core.PROFILES/role/'launched').exists() else ''))
 
+def unarchive(archive):
+    spec=importlib.util.spec_from_file_location('project_unarchive',INSTALL/'routing/unarchive-project.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    module.restore(sys.modules[__name__],archive)
+
+
 def main():
     action=sys.argv[1] if len(sys.argv)>1 else None
     if action is None:raise ValueError('A command is required. Use ~/team --help')
@@ -429,8 +443,9 @@ def main():
         if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use ~/team diagnostics --export PATH')
         diagnostics().export(ACCOUNT_HOME,sys.argv[3]);return
     p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
-    if a.action in ['destroy','archive'] and a.role:p.error(a.action+' takes exactly NAME')
+    if a.action in ['destroy','archive','unarchive'] and a.role:p.error(a.action+' takes exactly NAME')
     if a.action=='create-project':create(a.project);return
+    if a.action=='unarchive':unarchive(a.project);return
     verify_project(a.project)
     if a.action in ['start','restart']:
         required_auth(a.project);control(a.action,a.project)

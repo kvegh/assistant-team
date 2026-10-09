@@ -57,3 +57,5 @@ The editable default template for new projects is `~/templates/assistant-prompts
 Creation copies its role instructions into the new project; existing project prompts
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
+
+`~/team unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.

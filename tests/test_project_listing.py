@@ -47,6 +47,7 @@ class ProjectListingTests(unittest.TestCase):
         routing.mkdir(parents=True)
         shutil.copyfile(FRAMEWORK, routing / 'project-team.py')
         shutil.copyfile(ROUTER, routing / 'connector-team.py')
+        shutil.copyfile(REPOSITORY/'src/lib/project-names.py', routing/'project-names.py')
         self.home.joinpath('team').symlink_to(routing / 'connector-team.py')
         tools=self.home/'tools';tools.mkdir()
         for name,body in [('systemctl',"print('ActiveState=inactive\\nLoadState=not-found\\nUnitFileState=')"),('podman','import sys;sys.exit(1)')]:

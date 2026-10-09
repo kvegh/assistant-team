@@ -56,3 +56,5 @@ Listing status uses service metadata and checks inactive projects for orphan
 containers. Query failures produce `unknown` with an actionable bus/access hint
 rather than silently becoming `stopped`. `running` is target state, not native
 pane health or provider entitlement; listing never activates services.
+
+The installed unarchive helper copies retained archives transactionally and uses the shared identity helper to update structured config and generated role instructions. Shared name validation checks real Unix socket path lengths before restoration.

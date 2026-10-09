@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.20.0
+
+- Add unarchive: copy a retained archive to its dated project identity, enable the exact target and leave it stopped.
+- Preserve archived originals and user content; validate collisions, links, database integrity and actual socket limits, with rollback on failure.
+
 ## 0.19.1
 
 Document verified installed dated archives, collision preservation and exact
