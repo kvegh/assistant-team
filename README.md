@@ -1066,3 +1066,4 @@ The auth-transfer transport is verified through an actual local Ansible fixture:
 metadata-only preflight, six-context missing-only restore and idempotent rerun.
 Explicit JSON serialization preserves native credential documents across Ansible
 templating. These disposable checks do not access real model authentication.
+The [team review backlog](TODO.md#team-source-review--review-only-not-approved-fixes) preserves findings from an older pinned source snapshot for reassessment against current code. These are review items, not approved implementations or a complete audit.

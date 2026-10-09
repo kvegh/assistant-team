@@ -1546,3 +1546,6 @@ profiles present), missing-only restore (six restored) and an idempotent rerun
 (six existing profiles skipped), with temporary helper directories removed. All
 15 focused transfer tests and production lint for the role/playbook passed. These
 checks used synthetic credentials and did not copy or read real authentication.
+## Preserve source-review findings for later assessment
+
+Implementation `5eb9f18` adds thirteen review-only backlog items from the team review of snapshot `12ac41f` (0.28.1). The purpose is to preserve evidence and open questions without approving fixes or carrying rejected claims into the active defect list. Current-source reassessment and live verification are required because the installation and private-reader design have changed since that snapshot. Only generic findings were retained; raw conversation and environment information were excluded. Validation: documentation diff check passed; no runtime or system change was made.

@@ -16,6 +16,13 @@ Document exact retirement authorization and fresh guest discovery.
 
 Require exact encrypted authorization for disposable clone retirement and prepare
 a new fresh clone without stale recovery addressing.
+## 0.31.4
+
+Document the team-review backlog decision and its implementation commit without changing runtime behavior.
+
+## 0.31.3
+
+Document thirteen team-review items for reassessment against current source, distinguish already changed designs from unresolved claims, and retain rejected findings outside the active defect list. No fixes or runtime changes are included.
 
 ## 0.31.2
 

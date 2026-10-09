@@ -1,5 +1,41 @@
 # Future work
 
+## Team source review — review only, not approved fixes
+
+The team reviewed snapshot `12ac41f` (version `0.28.1`). These are reviewer claims
+and questions to reassess against current code, not endorsed defects or permission
+to implement changes. The review was limited; it was not a complete security audit.
+Some findings concern older designs already changed in integrated source. Verify
+current source and deployed behavior separately before deciding on any fix.
+
+| # | Review item | Evidence/status to reassess |
+| --- | --- | --- |
+| 1 | Explicit permissions for generated broker config and token files | Check creation and existing-file permissions: private files `0600`, private directories `0700`; do not rely only on the caller's umask. |
+| 2 | Portable deployment omitted the dedicated Codex sandbox role | Fixed in integrated fresh/portable source; verify role ordering and actual deployment before closing. |
+| 3 | Unbounded communication history versus transport limits | Examine history reads against the broker's 1 MiB wire limit and MCP response bounds; decide whether bounded reads/pagination are needed. |
+| 4 | No automatic CI triggers | Review secret-free hosted tests separately from privileged, explicitly invoked quality/deployment checks. |
+| 5 | Reproducible test dependencies and destructive-operation guards | Review declared test tool versions and meaningful negative tests for destructive guard behavior. |
+| 6 | Sandbox repair failure recovery and false-success retry | Reviewer reports a mock-verified failure/retry problem; reproduce against current repair code before treating it as confirmed live behavior. |
+| 7 | Missing launched marker can silently drop wake requests | Review marker lifecycle, failure reporting and recovery; registration alone does not prove readiness. |
+| 8 | Container SELinux label drift | Check whether reuse validates the expected process domain/MCS and handles drift safely. |
+| 9 | Provider configuration merges | Review consistency between managed fields and preserved operator settings across vendors; avoid overwriting unrelated settings. |
+| 10 | Existing structuredContent arrays | Review normalization and add a relevant regression if needed; the proposed connection to the live MCP failure remains undecided. |
+| 11 | Decision log creation and SELinux | The shared decision-log design was removed in favor of private outputs; verify current SUMMARY.md/assessment creation, labels and native writes rather than reinstating the old workflow. |
+| 12 | Unbounded observer history and memory | Reassess against the new passive readers, including raw-history growth, batching and memory behavior; older observer findings are not automatically current. |
+| 13 | Private versus shared workspace clarity | Review prompts, paths and operator documentation so agents deliver shared artifacts to the actual shared mount and preserve private context. |
+
+Do not carry rejected allegations into the active defect list: the claimed critical
+role-name authentication bypass was rejected by the review evidence, and the
+file-descriptor leak claim was refuted. Preserve that disposition if later evidence
+is reviewed; neither is a currently accepted bug. Claims labelled H1/H2, cold-wake
+latency and any proposed alert threshold remain unresolved and require measured
+evidence, not assumptions.
+
+Coverage gaps remain in role idempotency, VM retirement, project lifecycle/framework
+behavior and the upstream broker source. Review those limits when deciding whether
+further assessment is useful. This backlog deliberately contains no raw discussion,
+operator identities, deployment addresses, credentials or private repository data.
+
 ## Exploratory
 
 - Consider developing our own Ansible modules and packaging them as a collection
