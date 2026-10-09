@@ -1239,3 +1239,19 @@ bootstrap defaults that may differ from its isolated running configuration.
 Ansible installs the same helper; a dedicated `project_status` tag permits updates
 without restarting roles, touching authentication or applying the held directory
 layout migration. Validation: 226 unit tests; production Ansible lint passed.
+
+## Color live discussion routing labels
+
+Implementation: `101cc13` (0.25.0).
+
+Use a stable color for each sender and recipient label in terminal watch output,
+so operators can follow multiple conversations without coloring message content.
+The existing stock broker subscription and its privacy scope remain unchanged.
+Keep message IDs and available question correlation identifiers. Unknown roles
+and worker broadcasts use neutral colors. Escape/control characters cannot
+inject terminal styling through labels or message content. Redirected output,
+NO_COLOR and TERM=dumb remain plain. The viewer selects its formatting when
+started; operators restart only the viewer, never the running project team, to
+load an update. A dedicated Ansible connector_watch tag installs the helper
+without profile regeneration, container changes, daemon reloads or model calls.
+Validation: 232 unit tests passed; production Ansible lint passed.

@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.25.1
+
+Document watch color behavior, plain-output controls and safe viewer-only refresh.
+
 ## 0.25.0
 
 Color sender and recipient role labels independently in interactive `team watch`
