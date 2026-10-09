@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Verify pinned native Antigravity team runtime without credentials or inference
+    options:
+      containers:
+        type: dict
+        required: true
+        options:
+          runtime_user:
+            type: str
+            required: true

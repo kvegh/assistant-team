@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.23.0
+
+Add native personal Antigravity team support for the challenger, using the existing
+scoped MCP broker and tmux architecture. Preserve private role refresh state, keep
+work credentials separate, and verify native container dependencies without auth
+or inference. Installed model and wake acceptance follows deployment.
+
 ## 0.21.27
 
 Document remaining communication acceptance cases in TODO, preserving the

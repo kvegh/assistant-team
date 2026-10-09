@@ -38,6 +38,8 @@
       tags: [gemini_account]
     - role: native_auth
       tags: [native_auth]
+    - role: antigravity_team
+      tags: [connector_antigravity]
     - role: project_framework
       tags: [project_framework]
     - role: project_workspace

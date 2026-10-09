@@ -1,16 +1,40 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc, connector_mcp_results]
+  tags:
+    - connector_services
+    - auth_sources
+    - connector_images
+    - connector_codex_repair
+    - connector_prompt_template
+    - connector_ipc
+    - connector_mcp_results
+    - connector_antigravity
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc, connector_mcp_results]
+  tags:
+    - connector_services
+    - auth_sources
+    - connector_images
+    - connector_codex_repair
+    - connector_prompt_template
+    - connector_ipc
+    - connector_mcp_results
+    - connector_antigravity
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc, connector_mcp_results]
+  tags:
+    - connector_services
+    - auth_sources
+    - connector_images
+    - connector_codex_repair
+    - connector_prompt_template
+    - connector_ipc
+    - connector_mcp_results
+    - connector_antigravity
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -45,10 +69,20 @@
     group: "{{ containers.runtime_user }}"
     mode: "0755"
 - name: Install Gemini stock MCP result compatibility adapter
-  tags: [connector_mcp_results]
+  tags: [connector_mcp_results, connector_antigravity]
   ansible.builtin.copy:
     src: mcp-results.py
     dest: "{{ __agents_connector_root }}/bin/mcp-results.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
+    setype: container_file_t
+    selevel: s0
+- name: Install native Antigravity broker hook adapter
+  tags: [connector_antigravity]
+  ansible.builtin.copy:
+    src: antigravity-hook.py
+    dest: "{{ __agents_connector_root }}/bin/antigravity-hook.py"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
@@ -68,7 +102,15 @@
     group: "{{ containers.runtime_user }}"
     mode: "0600"
 - name: Install constrained lifecycle and IPC routing utility
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc, connector_mcp_results]
+  tags:
+    - connector_services
+    - auth_sources
+    - connector_images
+    - connector_codex_repair
+    - connector_prompt_template
+    - connector_ipc
+    - connector_mcp_results
+    - connector_antigravity
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"
@@ -194,9 +236,9 @@
       tags: [connector_codex_repair, connector_prompt_template]
 
 - name: Configure compatibility only for an explicitly selected Gemini project role
-  tags: [connector_mcp_results]
+  tags: [connector_mcp_results, connector_antigravity]
   ansible.builtin.include_tasks:
     file: repair_gemini_mcp.yml
     apply:
-      tags: [connector_mcp_results]
+      tags: [connector_mcp_results, connector_antigravity]
   when: agents_connector_repair_gemini_project | length > 0

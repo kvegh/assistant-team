@@ -18,8 +18,7 @@ check-mode limits; this is not a claim of universal check-mode support.
 
 The published 0.0.1 tag remains the earlier baseline. Google Cloud SDK 588.0.0
 is installed in isolated work profiles. Personal Gemini uses the supported
-Antigravity native CLI; installation is not model-access proof. Its team adapter
-remains pending.
+Antigravity native CLI; installation is not model-access proof. Its native team adapter uses the same scoped broker and tmux wake path.
 
 Private project for an assistant team. Application requirements are still being defined.
 
@@ -674,8 +673,14 @@ These are local file permissions, not encryption at rest, and do not protect
 against root, sudo or other processes running as the runtime user. Deployment
 never signs in or reads/copies existing credentials. Saved authentication does
 not prove model access. No client-ID bypass or automatic paid API fallback is
-configured. Personal Antigravity cannot yet be assigned to a project role:
-the existing agents-connector Gemini ACP adapter requires a separate adaptation.
+configured. Assign `gemini-priv` to the challenger in `projects.PROJECT.config` to use
+Antigravity 1.3.1. Its existing pinned executable is mounted read-only inside the
+Gemini connector image; the native MCP server lives in `.gemini/config/mcp_config.json`.
+A small lifecycle adapter translates native `PreInvocation` and `Stop` events into
+scoped broker state and addressed context. Partial stops remain busy. Role launch
+seeds only a missing private native token; existing role refresh state wins. Work
+ADC, Vertex settings and provider API keys are not used by this launch. Native
+approval remains enabled, and no credits/paid fallback setting is imported.
 
 Login wrapper status, outcome and error messages use the `[AC-Agents]:` prefix; native vendor output keeps its original format.
 
@@ -889,3 +894,9 @@ not establish unattended approvals, busy-queue recovery or tell-only wake-up.
 
 The remaining installed communication acceptance cases are tracked in TODO: busy
 roles, tell-only wake-up, queued recovery and approval-blocked delivery.
+
+Antigravity team integration follows its official [MCP configuration](https://antigravity.google/docs/mcp?tab=cli)
+and [native hook contracts](https://antigravity.google/docs/hooks/). It retains the
+current broker and tmux architecture; it does not introduce ACP or change native
+approval policy. The separate `antigravity_team` role verifies runtime dependencies
+without mounting credentials or enabling network access.

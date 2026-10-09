@@ -228,6 +228,10 @@ def required_auth(name):
         cfg=json.loads((core.PROFILES/role/'profile.json').read_text());flavour=cfg['flavour']
         boundary=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[flavour])
         relative={'claude':'.claude/.credentials.json','codex':'.codex/auth.json','gemini':'.gemini/oauth_creds.json'}[flavour]
+        antigravity=flavour=='gemini' and boundary=='gemini-priv'
+        if antigravity:
+            core.antigravity_executable(role)
+            relative='.gemini/antigravity-cli/antigravity-oauth-token'
         if flavour in ['claude','gemini'] and boundary==flavour+'-work':
             provider_path=ACCOUNT_HOME/boundary/'.vertex.json'
             adc=core.role_home(role)/'.config/gcloud/application_default_credentials.json'
@@ -248,6 +252,9 @@ def required_auth(name):
             data=json.loads(credential.read_text())
             if flavour=='claude':valid=isinstance(data.get('claudeAiOauth'),dict) and bool(data['claudeAiOauth'].get('accessToken'))
             elif flavour=='codex':valid=data.get('auth_mode')=='chatgpt' and isinstance(data.get('tokens'),dict) and bool(data['tokens'].get('access_token'))
+            elif antigravity:
+                data=data.get('token',data)
+                valid=isinstance(data,dict) and bool(data.get('access_token') or data.get('refresh_token'))
             else:valid=bool(data.get('access_token') or data.get('refresh_token'))
         except (OSError,ValueError,TypeError):valid=False
         if not valid and boundary not in missing:missing.append(boundary)

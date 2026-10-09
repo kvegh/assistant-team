@@ -37,7 +37,7 @@ List status describes services: running, starting, stopping, stopped, failed,
 partial (orphan components) or unknown (metadata unavailable); it does not verify model access.
 
 Artifacts: `~/projects/example/workspace` (`/workspace/shared` in containers).
-Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses scoped Antigravity (`cd ~/gemini-priv; ./login`, then `./agy`). Its team adapter is pending; use Gemini work for project roles.
+Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses scoped Antigravity (`cd ~/gemini-priv; ./login`, then `./agy`). Select `gemini-priv` for the challenger in the project config to use native Antigravity; `gemini-work` retains Gemini CLI/Vertex. Native tool approvals remain enabled.
 Native SSH/container auth uses local file permissions, not encryption at rest.
 Mistral native login is supported; team adapter is not implemented yet.
 Login reports failed/cancelled or credentials saved/model access unverified; no automatic inference.

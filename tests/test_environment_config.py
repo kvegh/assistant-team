@@ -39,13 +39,12 @@ class EnvironmentConfigTests(unittest.TestCase):
             self.assertEqual(module.project(home,'one')['roles']['challenger'],'gemini-priv')
             self.assertEqual(module.project(home,'two')['roles']['challenger'],'gemini-work')
 
-    def test_antigravity_native_login_does_not_imply_compatible_team_adapter(self):
+    def test_antigravity_private_profile_can_select_native_team_adapter(self):
         with tempfile.TemporaryDirectory() as home:
             self.environment(home,module.PROFILES)
             value=module.project(home,'one');value['roles']['challenger']='gemini-priv'
             module.atomic(pathlib.Path(home)/'projects.one.config',value)
-            with self.assertRaisesRegex(ValueError,'Antigravity team adapter'):
-                module.assignments(home,'one')
+            self.assertEqual(module.assignments(home,'one')['challenger'],'gemini-priv')
 
     def test_mistral_profile_available_but_team_assignment_rejected(self):
         with tempfile.TemporaryDirectory() as home:

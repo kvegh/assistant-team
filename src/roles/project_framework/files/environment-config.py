@@ -83,7 +83,6 @@ def assignments(home, name):
     for role, profile in data['roles'].items():
         if profile is None:errors.append(role+': select an enabled profile')
         elif not env['profiles'][profile]['enabled']:errors.append(role+': '+profile+' is disabled')
-        elif profile=='gemini-priv':errors.append(role+': Antigravity team adapter is not implemented; use Gemini work')
         elif PROFILES[profile]['vendor']=='mistral':errors.append(role+': Mistral team adapter is not implemented; use Claude/Codex/Gemini')
         elif PROFILES[profile]['vendor']!=PROFILES[DEFAULTS[role]]['vendor']:errors.append(role+': current role adapter requires '+PROFILES[DEFAULTS[role]]['vendor']+'; choose its enabled work/priv profile')
         elif role in ['observer','private-connector','corporate-connector'] and PROFILES[profile]['vendor']!='claude':errors.append(role+': current restricted role requires Claude')

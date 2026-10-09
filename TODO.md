@@ -64,6 +64,6 @@
   For now, support one environment per Linux user; do not migrate the current
   directory layout as part of this optional feature request.
 
-- Implement the agents-connector adapter for personal Antigravity, preserving its
-  native harness, MCP routing, event-driven wake-up and scoped authentication.
-  Installation/login support does not establish team integration.
+- [x] Implement the native personal Antigravity adapter using scoped MCP routing,
+  native lifecycle hooks and the existing tmux wake architecture. Acceptance and
+  remaining delivery-state limitations are documented in the release history.

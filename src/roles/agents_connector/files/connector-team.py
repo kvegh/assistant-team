@@ -30,6 +30,19 @@ def role_directory(name, kind):
     return base/'accounts'/account/kind if account else base/kind
 
 def role_home(name):return role_directory(name,'home')
+
+
+def antigravity_executable(name):
+    """Resolve only the pinned native private provider, never a work credential path."""
+    cfg=json.loads((PROFILES/name/'profile.json').read_text())
+    if cfg.get('auth_directory')!='gemini-priv':return None
+    source=ACCOUNT_HOME/'gemini-priv'
+    meta=json.loads((source/'.native-install.json').read_text())
+    if meta.get('provider')!='antigravity' or meta.get('version')!='1.3.1' or meta.get('entrypoint')!='antigravity/1.3.1/antigravity':
+        raise ValueError('Private Gemini requires the pinned native Antigravity installation')
+    binary=source/'.install'/meta['entrypoint']
+    if binary.is_symlink() or not binary.is_file():raise ValueError('Pinned Antigravity executable is missing')
+    return binary
 def role_workspace(name):return role_directory(name,'workspace')
 
 def frame(s, obj):
@@ -77,7 +90,18 @@ def initialize():
         server={'command':args[0],'args':args[1:]}
         def hook(event,kind):return ' '.join(['/opt/connector/bin/agents-connector','hook','--socket','/ipc/agent.sock','--agent-token',t,'--event',event,'--cli-kind',kind])
         flavour=spec['flavour']
-        if flavour=='claude':
+        if antigravity_executable(name) is not None:
+            d=role_home(name)/'.gemini/config';d.mkdir(parents=True,exist_ok=True,mode=0o700)
+            settings=d/'mcp_config.json'
+            previous=json.loads(settings.read_text()) if settings.exists() else {}
+            previous.setdefault('mcpServers',{})['agents_connector']=server
+            settings.write_text(json.dumps(previous));settings.chmod(0o600)
+            hooks=d/'hooks.json'
+            previous=json.loads(hooks.read_text()) if hooks.exists() else {}
+            command=shlex.join(['python3','/opt/connector/bin/antigravity-hook.py','--socket','/ipc/agent.sock','--agent-token',t])
+            previous['agents-connector']={event:[{'type':'command','command':command+' --event '+event}] for event in ['PreInvocation','Stop']}
+            hooks.write_text(json.dumps(previous));hooks.chmod(0o600)
+        elif flavour=='claude':
             (role_home(name)/'mcp.json').write_text(json.dumps({'mcpServers':{'agents_connector':server}}))
             events={'SessionStart':'session_start','UserPromptSubmit':'user_prompt_submit','PostToolUse':'post_tool_use','Stop':'stop'}
             cfg={'hooks':{e:[{'matcher':'','hooks':[{'type':'command','command':hook(k,'claude')}]}] for e,k in events.items()}}
@@ -248,6 +272,10 @@ def start_container(name):
         return
     uid=os.getuid()
     cmd=['podman','run','-d','--name',c,'--userns=keep-id:uid=1000,gid=1000','--user','1000:1000','--read-only','--cap-drop=all','--security-opt=no-new-privileges','--memory=768m','--cpus=1','--pids-limit=256','--network=slirp4netns:allow_host_loopback=false','--tmpfs','/tmp:rw,nosuid,nodev,size=128m','--tmpfs','/run:rw,nosuid,nodev,size=16m','-e','HOME=/home/agent','-e','TERM=xterm-256color','-w','/workspace','-v',str(role_home(name))+':/home/agent:Z','-v',str(role_workspace(name))+':/workspace:Z','-v',str(p/'ipc')+':/ipc:Z','-v',str(INSTALL_ROOT/'bin')+':/opt/connector/bin:ro,z','localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']],'/bin/sh','-c','tmux new-session -d -s native -n agent && exec sleep infinity']
+    agy=antigravity_executable(name)
+    if agy is not None:
+        image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
+        cmd[image:image]=['-v',str(agy)+':/opt/antigravity/agy:ro,z']
     if PROJECT:
         image=cmd.index('localhost/assistant-connector-'+spec['flavour']+':'+VERSIONS[spec['flavour']])
         cmd[image:image]=['-v',str(ROOT/'workspace')+':/workspace/shared:'+('ro,z' if name=='observer' else 'rw,z')]
@@ -265,6 +293,14 @@ def seed_auth(name):
     source_name=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[flavour])
     if source_name not in [flavour+'-work',flavour+'-priv']:raise ValueError('unsupported provider auth boundary')
     source=(ACCOUNT_HOME if PROJECT else ROOT.parent)/source_name
+    if antigravity_executable(name) is not None:
+        relative='.gemini/antigravity-cli/antigravity-oauth-token'
+        src=source/relative;dst=role_home(name)/relative
+        if src.is_symlink() or not src.is_file():raise ValueError('Personal Antigravity login required')
+        if not dst.exists():
+            dst.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+            dst.write_bytes(src.read_bytes());dst.chmod(0o600)
+        return
     if flavour in ['claude','gemini'] and source_name==flavour+'-work':
         provider=json.loads((source/'.vertex.json').read_text())
         allowed=({'CLAUDE_CODE_USE_VERTEX','CLOUD_ML_REGION','ANTHROPIC_VERTEX_PROJECT_ID','ANTHROPIC_MODEL','ANTHROPIC_DEFAULT_OPUS_MODEL','ANTHROPIC_DEFAULT_SONNET_MODEL','ANTHROPIC_DEFAULT_HAIKU_MODEL'} if flavour=='claude' else {'GOOGLE_GENAI_USE_VERTEXAI','GOOGLE_CLOUD_PROJECT','GOOGLE_CLOUD_LOCATION','GEMINI_MODEL'})
@@ -309,7 +345,10 @@ def launch(name):
     start_container(name);spec=json.loads((PROFILES/name/'profile.json').read_text());flavour=spec['flavour']
     apply_prompts()
     cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--no-daemon','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
-    if flavour in ['claude','gemini'] and spec.get('auth_directory',flavour+'-work')==flavour+'-work':
+    if antigravity_executable(name) is not None:
+        cmd=['/opt/antigravity/agy']
+        vertex_command=['env','-u','ANTHROPIC_API_KEY','-u','ANTHROPIC_AUTH_TOKEN','-u','CLAUDE_CODE_OAUTH_TOKEN','-u','OPENAI_API_KEY','-u','MISTRAL_API_KEY', '-u','GEMINI_API_KEY','-u','GOOGLE_API_KEY','-u','GOOGLE_GENAI_USE_VERTEXAI','-u','GOOGLE_CLOUD_PROJECT','-u','GOOGLE_CLOUD_LOCATION','-u','GOOGLE_APPLICATION_CREDENTIALS','-u','GOOGLE_GENAI_USE_GCA','-u','GEMINI_MODEL','AGY_CLI_DISABLE_AUTO_UPDATE=true']
+    elif flavour in ['claude','gemini'] and spec.get('auth_directory',flavour+'-work')==flavour+'-work':
         provider=json.loads((role_home(name)/'.vertex.json').read_text())
         for value in provider.values():
             if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9_@.-]+',value):raise ValueError('Invalid Vertex environment value')
@@ -510,9 +549,9 @@ def main():
         start_container(a.name);f=json.loads((PROFILES/a.name/'profile.json').read_text())['flavour']
         if a.action=='launch':launch(a.name);(PROFILES/a.name/'launched').touch()
         elif a.action=='attach':run(['podman','exec','-it',container(a.name),'tmux','attach-session','-t','native'])
-        elif a.action=='help':run(['podman','exec',container(a.name),f,'--help'])
+        elif a.action=='help':run(['podman','exec',container(a.name),'/opt/antigravity/agy' if antigravity_executable(a.name) is not None else f,'--help'])
         else:
-            cmd={'claude':['claude','auth','login'],'codex':['codex','login','--device-auth'],'gemini':['gemini']}[f]
+            cmd=(['env','AGY_CLI_DISABLE_AUTO_UPDATE=true','/opt/antigravity/agy'] if antigravity_executable(a.name) is not None else {'claude':['claude','auth','login'],'codex':['codex','login','--device-auth'],'gemini':['gemini']}[f])
             run(['podman','exec','-it',container(a.name)]+cmd)
     elif a.action=='watch':watch()
     elif a.action=='apply-prompts':apply_prompts();print('Role instructions updated; active sessions use them on next launch.')

@@ -1,0 +1,50 @@
+---
+- name: Resolve native Antigravity runtime account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ containers.runtime_user }}"
+- name: Inspect the pinned personal native executable without authentication
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/gemini-priv/.install/antigravity/1.3.1/antigravity"
+    follow: false
+  register: __antigravity_team_binary
+- name: Require a regular pinned native executable before mounting
+  when: __antigravity_team_binary.stat.exists
+  ansible.builtin.assert:
+    that:
+      - __antigravity_team_binary.stat.isreg
+      - not __antigravity_team_binary.stat.islnk
+    quiet: true
+- name: Verify pinned native Antigravity inside the existing isolated Gemini image
+  when: __antigravity_team_binary.stat.exists
+  become: true
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+  ansible.builtin.command:
+    argv:
+      - podman
+      - run
+      - --rm
+      - --read-only
+      - --network=none
+      - --cap-drop=all
+      - --security-opt=no-new-privileges
+      - --userns=keep-id:uid=1000,gid=1000
+      - --user=1000:1000
+      - --memory=256m
+      - --pids-limit=64
+      - --tmpfs=/tmp:rw,nosuid,nodev,size=16m
+      - --env=HOME=/tmp/native-smoke
+      - --volume
+      - "{{ __antigravity_team_binary.stat.path }}:/opt/agy:ro,z"
+      - --entrypoint=/opt/agy
+      - localhost/assistant-connector-gemini:0.63.0
+      - --help
+  changed_when: false
+  register: __antigravity_team_help
+  failed_when: >-
+    __antigravity_team_help.rc != 0 or
+    'mcp' not in (__antigravity_team_help.stdout ~ __antigravity_team_help.stderr) or
+    '--dangerously-skip-permissions' not in (__antigravity_team_help.stdout ~ __antigravity_team_help.stderr)
