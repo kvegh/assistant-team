@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.2
+
+Roll back project rename on unexpected renderer exceptions or interruption too,
+preserving the old identity and reporting a safe failure instead of leaving a
+partially renamed project.
+
 ## 0.21.1
 
 Record the project-rename design and successful installed fixture acceptance:

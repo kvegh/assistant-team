@@ -72,7 +72,7 @@ def rename_project(framework,old,new):
         new_enable_attempted=enabled in ['enabled','enabled-runtime']
         enable_target(framework,new,enabled)
         if stash is not None:shutil.rmtree(stash);stash=None
-    except (OSError,ValueError,subprocess.CalledProcessError) as error:
+    except (Exception,KeyboardInterrupt) as error:
         failures=[]
         if new_enable_attempted:
             args=['systemctl','--user','disable']
@@ -105,5 +105,7 @@ def rename_project(framework,old,new):
         except (OSError,subprocess.CalledProcessError):failures.append(True)
         if failures:
             raise ValueError('Rename failed and rollback was incomplete; inspect retained old/new project paths before retrying') from error
+        if not isinstance(error,(OSError,ValueError,subprocess.CalledProcessError)):
+            raise ValueError('Rename interrupted or rendering failed; old project identity was restored and remains stopped') from error
         raise
     print('Renamed project '+old+' to '+new+'; it remains stopped. Start with: ~/team start '+new)

@@ -123,6 +123,19 @@ class RenameProjectTests(unittest.TestCase):
         self.assertEqual(self.rendered.read_text(),'generated old identity')
         self.assertTrue((self.path/'profiles/builder/launched').exists())
 
+    def test_unexpected_renderer_failure_or_interrupt_rolls_back_identity(self):
+        for error in [RuntimeError('fixture unexpected error'),KeyboardInterrupt()]:
+            with self.subTest(error=type(error).__name__):
+                original_rebase=self.helper.rebase
+                def fail(*args,**kwargs):
+                    original_rebase(*args,**kwargs)
+                    raise error
+                self.helper.rebase=fail
+                with self.assertRaisesRegex(ValueError,'identity was restored'):self.run_rename()
+                self.assertTrue(self.path.exists());self.assertEqual(self.config.read_text(),self.original)
+                self.assertEqual(self.rendered.read_text(),'generated old identity')
+                self.helper.rebase=original_rebase
+
     def test_config_move_failure_rolls_directory_back(self):
         original_rename=Path.rename
         def rename(path,target):

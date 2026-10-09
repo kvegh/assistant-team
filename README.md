@@ -779,3 +779,5 @@ path lengths refuse the operation before shutdown. Partial rename failures roll
 back directories, config and generated instructions where possible; an incomplete
 rollback reports retained paths rather than overwriting them. Do not run lifecycle
 commands or edit the same project's config concurrently.
+
+Project rename also rolls back unexpected rendering failures and terminal interruption; the restored old project remains stopped.
