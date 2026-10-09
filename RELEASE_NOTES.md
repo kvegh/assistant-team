@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.22.1
+
+Document the canonical installation-layout implementation and its local verification.
+Fresh-install support is source-only; existing-environment deployment and executable
+controlled migration remain pending explicit work.
+
 ## 0.22.0
 
 Add a canonical `PREFIX/ac-agents` installation root with destination-home default,

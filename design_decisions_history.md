@@ -972,3 +972,33 @@ archive digest, enabled-but-stopped target and unchanged other containers; its
 fixtures were cleaned. After the final updater-socket correction, the coordinating
 agent completed the operator's actual restore and verified its enabled target
 and stopped project state. The archive remains retained; no models were started.
+
+
+## Canonical installation root without migrating the running environment
+
+Implementation: `2cf98a7` (0.22.0).
+
+A single `PREFIX/ac-agents` root makes future fresh installations easier to locate,
+reproduce and inspect. The prefix is a parent directory and defaults to the destination
+runtime user's real home. Tools live in `bin`, connector code in `agent-connector`,
+account profiles in `model-environments`, and environment/template configuration in
+`conf`. Each project's singular `project.NAME.config` lives beside its editable prompt.
+Central path helpers drive runtime, authentication, lifecycle and Ansible references
+so profile discovery and authentication clearing remain within the correct scope.
+
+Systemd user units and Podman engine storage retain their standard real-home locations;
+units explicitly reference the installation root. Existing parent directory ownership
+is preserved. Fresh-install preflight refuses legacy layouts, unsafe ancestors and
+conflicting same-user service namespaces rather than creating an overlapping environment.
+Native profile credential isolation and validated archive-link/cache handling remain
+unchanged. Deeper paths are checked against actual Unix socket byte limits.
+
+The user explicitly prohibited deployment to the current environment. This change is
+therefore source-only: no target deployment, credential migration or model call ran.
+Controlled migration prerequisites are documented separately; an executable migration
+procedure and fresh installed acceptance remain future work, not verified deliverables.
+
+Validation: Python 3.12 executed all 191 local tests without skips; production Ansible
+lint reported zero failures and warnings across 149 files. Regression tests cover
+project-local configuration and lifecycle rebasing, profile-auth copy scope, actual
+socket limits, destination-prefix forwarding and rendered systemd path quoting.
