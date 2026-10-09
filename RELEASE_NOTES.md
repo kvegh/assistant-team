@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.21.21
+
+Include all account/path prerequisites in the focused MCP adapter deployment tag.
+Verify the selected tasks copy files without service actions or restart handlers.
+
 ## 0.21.20
 
 Document the Gemini client-side JSON promotion diagnosis, narrow compatibility

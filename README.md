@@ -34,7 +34,8 @@ errors and broker semantics. Claude and Codex continue using the unmodified stoc
 shim directly. Native harnesses and the stock broker executable are unchanged.
 
 Ansible installs the adapter into the existing read-only connector binary mount and
-generates Gemini's MCP command at initialization. Existing MCP processes need an
+generates Gemini's MCP command at initialization. Its focused Ansible tag includes
+all path/account prerequisites and only copies the adapter/routing files. Existing MCP processes need an
 explicit controlled reconnect or project restart to pick up configuration; this
 source fix does not restart an active team or alter trust/tool approval settings.
 No model-based acceptance is implied by the model-free transport tests.
