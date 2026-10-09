@@ -1576,3 +1576,7 @@ The final 1.0.0 source validation passed 283 unit/fixture tests and offline prod
 Implementation `a2a2b52` normalizes an absent passwd record to an empty list before any home inspection, and requires a valid record before resolving installation paths. Ansible core 2.16.19 converted None to an empty string, causing the previous None test to succeed and index a missing home field. A real localhost read-only regression now includes the actual preflight tasks against a nonexistent synthetic account and verifies legacy home checks are skipped. Existing-account legacy migration guards are retained. Focused layout tests and role production lint passed; no live host or credentials were changed by the reproduction.
 
 Full validation passed 284 tests and production Ansible lint across 183 files with zero findings before publishing the patch. Live AAP recovery remains a separate outcome check.
+
+## Resume an existing clone without provisioning again
+
+Implementation `5284ae6` fills only the encrypted recovery guest address in the current test definition. The clone already existed when preflight failed; a guest_config rerun registers it from the recovery context and skips image cloning/provisioning. A future fresh run must select an unused clone identity and an empty recovery address in a separate definition. Encryption roundtrip and structural comparison verified that no other environment values changed. Ten focused portable-deployment tests and the documentation diff check passed. No VM or model authentication was changed by this source update.

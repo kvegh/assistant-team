@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.4
+
+Document the encrypted configuration-recovery definition and its implementation reference. No additional runtime change beyond 1.0.3.
+
 ## 1.0.3
 
 Prepare encrypted guest discovery for configuration-only recovery of the existing fresh-test clone. Use guest_config to skip provisioning; later fresh clones require a separate blank recovery definition.
