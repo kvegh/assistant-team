@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.21.6
+
+Keep the named systemd target separate from the rewritten Codex cache-link target
+and validate the exact enablement command in restore tests.
+
 ## 0.21.5
 
 Restore safe relative internal links while keeping external/dangling links blocked.

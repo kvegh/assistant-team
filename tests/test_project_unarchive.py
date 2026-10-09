@@ -48,7 +48,9 @@ class UnarchiveTests(unittest.TestCase):
         self.framework.load=core
         enabled={'value':False}
         def run(args,**kwargs):
-            if 'enable' in args:enabled['value']=True
+            if 'enable' in args:
+                self.assertEqual(args[-1],'assistant-connector@'+self.name+'.target')
+                enabled['value']=True
             if 'disable' in args:enabled['value']=False
             if 'is-enabled' in args:return subprocess.CompletedProcess(args,0 if enabled['value'] else 1,'enabled\n' if enabled['value'] else 'disabled\n','')
             return subprocess.CompletedProcess(args,0,'','')

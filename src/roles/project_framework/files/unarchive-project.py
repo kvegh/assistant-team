@@ -155,11 +155,11 @@ def restore(framework,archive_name):
         def ignore(directory,names):
             return [name for name in names if pathlib.Path(directory)/name in ephemeral]
         shutil.copytree(archive,copied,symlinks=True,ignore=ignore)
-        for source,(original,target) in rewrites.items():
+        for source,(original,link_target) in rewrites.items():
             link=copied/source.relative_to(archive)
             if not link.is_symlink() or os.readlink(link)!=original:
                 raise ValueError('Codex cache pointer changed during restoration; archive was retained')
-            link.unlink();link.symlink_to(target)
+            link.unlink();link.symlink_to(link_target)
         validate_archive_tree(copied,set())
         copied.chmod(0o700)
         (copied/framework.ARCHIVE_METADATA).unlink(missing_ok=True)
