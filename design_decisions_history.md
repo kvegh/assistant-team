@@ -1223,3 +1223,19 @@ with the saved account but awaits the operator's terms/data-use decision. Thus
 actual native model and addressed-wake/reply acceptance are still pending; no
 legal consent or data-collection choice is inferred from authentication evidence.
 Task-specific model selection remains ON HOLD BUT PRIORITY by explicit decision.
+
+## Role account and model visibility
+
+Implementation: `6d575c8` (0.24.0).
+
+Display the account profile and configured model with each role’s lifecycle state
+in `team status NAME`, so operators can distinguish private/work assignments
+without inspecting authentication files. Read only allowlisted model configuration
+fields; never probe providers or expose unrelated settings. A configured model is
+not proof of the actual provider identity, entitlement or an interactive override.
+When no explicit model is present, report the unverified harness default rather
+than invent a vendor default. Once a role has launched, ignore newer operator
+bootstrap defaults that may differ from its isolated running configuration.
+Ansible installs the same helper; a dedicated `project_status` tag permits updates
+without restarting roles, touching authentication or applying the held directory
+layout migration. Validation: 226 unit tests; production Ansible lint passed.

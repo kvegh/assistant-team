@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.24.1
+
+Document account/model status semantics, unverified defaults and safe targeted
+installation of the status helper without role or authentication changes.
+
 ## 0.24.0
 
 Show each role’s work/private account profile and configured model in `team status`.
