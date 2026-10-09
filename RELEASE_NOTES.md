@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.15.7
+
+Record verified marker-only recovery: all eight native panes are alive with launch
+bookkeeping present, and every container and native process remained unchanged.
+
 ## 0.15.6
 
 Restore event wake-up bookkeeping after successful Codex builder repair. Failed

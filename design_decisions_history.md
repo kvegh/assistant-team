@@ -749,3 +749,21 @@ production Ansible lint passed with zero failures or warnings.
 The user also established a stricter storage rule: model authentication material
 must never enter Git, even encrypted. Deployment configuration may continue using
 Ansible Vault. No new secret manager or credential migration was introduced.
+
+## Restore event wake-up bookkeeping after builder repair
+
+Implementation: `24fa9a8`.
+
+Final project status inspection found that the image-repair path started the native
+builder but omitted the launch marker used by event wake-up. Normal launch callers
+create that marker separately. Repair now restores it only after successful native
+launch; failure leaves it absent. A guarded marker-only recovery mode verifies a
+live Codex pane and restores bookkeeping without image build, container replacement
+or native-session restart. Regression coverage includes actual event-routing
+behavior with mocked transport rather than marker state alone.
+
+The targeted marker-only Ansible run completed 17 tasks with zero failures. All
+eight actual native panes remained alive and had launch markers; all container IDs,
+start times and pane PIDs were unchanged. The full 114-test suite and production
+Ansible lint passed with zero failures or warnings. No work prompt, model request
+or provider credential content was sent to the chat.
