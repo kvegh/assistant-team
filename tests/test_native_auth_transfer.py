@@ -90,6 +90,51 @@ class TransferTests(unittest.TestCase):
         self.assertFalse((self.target / 'claude-work/.vertex.json').exists())
         self.assertEqual(next(r['status'] for r in result['report'] if r['profile'] == 'claude-work'), 'skipped_existing')
 
+    def test_historical_source_labels_capture_without_changing_source(self):
+        aliases = {'gemini-work': 'gemini', 'codex-priv': 'codex', 'mistral-priv': 'mistral'}
+        for profile, alias in aliases.items():
+            path = self.source / profile / '.native-install.json'
+            metadata = json.loads(path.read_text())
+            metadata['directory'] = alias
+            self.write(path, metadata)
+        before = {str(p): p.read_bytes() for p in self.source.rglob('*') if p.is_file()}
+        preflight = mod.capture(self.source, self.configs[0], metadata_only=True)
+        self.assertEqual(sum(r['status'] == 'present_unverified' for r in preflight['report']), 6)
+        result = self.restore(self.capture())
+        self.assertEqual(sum(r['status'] == 'restored' for r in result['report']), 6)
+        self.assertEqual(before, {str(p): p.read_bytes() for p in self.source.rglob('*') if p.is_file()})
+
+    def test_historical_labels_do_not_allow_other_contexts_or_wrong_providers(self):
+        for profile, directory, flavour, provider in [
+            ('codex-work', 'codex', 'codex', 'codex'),
+            ('mistral-work', 'mistral', 'vibe', 'mistral'),
+            ('gemini-priv', 'gemini', 'gemini', 'antigravity'),
+            ('codex-priv', 'codex-work', 'codex', 'codex'),
+            ('gemini-work', 'gemini', 'gemini', 'antigravity'),
+            ('mistral-priv', 'mistral', 'mistral', 'mistral'),
+        ]:
+            with self.subTest(profile=profile, provider=provider):
+                root = self.source / profile
+                self.write(root / '.native-install.json', {'directory': directory, 'flavour': flavour, 'provider': provider})
+                with self.assertRaises(mod.TransferError):
+                    mod.installation(profile, root, source_capture=True)
+
+    def test_restore_rejects_historical_destination_labels(self):
+        payload = self.capture()
+        for profile, alias in [('gemini-work', 'gemini'), ('codex-priv', 'codex'), ('mistral-priv', 'mistral')]:
+            with self.subTest(profile=profile):
+                path = self.target / profile / '.native-install.json'
+                original = path.read_bytes()
+                metadata = json.loads(original)
+                metadata['directory'] = alias
+                self.write(path, metadata)
+                entry = next(e for e in payload['entries'] if e['profile'] == profile)
+                single = dict(payload, entries=[entry])
+                with self.assertRaisesRegex(mod.TransferError, 'wrong_installed_profile'):
+                    self.restore(single)
+                self.assertFalse((self.target / profile / mod.credential_path(profile)).exists())
+                self.write(path, original)
+
     def test_metadata_preflight_never_reads_credential_bytes(self):
         original = mod.read_file
         def read(root, relative, private=True):

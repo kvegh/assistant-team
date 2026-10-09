@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.9
+
+Accept three exact historical installation directory labels during source authentication capture only. Fresh destination metadata, provider/flavour checks and work/private boundaries remain strict.
+
 ## 1.0.8
 
 Document the fresh/standalone Antigravity bootstrap correction and real model-free Ansible acceptance.

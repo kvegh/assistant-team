@@ -106,3 +106,5 @@ metadata-only preflight, malformed manifests, source/destination link attacks,
 provider mismatch, dotenv rejection and per-profile failure rollback. Production
 Ansible lint covers the role and playbook. Real transfer and entitlement results
 must be documented separately after the fresh AAP deployment is ready.
+
+Historical source metadata compatibility is capture-only: `gemini-work` may retain directory `gemini`, `codex-priv` may retain `codex`, and `mistral-priv` may retain `mistral`. These exact labels reflect earlier account-context renames; no other context mapping is accepted. Flavour/provider checks and private-directory checks still apply. Restore requires canonical destination metadata and does not rewrite source installation metadata.

@@ -179,7 +179,7 @@ def native_credentials(profile, raw):
     return raw
 
 
-def installation(profile, root):
+def installation(profile, root, *, source_capture=False):
     fd = directory(root)
     try:
         metadata = os.fstat(fd)
@@ -188,7 +188,13 @@ def installation(profile, root):
     finally:
         os.close(fd)
     value = object_json(read_file(root, '.native-install.json', private=False))
-    if value.get('directory') != profile or value.get('flavour') != ('vibe' if profile.startswith('mistral-') else profile.split('-')[0]):
+    # Earlier account-context renames retained these exact installation labels.
+    # Accept them only on capture; a fresh restore must be canonical.
+    historical = {'gemini-work': 'gemini', 'codex-priv': 'codex', 'mistral-priv': 'mistral'}
+    allowed = [profile]
+    if source_capture and profile in historical:
+        allowed.append(historical[profile])
+    if value.get('directory') not in allowed or value.get('flavour') != ('vibe' if profile.startswith('mistral-') else profile.split('-')[0]):
         raise TransferError('wrong_installed_profile')
     expected = provider(profile)
     if expected in ['vertex', 'antigravity'] and value.get('provider') != expected:
@@ -255,7 +261,7 @@ def capture(root, config, metadata_only=False):
         base = Path(root) / profile
         files = []
         try:
-            installation(profile, base)
+            installation(profile, base, source_capture=True)
             path = credential_path(profile)
             if metadata_only:
                 # No credential bytes are read by a preflight.
