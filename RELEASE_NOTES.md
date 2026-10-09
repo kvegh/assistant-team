@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.8
+
+Document the fresh/standalone Antigravity bootstrap correction and real model-free Ansible acceptance.
+
 ## 1.0.7
 
 Install Antigravity scoped launcher dependencies before creating command links. Fresh generic and standalone installation no longer depend on helpers being left over from an earlier deployment.
