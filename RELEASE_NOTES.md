@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.7
+
+Install Antigravity scoped launcher dependencies before creating command links. Fresh generic and standalone installation no longer depend on helpers being left over from an earlier deployment.
+
 ## 1.0.6
 
 Document explicit initial account selection and optional operator-requested reconciliation, including its implementation reference and protected Ansible regression checks.

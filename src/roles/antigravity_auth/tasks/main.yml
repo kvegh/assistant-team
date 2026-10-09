@@ -46,6 +46,23 @@
     owner: "{{ antigravity_auth_runtime_user }}"
     group: "{{ antigravity_auth_runtime_user }}"
     mode: "0600"
+- name: Install shared scoped launcher dependencies before publishing commands
+  ansible.builtin.copy:
+    src: "{{ item.source }}"
+    dest: "{{ antigravity_auth_profile_home }}/{{ item.destination }}"
+    owner: "{{ antigravity_auth_runtime_user }}"
+    group: "{{ antigravity_auth_runtime_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - source: "{{ role_path }}/../native_auth/files/native-cli.py"
+      destination: .native-cli.py
+      mode: '0700'
+    - source: "{{ role_path }}/../native_auth/files/login-result.py"
+      destination: .login-result.py
+      mode: '0600'
+    - source: "{{ role_path }}/../../lib/install-paths.py"
+      destination: .install-paths.py
+      mode: '0600'
 - name: Provide scoped native and login commands
   ansible.builtin.file:
     src: .native-cli.py
