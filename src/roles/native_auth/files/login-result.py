@@ -21,7 +21,9 @@ def vibe_browser_handoff(root, environment):
     return result
 
 
-def follow_up(flavour, provider, successful):
+def follow_up(flavour, provider, successful, existing_saved=False):
+    if existing_saved and not successful:
+        return 'Existing saved credentials are present and unchanged; this session did not prove a new login or model access. No automatic retry or model check is required.'
     if successful:
         return 'Saved credentials do not prove model entitlement. Request an explicit bounded model check before relying on access; no model check ran automatically.'
     if provider == 'vertex':
@@ -92,6 +94,11 @@ def credential_snapshot(root, flavour, provider=None):
             if provider == 'vertex':
                 valid = value.get('type') == 'authorized_user' and all(
                     value.get(key) for key in ['client_id', 'client_secret', 'refresh_token'])
+            elif provider == 'antigravity':
+                token = value.get('token', value)
+                valid = isinstance(token, dict) and any(
+                    isinstance(token.get(key), str) and token[key].strip()
+                    for key in ['refresh_token', 'access_token'])
             elif flavour == 'claude':
                 valid = bool(value.get('claudeAiOauth', {}).get('accessToken'))
             elif flavour == 'codex':
@@ -105,7 +112,8 @@ def credential_snapshot(root, flavour, provider=None):
 
 def result(exit_code, before, after, interactive=False):
     # Interactive TUI exit zero may simply mean the user quit before logging in.
-    if exit_code != 0 or not after or before == after:
+    completed = exit_code == 0 or interactive and exit_code in [130, -2]
+    if not completed or not after or before == after:
         return 'Failed or cancelled'
     return 'Credentials saved; model access unverified'
 

@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.15.8
+
+Recognize Antigravity's native nested OAuth token file instead of falsely reporting
+failed login. Newly saved evidence survives an intentional TUI interrupt as
+saved/unverified; unchanged credentials are explained without demanding another
+login. Refresh reporting helpers without provider reinstall or credential changes.
+
 ## 0.15.7
 
 Record verified marker-only recovery: all eight native panes are alive with launch

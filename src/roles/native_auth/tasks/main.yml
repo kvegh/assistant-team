@@ -1,9 +1,11 @@
 ---
 - name: Resolve the dedicated native installation account
+  tags: [native_auth_helpers]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define dedicated local installation paths
+  tags: [native_auth_helpers]
   ansible.builtin.set_fact:
     __native_auth_native_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     __native_auth_native_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
@@ -25,6 +27,7 @@
   loop_control:
     loop_var: native
 - name: Maintain secret-free login outcome reporting in every installed context
+  tags: [native_auth_helpers]
   ansible.builtin.copy:
     src: login-result.py
     dest: "{{ __native_auth_native_home }}/{{ item.directory }}/.login-result.py"
@@ -33,6 +36,7 @@
     mode: "0600"
   loop: "{{ native_auth_native_auth_dirs }}"
 - name: Maintain scoped launchers without changing credentials or installation metadata
+  tags: [native_auth_helpers]
   ansible.builtin.copy:
     src: native-cli.py
     dest: "{{ __native_auth_native_home }}/{{ item.directory }}/.native-cli.py"

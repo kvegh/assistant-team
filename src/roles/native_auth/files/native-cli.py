@@ -80,12 +80,14 @@ if pathlib.Path(sys.argv[0]).name=='login':
     after=status.credential_snapshot(root,f,config.get('provider'))
     message=status.result(code,before,after,interactive=f in ['gemini','vibe'])
     print('\n'+status.display(message),flush=True)
-    print(status.display(status.follow_up(f,config.get('provider'),message!='Failed or cancelled')),flush=True)
+    print(status.display(status.follow_up(f,config.get('provider'),message!='Failed or cancelled',existing_saved=bool(after and before==after))),flush=True)
+    if message!='Failed or cancelled' and code in [130,-2]:
+        print(status.display('Native CLI interrupted after saving new credentials; model access remains unverified.'),flush=True)
     diagnostic('login','credentials_saved' if message!='Failed or cancelled' else 'credentials_unconfirmed',code)
     if message=='Failed or cancelled' and code==0:
         print(status.display('No new completed login was confirmed; existing saved credentials, if any, were preserved.'),flush=True)
         code=1
-    raise SystemExit(code if code>=0 else 128-code)
+    raise SystemExit(0 if message!='Failed or cancelled' else code if code>=0 else 128-code)
 if vertex is not None and args not in [['--version'],['--help']]:
     try:env=vertex.environment(env)
     except ValueError as error:raise SystemExit(status.display(str(error)))

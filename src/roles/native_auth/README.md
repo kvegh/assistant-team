@@ -22,3 +22,10 @@ Personal Gemini invokes the separate `antigravity_auth` role for the supported
 native Antigravity CLI. Vertex Gemini remains unchanged. Operator login is ready
 after deployment; personal Antigravity team routing remains explicitly blocked
 until its adapter is implemented. See that role README for file-storage limits.
+
+The `native_auth_helpers` tag refreshes login reporting and scoped launchers only,
+without reinstalling providers or touching credentials. Antigravity's native nested
+OAuth token structure is supported. A TUI interrupt with newly persisted valid
+evidence is reported as saved/unverified; cancellation without new evidence stays
+failed/cancelled. Unchanged existing evidence is described separately. No outcome
+can claim verified model entitlement without an explicit model check.

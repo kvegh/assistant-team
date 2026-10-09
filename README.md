@@ -608,7 +608,11 @@ use separate Linux users for isolated environments.
 
 Personal Gemini uses the official pinned Antigravity CLI in `~/gemini-priv`:
 run `./login`, complete its personal Google browser/code authorization yourself,
-then exit the CLI to see the saved-auth result. `./agy` launches the native CLI;
+then exit the CLI to see the saved-auth result. The detector recognizes the native
+nested OAuth token file. An interrupted TUI reports saved/unverified only when new
+valid credential evidence was written; unchanged existing credentials are explained
+without demanding another login. Neither condition proves remote model access.
+`./agy` launches the native CLI;
 `./login --clear` removes this profile's local authentication. The work profile
 continues to use Gemini CLI through Vertex. No old account data is migrated.
 

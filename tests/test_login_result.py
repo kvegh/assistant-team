@@ -53,6 +53,35 @@ class LoginOutcomeTests(unittest.TestCase):
             self.assertFalse((path/'antigravity-oauth-token').exists())
             self.assertFalse((root/'.gemini/settings.json').exists())
 
+    def test_antigravity_native_nested_oauth_token_is_detected_without_identity_fields(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=pathlib.Path(directory);path=root/'.gemini/antigravity-cli'
+            path.mkdir(parents=True)
+            for token in [{'access_token':'fixture-access','refresh_token':'fixture-refresh',
+                           'token_type':'Bearer','expiry':'2000-01-01T00:00:00Z'},
+                          {'access_token':'fixture-access'}]:
+                import json
+                (path/'antigravity-oauth-token').write_text(json.dumps({'token':token,'id_token':'fixture-identity'}))
+                self.assertEqual(len(module.credential_snapshot(root,'gemini','antigravity')),64)
+            for token in [None, [], 'invalid', {}, {'access_token':''}, {'access_token':42}]:
+                (path/'antigravity-oauth-token').write_text(json.dumps({'token':token,'id_token':'fixture-only'}))
+                self.assertIsNone(module.credential_snapshot(root,'gemini','antigravity'))
+
+    def test_interrupted_tui_reports_only_new_valid_saved_evidence(self):
+        for code in [130,-2]:
+            self.assertEqual(module.result(code,None,'new',interactive=True),
+                             'Credentials saved; model access unverified')
+            self.assertEqual(module.result(code,'old','old',interactive=True),'Failed or cancelled')
+            self.assertEqual(module.result(code,None,None,interactive=True),'Failed or cancelled')
+            self.assertEqual(module.result(code,None,'new'),'Failed or cancelled')
+        self.assertEqual(module.result(1,None,'new',interactive=True),'Failed or cancelled')
+
+    def test_unchanged_saved_state_is_explained_without_demanding_another_login(self):
+        suggestion=module.follow_up('gemini','antigravity',False,existing_saved=True)
+        self.assertIn('unchanged',suggestion)
+        self.assertNotIn('Run ./login again',suggestion)
+        self.assertNotIn('verified',suggestion)
+
     def test_antigravity_removes_competing_api_and_vertex_auth_without_forcing_storage(self):
         result=module.personal_antigravity({'GEMINI_API_KEY':'fixture','GOOGLE_APPLICATION_CREDENTIALS':'fixture',
             'GEMINI_FORCE_FILE_STORAGE':'true','PATH':'retained','SSH_CONNECTION':'retained'})
@@ -83,6 +112,26 @@ class LoginOutcomeTests(unittest.TestCase):
             digest = module.credential_snapshot(directory, 'gemini')
             self.assertEqual(len(digest), 64)
             self.assertNotIn('fixture', digest)
+
+    def test_native_antigravity_wrapper_reports_saved_after_tui_interrupt_without_model_probe(self):
+        import json, os, subprocess, sys
+        for save in [False,True]:
+            with self.subTest(saved=save), tempfile.TemporaryDirectory() as directory:
+                root=pathlib.Path(directory)
+                binary=root/'.install/bin/agy';binary.parent.mkdir(parents=True)
+                binary.write_text('#!/usr/bin/env python3\nimport json,pathlib,os,sys\n'
+                    + ("p=pathlib.Path(os.environ['HOME'])/'.gemini/antigravity-cli/antigravity-oauth-token';p.parent.mkdir(parents=True);p.write_text(json.dumps({'token':{'access_token':'fixture-only'}}))\n" if save else '')
+                    + 'sys.exit(130)\n')
+                binary.chmod(0o700)
+                (root/'.native-install.json').write_text(json.dumps({'flavour':'gemini','provider':'antigravity','entrypoint':'bin/agy'}))
+                (root/'.login-result.py').write_text(SOURCE.read_text())
+                wrapper=SOURCE.with_name('native-cli.py')
+                (root/'.native-cli.py').write_text(wrapper.read_text())
+                (root/'login').symlink_to(root/'.native-cli.py')
+                completed=subprocess.run([sys.executable,str(root/'login')],capture_output=True,text=True,env=os.environ.copy())
+                self.assertEqual(completed.returncode,0 if save else 130,completed.stderr)
+                self.assertIn('Credentials saved; model access unverified' if save else 'Failed or cancelled',completed.stdout)
+                self.assertNotIn('fixture-only',completed.stdout+completed.stderr)
 
 
 class LoginDisplayTests(unittest.TestCase):
