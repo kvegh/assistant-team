@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.12
+
+Document verified shutdown completion and the installed-helper acceptance test:
+all dependent fixture units stopped before return, immediate start waited out
+shutdown, and existing native containers remained unchanged.
+
 ## 0.21.11
 
 Wait for all four named project units, containers and IPC listeners to stop before

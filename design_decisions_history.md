@@ -1007,3 +1007,31 @@ Successful live hook authentication remains to be verified after activation.
 
 Technical basis: [Linux SELinux Unix stream connection check](https://github.com/torvalds/linux/blob/master/security/selinux/hooks.c)
 and the [SELinux socket-context API](https://github.com/SELinuxProject/selinux/blob/main/libselinux/include/selinux/selinux.h).
+
+## Complete shutdown before subsequent start
+
+Implementation: `e119e2dd04bb6b637a90e73879747d2a6ab8798b`.
+
+Stopping only a systemd target could return while its PartOf-dependent services
+and containers were still shutting down. An immediate start could then conflict
+with remaining stop jobs. Explicitly stop the exact target, broker, gateway and
+container service as one blocking request, and verify their states, container
+shutdown and listener closure before returning success. Stop preserves target
+enablement and project configuration, authentication, prompts and stopped
+containers; it does not perform retirement cleanup.
+
+Start checks for pending stop jobs and deactivating services or stopping
+containers before submitting its own job. Restart uses completed stop followed
+by start. Bounded waits and failed metadata queries report a clear failure rather
+than declaring shutdown complete. Status uses the dependent-aware project
+summary so an inactive target does not conceal stopping services.
+
+Ten focused regression tests and the full 197-test suite passed, along with
+production lint. Disposable real systemd units with delayed stops verified both
+completion before return and an immediate start waiting out a queued shutdown.
+The same checks passed against the actually installed helper after the focused
+`project_control` Ansible deployment. Its installed checksum matched the
+implementation, fixture files were removed, and existing running container IDs
+stayed unchanged. Only the control file and path facts were installed; no live
+team was stopped, no provider was invoked and no installation-layout migration
+was deployed.
