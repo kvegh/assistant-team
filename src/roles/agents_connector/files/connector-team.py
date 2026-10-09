@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
-import argparse, asyncio, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
+import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 
@@ -121,6 +121,43 @@ def authorize(name,obj):
     if kind=='read_messages':return obj.get('agent')==name
     return kind in ['list_agents','check_replies','wait_for_reply']
 
+def gateway_socket():
+    """Label only the listener's kernel socket SID; retain its mount's MCS label."""
+    library = ctypes.util.find_library('selinux')
+    if not library:
+        if pathlib.Path('/sys/fs/selinux/enforce').exists():
+            raise RuntimeError('SELinux listener labeling requires the system libselinux library')
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    selinux = ctypes.CDLL(library, use_errno=True)
+    enabled = selinux.is_selinux_enabled()
+    if enabled == 0:
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    if enabled < 0:
+        raise RuntimeError('Could not determine SELinux listener labeling state')
+    selinux.getsockcreatecon.argtypes = [ctypes.POINTER(ctypes.c_void_p)]
+    selinux.setsockcreatecon.argtypes = [ctypes.c_char_p]
+    selinux.freecon.argtypes = [ctypes.c_void_p]
+    previous = ctypes.c_void_p()
+    if selinux.getsockcreatecon(ctypes.byref(previous)) != 0:
+        raise RuntimeError('Could not read the previous SELinux socket creation context')
+    try:
+        previous_context = ctypes.string_at(previous) if previous.value else None
+    finally:
+        if previous.value:
+            selinux.freecon(previous)
+    if selinux.setsockcreatecon(b'system_u:system_r:container_t:s0') != 0:
+        raise RuntimeError('Could not assign the SELinux container listener socket context')
+    listener = None
+    try:
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    finally:
+        # This setting is thread-local. Restore before any await or RPC work.
+        if selinux.setsockcreatecon(previous_context) != 0:
+            if listener is not None:
+                listener.close()
+            raise RuntimeError('Could not restore the SELinux socket creation context')
+    return listener
+
 async def gateway():
     async def client(name,reader,writer):
         authenticated=False
@@ -140,8 +177,16 @@ async def gateway():
     for name in VISIBLE:
         d=PROFILES/name/'ipc';d.mkdir(mode=0o700,exist_ok=True);path=d/'agent.sock'
         if path.exists():path.unlink()
-        servers.append(await asyncio.start_unix_server(lambda r,w,n=name:client(n,r,w),path=str(path)))
-        path.chmod(0o600)
+        listener = gateway_socket()
+        try:
+            listener.bind(str(path))
+            path.chmod(0o600)
+            listener.listen(socket.SOMAXCONN)
+            listener.setblocking(False)
+            servers.append(await asyncio.start_unix_server(lambda r,w,n=name:client(n,r,w),sock=listener))
+        except BaseException:
+            listener.close()
+            raise
     await asyncio.gather(*(s.serve_forever() for s in servers))
 
 def wait_for_native_session(c, restore=False, timeout=15):

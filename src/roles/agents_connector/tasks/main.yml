@@ -1,16 +1,16 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc]
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc]
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -58,7 +58,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0600"
 - name: Install constrained lifecycle and IPC routing utility
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc]
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"

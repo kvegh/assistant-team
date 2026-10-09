@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.21.9
+
+Create gateway listener sockets with the SELinux container socket context so native
+hooks can connect under enforcing policy. Restore the prior thread socket-creation
+context immediately, keep private mount labels and role authorization, and fail
+closed on labeling errors. No new SELinux policy or enforcement exception is used.
+The live model-free socket probe passed; activation is coordinated separately
+because restarting the gateway can stop dependent containers.
+
 ## 0.21.8
 
 Document verified old-layout restore fixes and successful restoration of the

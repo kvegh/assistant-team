@@ -44,3 +44,20 @@ builder, set `agents_connector_repair_codex_restore_marker_only: true` with the
 explicit project and run only `connector_codex_repair`. This checks that tmux has
 a live native Codex command and touches its marker without rebuilding images,
 replacing containers or respawning any pane. Dead or idle-shell panes are rejected.
+
+On SELinux hosts the gateway assigns `system_u:system_r:container_t:s0` only to
+each newly created listening socket. Existing policy permits the container client
+to connect to that socket; the host gateway process is not relabeled. The code
+restores the previous thread-local socket creation context immediately, preserves
+private MCS mount/inode labels and role token checks, and fails on labeling errors.
+No custom allow rule, SELinux boolean or enforcement exception is installed.
+This uses the system libselinux library already available on the supported host.
+
+The project container service requires the gateway. Applying new code to a live
+listener requires coordinated activation; do not issue an unplanned gateway
+restart that can stop dependent native sessions.
+
+Use the focused `connector_ipc` tag to install only the routing utility and its
+path facts. It does not restart units, launch native sessions, rebuild images or
+rewrite prompts/authentication. Activation of a currently running gateway remains
+a separate coordinated operation.

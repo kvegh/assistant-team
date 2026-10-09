@@ -794,3 +794,11 @@ or target enablement. Credentials and other native state are preserved.
 
 The exact Codex `.codex/app-server-daemon/daemon-updater.sock` is also omitted
 from the restored copy when it is a socket; an ordinary file at that path is kept.
+
+Gateway listeners on SELinux hosts use an explicitly permitted container socket
+context at socket creation. The host process keeps its own context, the previous
+thread default is restored before asynchronous work, and private per-role mount
+labels and token checks remain in force. This resolves Unix `connectto` denials
+that inode relabeling alone cannot fix. A gateway restart may stop dependent
+containers; coordinate activation with the operator rather than restarting a
+live team merely to apply the change.
