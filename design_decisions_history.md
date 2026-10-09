@@ -1274,3 +1274,26 @@ and existing privacy boundaries. Upstream slow-viewer stream loss remains an
 explicit limitation; no timed polling, model calls or agent restarts were added.
 Validation: 239 unit tests passed, including snapshot/follow boundary and parser
 coverage; production Ansible lint passed.
+
+## High-level project decision feed
+
+Implementation: `b3242fb` (0.27.0).
+
+Provide workspace/DECISIONS.log for tail-followable, brief timestamped accepted
+decisions, agreed direction changes and blockers that require user input. The
+orchestrator requests updates only at meaningful milestones, and the summarizer
+is the sole intended writer. Proposals cannot be presented as accepted outcomes.
+Exclude routine progress, repetitive entries, credentials, raw connector content
+and hidden/private-role information. No timer-driven inference or quota fallback.
+
+Fresh projects initialize an empty owner-only file; existing projects preserve
+its contents. Managed instruction blocks change only orchestrator/summarizer
+generated files while retaining user text outside those blocks and the editable
+project prompt unchanged. The separate project_decisions Ansible role reproduces
+this migration, refuses redirected workspace/log destinations and does not
+restart native sessions. Active conversations require an explicit refresh or
+normal subsequent launch; editing files alone does not prove live adoption.
+Append-only behavior and writer ownership are role instructions, not a changed
+filesystem security boundary; shared-workspace permissions remain unchanged.
+Validation: 245 unit tests passed, including content preservation, block
+idempotence and unsafe path rejection; production Ansible lint passed.

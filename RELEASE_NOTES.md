@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.27.1
+
+Document decision-feed ownership, preservation, privacy and active-session refresh.
+
 ## 0.27.0
 
 Add a project workspace DECISIONS.log and milestone-triggered summarizer workflow.
