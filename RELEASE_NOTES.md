@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.19.0
+
+Archive every project to NAME-ddmmyyhhmm using local 24-hour operation-start time.
+Refuse dated or exact-name archive collisions before shutdown and preserve
+existing contents. Stop/disable only named instances, clear their failed state,
+and verify systemd has forgotten them before moving or deleting project files.
+Keep timestamp metadata private and explain collisions in safe diagnostic logs.
+
 ## 0.18.1
 
 Document verified template migration, preserved operator and project prompts,

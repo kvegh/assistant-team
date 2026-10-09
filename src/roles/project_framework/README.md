@@ -38,10 +38,18 @@ its regular home-level config, never saved model authentication. They stop runni
 named service instances/orphan containers, disable enabled named units, verify
 quiescence and remove stopped project containers. Destroy deletes only that
 project/config; archive moves the whole directory with config into a private
-`~/project-archive/NAME`, rejecting collisions before shutdown. Whole-directory
+`~/project-archive/NAME-ddmmyyhhmm` on every invocation (operation-start local
+24-hour time, saved as private ISO timestamp metadata), rejecting collisions before
+shutdown. Existing exact-name archives also refuse shutdown and recommend
+`team rename-project OLD NEW`; existing archives are never renamed or overwritten. Whole-directory
 rename preserves SQLite auxiliary files and internal symlinks. Config placement
 is rolled back if the archive rename fails. Shared templates, images, provider
-homes and other projects are preserved. Do not run concurrent lifecycle/edit
+homes and other projects are preserved. The four named unit instances have their
+failed states reset and must disappear from nonloading `list-units --all` checks
+within ten seconds before filesystem changes; lingering references fail safely.
+These checks deliberately avoid `show`/`status`, which can reload an instance.
+This follows [systemd unit garbage collection](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Unit%20Garbage%20Collection).
+Do not run concurrent lifecycle/edit
 operations against the same project. There is no restore command yet.
 
 Listing status uses service metadata and checks inactive projects for orphan

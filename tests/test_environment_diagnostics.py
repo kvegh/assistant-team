@@ -61,3 +61,14 @@ class DiagnosticTests(unittest.TestCase):
     def test_unknown_failure_text_cannot_be_logged(self):
         with tempfile.TemporaryDirectory() as home:
             with self.assertRaises(ValueError):module.record(home,'start','exception containing fixture secret')
+
+    def test_archive_collision_is_specific_safe_and_exportable(self):
+        with tempfile.TemporaryDirectory() as home:
+            module.record(home,'archive','archive_collision',1)
+            directory=pathlib.Path(home)/'environment-logs'
+            event=json.loads((directory/'events.jsonl').read_text())
+            self.assertEqual(event['result'],'archive_collision')
+            text=(directory/'events.log').read_text()
+            self.assertIn('without shutdown',text)
+            self.assertIn('rename-project OLD NEW',text)
+            module.export(home,pathlib.Path(home)/'metadata.tar.gz')

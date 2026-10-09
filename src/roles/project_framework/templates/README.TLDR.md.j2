@@ -27,9 +27,12 @@ vi ~/projects/example/assistant-prompt.md          # fill [Project] and [Role: N
 
 Finish a project with one of these alternatives:
 `~/team archive NAME` stops it if running and moves its full contents/config to
-`~/project-archive/NAME`; `~/team destroy NAME` stops it if running and deletes it.
+`~/project-archive/NAME-ddmmyyhhmm` (local 24-hour time); `~/team destroy NAME` stops it if running and deletes it.
 Both remove only its containers; account profiles and other projects stay intact.
-Archive rejects an existing destination. Do not run same-project start/edit operations concurrently.
+Archive refuses same-minute or exact-name collisions before stopping. Rename the
+project if an exact-name archive already exists. Named instances are disabled,
+reset and forgotten; shared templates remain. Do not run same-project start/edit
+operations concurrently.
 
 List status describes services: running, starting, stopping, stopped, failed,
 partial (orphan components) or unknown (metadata unavailable); it does not verify model access.

@@ -10,11 +10,12 @@ import tempfile
 import uuid
 
 ACTIONS={'broker_init','gateway','containers_prepare','containers_stop','deployment','setup','login','clear','create-project','start','stop','restart','status','preflight','launch-all','launch','apply-prompts','refresh-observer','deliver-observer-report','stop-containers','watch','attach','destroy','archive'}
-RESULTS={'started','completed','failed','cancelled','credentials_saved','credentials_unconfirmed'}
+RESULTS={'started','completed','failed','cancelled','credentials_saved','credentials_unconfirmed','archive_collision'}
 MODULES={'unknown','redhat.rhel_system_roles.podman_image'}|{'ansible.builtin.'+name for name in ['setup','assert','include_vars','add_host','getent','set_fact','file','copy','template','command','shell','stat','user','dnf','unarchive','get_url','include_role','include_tasks','systemd_service','slurp']}
 
 
 EXPLANATIONS = {
+    ('archive', 'archive_collision'): 'Archive destination already exists. Project files and archives were preserved without shutdown; inspect dated names or use team rename-project OLD NEW for an exact-name collision.',
     ('destroy', 'failed'): 'Project removal did not complete. Check service/container state and project paths before retrying; shared account profiles are outside this operation.',
     ('archive', 'failed'): 'Project archival did not complete. Check service/container state, project paths and archive collisions before retrying.',
     ('start', 'failed'): 'Project services could not start. Inspect systemctl --user status and the user journal for the failing dependency.',

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Project-scoped control of the existing native container/broker foundation."""
-import argparse, importlib.util, json, os, pathlib, re, sqlite3, subprocess, sys, time, shutil, socket
+import argparse, importlib.util, json, os, pathlib, re, sqlite3, subprocess, sys, time, shutil, socket, datetime
 INSTALL = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL.parent
 PROJECTS = ACCOUNT_HOME/'projects'
@@ -24,7 +24,7 @@ Projects:
   start NAME                         Check authentication and start this project's team.
   stop NAME                          Stop this project's target and services.
   destroy NAME                       Stop if running, remove its containers, then delete project/config.
-  archive NAME                       Stop if running and move its full content/config to ~/project-archive/NAME.
+  archive NAME                       Stop if running and retain full content/config; always use NAME-ddmmyyhhmm.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show this project's target and role/container states.
   watch NAME                         Follow messages; Ctrl-C stops only the viewer.
@@ -41,6 +41,8 @@ NAME: 1-40 lowercase letters/digits, underscores or hyphens; start with a letter
 ROLE: orchestrator, builder, investigator, challenger, summarizer, observer,
       private-connector or corporate-connector.
 Account profile listing uses setup --list; project listing uses --list.
+Archive: always NAME-ddmmyyhhmm (local 24-hour time); collisions fail before stopping.
+An existing exact-name archive requires team rename-project OLD NEW first.
 '''
 
 def settings():
@@ -229,23 +231,42 @@ def stop_containers(name):
     if existing:core.run(['podman','stop','--time','10',*existing],stdout=subprocess.DEVNULL)
     for role in ROLES:(core.PROFILES/role/'launched').unlink(missing_ok=True)
 
-def lifecycle_paths(name, archive=False):
+ARCHIVE_METADATA='.assistant-archive.json'
+
+class ArchiveCollisionError(ValueError):
+    """A safe minute-resolution name collision, rejected before shutdown."""
+
+
+def archive_timestamp():
+    return datetime.datetime.now().astimezone()
+
+def plan_archive(name, path, when):
+    parent=ACCOUNT_HOME/'project-archive';plain=parent/name
+    if parent.is_symlink() or parent.exists() and not parent.is_dir():
+        raise ValueError('Archive parent must be a directory, not a symlink')
+    if plain.exists() or plain.is_symlink():
+        raise ArchiveCollisionError('An archive with this exact project name already exists; project was not stopped. Use team rename-project OLD NEW before archiving')
+    destination=parent/(name+'-'+when.strftime('%d%m%y%H%M'))
+    if destination.exists() or destination.is_symlink():
+        raise ArchiveCollisionError('Archive timestamp collision; archives and project were preserved without stopping')
+    return {'destination':destination,'archived_at':when.isoformat(timespec='seconds')}
+
+def lifecycle_paths(name, archive=False, when=None):
     path=verify_project(name);config=ACCOUNT_HOME/('projects.'+name+'.config')
     if not archive and not shutil.rmtree.avoids_symlink_attacks:
         raise ValueError('This platform cannot safely remove a project directory')
     if ACCOUNT_HOME.is_symlink() or config.is_symlink() or not config.is_file():
         raise ValueError('Project configuration must be a regular file inside the account home')
-    destination=None
+    plan=None
     if archive:
-        parent=ACCOUNT_HOME/'project-archive';destination=parent/name
-        if parent.is_symlink() or parent.exists() and not parent.is_dir():
-            raise ValueError('Archive parent must be a directory, not a symlink')
-        if destination.exists() or destination.is_symlink():
-            raise ValueError('Archive already exists; it was not overwritten and the project was not stopped')
         embedded=path/config.name
         if embedded.exists() or embedded.is_symlink():
             raise ValueError('Archive configuration destination already exists; project was not stopped')
-    return path,config,destination
+        metadata=path/ARCHIVE_METADATA
+        if metadata.exists() or metadata.is_symlink():
+            raise ValueError('Reserved archive metadata already exists; project was not stopped')
+        plan=plan_archive(name,path,when or archive_timestamp())
+    return path,config,plan
 
 def service_state(unit):
     result=subprocess.run(['systemctl','--user','show',unit,
@@ -307,28 +328,76 @@ def quiesce_project(name, path):
     verify_no_project_listener(path)
     if remaining:subprocess.run(['podman','rm',*remaining],check=True,stdout=subprocess.DEVNULL)
 
+def project_units(name):
+    return ['assistant-connector@'+name+'.target']+[
+        'assistant-connector-'+kind+'@'+name+'.service' for kind in ['broker','gateway','containers']]
+
+def loaded_project_units(name):
+    units=project_units(name);env=user_env();env.update(LC_ALL='C',SYSTEMD_COLORS='0')
+    result=subprocess.run(['systemctl','--user','list-units','--all','--no-legend',
+                           '--plain','--full','--no-pager',*units],env=env,capture_output=True,text=True)
+    if result.returncode:raise ValueError('Cannot verify named systemd instances were forgotten; project files were preserved')
+    loaded=[]
+    for line in result.stdout.splitlines():
+        fields=line.split()
+        if not fields:continue
+        if len(fields)<4 or fields[0] not in units:
+            raise ValueError('Unexpected systemd unit-list response; project files were preserved')
+        loaded.append(fields[0])
+    return loaded
+
+def forget_project_units(name, timeout=10):
+    """Reset only named failures; ListUnits observes GC without loading templates."""
+    present=loaded_project_units(name)
+    if present:
+        reset=subprocess.run(['systemctl','--user','reset-failed',*present],env=user_env(),
+                             capture_output=True,text=True)
+        if reset.returncode and loaded_project_units(name):
+            raise ValueError('Could not clear named systemd instance failures; project files were preserved')
+    deadline=time.monotonic()+timeout
+    while loaded_project_units(name):
+        if time.monotonic()>=deadline:
+            raise ValueError('Named systemd instances are still referenced; project files were preserved')
+        time.sleep(0.2)
+
+
 def retire_project(name, archive=False):
-    path,config,destination=lifecycle_paths(name,archive)
+    when=archive_timestamp() if archive else None
+    path,config,plan=lifecycle_paths(name,archive,when)
     quiesce_project(name,path)
+    forget_project_units(name)
     # Recheck operator-editable paths after shutdown, before destructive filesystem work.
-    lifecycle_paths(name,archive)
+    if lifecycle_paths(name,archive,when)[2]!=plan:
+        raise ValueError('Archive state changed during shutdown; project files were preserved')
     if archive:
-        destination.parent.mkdir(mode=0o700,exist_ok=True)
-        destination.parent.chmod(0o700)
-        embedded=path/config.name
-        config.rename(embedded)
+        destination=plan['destination']
+        destination.parent.mkdir(mode=0o700,exist_ok=True);destination.parent.chmod(0o700)
+        embedded=path/config.name;metadata=path/ARCHIVE_METADATA
+        moved_config=False;created_metadata=False
         try:
+            config.rename(embedded);moved_config=True
+            with metadata.open('x') as file:
+                created_metadata=True
+                os.fchmod(file.fileno(),0o600)
+                json.dump({'version':1,'archived_at':plan['archived_at'],'timestamp_basis':'operation_start'},file)
+                file.write('\n')
             embedded.chmod(0o600);path.chmod(0o700)
             path.rename(destination)
-        except OSError:
-            embedded.rename(config)
+        except OSError as error:
+            rollback_errors=[]
+            for operation,needed in [(lambda:metadata.unlink(),created_metadata),
+                                     (lambda:embedded.rename(config),moved_config)]:
+                if needed:
+                    try:operation()
+                    except OSError:rollback_errors.append(True)
+            if rollback_errors:
+                raise ValueError('Archive failed and rollback was incomplete; inspect retained project and archive files before retrying') from error
             raise
         print('Archived project '+name+' to '+str(destination)+'; account profiles and other projects were preserved.')
     else:
         shutil.rmtree(path)
         config.unlink()
         print('Destroyed project '+name+'; account profiles, images and other projects were preserved.')
-
 
 def status(name):
     core=load(name)
@@ -389,6 +458,8 @@ if __name__=='__main__':
         if action in PROJECT_ACTIONS+['setup'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'completed',0)
     except (ValueError,subprocess.CalledProcessError,OSError) as error:
         try:
-            if action in PROJECT_ACTIONS+['setup'] and action in diagnostics().ACTIONS:diagnostics().record(ACCOUNT_HOME,action,'failed',1)
+            if action in PROJECT_ACTIONS+['setup'] and action in diagnostics().ACTIONS:
+                outcome='archive_collision' if isinstance(error,ArchiveCollisionError) else 'failed'
+                diagnostics().record(ACCOUNT_HOME,action,outcome,1)
         except (OSError,ValueError):pass
         print('Project operation failed: '+str(error),file=sys.stderr);sys.exit(1)

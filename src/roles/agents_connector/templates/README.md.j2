@@ -56,13 +56,19 @@ leaves project data and configuration in place; an inactive project needs no
 native harness or login to complete either operation.
 
 Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
-prompts and role state—to `~/project-archive/NAME`, with its former home-level
-`projects.NAME.config` inside. It rejects existing destinations before stopping
-anything. Archive directories are private (0700), the assignment config is 0600,
+prompts and role state—to `~/project-archive/NAME-ddmmyyhhmm`, with its former home-level
+`projects.NAME.config` inside. Every archive uses the operation-start local time
+(day, month, two-digit year, 24-hour hour/minute), saved in private timestamp metadata.
+Same-minute destination collisions fail before stopping; no archive is overwritten.
+An archive matching the current project name exactly also blocks shutdown: use
+`~/team rename-project OLD NEW` before retrying (provided by the rename feature). Archive directories are private (0700), the assignment config is 0600,
 and internal file modes and symlinks are preserved. Archives can include private
 role-local authentication copies and must stay outside Git. Restore is not provided.
 Destroy permanently deletes the project directory and its home-level config.
-Enabled named service instances are disabled; shared systemd templates remain.
+Enabled named service instances are disabled. Only their failed state is reset;
+bounded nonloading unit-list checks verify that systemd forgets all four instances
+before files are moved/deleted. If a reference prevents collection, files remain.
+Shared systemd templates and other instances remain.
 Do not start, restart or edit the same project concurrently with either operation.
 
 ## Project files and sessions
