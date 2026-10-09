@@ -53,12 +53,13 @@ class AntigravityHookTests(unittest.TestCase):
         output,frames=self.invoke('Stop',{'fullyIdle':True},self.messages)
         self.assertEqual(output['decision'],'continue')
         self.assertIn('readiness',output['reason'])
-        self.assertEqual(frames[-1]['state'],'busy')
+        self.assertEqual(frames[1]['state'],'busy')
+        self.assertFalse(any(x.get('state')=='idle' for x in frames))
 
     def test_idle_stop_without_context_allows_native_stop(self):
         output,frames=self.invoke('Stop',{'fullyIdle':True},[])
         self.assertEqual(output,{})
-        self.assertEqual(frames[1]['state'],'idle')
+        self.assertEqual(frames[-1]['state'],'idle')
 
     def test_auth_failure_never_reads_another_inbox(self):
         with mock.patch.object(hook,'frame',return_value={'kind':'error'}) as rpc:
@@ -91,3 +92,34 @@ class AntigravityProviderTests(unittest.TestCase):
                 (source/'.native-install.json').write_text(json.dumps(meta))
                 with self.assertRaisesRegex(ValueError,'pinned'):
                     team.antigravity_executable('challenger')
+
+class AntigravityCredentialBoundaryTests(unittest.TestCase):
+    def test_symlinked_target_directory_cannot_copy_token_to_shared_workspace(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home=pathlib.Path(temporary);source=home/'gemini-priv/token';source.parent.mkdir();source.write_text('private-fixture')
+            target=home/'project/role/.gemini/antigravity-cli/token';target.parent.parent.mkdir(parents=True)
+            outside=home/'project/shared';outside.mkdir()
+            target.parent.symlink_to(outside,target_is_directory=True)
+            with mock.patch.object(team,'ACCOUNT_HOME',home):
+                with self.assertRaisesRegex(ValueError,'boundary'):
+                    team.seed_private_antigravity(source,target)
+            self.assertFalse((outside/'token').exists())
+
+    def test_dangling_target_link_is_refused_without_external_write(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home=pathlib.Path(temporary);source=home/'gemini-priv/token';source.parent.mkdir();source.write_text('private-fixture')
+            target=home/'project/role/token';target.parent.mkdir(parents=True)
+            outside=home/'outside-token';target.symlink_to(outside)
+            with mock.patch.object(team,'ACCOUNT_HOME',home):
+                with self.assertRaisesRegex(ValueError,'symlink'):
+                    team.seed_private_antigravity(source,target)
+            self.assertFalse(outside.exists())
+
+    def test_source_parent_link_is_refused_without_reading_external_credentials(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home=pathlib.Path(temporary);outside=home/'outside';outside.mkdir();(outside/'token').write_text('private-fixture')
+            (home/'gemini-priv').symlink_to(outside,target_is_directory=True)
+            with mock.patch.object(team,'ACCOUNT_HOME',home):
+                with self.assertRaisesRegex(ValueError,'boundary'):
+                    team.seed_private_antigravity(home/'gemini-priv/token',home/'project/token')
+            self.assertFalse((home/'project').exists())

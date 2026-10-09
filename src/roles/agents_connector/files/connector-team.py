@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
-import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, struct, subprocess, sys, time
+import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, stat, struct, subprocess, sys, time
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 
@@ -43,6 +43,55 @@ def antigravity_executable(name):
     binary=source/'.install'/meta['entrypoint']
     if binary.is_symlink() or not binary.is_file():raise ValueError('Pinned Antigravity executable is missing')
     return binary
+def private_directory(path,create=False):
+    """Walk beneath the real account home without following native-created links."""
+    parts=path.relative_to(ACCOUNT_HOME).parts
+    descriptor=os.open(ACCOUNT_HOME,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    try:
+        for part in parts:
+            if part in ['', '.', '..']:raise ValueError('Invalid private authentication path')
+            if create:
+                try:os.mkdir(part,mode=0o700,dir_fd=descriptor)
+                except FileExistsError:pass
+            next_fd=os.open(part,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=descriptor)
+            os.close(descriptor);descriptor=next_fd
+        return descriptor
+    except (OSError,ValueError):
+        os.close(descriptor)
+        raise ValueError('Private authentication directory must remain inside its account boundary') from None
+
+
+def seed_private_antigravity(source,target):
+    """Copy an absent token atomically; preserve existing regular native refresh state."""
+    source_fd=private_directory(source.parent)
+    target_fd=None
+    try:
+        target_fd=private_directory(target.parent,create=True)
+        try:existing=os.stat(target.name,dir_fd=target_fd,follow_symlinks=False)
+        except FileNotFoundError:existing=None
+        if existing is not None:
+            if not stat.S_ISREG(existing.st_mode):raise ValueError('Private native token must not be a symlink or special file')
+            return
+        input_fd=os.open(source.name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=source_fd)
+        with os.fdopen(input_fd,'rb') as input_file:
+            if not stat.S_ISREG(os.fstat(input_file.fileno()).st_mode):raise ValueError('Personal Antigravity login required')
+            data=input_file.read(1048577)
+        if not data or len(data)>1048576:raise ValueError('Personal Antigravity login required')
+        # Publish a complete private token without replacing a refreshed file or link.
+        temporary='.antigravity-token-'+os.urandom(8).hex()
+        output_fd=os.open(temporary,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=target_fd)
+        try:
+            with os.fdopen(output_fd,'wb') as output:
+                output.write(data);output.flush();os.fsync(output.fileno())
+            os.link(temporary,target.name,src_dir_fd=target_fd,dst_dir_fd=target_fd,follow_symlinks=False)
+        finally:os.unlink(temporary,dir_fd=target_fd)
+    except OSError:
+        raise ValueError('Private authentication path changed; no external token copy was permitted') from None
+    finally:
+        os.close(source_fd)
+        if target_fd is not None:os.close(target_fd)
+
+
 def role_workspace(name):return role_directory(name,'workspace')
 
 def frame(s, obj):
@@ -296,10 +345,7 @@ def seed_auth(name):
     if antigravity_executable(name) is not None:
         relative='.gemini/antigravity-cli/antigravity-oauth-token'
         src=source/relative;dst=role_home(name)/relative
-        if src.is_symlink() or not src.is_file():raise ValueError('Personal Antigravity login required')
-        if not dst.exists():
-            dst.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
-            dst.write_bytes(src.read_bytes());dst.chmod(0o600)
+        seed_private_antigravity(src,dst)
         return
     if flavour in ['claude','gemini'] and source_name==flavour+'-work':
         provider=json.loads((source/'.vertex.json').read_text())

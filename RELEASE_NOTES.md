@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.23.1
+
+Prevent native-created symlinks from redirecting a private Antigravity token seed.
+Traverse account directories without following links and publish only complete
+credentials without replacing refreshed role state.
+
 ## 0.23.0
 
 Add native personal Antigravity team support for the challenger, using the existing

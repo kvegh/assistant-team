@@ -43,7 +43,8 @@ def handle(event, body, connection, agent_token, cursor):
     if auth.get('kind') != 'agent_info' or not isinstance(auth.get('name'), str):
         raise ValueError('Broker authentication failed')
     idle = event == 'Stop' and body.get('fullyIdle') is True
-    state = 'idle' if idle else 'busy'
+    # Keep the loop busy until its inbox has been checked, avoiding a premature nudge.
+    state = 'busy'
     response = frame(connection, {'kind': 'set_agent_state', 'agent_token': agent_token, 'state': state})
     if response.get('kind') == 'error':
         raise ValueError('Broker state update failed')
@@ -56,6 +57,8 @@ def handle(event, body, connection, agent_token, cursor):
         raise ValueError('Broker inbox read failed')
     messages = response['messages']
     if not messages:
+        if idle:
+            frame(connection, {'kind': 'set_agent_state', 'agent_token': agent_token, 'state': 'idle'})
         return {}
     text = context(messages)
     cursor.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -64,7 +67,6 @@ def handle(event, body, connection, agent_token, cursor):
     temporary.chmod(0o600)
     temporary.replace(cursor)
     if event == 'Stop':
-        frame(connection, {'kind': 'set_agent_state', 'agent_token': agent_token, 'state': 'busy'})
         return {'decision': 'continue', 'reason': text}
     return {'injectSteps': [{'ephemeralMessage': text}]}
 

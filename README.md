@@ -900,3 +900,8 @@ and [native hook contracts](https://antigravity.google/docs/hooks/). It retains 
 current broker and tmux architecture; it does not introduce ACP or change native
 approval policy. The separate `antigravity_team` role verifies runtime dependencies
 without mounting credentials or enabling network access.
+
+Private Antigravity credential seeding rejects symlinked directories and token
+files. Directory-descriptor traversal and exclusive publication prevent a prior
+role session from redirecting the copy into a shared workspace or outside its
+account boundary. Existing regular role credentials remain authoritative.
