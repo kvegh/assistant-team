@@ -74,3 +74,10 @@ unnecessary here. Startup verification found that direct mode reached the normal
 prompt after operator authentication/trust steps where shared-daemon mode still
 showed sign-in. This is scoped to containers, not host wrappers, and does not
 automatically authenticate or trust hooks/workspaces.
+
+Gemini MCP result compatibility is installed by this role as `bin/mcp-results.py`
+and selected only for Gemini's generated MCP command. It preserves stock text
+results and adds object structured-content envelopes for JSON arrays/scalars.
+The `connector_mcp_results` tag copies this adapter and routing code without
+restarting sessions; generated configurations take effect after initialization
+and a separately authorized native MCP reconnect.

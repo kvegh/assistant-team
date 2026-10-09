@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.21.19
+
+Shield Gemini CLI's JSON-text promotion bug with a Gemini-only stock-MCP stdio
+adapter. Preserve original text, IDs, errors and broker behavior while adding
+object envelopes for successful array/scalar results. Install through Ansible
+and generate the scoped MCP command; do not restart active native sessions or
+change permissions. Model-free transport regressions and production lint pass.
+
 ## 0.21.18
 
 Document the verified model-ID correction and startup guidance with its commit

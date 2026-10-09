@@ -83,6 +83,7 @@ def initialize():
             cfg={'hooks':{e:[{'matcher':'','hooks':[{'type':'command','command':hook(k,'claude')}]}] for e,k in events.items()}}
             (role_home(name)/'settings.json').write_text(json.dumps(cfg))
         elif flavour=='gemini':
+            server={'command':'python3','args':['/opt/connector/bin/mcp-results.py']+args}
             d=role_home(name)/'.gemini';d.mkdir(exist_ok=True)
             events={'BeforeAgent':'before_agent','AfterTool':'after_tool','AfterAgent':'after_agent'}
             cfg={'mcpServers':{'agents_connector':server},'hooks':{e:[{'matcher':'*','hooks':[{'type':'command','name':'connector-'+k,'command':hook(k,'gemini')}]}] for e,k in events.items()}}

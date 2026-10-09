@@ -23,6 +23,22 @@ remains pending.
 
 Private project for an assistant team. Application requirements are still being defined.
 
+## Gemini MCP JSON-text compatibility
+
+Gemini CLI 0.63 promotes JSON in a tool's first text block into `structuredContent`
+without checking whether it is an object. The stock connector correctly returns
+text-only JSON arrays for inbox/peer queries; Gemini then rejects its own promoted
+array as an invalid record. A Gemini-only stdio adapter adds an object envelope for
+successful JSON array/scalar text results, preserving the original text, request IDs,
+errors and broker semantics. Claude and Codex continue using the unmodified stock
+shim directly. Native harnesses and the stock broker executable are unchanged.
+
+Ansible installs the adapter into the existing read-only connector binary mount and
+generates Gemini's MCP command at initialization. Existing MCP processes need an
+explicit controlled reconnect or project restart to pick up configuration; this
+source fix does not restart an active team or alter trust/tool approval settings.
+No model-based acceptance is implied by the model-free transport tests.
+
 ## Security
 
 Model authentication data must never enter Git, even encrypted. Keep provider

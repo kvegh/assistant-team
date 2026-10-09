@@ -1,6 +1,6 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair, connector_prompt_template, connector_ipc, connector_mcp_results]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
@@ -44,6 +44,14 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0755"
+- name: Install Gemini stock MCP result compatibility adapter
+  tags: [connector_mcp_results]
+  ansible.builtin.copy:
+    src: mcp-results.py
+    dest: "{{ __agents_connector_root }}/bin/mcp-results.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
 - name: Verify the upstream executable
   become: true
   become_user: "{{ containers.runtime_user }}"
