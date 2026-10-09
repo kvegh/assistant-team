@@ -1,2 +1,7 @@
 ---
 project_framework_migrate_prompt_projects: []
+
+# Empty preserves the existing automatic installed-profile behavior.
+project_framework_enabled_profiles: []
+# Explicit operator opt-in only; otherwise existing configuration is retained.
+project_framework_reconcile_profiles: false

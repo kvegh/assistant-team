@@ -29,6 +29,7 @@
       runtime_user: "{{ hostvars.localhost.destination.runtime_user }}"
     provisioning:
       guest_ssh_user: "{{ hostvars.localhost.destination.connection.user }}"
+    project_framework_enabled_profiles: "{{ hostvars.localhost.destination.enabled_profiles | default([]) }}"
     assistant_source_user: "{{ containers.runtime_user }}"
     vertex_auth_install_sdk: "{{ hostvars.localhost.destination.install_google_cloud_sdk | default(false) }}"
   roles:

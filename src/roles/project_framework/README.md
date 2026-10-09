@@ -93,3 +93,7 @@ The focused `project_control` tag installs only the operator control file and
 required account/path facts. It does not render units, reload systemd, restart
 services, rewrite project files or change authentication.
 Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.
+
+`project_framework_enabled_profiles` optionally selects initially enabled work/private profiles. A nonempty known unique list creates missing `conf/environment.conf` (0600, force:false by default); all other supported profiles are disabled. Empty means no seed and preserves the existing automatic behavior. Existing operator edits are retained. `project_profile_selection` resolves paths and runs the seed without starting services or authenticating.
+
+`project_framework_reconcile_profiles: true` is an explicit operator opt-in to replace the existing selection with the provided nonempty list. It is false by default and is never inferred from source authentication or enabled automatically. Confirm ownership of current configuration before choosing it; credentials and projects are not copied or restarted by this task.

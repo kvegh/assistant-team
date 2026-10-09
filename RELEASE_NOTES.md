@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.5
+
+Support explicit initial enabled-account selection in Ansible deployment. Validate known unique profiles and seed only missing protected environment configuration; preserve operator edits and the existing empty/default behavior. Replacing an existing selection requires explicit reconciliation opt-in.
+
 ## 1.0.4
 
 Document the encrypted configuration-recovery definition and its implementation reference. No additional runtime change beyond 1.0.3.

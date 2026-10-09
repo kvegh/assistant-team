@@ -351,3 +351,5 @@ allowlisted credentials to a fresh environment. Target-local
 `environment-logs/auth-transfer/latest.json` reports safe status and the exact
 future-vault material manifest. It does not prove provider access or copy project
 role sessions; no credentials belong in Git, even encrypted.
+
+Initial account selection can be supplied through encrypted Ansible deployment enabled_profiles. Empty preserves automatic installed-profile selection; a nonempty list seeds only missing environment.conf by default. Explicit project_framework_reconcile_profiles=true replaces existing selection and must be chosen by the operator. Neither operation copies credentials or restarts teams.

@@ -25,6 +25,7 @@
   vars:
     provisioning: "{{ hostvars['localhost'].assistant_environment.provisioning }}"
     assistant_install_prefix: "{{ hostvars['localhost'].assistant_environment.agent_connector.install_prefix | default('') }}"
+    project_framework_enabled_profiles: "{{ hostvars['localhost'].assistant_environment.agent_connector.enabled_profiles | default([]) }}"
     assistant_source_user: "{{ hostvars['localhost'].assistant_environment.containers.runtime_user }}"
     containers:
       runtime_user: "{{ hostvars['localhost'].assistant_environment.agent_connector.runtime_user }}"

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "profiles": {
+{% for profile in __project_framework_supported_profiles %}
+    {{ profile | to_json }}: {"enabled": {{ (profile in project_framework_enabled_profiles) | to_json }}}{{ ',' if not loop.last else '' }}
+{% endfor %}
+  }
+}

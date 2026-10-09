@@ -8,6 +8,15 @@ argument_specs:
         elements: str
         default: []
         description: Explicit project names whose legacy prompts are migrated with protected backups; no sessions restart.
+      project_framework_enabled_profiles:
+        type: list
+        elements: str
+        default: []
+        description: Optional initial profiles; empty preserves automatic selection, existing configuration is retained by default.
+      project_framework_reconcile_profiles:
+        type: bool
+        default: false
+        description: Explicit operator opt-in to replace existing environment account selection; never enabled automatically.
       containers:
         type: dict
         required: true

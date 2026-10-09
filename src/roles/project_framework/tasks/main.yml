@@ -6,15 +6,18 @@
     apply:
       tags: [always]
 - name: Resolve runtime account for project framework
-  tags: [operator_docs, connector_prompt_template, project_control, connector_antigravity]
+  tags: [operator_docs, connector_prompt_template, project_control, connector_antigravity, project_profile_selection]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Define project framework paths
-  tags: [operator_docs, connector_prompt_template, project_control, connector_antigravity]
+  tags: [operator_docs, connector_prompt_template, project_control, connector_antigravity, project_profile_selection]
   ansible.builtin.set_fact:
     __project_framework_home: "{{ assistant_install_root }}"
     __project_framework_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
+- name: Seed explicitly selected profiles without overwriting operator configuration
+  tags: [project_profile_selection]
+  ansible.builtin.import_tasks: profile_selection.yml
 - name: Create project parent without changing existing projects
   ansible.builtin.file:
     path: "{{ __project_framework_home }}/projects"
