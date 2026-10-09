@@ -1,5 +1,6 @@
 """Synthetic private Claude refresh-capable cache recovery without provider calls."""
 import getpass
+import io
 import importlib.util
 import json
 import os
@@ -85,6 +86,55 @@ class ClaudeRecoveryTests(unittest.TestCase):
                 self.replace(self.capture())
             self.assertEqual((self.target / 'claude-priv/.claude/.credentials.json').read_bytes(), old)
 
+    @staticmethod
+    def cleared():
+        return {'claudeAiOauth': {'accessToken': '', 'refreshToken': '', 'expiresAt': 0,
+                                'refreshTokenExpiresAt': 0, 'scopes': ['synthetic-scope'],
+                                'subscriptionType': 'synthetic', 'rateLimitTier': 'synthetic'}}
+
+    def test_exact_native_cleared_target_requires_matching_identity(self):
+        path = self.target / 'claude-priv/.claude/.credentials.json'
+        self.write(path, self.cleared())
+        self.assertEqual(self.replace(self.capture(), True)['status'], 'validated_same_account')
+        before = path.read_bytes()
+        metadata = json.loads(json.dumps(self.metadata))
+        metadata['oauthAccount']['accountUuid'] = 'different'
+        self.write(self.home / '.claude.json', metadata)
+        with self.assertRaisesRegex(mod.Error, 'account_identity_mismatch'):
+            self.replace(self.capture())
+        self.assertEqual(path.read_bytes(), before)
+        self.write(self.home / '.claude.json', self.metadata)
+        self.assertTrue(self.replace(self.capture())['changed'])
+        self.assertEqual(path.read_bytes(), (self.home / '.claude/.credentials.json').read_bytes())
+
+    def test_malformed_or_api_cleared_targets_are_refused(self):
+        path = self.target / 'claude-priv/.claude/.credentials.json'
+        invalid = [{}, {'claudeAiOauth': {}}, {'ANTHROPIC_API_KEY': 'synthetic-api'}]
+        for field, value in [('accessToken', None), ('expiresAt', '0'), ('refreshTokenExpiresAt', True),
+                             ('scopes', [1]), ('subscriptionType', {}), ('rateLimitTier', None)]:
+            data = self.cleared()
+            data['claudeAiOauth'][field] = value
+            invalid.append(data)
+        data = self.cleared()
+        data['ANTHROPIC_API_KEY'] = 'synthetic-api'
+        invalid.append(data)
+        for data in invalid:
+            with self.subTest(shape=list(data)):
+                self.write(path, data)
+                before = path.read_bytes()
+                with self.assertRaisesRegex(mod.Error, 'invalid_cleared_native_target'):
+                    self.replace(self.capture())
+                self.assertEqual(path.read_bytes(), before)
+
+    def test_refusal_diagnostics_allow_only_static_codes(self):
+        for error, expected in [('account_identity_mismatch', 'account_identity_mismatch'),
+                                ('synthetic-sensitive-message', 'recovery_validation_failed')]:
+            out = io.StringIO()
+            with mock.patch.object(sys, 'argv', ['helper', 'capture']), mock.patch.object(mod, 'capture', side_effect=mod.Error(error)), mock.patch.object(sys, 'stdout', out):
+                self.assertEqual(mod.main(), 1)
+            self.assertEqual(json.loads(out.getvalue())['reason'], expected)
+            self.assertNotIn('synthetic-sensitive-message', out.getvalue())
+
     def test_explicit_metadata_context_refresh_and_private_paths_required(self):
         with self.assertRaises(mod.Error):
             mod.capture(self.role, self.home, self.home / '.claude/.claude.json')
@@ -135,6 +185,7 @@ class ClaudeRecoveryTests(unittest.TestCase):
                                   capture_output=True, text=True, timeout=90)
         source = (self.home / '.claude/.credentials.json').read_bytes()
         metadata = (self.target / 'claude-priv/.claude/.claude.json').read_bytes()
+        self.write(self.target / 'claude-priv/.claude/.credentials.json', self.cleared())
         for execute, status in [(False, 'validated_same_account'), (True, 'replaced_same_account'), (True, 'unchanged_same_account')]:
             result = run(execute)
             self.assertEqual(result.returncode, 0, 'Synthetic Ansible recovery failed; protected output withheld')

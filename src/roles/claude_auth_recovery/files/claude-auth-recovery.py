@@ -33,6 +33,25 @@ def credentials(raw, candidate=False):
     return raw
 
 
+def destination_credentials(raw):
+    """Accept valid auth or the exact native token-cleared state, only on target."""
+    try:
+        return credentials(raw)
+    except Error:
+        data = transfer.object_json(raw)
+        token = data.get('claudeAiOauth')
+        fields = {'accessToken', 'refreshToken', 'expiresAt', 'refreshTokenExpiresAt',
+                  'scopes', 'subscriptionType', 'rateLimitTier'}
+        valid = set(data) == {'claudeAiOauth'} and isinstance(token, dict) and set(token) == fields
+        valid = valid and token['accessToken'] == '' and token['refreshToken'] == ''
+        valid = valid and all(type(token[k]) is int and token[k] >= 0 for k in ['expiresAt', 'refreshTokenExpiresAt'])
+        valid = valid and isinstance(token['scopes'], list) and all(isinstance(v, str) for v in token['scopes'])
+        valid = valid and all(isinstance(token[k], str) for k in ['subscriptionType', 'rateLimitTier'])
+        if not valid:
+            raise Error('invalid_cleared_native_target')
+        return raw
+
+
 def capture(role, home, metadata):
     role, home, metadata = Path(role), Path(home), Path(metadata)
     if home != role / 'accounts/claude-priv/home' or metadata != home / '.claude.json':
@@ -69,7 +88,7 @@ def replace(root, config, payload, validate_only=False):
         raw = credentials(base64.b64decode(payload['auth_b64'], validate=True), candidate=True)
     except (ValueError, TypeError):
         raise Error('invalid_recovery_payload') from None
-    before = credentials(transfer.read_file(home, '.claude/.credentials.json'))
+    before = destination_credentials(transfer.read_file(home, '.claude/.credentials.json'))
     changed = before != raw
     if changed and not validate_only:
         fd = transfer.directory(home / '.claude')
@@ -107,7 +126,19 @@ def main():
     try:
         result = capture(args.source_role, args.source_home, args.source_metadata) if args.action == 'capture' else replace(args.profiles_root, args.environment_config, transfer.object_json(sys.stdin.read(1048577)), args.validate_only)
         print(json.dumps(result))
-    except (Error, OSError, ValueError, TypeError):
+    except Error as error:
+        safe_codes = {'invalid_cleared_native_target', 'candidate_refresh_missing',
+                      'account_identity_mismatch', 'wrong_source_account_binding',
+                      'wrong_source_role_context', 'target_account_disabled',
+                      'invalid_recovery_manifest', 'invalid_recovery_payload',
+                      'destination_changed_during_recovery', 'missing_private_account_metadata',
+                      'source_file_not_private', 'unsafe_source_file', 'unsafe_directory',
+                      'directory_not_private', 'bootstrap_writer_active',
+                      'credential_container_writer_active', 'container_writer_state_unavailable'}
+        reason = str(error) if str(error) in safe_codes else 'recovery_validation_failed'
+        print(json.dumps({'status': 'refused', 'reason': reason}))
+        return 1
+    except (OSError, ValueError, TypeError):
         print(json.dumps({'status': 'refused', 'reason': 'recovery_validation_failed'}))
         return 1
     return 0

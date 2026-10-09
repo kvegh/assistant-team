@@ -49,3 +49,13 @@ Synthetic tests include real disposable Ansible validation/replacement/rerun,
 account mismatch refusal, unchanged source and destination account metadata,
 organization mismatch, missing refreshToken, wrong work context, fixed metadata
 binding and private-file/link checks. They make no provider requests.
+
+A failed native authentication request can clear both target token strings while
+retaining the native OAuth record. Recovery accepts that target-only state when
+the document contains only claudeAiOauth and exactly accessToken/refreshToken
+(empty strings), expiresAt/refreshTokenExpiresAt (nonnegative integers), scopes
+(a list of strings), and subscriptionType/rateLimitTier (strings). All existing
+account/context/permission/writer checks still apply. Source candidate checks are
+unchanged. Other empty or malformed documents, additional API-key records and
+missing fields are refused. Helper refusal diagnostics expose only a fixed
+allowlist of static error codes; protected Ansible logging remains enabled.

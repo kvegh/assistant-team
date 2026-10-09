@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.15
+
+Recognize the exact private Claude token-cleared target cache after failed native authentication. Matching account metadata and all safety checks remain mandatory; malformed or API-key records remain refused.
+
 ## 1.0.14
 
 Document private Claude recovery account/organization boundaries, refresh-capable credential validation and unchanged metadata semantics.
