@@ -1,16 +1,16 @@
 ---
 - name: Inspect dedicated account for focused configuration reruns
-  tags: [connector_services, auth_sources]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
   ansible.builtin.getent:
     database: passwd
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
-  tags: [connector_services, auth_sources]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
-  tags: [connector_services, auth_sources]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ agents_connector_runtime_home }}/agents-connector"
 - name: Create connector directories in the dedicated home
@@ -51,7 +51,7 @@
     argv: ["{{ __agents_connector_root }}/bin/agents-connector", --version]
   changed_when: false
 - name: Install constrained lifecycle and IPC routing utility
-  tags: [connector_services, auth_sources]
+  tags: [connector_services, auth_sources, connector_images, connector_codex_repair]
   ansible.builtin.copy:
     src: connector-team.py
     dest: "{{ __agents_connector_root }}/routing/connector-team.py"
@@ -121,14 +121,27 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
 - name: Copy the tmux image extension context
+  tags: [connector_images]
   ansible.builtin.copy:
     src: Containerfile
     dest: "{{ __agents_connector_root }}/build/Containerfile"
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"
-- name: Transfer and extend existing native images sequentially
-  ansible.builtin.include_tasks: image.yml
+- name: Validate selected native image flavours
+  tags: [connector_images]
+  ansible.builtin.assert:
+    that:
+      - agents_connector_image_flavours | length > 0
+      - agents_connector_image_flavours | difference(['claude', 'codex', 'gemini']) | length == 0
+    quiet: true
+- name: Transfer and extend selected native images sequentially
+  tags: [connector_images]
+  when: connector_image.flavour in agents_connector_image_flavours
+  ansible.builtin.include_tasks:
+    file: image.yml
+    apply:
+      tags: [connector_images]
   loop:
     - { flavour: claude, version: "2.1.292" }
     - { flavour: codex, version: "0.160.1" }
@@ -150,3 +163,11 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"
+
+- name: Repair only an explicitly selected failed Codex builder
+  tags: [connector_codex_repair]
+  when: agents_connector_repair_codex_project | length > 0
+  ansible.builtin.include_tasks:
+    file: repair_codex.yml
+    apply:
+      tags: [connector_codex_repair]

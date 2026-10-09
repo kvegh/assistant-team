@@ -41,6 +41,10 @@ material uncertainty rather than inventing history.
 ## Access and secrets
 
 - The repository is private. Privacy does not replace encryption.
+- Model authentication data must never enter Git, even encrypted. Provider login
+  tokens, refresh tokens, API keys and credential files belong in operator-owned
+  runtime storage or a separate secret manager outside the repository. This is
+  stricter than the Vault allowance for deployment configuration below.
 - Never commit environment-specific sensitive data in plaintext: credentials,
   tokens, usernames, hostnames, addresses, cloud project identifiers, or similar
   deployment values. Use Ansible Vault and generic documentation placeholders.

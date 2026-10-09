@@ -25,6 +25,11 @@ Private project for an assistant team. Application requirements are still being 
 
 ## Security
 
+Model authentication data must never enter Git, even encrypted. Keep provider
+login tokens, refresh tokens, API keys and native credential files in operator-owned
+runtime storage or a separate secret manager outside the repository. Ansible Vault
+remains available for deployment configuration, not for these model credentials.
+
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
 Ansible Vault-encrypted files. Plaintext documentation and examples must use
@@ -341,6 +346,10 @@ Vibe is not included in the selected connector setup.
 Container launch waits up to 15 seconds for the idle tmux session before starting
 a native harness. A stopped container or readiness timeout fails clearly without
 a model request; existing idle sessions can be restored safely.
+The connector image also includes process inspection (`procps`) required by Codex
+app-server startup. A focused certified image rebuild and guarded failed-builder
+repair can replace a dead Codex container without stopping other project agents;
+see the [connector role interface](src/roles/agents_connector/README.md).
 
 Existing communication software is preferred over a new message service. Timed
 inbox polling is rejected. The selected integration uses stock event-driven wake

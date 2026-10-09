@@ -39,9 +39,34 @@
     name: "localhost/assistant-connector-{{ connector_image.flavour }}"
     tag: "{{ connector_image.version }}"
     state: build
+    force: "{{ agents_connector_image_force }}"
     path: "{{ __agents_connector_root }}/build"
     build:
       file: "{{ __agents_connector_root }}/build/Containerfile"
       extra_args: "--build-arg BASE_IMAGE=localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }}"
   async: 600
   poll: 20
+
+- name: Verify process inspection required by the native Codex app server
+  when: connector_image.flavour == 'codex'
+  become: true
+  become_user: "{{ containers.runtime_user }}"
+  environment:
+    HOME: "{{ agents_connector_runtime_home }}"
+    XDG_RUNTIME_DIR: "/run/user/{{ agents_connector_runtime_uid }}"
+  ansible.builtin.command:
+    argv:
+      - podman
+      - run
+      - --rm
+      - --read-only
+      - --network=none
+      - --cap-drop=all
+      - --security-opt=no-new-privileges
+      - "localhost/assistant-connector-codex:{{ connector_image.version }}"
+      - ps
+      - -p
+      - '1'
+      - -o
+      - pid=
+  changed_when: false

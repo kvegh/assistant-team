@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.15.4
+
+Include `ps` in connector runtime images so Codex can start its managed app server.
+Support focused certified image rebuilds and verify process inspection before a
+guarded failed-builder repair. Preserve mounted data and other live agents; refuse
+replacement when the selected builder is active or uses another harness.
+
 ## 0.15.3
 
 - Record successful original-environment deployment and live checks for protected prompt conversion and correlated readable logs.

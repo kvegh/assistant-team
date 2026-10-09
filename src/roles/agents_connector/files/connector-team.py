@@ -269,6 +269,25 @@ def launch(name):
     # Operator launch is explicit; never supply a work prompt or bypass approval.
     run(['podman','exec',container(name),'tmux','respawn-pane','-k','-t','native:agent',shlex.join(vertex_command+cmd)])
 
+def repair_failed_codex_builder():
+    """Explicit image-repair operation: preserve every active session and private mount."""
+    if not PROJECT:
+        raise ValueError('Codex repair requires an explicitly selected project')
+    name='builder';profile=PROFILES/name
+    if json.loads((profile/'profile.json').read_text())['flavour']!='codex':
+        raise ValueError('Selected builder is not a Codex profile; preserved')
+    c=container(name)
+    dead=subprocess.check_output(['podman','exec',c,'tmux','display-message','-p',
+                                  '-t','native:agent','#{pane_dead}'],text=True).strip()
+    if dead!='1':
+        raise ValueError('Selected Codex builder is active; preserved')
+    # Only the dead pane's idle container is replaced. Mounted homes and shared
+    # workspaces remain on disk; sibling containers and their tmux panes are untouched.
+    run(['podman','rm','--force',c],stdout=subprocess.DEVNULL)
+    (profile/'launched').unlink(missing_ok=True)
+    launch(name)
+
+
 def wake(args):
     # Only upstream literal fixed notices and Enter are accepted; discard sender text.
     if len(args)!=5 or args[:2]!=['send-keys','-l'] or args[2]!='-t':

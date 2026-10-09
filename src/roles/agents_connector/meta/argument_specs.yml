@@ -10,3 +10,16 @@ argument_specs:
       assistant_source_user:
         type: str
         required: true
+      agents_connector_image_flavours:
+        type: list
+        elements: str
+        default: [claude, codex, gemini]
+        description: Native image subset to build; active containers are preserved.
+      agents_connector_image_force:
+        type: bool
+        default: false
+        description: Rebuild selected images even when their version tags already exist.
+      agents_connector_repair_codex_project:
+        type: str
+        default: ''
+        description: Explicit project whose failed Codex builder alone may be replaced and launched.
