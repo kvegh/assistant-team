@@ -19,6 +19,7 @@ class CodexRepairTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             spec.loader.exec_module(self.core)
         self.core.PROJECT = 'example'
+        self.core.SESSION = 'example'
         self.core.PROFILES = self.root / 'profiles'
         self.builder = self.core.PROFILES / 'builder'
         self.builder.mkdir(parents=True)
@@ -41,7 +42,7 @@ class CodexRepairTests(unittest.TestCase):
             self.core.repair_failed_codex_builder()
         self.assertEqual(run.call_args.args[0], ['podman', 'rm', '--force', 'acp-example-builder'])
         launch.assert_called_once_with('builder')
-        self.assertFalse((self.builder / 'launched').exists())
+        self.assertTrue((self.builder / 'launched').exists())
         self.assertEqual((self.builder / 'private-state').read_text(), 'preserve')
 
     def test_non_codex_builder_is_preserved_before_runtime_commands(self):
@@ -55,3 +56,39 @@ class CodexRepairTests(unittest.TestCase):
         self.core.PROJECT = None
         with self.assertRaisesRegex(ValueError, 'explicitly selected'):
             self.core.repair_failed_codex_builder()
+
+    def test_failed_native_launch_never_restores_wake_marker(self):
+        with patch.object(self.core.subprocess, 'check_output', return_value='1\n'), \
+                patch.object(self.core, 'run'), \
+                patch.object(self.core, 'launch', side_effect=RuntimeError('launch failed')):
+            with self.assertRaisesRegex(RuntimeError, 'launch failed'):
+                self.core.repair_failed_codex_builder()
+        self.assertFalse((self.builder / 'launched').exists())
+
+    def test_live_native_marker_restoration_never_launches_or_replaces(self):
+        (self.builder / 'launched').unlink()
+        with patch.object(self.core.subprocess, 'check_output', side_effect=['0\n', 'codex\n']), \
+                patch.object(self.core, 'run') as run, patch.object(self.core, 'launch') as launch:
+            self.core.restore_codex_builder_marker()
+        self.assertTrue((self.builder / 'launched').exists())
+        run.assert_not_called()
+        launch.assert_not_called()
+
+    def test_idle_or_dead_pane_cannot_claim_native_launch_marker(self):
+        for dead, command in [('1', 'codex'), ('0', 'bash')]:
+            with self.subTest(dead=dead, command=command):
+                (self.builder / 'launched').unlink(missing_ok=True)
+                with patch.object(self.core.subprocess, 'check_output', side_effect=[dead, command]):
+                    with self.assertRaisesRegex(ValueError, 'live native Codex'):
+                        self.core.restore_codex_builder_marker()
+                self.assertFalse((self.builder / 'launched').exists())
+
+    def test_repaired_builder_receives_fixed_event_notice(self):
+        with patch.object(self.core.subprocess, 'check_output', return_value='1\n'), \
+                patch.object(self.core, 'run'), patch.object(self.core, 'launch'):
+            self.core.repair_failed_codex_builder()
+        with patch.object(self.core, 'run') as send:
+            self.core.wake(['send-keys', '-l', '-t', 'example:builder',
+                            '[agents-connector] new message from orchestrator — see additionalContext for content'])
+        self.assertEqual(send.call_args.args[0][:4], ['podman', 'exec', 'acp-example-builder', 'tmux'])
+        self.assertIn('read your authenticated inbox', send.call_args.args[0][-1])

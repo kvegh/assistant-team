@@ -286,7 +286,22 @@ def repair_failed_codex_builder():
     run(['podman','rm','--force',c],stdout=subprocess.DEVNULL)
     (profile/'launched').unlink(missing_ok=True)
     launch(name)
+    (profile/'launched').touch()
 
+def restore_codex_builder_marker():
+    """Restore wake-up bookkeeping for an already live native session, without respawn."""
+    if not PROJECT:
+        raise ValueError('Codex marker restoration requires an explicitly selected project')
+    profile=PROFILES/'builder';c=container('builder')
+    if json.loads((profile/'profile.json').read_text())['flavour']!='codex':
+        raise ValueError('Selected builder is not a Codex profile; preserved')
+    dead=subprocess.check_output(['podman','exec',c,'tmux','display-message','-p',
+                                  '-t','native:agent','#{pane_dead}'],text=True).strip()
+    command=subprocess.check_output(['podman','exec',c,'tmux','display-message','-p',
+                                     '-t','native:agent','#{pane_current_command}'],text=True).strip()
+    if dead!='0' or command not in ['codex','node']:
+        raise ValueError('A live native Codex builder is required; marker preserved')
+    (profile/'launched').touch()
 
 def wake(args):
     # Only upstream literal fixed notices and Enter are accepted; discard sender text.

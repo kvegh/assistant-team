@@ -12,7 +12,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0700"
   loop: [connector-team.py, repair-codex.py]
-- name: Replace and launch only the selected dead Codex builder pane
+- name: Repair the selected dead builder or restore its verified live-session marker
   become: true
   become_user: "{{ containers.runtime_user }}"
   environment:
@@ -20,5 +20,6 @@
     XDG_RUNTIME_DIR: "/run/user/{{ agents_connector_runtime_uid }}"
     ASSISTANT_PROJECT: "{{ agents_connector_repair_codex_project }}"
   ansible.builtin.command:
-    argv: [python3, "{{ __agents_connector_root }}/routing/repair-codex.py"]
+    argv: "{{ ['python3', __agents_connector_root + '/routing/repair-codex.py']
+      + (['--restore-marker'] if agents_connector_repair_codex_restore_marker_only else []) }}"
   changed_when: true

@@ -23,3 +23,7 @@ argument_specs:
         type: str
         default: ''
         description: Explicit project whose failed Codex builder alone may be replaced and launched.
+      agents_connector_repair_codex_restore_marker_only:
+        type: bool
+        default: false
+        description: Restore launch bookkeeping only after verifying a live native Codex pane; never replace or restart it.

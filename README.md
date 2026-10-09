@@ -348,7 +348,9 @@ a native harness. A stopped container or readiness timeout fails clearly without
 a model request; existing idle sessions can be restored safely.
 The connector image also includes process inspection (`procps`) required by Codex
 app-server startup. A focused certified image rebuild and guarded failed-builder
-repair can replace a dead Codex container without stopping other project agents;
+repair can replace a dead Codex container without stopping other project agents.
+Successful repair restores event wake-up bookkeeping; a marker-only recovery mode
+can restore it for a verified live Codex session without restarting that session;
 see the [connector role interface](src/roles/agents_connector/README.md).
 
 Existing communication software is preferred over a new message service. Timed

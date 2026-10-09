@@ -17,3 +17,4 @@ agents_connector_validate_lifecycle: false
 agents_connector_image_flavours: [claude, codex, gemini]
 agents_connector_image_force: false
 agents_connector_repair_codex_project: ''
+agents_connector_repair_codex_restore_marker_only: false

@@ -37,3 +37,10 @@ The optional `connector_codex_repair` tag requires an explicit
 only a dead native pane's container is replaced. Mounted home, authentication and
 workspace files remain in place. The new native session receives no initial task
 prompt. Do not use this operation as a general project restart.
+
+Successful repair restores the launch marker used by event wake-up only after
+native launch succeeds. To recover missing bookkeeping for an already live Codex
+builder, set `agents_connector_repair_codex_restore_marker_only: true` with the
+explicit project and run only `connector_codex_repair`. This checks that tmux has
+a live native Codex command and touches its marker without rebuilding images,
+replacing containers or respawning any pane. Dead or idle-shell panes are rejected.

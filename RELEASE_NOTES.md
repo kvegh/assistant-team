@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.15.6
+
+Restore event wake-up bookkeeping after successful Codex builder repair. Failed
+launches do not claim success. Add guarded marker-only recovery for an already
+live native Codex pane, preserving running sessions and container state.
+
 ## 0.15.5
 
 Record successful Codex-only rebuild and native-session repair. The actual builder
