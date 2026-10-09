@@ -1570,3 +1570,9 @@ missing-only rerun, passed again using synthetic credentials only.
 Release source also includes Vibe metadata compatibility implementation `9a7680c`: native Mistral installations identify their harness flavour as vibe. Synthetic protected Ansible transfer checks verify capture, missing-only restore and rerun preservation without reading live credentials.
 
 The final 1.0.0 source validation passed 283 unit/fixture tests and offline production Ansible lint across 183 files with zero findings, using the pinned certified collection. The test suite includes synthetic protected Ansible authentication preflight/restore/rerun; no live auth data or VM was changed by these source checks. Native AAP/team acceptance follows the published source release.
+
+## Fresh account preflight under non-native Ansible templating
+
+Implementation `a2a2b52` normalizes an absent passwd record to an empty list before any home inspection, and requires a valid record before resolving installation paths. Ansible core 2.16.19 converted None to an empty string, causing the previous None test to succeed and index a missing home field. A real localhost read-only regression now includes the actual preflight tasks against a nonexistent synthetic account and verifies legacy home checks are skipped. Existing-account legacy migration guards are retained. Focused layout tests and role production lint passed; no live host or credentials were changed by the reproduction.
+
+Full validation passed 284 tests and production Ansible lint across 183 files with zero findings before publishing the patch. Live AAP recovery remains a separate outcome check.
