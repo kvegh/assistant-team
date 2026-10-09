@@ -1255,3 +1255,22 @@ started; operators restart only the viewer, never the running project team, to
 load an update. A dedicated Ansible connector_watch tag installs the helper
 without profile regeneration, container changes, daemon reloads or model calls.
 Validation: 232 unit tests passed; production Ansible lint passed.
+
+## Tail-style communication history
+
+Implementation: `ca641e8` (0.26.0).
+
+Make bare watch show the last 50 communication entries and exit. Explicit -f
+follows new entries only; an optional -NUMBER selects preceding history, with
+-NUMBER -f combining history and live following. Zero is supported; counts are
+bounded at 10000 and duplicate/unknown flags fail explicitly. This intentionally
+changes the earlier bare-watch live default to the operator’s requested semantics.
+Read only project message rows, which already contain tell, ask and reply events;
+avoid joining asks/replies and duplicating their communication. Order by message
+ID and retain question/reply correlation. For follow, acknowledge the stock
+subscription before a read-only SQLite snapshot, then suppress queued entries
+already included through that snapshot’s ID boundary. Preserve terminal colors
+and existing privacy boundaries. Upstream slow-viewer stream loss remains an
+explicit limitation; no timed polling, model calls or agent restarts were added.
+Validation: 239 unit tests passed, including snapshot/follow boundary and parser
+coverage; production Ansible lint passed.

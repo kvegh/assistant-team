@@ -16,7 +16,7 @@ vi ~/projects.example.config                      # role -> enabled profile
 vi ~/projects/example/assistant-prompt.md          # fill [Project] and [Role: Name]; # lines are comments
 ~/team start example
 ~/team attach example orchestrator                 # give task; Ctrl-B D detaches
-~/team watch example                               # live messages; Ctrl-C viewer only
+~/team watch example -f                            # new live messages; Ctrl-C viewer only
 ~/team status example
 ~/team stop example
 ~/team restart example

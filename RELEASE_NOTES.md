@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.26.1
+
+Document watch defaults, explicit follow examples and history/live boundary semantics.
+
 ## 0.26.0
 
 Add tail-style watch history: default last 50 and exit; -NUMBER selects a snapshot;
