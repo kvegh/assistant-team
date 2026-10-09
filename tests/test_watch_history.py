@@ -30,9 +30,9 @@ class WatchHistoryTests(unittest.TestCase):
         self.assertEqual([m['id'] for m in team.watch_snapshot(50)[0]],[1,2,3])
 
     def test_options_match_tail_defaults_and_follow(self):
-        for args,expected in [([], (50,False)),(['-50'],(50,False)),(['-f'],(0,True)),(['-20','-f'],(20,True)),(['-f','-20'],(20,True)),(['-0'],(0,False)),(['-0','-f'],(0,True))]:
+        for args,expected in [([], (50,False)),(['-50'],(50,False)),(['-f'],(0,True)),(['-20','-f'],(20,True)),(['-f','-20'],(20,True)),(['-0'],(0,False)),(['-0','-f'],(0,True)),(['-200f'],(200,True)),(['-0f'],(0,True))]:
             self.assertEqual(team.watch_history_limit(args),expected)
-        for arguments in [['-f','-f'],['-10001'],['50'],['-50','-20'],['--unknown']]:
+        for arguments in [['-f','-f'],['-10001'],['50'],['-50','-20'],['--unknown'],['-200f','-f'],['-f','-200f'],['-20f','-30'],['-01f']]:
             with self.subTest(arguments=arguments),self.assertRaises(ValueError):team.watch_history_limit(arguments)
 
     def test_history_prints_and_exits_without_broker_or_model_operations(self):

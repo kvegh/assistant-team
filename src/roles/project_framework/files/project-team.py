@@ -29,7 +29,7 @@ Projects:
   rename-project OLD NEW             Stop OLD, rename identity/config; preserve enablement, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show target/role states, work/priv profiles and configured models.
-  watch NAME [-NUMBER] [-f]          Last 50 then exit; -NUMBER changes count; -f alone follows new.
+  watch [OPTIONS] NAME [OPTIONS]    Last 50 then exit; -NUMBER, -f or -NUMBERf; options either side.
   attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
   launch NAME ROLE                   Launch one role after checking project authentication.
   preflight NAME                     Validate enabled role assignments and saved authentication.
@@ -554,6 +554,13 @@ def unarchive(archive):
     module.restore(sys.modules[__name__],archive)
 
 
+def watch_project_arguments(arguments):
+    projects=[argument for argument in arguments if not argument.startswith('-')]
+    if len(projects)!=1:
+        raise ValueError('watch requires exactly one project NAME; use team watch [-NUMBER] [-f] NAME (or -NUMBERf). Options may come before or after NAME.')
+    return projects[0],[argument for argument in arguments if argument.startswith('-')]
+
+
 def main():
     action=sys.argv[1] if len(sys.argv)>1 else None
     if action is None:raise ValueError('A command is required. Use ~/team --help')
@@ -580,9 +587,10 @@ def main():
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         module.rename_project(sys.modules[__name__],sys.argv[2],sys.argv[3]);return
     if action=='watch':
-        if len(sys.argv)<3:raise ValueError('Use team watch NAME [-NUMBER] [-f]')
-        verify_project(sys.argv[2]);core=load(sys.argv[2])
-        limit,follow=core.watch_history_limit(sys.argv[3:])
+        name,options=watch_project_arguments(sys.argv[2:])
+        core=load(name)
+        limit,follow=core.watch_history_limit(options)
+        verify_project(name)
         core.watch(limit=limit,follow=follow);return
     p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
     if a.action in ['destroy','archive','unarchive'] and a.role:p.error(a.action+' takes exactly NAME')

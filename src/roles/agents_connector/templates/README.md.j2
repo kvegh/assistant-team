@@ -234,6 +234,8 @@ viewer to pick up formatter updates; the project team can keep running.
 `team watch NAME` now prints the last 50 communication entries and exits.
 `team watch NAME -20` prints the last 20 and exits. `team watch NAME -f` follows
 only new entries; `team watch NAME -20 -f` prints the last 20 then follows.
+Options may go before or after the project name: `team watch -200 -f NAME`
+and compact `team watch -200f NAME` both show 200 entries then follow.
 Counts are 0–10000; either flag order works. This changes the earlier bare-watch
 live-follow default. History is chronological by message ID, including asks and
 replies once each. Follow subscribes before taking its history snapshot and skips

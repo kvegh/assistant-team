@@ -634,12 +634,17 @@ def format_watch_message(message, color=False):
 
 def watch_history_limit(arguments):
     limit=None;follow=False
+    usage='Use team watch [-NUMBER] [-f] NAME (or -NUMBERf); options may come before or after NAME; specify each option once. Default: last 50 and exit; -f alone follows only new entries.'
     for argument in arguments:
-        if argument=='-f' and not follow:follow=True
-        elif re.fullmatch(r'-(?:0|[1-9][0-9]{0,4})',argument) and limit is None:
-            limit=int(argument[1:])
-            if limit>10000:raise ValueError('watch history limit must be 0..10000')
-        else:raise ValueError('Use team watch NAME [-NUMBER] [-f]; specify each option once. Default: last 50 and exit; -f alone follows only new entries.')
+        if argument=='-f':
+            if follow:raise ValueError(usage)
+            follow=True
+            continue
+        match=re.fullmatch(r'-(0|[1-9][0-9]{0,4})(f?)',argument)
+        if not match or limit is not None or match.group(2) and follow:raise ValueError(usage)
+        limit=int(match.group(1))
+        if limit>10000:raise ValueError('watch history limit must be 0..10000')
+        if match.group(2):follow=True
     return (0 if follow else 50) if limit is None else limit,follow
 
 

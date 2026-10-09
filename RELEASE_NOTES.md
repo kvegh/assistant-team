@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.28.2
+
+Fix watch options before or after the project name, including compact `-NUMBERf`.
+Preserve history/follow defaults and reject duplicate or unsupported arguments.
+
 ## 0.28.1
 
 Document the scoped SELinux permissions, explicit module activation, preserved
