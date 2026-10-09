@@ -6,6 +6,10 @@ bundle or save/restore automation has been created.
 
 Source-only layout change: these new-prefix instructions describe future fresh installs. The running environment keeps its current home-level commands and paths; do not deploy this layout to it yet. See [migration prerequisites](INSTALLATION_MIGRATION.md).
 
+Permission management is a scoped design proposal, not implemented automation:
+[generated policies and private approval notifications](docs/PERMISSION_MANAGEMENT.md).
+Current roles retain native approvals; a running process alone does not prove readiness.
+
 For another working session, start with [the reusable session rules](SESSION_RULES.md)
 and `AGENTS.md`. The rules collect our collaboration, security, deployment, design,
 and versioning decisions without including environment credentials.

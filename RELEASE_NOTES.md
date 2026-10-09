@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.22.4
+
+Document scoped permission policy generation, meaningful native readiness states
+and private approval notifications as the next startup/communication work. Clarify
+supported harness capabilities and current transport gaps; no permission automation,
+trust acceptance, model invocation or deployment is implemented by this proposal.
+
 ## 0.22.3
 
 Document the model-authentication replication plan, exact credential-file manifest

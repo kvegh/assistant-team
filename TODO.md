@@ -7,6 +7,13 @@
 
 ## Priority after bug fixes and blocking features
 
+- [ ] Resolve startup/communication permission blocking with operator-controlled
+  per-project/role native policy generated before launch, distinct readiness and
+  waiting-approval states, and private out-of-model approval notifications with
+  sanitized SQLite correlation. See `docs/PERMISSION_MANAGEMENT.md`. Keep tmux
+  attach as the initial explicit decision path; no blind Enter or timeout approval.
+  Structured cross-harness approval transport remains a separate design decision.
+
 - [ ] Resolve the live broker-hook connection failure: SELinux currently denies
   a container-domain client connecting to the host gateway's unconfined-domain
   Unix listener. Verify a narrowly scoped existing-policy listener-label solution
