@@ -1074,3 +1074,5 @@ Mistral bootstrap profiles use the installed native Vibe harness metadata; the
 transfer accepts its `vibe` flavour while keeping `mistral-work` and
 `mistral-priv` credential boundaries separate. Mistral team integration remains
 a separate unfinished task.
+
+Fresh-account preflight normalizes a missing passwd record to an empty list before inspecting legacy home paths. This avoids Ansible non-native templating turning None into an empty string and accidentally executing checks before the runtime user is created. Existing-account migration protection remains in force.

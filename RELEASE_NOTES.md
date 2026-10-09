@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.1
+
+Fix fresh installation preflight when the runtime account does not yet exist. Normalize absent account records and guard home inspection by record length; preserve legacy-environment protection for existing accounts.
+
 ## 1.0.0
 
 Consolidate the current deployment and agent-team features into one release:

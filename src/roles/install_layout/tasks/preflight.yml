@@ -6,7 +6,7 @@
     fail_key: false
 - name: Select an existing runtime account for legacy checks
   ansible.builtin.set_fact:
-    __install_layout_existing_account: "{{ ansible_facts.getent_passwd.get(containers.runtime_user) }}"
+    __install_layout_existing_account: "{{ ansible_facts.getent_passwd.get(containers.runtime_user) | default([], true) }}"
 - name: Inspect legacy environment markers without reading authentication
   ansible.builtin.stat:
     path: "{{ __install_layout_existing_account[4] }}/{{ item }}"
@@ -25,7 +25,7 @@
     - gemini-priv/.native-install.json
     - mistral-work/.native-install.json
     - mistral-priv/.native-install.json
-  when: __install_layout_existing_account is not none
+  when: __install_layout_existing_account | length > 4
   register: __install_layout_legacy_markers
 - name: Inspect legacy home-level project configuration names only
   ansible.builtin.find:
@@ -34,7 +34,7 @@
     recurse: false
     file_type: any
     follow: false
-  when: __install_layout_existing_account is not none
+  when: __install_layout_existing_account | length > 4
   register: __install_layout_legacy_configs
 - name: Refuse implicit migration or duplicate legacy environments
   ansible.builtin.assert:
@@ -52,7 +52,7 @@
       {{ ((assistant_install_prefix | default('') | length > 0)
           | ternary(assistant_install_prefix, __install_layout_existing_account[4]))
           | regex_replace('/+$', '') }}/ac-agents
-  when: __install_layout_existing_account is not none
+  when: __install_layout_existing_account | length > 4
 - name: Refuse another root before changing an existing runtime account or host
   ansible.builtin.include_tasks: namespace.yml
-  when: __install_layout_existing_account is not none
+  when: __install_layout_existing_account | length > 4

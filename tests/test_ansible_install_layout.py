@@ -62,3 +62,32 @@ class AnsibleInstallLayoutTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+
+class FreshAccountPreflightTests(unittest.TestCase):
+    @unittest.skipUnless(__import__('shutil').which('ansible-playbook'), 'Ansible required')
+    def test_missing_runtime_account_skips_legacy_home_inspection(self):
+        import os
+        import subprocess
+        import tempfile
+        import uuid
+        with tempfile.TemporaryDirectory() as temporary:
+            work=Path(temporary)
+            play=work/'preflight.yml'
+            missing='acfixture'+uuid.uuid4().hex[:12]
+            play.write_text(yaml.safe_dump([{
+                'hosts':'localhost','gather_facts':False,
+                'vars':{'containers':{'runtime_user':missing}},
+                'tasks':[
+                    {'ansible.builtin.include_tasks':str(ROOT/'src/roles/install_layout/tasks/preflight.yml')},
+                    {'ansible.builtin.assert':{'that':[
+                        '__install_layout_existing_account == []',
+                        '__install_layout_legacy_markers.results | selectattr("skipped", "defined") | list | length == __install_layout_legacy_markers.results | length',
+                        '__install_layout_legacy_configs.skipped | bool']}}
+                ]}]))
+            env=os.environ.copy();env['ANSIBLE_HOME']=str(work/'ansible');env['ANSIBLE_REMOTE_TEMP']=str(work/'remote')
+            env.pop('ANSIBLE_VAULT_PASSWORD_FILE',None)
+            result=subprocess.run(['ansible-playbook','-i','localhost,','-c','local',str(play)],
+                cwd=work,env=env,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertIn('failed=0',result.stdout)

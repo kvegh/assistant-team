@@ -3,7 +3,10 @@
   ansible.builtin.import_tasks: preflight.yml
 - name: Require the destination runtime account
   ansible.builtin.assert:
-    that: __install_layout_existing_account is not none
+    that:
+      - __install_layout_existing_account is sequence
+      - __install_layout_existing_account is not string
+      - __install_layout_existing_account | length > 4
     quiet: true
     fail_msg: Create the destination runtime account before installing environment content.
 - name: Define real home and destination parent independently  # noqa var-naming[no-role-prefix]
