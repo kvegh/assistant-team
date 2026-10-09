@@ -7,6 +7,18 @@
 
 ## Priority after bug fixes and blocking features
 
+- [ ] Resolve the live broker-hook connection failure: SELinux currently denies
+  a container-domain client connecting to the host gateway's unconfined-domain
+  Unix listener. Verify a narrowly scoped existing-policy listener-label solution
+  before any production fix; diagnosis is ongoing, not a completed fix.
+
+- [ ] Agree and implement a consistent verb-only CLI scheme: `team create PROJECT`,
+  `team list`, `team start/stop/status/watch PROJECT`, `team attach PROJECT ROLE`,
+  `team archive PROJECT`, `team unarchive ARCHIVE`, `team rename PROJECT NEW_PROJECT`
+  and `team destroy PROJECT`. Keep flags for help/information rather than actions;
+  retain `create-project`, `--list` and `list-projects` as compatibility aliases
+  during transition. This is a proposal only; current commands remain unchanged.
+
 - [ ] Select the model used by each native harness for the task it receives,
   balancing cost or subscription allowance with outcome quality. Investigate
   supported model-selection controls, task-based recommendations and evaluation

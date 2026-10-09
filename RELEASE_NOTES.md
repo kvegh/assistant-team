@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.22.2
+
+Document that each project owns one team and its roles are participants; clarify
+current project/role/archive parameters in source and generated operator guides.
+Add a proposed verb-only CLI transition and the unresolved live broker-hook blocker
+to TODO. Existing commands and the current environment remain unchanged.
+
 ## 0.22.1
 
 Document the canonical installation-layout implementation and its local verification.

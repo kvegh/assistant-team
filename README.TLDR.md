@@ -4,6 +4,10 @@ Source-only layout change: these new-prefix instructions describe future fresh i
 
 Run as the runtime user. One environment per user; credentials stay local.
 
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
 ```sh
 ~/ac-agents/bin/team --help             # every command, parameters and brief explanation
 ~/ac-agents/bin/team version            # installed source version/build
@@ -27,8 +31,8 @@ vi ~/ac-agents/projects/example/assistant-prompt.md          # fill [Project] an
 ```
 
 Finish a project with one of these alternatives:
-`~/ac-agents/bin/team archive NAME` stops it if running and moves its full contents/config to
-`~/ac-agents/project-archive/NAME-ddmmyyhhmm` (local 24-hour time); `~/ac-agents/bin/team destroy NAME` stops it if running and deletes it.
+`~/ac-agents/bin/team archive PROJECT` stops it if running and moves its full contents/config to
+`~/ac-agents/project-archive/PROJECT-ddmmyyhhmm` (local 24-hour time); `~/ac-agents/bin/team destroy PROJECT` stops it if running and deletes it.
 Both remove only its containers; account profiles and other projects stay intact.
 Archive refuses same-minute or exact-name collisions before stopping. Rename the
 project if an exact-name archive already exists. Named instances are disabled,
@@ -60,7 +64,7 @@ Creation copies its role instructions into the new project; existing project pro
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
 
-`~/ac-agents/bin/team unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
+`~/ac-agents/bin/team unarchive PROJECT-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
 
 `~/ac-agents/bin/team rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `~/ac-agents/bin/team start NEW`. Never run same-project lifecycle commands concurrently.
 

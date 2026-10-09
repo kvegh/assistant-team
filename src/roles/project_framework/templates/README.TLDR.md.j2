@@ -7,6 +7,11 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 # Assistant team: commands
 
 Run as the runtime user. One environment per user; credentials stay local.
+
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
 Ansible roles reproduce installation; source role READMEs describe validation limits.
 
 ```sh
@@ -32,8 +37,8 @@ vi {{ assistant_install_root }}/projects/example/assistant-prompt.md          # 
 ```
 
 Finish a project with one of these alternatives:
-`"$AC_AGENTS_ROOT/bin/team" archive NAME` stops it if running and moves its full contents/config to
-`{{ assistant_install_root }}/project-archive/NAME-ddmmyyhhmm` (local 24-hour time); `"$AC_AGENTS_ROOT/bin/team" destroy NAME` stops it if running and deletes it.
+`"$AC_AGENTS_ROOT/bin/team" archive PROJECT` stops it if running and moves its full contents/config to
+`{{ assistant_install_root }}/project-archive/PROJECT-ddmmyyhhmm` (local 24-hour time); `"$AC_AGENTS_ROOT/bin/team" destroy PROJECT` stops it if running and deletes it.
 Both remove only its containers; account profiles and other projects stay intact.
 Archive refuses same-minute or exact-name collisions before stopping. Rename the
 project if an exact-name archive already exists. Named instances are disabled,
@@ -57,6 +62,6 @@ Creation copies its role instructions into the new project; existing project pro
 remain independent. Deployment preserves operator edits and migrates the old home-level
 template without overwriting an existing destination. Conflicting paths require operator review.
 
-`"$AC_AGENTS_ROOT/bin/team" unarchive NAME-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
+`"$AC_AGENTS_ROOT/bin/team" unarchive PROJECT-ddmmyyhhmm` copies a retained archive to that dated project name, enables its target, and leaves it stopped. The original archive is always retained.
 
 `"$AC_AGENTS_ROOT/bin/team" rename-project OLD NEW` stops and renames a project/config, preserving content and target enablement. It leaves NEW stopped: `"$AC_AGENTS_ROOT/bin/team" start NEW`. Never run same-project lifecycle commands concurrently.

@@ -1002,3 +1002,14 @@ Validation: Python 3.12 executed all 191 local tests without skips; production A
 lint reported zero failures and warnings across 149 files. Regression tests cover
 project-local configuration and lifecycle rebasing, profile-auth copy scope, actual
 socket limits, destination-prefix forwarding and rendered systemd path quoting.
+
+
+## Clarify project ownership and defer CLI renaming
+
+The installation-layout implementation `2cf98a7` retains the existing command
+behavior. Operator documentation now calls its named unit `PROJECT`: one project
+owns one team, and roles identify participants within it. Current command parameters
+are documented to make this distinction explicit. A proposed shorter verb scheme
+is tracked in TODO only; no command/subcommand renaming is implemented here.
+The live broker-hook SELinux connection blocker remains separately under diagnosis,
+without a claim that the source-only layout or these documentation changes fix it.

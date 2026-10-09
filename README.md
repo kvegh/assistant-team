@@ -340,6 +340,10 @@ automatically switching to paid API usage.
 
 ### Persistent, attachable native sessions
 
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
 The selected Agents Connector setup below implements continuously running rootless
 Podman containers with inside-container tmux for the five visible Claude/Codex/Gemini
 profiles. Native authenticated sessions require operator login and launch. The
@@ -481,6 +485,27 @@ ${EDITOR:-vi} ~/ac-agents/projects/my-project/assistant-prompt.md
 ~/ac-agents/bin/team restart my-project
 ```
 
+Current command parameters (invoke `team` through the installation's `bin/team`):
+
+| Command | Meaning |
+| --- | --- |
+| `create-project PROJECT` | Create one project, its team configuration and database. |
+| `--list` / `list-projects` | List projects; no project parameter. |
+| `start PROJECT` / `stop PROJECT` / `restart PROJECT` | Control that project's whole team. |
+| `status PROJECT` / `watch PROJECT` | Inspect runtime state or follow its messages. |
+| `attach PROJECT ROLE` | Attach one role's native session; detach with Ctrl-B D. |
+| `archive PROJECT` / `destroy PROJECT` | Retain the stopped project as an archive or delete it. |
+| `unarchive ARCHIVE` | Copy a retained archive into its dated project name, leaving it stopped. |
+| `rename-project PROJECT NEW_PROJECT` | Rename a project and its identity; leave it stopped. |
+| `apply-prompts PROJECT` | Render role instructions for the next native launch. |
+| `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
+| `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
+| `stop-containers PROJECT` | Stop only that project's role containers. |
+| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+
+Use `--help` for every command, including environment setup and diagnostics.
+The shorter verb-only command scheme is a proposal in TODO, not current behavior.
+
 There is one environment per Linux user. `~/ac-agents/conf/environment.conf` records which
 of the eight profiles are enabled; setup selects those profiles before offering
 native logins. Listing distinguishes enabled, installed and locally saved
@@ -494,7 +519,7 @@ Podman query failed and includes a bus/access suggestion. `running` describes th
 target, not individual pane health or verified model access. Listing starts no
 service and reads no project database, prompt or authentication contents.
 
-Project completion commands are `~/ac-agents/bin/team archive NAME` and `~/ac-agents/bin/team destroy NAME`.
+Project completion commands are `~/ac-agents/bin/team archive PROJECT` and `~/ac-agents/bin/team destroy PROJECT`.
 Both first check the named target, broker, gateway and containers, stop them only
 if running, and verify that no project writer remains. Stopped containers are
 removed without deleting images or shared model account profiles. A failed stop
@@ -502,8 +527,8 @@ leaves project data and configuration in place; an inactive project needs no
 native harness or login to complete either operation.
 
 Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
-prompts and role state—to `~/ac-agents/project-archive/NAME-ddmmyyhhmm`, with its former home-level
-`projects.NAME.config` inside. Every archive uses the operation-start local time
+prompts and role state—to `~/ac-agents/project-archive/PROJECT-ddmmyyhhmm`, with its project-local
+`project.PROJECT.config` inside. Every archive uses the operation-start local time
 (day, month, two-digit year, 24-hour hour/minute), saved in private timestamp metadata.
 Same-minute destination collisions fail before stopping; no archive is overwritten.
 An archive matching the current project name exactly also blocks shutdown: use
@@ -517,7 +542,7 @@ before files are moved/deleted. If a reference prevents collection, files remain
 Shared systemd templates and other instances remain.
 Do not start, restart or edit the same project concurrently with either operation.
 
-`~/ac-agents/projects/NAME/project.NAME.config` is the sole authority for role-to-profile assignments.
+`~/ac-agents/projects/PROJECT/project.PROJECT.config` is the sole authority for role-to-profile assignments.
 Both configuration files use JSON and contain no authentication secrets. Project
 assignments must select enabled profiles. Connector roles whose required account
 is unavailable need an explicit assignment before startup; they do not silently
@@ -526,7 +551,7 @@ roles currently require Claude. The collaboration roles retain their current nat
 enabled work/private profile; changing the role’s vendor adapter is not implemented. Mistral profiles support standalone login and
 CLI use; assigning them to team roles is refused until its adapter is implemented.
 
-Creation uses the stock broker to initialize `~/ac-agents/projects/NAME/db.sqlite` and its
+Creation uses the stock broker to initialize `~/ac-agents/projects/PROJECT/db.sqlite` and its
 five-worker registry. Eight profiles have separate native homes, workspaces, IPC
 and container names. Native role state is separated by assigned account profile,
 so changing accounts does not reuse another profile's credentials. Stop an active
@@ -546,7 +571,7 @@ Native onboarding, workspace trust and Codex hook approval are not bypassed.
 Native Mistral team support is tracked as required future work, including an
 upstream agents-connector pull request.
 
-The user target `assistant-connector@NAME.target` orders that project's broker,
+The user target `assistant-connector@PROJECT.target` orders that project's broker,
 gateway and native container services. Project targets are not enabled at boot.
 Stop/restart affect only that project and preserve its database and role state;
 restart launches new CLI sessions, without claiming automatic conversation resume.
@@ -577,7 +602,7 @@ authenticated profiles. Work projects require the chosen backend to be ready.
 
 ### Shared project artifact workspace
 
-Every project has `~/ac-agents/projects/NAME/workspace`, mounted at `/workspace/shared`.
+Every project has `~/ac-agents/projects/PROJECT/workspace`, mounted at `/workspace/shared`.
 All seven working roles can read/write shared artifacts; the observer can only
 read them. Their native homes, credentials and role instruction files remain
 separate. The full prompt file and private connector contexts are not shared.

@@ -41,9 +41,31 @@ Mistral profiles work as standalone native CLI installations. Vibe participation
 
 ## Configuration
 
+
+Current command parameters (invoke `team` through the installation's `bin/team`):
+
+| Command | Meaning |
+| --- | --- |
+| `create-project PROJECT` | Create one project, its team configuration and database. |
+| `--list` / `list-projects` | List projects; no project parameter. |
+| `start PROJECT` / `stop PROJECT` / `restart PROJECT` | Control that project's whole team. |
+| `status PROJECT` / `watch PROJECT` | Inspect runtime state or follow its messages. |
+| `attach PROJECT ROLE` | Attach one role's native session; detach with Ctrl-B D. |
+| `archive PROJECT` / `destroy PROJECT` | Retain the stopped project as an archive or delete it. |
+| `unarchive ARCHIVE` | Copy a retained archive into its dated project name, leaving it stopped. |
+| `rename-project PROJECT NEW_PROJECT` | Rename a project and its identity; leave it stopped. |
+| `apply-prompts PROJECT` | Render role instructions for the next native launch. |
+| `preflight PROJECT` | Check assignments and saved-auth prerequisites. |
+| `launch PROJECT ROLE` / `launch-all PROJECT` | Launch one or all native role sessions after checks. |
+| `stop-containers PROJECT` | Stop only that project's role containers. |
+| `refresh-observer PROJECT` / `deliver-observer-report PROJECT` | Update its private snapshot or deliver its report. |
+
+Use `--help` for every command, including environment setup and diagnostics.
+The shorter verb-only command scheme is a proposal in TODO, not current behavior.
+
 There is one environment per Linux user. `{{ assistant_install_root }}/conf/environment.conf` is strict JSON containing eight profile enablement flags. `"$AC_AGENTS_ROOT/bin/team" setup --list` distinguishes enabled, installed and locally saved credentials without printing identities or tokens. Disabling a profile preserves its files and does not stop running projects.
 
-Each `{{ assistant_install_root }}/projects/NAME/project.NAME.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-work"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
+Each `{{ assistant_install_root }}/projects/PROJECT/project.PROJECT.config` contains `version`, `project` and `roles`; for example the role map can contain `"challenger": "gemini-work"` and `"builder": "codex-work"`. This file is the authoritative assignment. Prompts contain prose, not competing editable account settings. Legacy `Account: priv/work` prompt directives migrate once into this config. An unresolved connector assignment must be selected explicitly; account boundaries never silently change because a profile is disabled.
 
 Changing a role account requires stopping and starting that project. Separate per-profile role homes and sessions prevent previous-account credentials carrying over. Native provider approvals remain enabled. Codex uses workspace-write/on-request; observer tools are restricted and connector general tools disabled. Connector service credentials/plugins are not configured.
 
@@ -54,7 +76,7 @@ Podman query failed and includes a bus/access suggestion. `running` describes th
 target, not individual pane health or verified model access. Listing starts no
 service and reads no project database, prompt or authentication contents.
 
-Project completion commands are `"$AC_AGENTS_ROOT/bin/team" archive NAME` and `"$AC_AGENTS_ROOT/bin/team" destroy NAME`.
+Project completion commands are `"$AC_AGENTS_ROOT/bin/team" archive PROJECT` and `"$AC_AGENTS_ROOT/bin/team" destroy PROJECT`.
 Both first check the named target, broker, gateway and containers, stop them only
 if running, and verify that no project writer remains. Stopped containers are
 removed without deleting images or shared model account profiles. A failed stop
@@ -62,8 +84,8 @@ leaves project data and configuration in place; an inactive project needs no
 native harness or login to complete either operation.
 
 Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
-prompts and role state—to `{{ assistant_install_root }}/project-archive/NAME-ddmmyyhhmm`, with its former home-level
-`projects.NAME.config` inside. Every archive uses the operation-start local time
+prompts and role state—to `{{ assistant_install_root }}/project-archive/PROJECT-ddmmyyhhmm`, with its project-local
+`project.PROJECT.config` inside. Every archive uses the operation-start local time
 (day, month, two-digit year, 24-hour hour/minute), saved in private timestamp metadata.
 Same-minute destination collisions fail before stopping; no archive is overwritten.
 An archive matching the current project name exactly also blocks shutdown: use
@@ -79,19 +101,23 @@ Do not start, restart or edit the same project concurrently with either operatio
 
 ## Project files and sessions
 
+`PROJECT` always means the project name. Each project has one team; its roles are
+participants in that team, not separate projects. `ROLE` selects a participant
+(such as `orchestrator` or `builder`); `ARCHIVE` selects a retained archive directory.
+
 `"$AC_AGENTS_ROOT/bin/team" --help` shows every supported command, required parameters and a brief
 explanation without reading authentication or starting services. Unknown commands
 explicitly report `Invalid command`; missing required parameters are a separate error.
-Use `create-project NAME`, not `create NAME`.
+Use `create-project PROJECT`, not `create PROJECT`.
 
 `"$AC_AGENTS_ROOT/bin/team" --list` (or `"$AC_AGENTS_ROOT/bin/team" list-projects`) lists initialized project names and runtime status using read-only service/container
 metadata, without opening their prompts, databases or credentials. `"$AC_AGENTS_ROOT/bin/team" setup --list` lists account
 profiles instead. Empty or unfinished projects and symlink paths are excluded.
 
-- `{{ assistant_install_root }}/projects/NAME/assistant-prompt.md`: project goal and eight editable role sections.
-- `{{ assistant_install_root }}/projects/NAME/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
-- `{{ assistant_install_root }}/projects/NAME/db.sqlite`: project-local stock broker history.
-- `{{ assistant_install_root }}/projects/NAME/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
+- `{{ assistant_install_root }}/projects/PROJECT/assistant-prompt.md`: project goal and eight editable role sections.
+- `{{ assistant_install_root }}/projects/PROJECT/workspace`: shared artifacts, mounted at `/workspace/shared`; seven working roles read/write, observer read-only.
+- `{{ assistant_install_root }}/projects/PROJECT/db.sqlite`: project-local stock broker history.
+- `{{ assistant_install_root }}/projects/PROJECT/profiles/ROLE/accounts/PROFILE`: isolated native role state and private instructions.
 
 New project templates use `[Project]` and role markers such as `[Role: Investigator]`,
 `[Role: Private Connector]` and `[Role: Corporate Connector]`. All `#` lines are
@@ -101,21 +127,21 @@ Blank roles are allowed; examples do not become automatic fallback instructions.
 Existing legacy `# Role: canonical-name` files retain their previous interpretation
 and are not rewritten. Duplicate, missing or unknown roles are rejected before rendering.
 
-`"$AC_AGENTS_ROOT/bin/team" apply-prompts NAME` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
+`"$AC_AGENTS_ROOT/bin/team" apply-prompts PROJECT` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
 
-`"$AC_AGENTS_ROOT/bin/team" start NAME` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `"$AC_AGENTS_ROOT/bin/team" attach NAME ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
+`"$AC_AGENTS_ROOT/bin/team" start PROJECT` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `"$AC_AGENTS_ROOT/bin/team" attach PROJECT ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
 
-The per-project systemd target is `assistant-connector@NAME.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
+The per-project systemd target is `assistant-connector@PROJECT.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
 
 ```sh
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
-systemctl --user status assistant-connector@NAME.target
+systemctl --user status assistant-connector@PROJECT.target
 ```
 
 ## Private observer
 
-Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `"$AC_AGENTS_ROOT/bin/team" refresh-observer NAME` updates its snapshot; `"$AC_AGENTS_ROOT/bin/team" deliver-observer-report NAME` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
+Worker-visible broker registration contains only collaboration roles. The observer is outside that roster and has read-only shared/context mounts. Continuous automatic observation is not implemented. `"$AC_AGENTS_ROOT/bin/team" refresh-observer PROJECT` updates its snapshot; `"$AC_AGENTS_ROOT/bin/team" deliver-observer-report PROJECT` copies its report privately to the orchestrator. Worker-readable threads do not receive evaluator reports automatically. The orchestrator must preserve this boundary when communicating.
 
 See `{{ assistant_install_root }}/README.TLDR.md` for condensed commands. Keep both guides current after lasting configuration changes.
 
