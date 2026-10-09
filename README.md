@@ -466,7 +466,7 @@ systemd instance units without restarting existing sessions. As the runtime user
 ~/team setup
 ~/team setup --list
 ~/team --help                    # all commands and required parameters
-~/team --list                    # initialized projects, without auth or DB reads
+~/team --list                    # project names + runtime status, without auth or DB reads
 ~/team create-project my-project
 ${EDITOR:-vi} ~/projects.my-project.config
 ${EDITOR:-vi} ~/projects/my-project/assistant-prompt.md
@@ -484,6 +484,13 @@ of the eight profiles are enabled; setup selects those profiles before offering
 native logins. Listing distinguishes enabled, installed and locally saved
 credentials, without making model requests. Disabling a profile preserves its
 credentials and existing projects, but prevents new starts that require it.
+
+Project listing status describes the target and named components: `running`,
+`starting`, `stopping`, `stopped`, `failed`, `partial` or `unknown`. `partial` means
+components are active while the target is inactive; `unknown` means a systemd or
+Podman query failed and includes a bus/access suggestion. `running` describes the
+target, not individual pane health or verified model access. Listing starts no
+service and reads no project database, prompt or authentication contents.
 
 Project completion commands are `~/team archive NAME` and `~/team destroy NAME`.
 Both first check the named target, broker, gateway and containers, stop them only

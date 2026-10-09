@@ -13,7 +13,7 @@ HELP = '''Usage: ~/team COMMAND [PARAMETERS]
 
 Environment and discovery:
   --help | -h | help                  Show all supported commands; no project required.
-  --list | list-projects             List initialized project names; no private content read.
+  --list | list-projects             List initialized projects and runtime status; no private content read.
   version                            Show installed version and build metadata.
   setup                              Select enabled account profiles; login is optional.
   setup --list                       List enabled/installed profiles and saved-auth status.
@@ -170,6 +170,22 @@ def verify_project(name):
     if not (path/'initialized').is_file():raise ValueError('Project is not initialized; create-project NAME first')
     return path
 
+def project_summary(name):
+    """Read service/container metadata only; running does not imply model readiness."""
+    try:
+        units=['assistant-connector@'+name+'.target']+[
+            'assistant-connector-'+kind+'@'+name+'.service' for kind in ['broker','gateway','containers']]
+        states=[service_state(unit)['ActiveState'] for unit in units]
+        if 'failed' in states:return 'failed'
+        if 'deactivating' in states:return 'stopping'
+        if 'activating' in states:return 'starting'
+        if states[0]=='active':return 'running'
+        if any(state in ['active','reloading'] for state in states):return 'partial'
+        if any(project_container_state(name,role) for role in ROLES):return 'partial'
+        return 'stopped'
+    except (ValueError,OSError,subprocess.CalledProcessError):
+        return 'unknown'
+
 def list_projects():
     """List initialized project names without opening prompts, databases or credentials."""
     if PROJECTS.is_symlink():
@@ -187,7 +203,14 @@ def list_projects():
             workspace_complete=not workspace.is_symlink() and workspace.is_dir()
             if files_complete and workspace_complete:
                 names.append(path.name)
-    print('\n'.join(names) if names else 'No initialized projects. Use: ~/team create-project NAME')
+    if not names:
+        print('No initialized projects. Use: ~/team create-project NAME');return
+    width=max(4,max(map(len,names)))
+    print('NAME'.ljust(width)+'  STATUS')
+    summaries=[(name,project_summary(name)) for name in names]
+    for name,state in summaries:print(name.ljust(width)+'  '+state)
+    if any(state=='unknown' for _,state in summaries):
+        print('Unknown status: check the user systemd bus and Podman access; no service was started.')
 
 def launch_all(name):
     core=required_auth(name)

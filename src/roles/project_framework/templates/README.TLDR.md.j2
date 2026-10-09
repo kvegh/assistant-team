@@ -11,7 +11,7 @@ Ansible roles reproduce installation; source role READMEs describe validation li
 cd ~/PROFILE; ./login     # PROFILE: claude-work/priv, gemini-work/priv,
                          # codex-work/priv, mistral-work/priv (each full name)
 ./login --clear           # only current profile; exit CLI and stop using projects first
-~/team --list            # initialized project names; alias: list-projects
+~/team --list            # project names + status; alias: list-projects
 ~/team create-project example
 vi ~/projects.example.config                      # role -> enabled profile
 vi ~/projects/example/assistant-prompt.md          # fill [Project] and [Role: Name]; # lines are comments
@@ -30,6 +30,9 @@ Finish a project with one of these alternatives:
 `~/project-archive/NAME`; `~/team destroy NAME` stops it if running and deletes it.
 Both remove only its containers; account profiles and other projects stay intact.
 Archive rejects an existing destination. Do not run same-project start/edit operations concurrently.
+
+List status describes services: running, starting, stopping, stopped, failed,
+partial (orphan components) or unknown (metadata unavailable); it does not verify model access.
 
 Artifacts: `~/projects/example/workspace` (`/workspace/shared` in containers).
 Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses scoped Antigravity (`cd ~/gemini-priv; ./login`, then `./agy`). Its team adapter is pending; use Gemini work for project roles.

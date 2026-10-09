@@ -25,6 +25,8 @@ class ProjectListingTests(unittest.TestCase):
         self.framework = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(self.framework)
         self.framework.PROJECTS = self.projects
+        self.status_patch=patch.object(self.framework,'project_summary',return_value='stopped')
+        self.status_patch.start();self.addCleanup(self.status_patch.stop)
 
     def create_fixture(self, name):
         path = self.projects / name
@@ -46,10 +48,14 @@ class ProjectListingTests(unittest.TestCase):
         shutil.copyfile(FRAMEWORK, routing / 'project-team.py')
         shutil.copyfile(ROUTER, routing / 'connector-team.py')
         self.home.joinpath('team').symlink_to(routing / 'connector-team.py')
+        tools=self.home/'tools';tools.mkdir()
+        for name,body in [('systemctl',"print('ActiveState=inactive\\nLoadState=not-found\\nUnitFileState=')"),('podman','import sys;sys.exit(1)')]:
+            command=tools/name;command.write_text('#!/usr/bin/env python3\n'+body+'\n');command.chmod(0o700)
 
     def run_router(self, arguments, project=None):
         environment = os.environ.copy()
         environment.pop('ASSISTANT_PROJECT', None)
+        environment['PATH']=str(self.home/'tools')+os.pathsep+environment.get('PATH','')
         if project is not None:
             environment['ASSISTANT_PROJECT'] = project
         return subprocess.run([sys.executable, str(self.home / 'team'), *arguments],
@@ -71,7 +77,7 @@ class ProjectListingTests(unittest.TestCase):
         linked_marker.joinpath('initialized').unlink()
         linked_marker.joinpath('initialized').symlink_to(self.projects / 'alpha' / 'initialized')
         with patch.object(Path, 'read_text', side_effect=AssertionError('private content read')):
-            self.assertEqual(self.output(), 'alpha\nzeta\n')
+            self.assertEqual(self.output(), 'NAME   STATUS\nalpha  stopped\nzeta   stopped\n')
 
     def test_project_parent_symlink_is_rejected(self):
         self.projects.symlink_to(self.home, target_is_directory=True)
@@ -88,7 +94,7 @@ class ProjectListingTests(unittest.TestCase):
                 output = io.StringIO()
                 with contextlib.redirect_stdout(output):
                     self.framework.main()
-                self.assertEqual(output.getvalue(), 'alpha\n')
+                self.assertEqual(output.getvalue(), 'NAME   STATUS\nalpha  stopped\n')
 
     def test_installed_router_executes_listing_without_project_or_private_helpers(self):
         self.install_router()
@@ -99,7 +105,7 @@ class ProjectListingTests(unittest.TestCase):
                 with self.subTest(project=project, action=action):
                     result = self.run_router([action], project)
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(result.stdout, 'alpha\n')
+                    self.assertEqual(result.stdout, 'NAME   STATUS\nalpha  stopped\n')
 
     def test_help_lists_every_public_action_without_private_helpers(self):
         self.install_router()
@@ -160,3 +166,49 @@ class ProjectListingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ProjectStatusSummaryTests(unittest.TestCase):
+    def setUp(self):
+        spec=importlib.util.spec_from_file_location('project_status_summary',FRAMEWORK)
+        self.core=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.core)
+
+    def test_service_states_are_reported_without_auth_or_private_reads(self):
+        cases=[(['active','active','active','active'],'running'),
+               (['activating','inactive','inactive','inactive'],'starting'),
+               (['inactive','inactive','inactive','deactivating'],'stopping'),
+               (['inactive','failed','inactive','inactive'],'failed'),
+               (['inactive','active','inactive','inactive'],'partial'),
+               (['inactive']*4,'stopped')]
+        for states,expected in cases:
+            with self.subTest(expected=expected), \
+                    patch.object(self.core,'service_state',side_effect=[{'ActiveState':state} for state in states]), \
+                    patch.object(self.core,'project_container_state',return_value=None), \
+                    patch.object(self.core,'required_auth',side_effect=AssertionError('auth read')), \
+                    patch.object(Path,'read_text',side_effect=AssertionError('private read')):
+                self.assertEqual(self.core.project_summary('example'),expected)
+
+    def test_orphan_running_container_is_partial_not_stopped(self):
+        with patch.object(self.core,'service_state',return_value={'ActiveState':'inactive'}), \
+                patch.object(self.core,'project_container_state',side_effect=[None,True]):
+            self.assertEqual(self.core.project_summary('example'),'partial')
+
+    def test_query_failures_are_unknown_not_stopped(self):
+        with patch.object(self.core,'service_state',side_effect=ValueError('bus unavailable')):
+            self.assertEqual(self.core.project_summary('example'),'unknown')
+        with patch.object(self.core,'service_state',return_value={'ActiveState':'inactive'}), \
+                patch.object(self.core,'project_container_state',side_effect=OSError('podman unavailable')):
+            self.assertEqual(self.core.project_summary('example'),'unknown')
+
+    def test_unknown_listing_is_actionable_and_per_project_failure_does_not_hide_others(self):
+        with tempfile.TemporaryDirectory() as directory:
+            projects=Path(directory);self.core.PROJECTS=projects
+            for name in ['alpha','beta']:
+                p=projects/name;p.mkdir();(p/'workspace').mkdir()
+                for file in ['initialized','db.sqlite','assistant-prompt.md']:(p/file).touch()
+            output=io.StringIO()
+            with patch.object(self.core,'project_summary',side_effect=['unknown','running']),contextlib.redirect_stdout(output):
+                self.core.list_projects()
+            self.assertIn('alpha  unknown',output.getvalue())
+            self.assertIn('beta   running',output.getvalue())
+            self.assertIn('check the user systemd bus and Podman access',output.getvalue())

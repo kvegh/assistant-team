@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.17.0
+
+Show project runtime status beside each name in `team --list` / `list-projects`.
+Distinguish running, starting, stopping, stopped, failed, partial orphan components
+and unavailable metadata. Use read-only service/container checks without opening
+project contents, authentication or the database, and explain unknown status.
+
 ## 0.16.1
 
 Record verified named-project archive/destroy behavior and model-free installed

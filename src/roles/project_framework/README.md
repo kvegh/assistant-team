@@ -1,7 +1,7 @@
 # project_framework
 
 Install project-scoped control, strict configs, services and concise operator guides.
-`~/team --list` and `~/team list-projects` list initialized project names without
+`~/team --list` and `~/team list-projects` list initialized project names with read-only runtime status without
 opening project data or requiring authentication; account profiles use `~/team setup --list`.
 
 ## Interface
@@ -43,3 +43,8 @@ rename preserves SQLite auxiliary files and internal symlinks. Config placement
 is rolled back if the archive rename fails. Shared templates, images, provider
 homes and other projects are preserved. Do not run concurrent lifecycle/edit
 operations against the same project. There is no restore command yet.
+
+Listing status uses service metadata and checks inactive projects for orphan
+containers. Query failures produce `unknown` with an actionable bus/access hint
+rather than silently becoming `stopped`. `running` is target state, not native
+pane health or provider entitlement; listing never activates services.
