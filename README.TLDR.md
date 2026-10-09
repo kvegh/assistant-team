@@ -112,3 +112,6 @@ unchanged. External vault implementation is a later task.
 
 Auth transfer transport: synthetic local Ansible preflight/copy/rerun verified;
 real AAP transfer remains gated on fresh environment readiness.
+
+Mistral auth transfer supports native Vibe metadata; Mistral team integration
+remains pending.

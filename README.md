@@ -984,3 +984,8 @@ The auth-transfer transport is verified through an actual local Ansible fixture:
 metadata-only preflight, six-context missing-only restore and idempotent rerun.
 Explicit JSON serialization preserves native credential documents across Ansible
 templating. These disposable checks do not access real model authentication.
+
+Mistral bootstrap profiles use the installed native Vibe harness metadata; the
+transfer accepts its `vibe` flavour while keeping `mistral-work` and
+`mistral-priv` credential boundaries separate. Mistral team integration remains
+a separate unfinished task.

@@ -36,7 +36,7 @@ class TransferTests(unittest.TestCase):
             self.write(config, {'version': 1, 'profiles': {p: {'enabled': p in self.selected} for p in mod.PROFILES}})
             self.configs.append(config)
             for p in self.selected:
-                self.write(root / p / '.native-install.json', {'directory': p, 'flavour': p.split('-')[0], 'provider': mod.provider(p)})
+                self.write(root / p / '.native-install.json', {'directory': p, 'flavour': 'vibe' if p.startswith('mistral-') else p.split('-')[0], 'provider': mod.provider(p)})
         for p in self.selected:
             kind = mod.provider(p)
             data = ({'type': 'authorized_user', 'client_id': 'synthetic-client', 'client_secret': 'synthetic-secret', 'refresh_token': 'synthetic-refresh'} if kind == 'vertex' else

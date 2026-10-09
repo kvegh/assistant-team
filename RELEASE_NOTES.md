@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.32.4
+
+Recognize the installed native Vibe flavour for Mistral bootstrap authentication
+while preserving independent work/private profile names and dotenv allowlists.
+
 ## 0.32.3
 
 Document successful synthetic Ansible transport acceptance and the JSON

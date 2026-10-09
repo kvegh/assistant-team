@@ -188,7 +188,7 @@ def installation(profile, root):
     finally:
         os.close(fd)
     value = object_json(read_file(root, '.native-install.json', private=False))
-    if value.get('directory') != profile or value.get('flavour') != profile.split('-')[0]:
+    if value.get('directory') != profile or value.get('flavour') != ('vibe' if profile.startswith('mistral-') else profile.split('-')[0]):
         raise TransferError('wrong_installed_profile')
     expected = provider(profile)
     if expected in ['vertex', 'antigravity'] and value.get('provider') != expected:
