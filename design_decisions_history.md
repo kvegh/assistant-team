@@ -1141,3 +1141,32 @@ this implementation. A future controlled MCP reconnect remains necessary for
 installed acceptance. Validation: all 206 local tests passed, including six new
 transport regressions; production Ansible lint passed with zero failures/warnings
 across 145 files.
+
+
+## Apply the MCP compatibility fix without replacing active native sessions
+
+Implementations: `e63b2b3` (0.21.21) and `471916d` (0.21.22).
+
+The focused adapter tag now includes all account/path prerequisites; its model-free
+regression verifies file-copy actions without service handlers. A guarded opt-in
+Ansible repair updates only the selected existing Gemini collaboration role's
+recognized stock MCP command. It preserves model selection, authentication settings,
+hooks, other MCP servers and existing broker credentials. Unsafe paths, unknown
+commands and non-Gemini roles are refused. An owner-only exact backup is retained,
+publication is atomic, and an already wrapped command is unchanged. No provider
+authentication file is copied or refreshed.
+
+Two pinned old-layout Ansible deployments completed without failure. The selected
+configuration deployment ran 24 target tasks. Read-only checks confirmed all eight
+container IDs/start times unchanged, a matching digest for all Gemini settings
+except the connector command, and unchanged credential-file metadata. Real broker
+checks through the installed adapter returned object structuredContent for an empty
+inbox and the five-agent roster, with original array text unchanged, isError false
+and exit zero. No model call or native input was sent during these checks.
+
+The running Gemini process still uses its prior stock shim children; a controlled
+MCP reconnect remains necessary. A real Gemini read/rollcall roundtrip is therefore
+not yet verified. This limitation is explicit rather than treating deployment as
+proof of end-to-end completion. The source-only installation-layout branch remains
+separate and was not deployed. Validation: all 211 local tests passed and production
+Ansible lint reported zero failures/warnings across 148 files.

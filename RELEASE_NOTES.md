@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.23
+
+Document successful old-layout adapter/configuration deployment and installed
+broker protocol checks. Active containers, unrelated settings and credential
+metadata were preserved; real Gemini acceptance awaits controlled MCP reconnect.
+
 ## 0.21.22
 
 Repair an explicitly selected existing Gemini role's MCP command through guarded
