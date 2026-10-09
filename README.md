@@ -1044,3 +1044,8 @@ The approved install-prefix layout is currently **source only**. The existing de
 Fresh and portable environment deployment include `codex_sandbox` after Podman host preparation and before container creation. Authentication migration and automatic permission management remain on hold; fresh deployment does not copy model credentials.
 
 Fresh deployment also verifies the scoped Antigravity executable without authentication or inference after installing the native profiles. The model-free deployment checks verify private readers have no shared workspace mount and that their SUMMARY.md exists.
+
+Test-clone retirement now requires an exact authorized name in the encrypted
+retirement definition, in addition to exclusive disk ownership and preservation
+checks. Fresh deployment clears recovery addressing and discovers the new clone
+by its own MAC address; it never reuses the retired guest as a recovery target.

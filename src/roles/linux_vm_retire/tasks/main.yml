@@ -3,7 +3,8 @@
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
-      - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-2$')
+      - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-[2-9][0-9]*$')
+      - linux_vm_retire_definition.vm_name == linux_vm_retire_definition.retire_authorized_vm_name | default('')
       - linux_vm_retire_definition.vm_dir is match('^/')
       - linux_vm_retire_definition.golden_image_path is match('^/')
       - linux_vm_retire_disk != linux_vm_retire_definition.golden_image_path

@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.31.3
+
+Require exact encrypted authorization for disposable clone retirement and prepare
+a new fresh clone without stale recovery addressing.
+
 ## 0.31.2
 
 Document fresh integrated installation checks and the private-reader output/visibility boundary; remove superseded observer feedback instructions.
