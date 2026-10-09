@@ -64,7 +64,7 @@
   retain `create-project`, `--list` and `list-projects` as compatibility aliases
   during transition. This is a proposal only; current commands remain unchanged.
 
-- [ ] Select the model used by each native harness for the task it receives,
+- [ ] **On hold, but priority when resumed:** select the model used by each native harness for the task it receives,
   balancing cost or subscription allowance with outcome quality. Investigate
   supported model-selection controls, task-based recommendations and evaluation
   of actual results. Respect enabled account profiles and available models;

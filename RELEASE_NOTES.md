@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.22.8
+
+Document that task-specific model selection for cost and quality is on hold,
+while retaining its priority when work resumes.
+
 ## 0.22.7
 
 Document the communication-review commit and the decision to continue current
