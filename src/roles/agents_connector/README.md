@@ -67,3 +67,10 @@ TOML includes the corresponding top-level setting. Existing TOML remains
 byte-for-byte unchanged. Updates must come through the managed image build; a
 read-only container must not try an interactive global npm update. This policy
 does not modify sandbox, approval, MCP or authentication settings.
+
+Codex container launches use the installed CLI's `--no-daemon` mode. A role's
+container and tmux session already own its lifecycle; a reused shared daemon is
+unnecessary here. Startup verification found that direct mode reached the normal
+prompt after operator authentication/trust steps where shared-daemon mode still
+showed sign-in. This is scoped to containers, not host wrappers, and does not
+automatically authenticate or trust hooks/workspaces.

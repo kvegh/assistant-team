@@ -307,7 +307,7 @@ def launch(name):
     seed_auth(name)
     start_container(name);spec=json.loads((PROFILES/name/'profile.json').read_text());flavour=spec['flavour']
     apply_prompts()
-    cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
+    cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--no-daemon','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
     if flavour in ['claude','gemini'] and spec.get('auth_directory',flavour+'-work')==flavour+'-work':
         provider=json.loads((role_home(name)/'.vertex.json').read_text())
         for value in provider.values():

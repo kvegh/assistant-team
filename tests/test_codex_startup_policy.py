@@ -48,6 +48,6 @@ class CodexStartupPolicyTests(unittest.TestCase):
             team.launch('builder')
         commands=[call.args[0] for call in run.call_args_list]
         argv=shlex.split(commands[-1][-1])
-        self.assertEqual(argv,['codex','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'])
+        self.assertEqual(argv,['codex','--no-daemon','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'])
         self.assertNotIn('--dangerously-bypass-approvals-and-sandbox',argv)
         self.assertFalse((self.home/'.codex/config.toml').exists())

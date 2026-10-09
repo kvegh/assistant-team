@@ -49,6 +49,7 @@ class NativeAuthenticationScopeTests(unittest.TestCase):
         args = self.exercise('codex')['args']
         self.assertIn('cli_auth_credentials_store="file"', args)
         self.assertIn('check_for_update_on_startup=false', args)
+        self.assertNotIn('--no-daemon', args)
         self.assertEqual(args[-2:], ['login', '--device-auth'])
 
     def test_gemini_google_browser_flow_keeps_its_home_local(self):

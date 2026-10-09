@@ -825,3 +825,9 @@ screen or HTTP 401 needs operator authentication/access investigation; re-login
 may be necessary, and controls must not be bypassed. Native first-run onboarding
 (such as theme or workspace trust) is separate from provider login and from tool
 approvals. Inspect the affected tmux pane locally without exposing credentials.
+
+Codex role containers launch with `--no-daemon`: each container owns the session
+lifecycle and does not need a shared background server. This supported CLI mode
+was verified during native startup troubleshooting. It does not replace login,
+hook trust, sandbox or approval checks. Host native wrappers retain their normal
+daemon behavior.

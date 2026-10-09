@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.21.15
+
+Launch Codex container sessions with `--no-daemon`, using the supported direct
+mode verified during startup troubleshooting. Each role container owns its native
+CLI lifecycle. Host wrappers retain the default daemon behavior; authentication,
+hook trust, sandbox and tool approvals stay unchanged.
+
 ## 0.21.14
 
 Document the managed Codex update policy and its regression results. Clarify that
