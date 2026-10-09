@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.5
+
+Document the exact authorized clone retirement role interface.
+
 ## 0.31.4
 
 Document exact retirement authorization and fresh guest discovery.
