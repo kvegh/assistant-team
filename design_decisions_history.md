@@ -1085,3 +1085,28 @@ regression checks confirm direct mode does not leak into host launches. All 200
 tests and production lint passed. The change remains source-only pending
 coordinated deployment; the running builder and other native sessions were not
 modified by this implementation.
+
+## Exact Vertex model IDs and first-run onboarding
+
+Documentation: `1df4e5f9b12a7207455c4b27a60857dc752b9329`.
+
+A Gemini work role used `gemini-3.1-pro`, which was not a valid provider model ID.
+The published Gemini 3.1 Pro ID is `gemini-3.1-pro-preview`; verification against
+the [official Google model reference](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-1-pro)
+confirmed the suffix. The authorized runtime correction changed only model
+selection in the local work profile and its role configuration. Authentication
+content was not exported or added to Git. The role subsequently accessed its
+inbox after operator session-tool approval.
+
+Keep model choice in local provider configuration instead of hard-coding one
+model for every installation. The existing Vertex setup accepts an explicit model
+ID and work role launch refreshes `.vertex.json` from that selected profile.
+Its syntax check is not a remote model-access test. Runtime guide templates now
+explain exact IDs and the difference between saved login and usable model access.
+
+Native first-run screens require per-role operator attention: theme, workspace
+trust, hook trust and requested session-tool permissions are distinct from
+provider authentication and from the future tool-approval design. Document how
+to attach and complete those steps before handing the task to the orchestrator;
+do not bypass those controls automatically. Source formatting and production
+lint passed. No runtime sessions were changed by this documentation work.

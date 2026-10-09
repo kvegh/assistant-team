@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.18
+
+Document the verified model-ID correction and startup guidance with its commit
+reference. Consolidate the completed legacy fix chain without deploying the
+separate installation-layout feature.
+
 ## 0.21.17
 
 Document the exact Gemini 3.1 Pro Vertex model ID and per-role manual first-run
