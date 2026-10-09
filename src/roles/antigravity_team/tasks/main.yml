@@ -5,7 +5,7 @@
     key: "{{ containers.runtime_user }}"
 - name: Inspect the pinned personal native executable without authentication
   ansible.builtin.stat:
-    path: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}/gemini-priv/.install/antigravity/1.3.1/antigravity"
+    path: "{{ assistant_profiles_root }}/gemini-priv/.install/antigravity/1.3.1/antigravity"
     follow: false
   register: __antigravity_team_binary
 - name: Require a regular pinned native executable before mounting

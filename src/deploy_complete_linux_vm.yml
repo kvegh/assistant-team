@@ -57,6 +57,7 @@
     - agent_images
     - agents_connector
     - native_auth
+    - antigravity_team
     - project_framework
     - project_workspace
     - vertex_auth

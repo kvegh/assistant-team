@@ -1489,3 +1489,7 @@ Also document the latest collaboration rule: prefer automatic subagent completio
 notifications instead of fixed-interval polling; status checks need a blocker,
 missing notification or task-specific reason. External jobs still need verified
 outcomes. This aligns with the separately documented source-layout session rule.
+
+## Fresh integrated installation and private readers
+
+Implementation `a3d4f07` combines the approved prefix layout with the latest runtime fixes. Implementation `eded349` integrates private event-driven readers, the operator-only SUMMARY.md, and the dedicated Codex sandbox role in complete and portable deployment. This provides one current fresh-install configuration while preserving existing environments until their separate migration is approved. The authentication vault, model selection and general permission automation remain on hold. Unit checks cover the merged runtime paths and private-reader boundaries; deployed native acceptance remains a separate verification.

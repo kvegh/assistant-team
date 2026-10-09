@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.31.1
+
+Verify complete fresh/portable sandbox and native-provider ordering, resolve Antigravity paths within model-environments, and update model-free deployment checks for private-reader isolation.
+
 ## 0.31.0
 
 Integrate private event-driven summarizer and observer with the fresh installation layout. The four participating roles remain visible; private readers use raw communication and append operator-only SUMMARY.md and ASSESSMENT.log. Preserve current Codex sandbox protection, native provider adapters, model status and flexible colored watch commands. Fresh and portable deployment now install the dedicated Codex sandbox domain. Existing environments are not automatically migrated.

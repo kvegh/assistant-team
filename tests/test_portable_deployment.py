@@ -94,3 +94,13 @@ class PortableDeploymentTests(unittest.TestCase):
             cmd=execute.call_args.args[0];extra=json.loads(cmd[cmd.index('-e')+1])
             self.assertEqual(extra['assistant_deployment_run_id'],run_id)
             self.assertEqual(extra['assistant_safe_deployment_metadata'],str(run/'target-metadata.jsonl'))
+
+class CompleteSandboxDeploymentTests(unittest.TestCase):
+    def test_fresh_and_portable_install_sandbox_before_container_creation(self):
+        root=SOURCE.parent
+        for name in ['deploy_environment.yml','deploy_complete_linux_vm.yml']:
+            source=(root/name).read_text()
+            with self.subTest(playbook=name):
+                self.assertLess(source.index('    - podman_host\n'),source.index('    - codex_sandbox\n'))
+                self.assertLess(source.index('    - codex_sandbox\n'),source.index('    - agents_connector\n'))
+                self.assertLess(source.index('    - native_auth\n'),source.index('    - antigravity_team\n'))

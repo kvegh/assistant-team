@@ -69,7 +69,7 @@ Vertex work profiles require the scoped Cloud SDK (operator-selected during depl
 Native SSH/container auth uses local file permissions, not encryption at rest.
 Mistral native login is supported; team adapter is not implemented yet.
 Login reports failed/cancelled or credentials saved/model access unverified; no automatic inference.
-All eight role sessions start only after enabled assignments and saved auth pass; connectors lack service tools, observer snapshots are manual. Details: `{{ assistant_install_root }}/README.md`.
+All eight role sessions start only after enabled assignments and saved auth pass; connectors lack service tools, private readers receive event-driven raw discussion. Details: `{{ assistant_install_root }}/README.md`.
 
 Human-readable diagnostics: `tail -f {{ assistant_install_root }}/environment-logs/events.log` (safe metadata only).
 

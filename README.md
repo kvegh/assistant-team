@@ -1042,3 +1042,5 @@ and the dedicated domain retained nonzero MCS categories.
 The approved install-prefix layout is currently **source only**. The existing deployment remains on its earlier home-level layout; do not apply these playbooks to it yet. Fresh installs use `PARENT/ac-agents`, with PARENT defaulting to the destination runtime HOME. `--prefix /absolute/parent` selects a destination parent for both local and remote deployment; AAP uses `assistant_install_prefix` or its encrypted definition. See [INSTALLATION_MIGRATION.md](INSTALLATION_MIGRATION.md) before any legacy migration.
 
 Fresh and portable environment deployment include `codex_sandbox` after Podman host preparation and before container creation. Authentication migration and automatic permission management remain on hold; fresh deployment does not copy model credentials.
+
+Fresh deployment also verifies the scoped Antigravity executable without authentication or inference after installing the native profiles. The model-free deployment checks verify private readers have no shared workspace mount and that their SUMMARY.md exists.
