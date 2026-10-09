@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.32.1
+
+Document selective bootstrap transfer boundaries, the accepted future-vault
+material manifest and synthetic verification; actual AAP copy remains pending
+fresh deployment readiness.
+
 ## 0.32.0
 
 Add selective bootstrap authentication transfer through a dedicated Ansible/AAP

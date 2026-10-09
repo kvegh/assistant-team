@@ -1347,3 +1347,31 @@ helpers and operator guides; running model sessions need no restart.
 Validation: 250 tests passed, including both reported commands and parser failure
 cases. Production-profile offline ansible-lint passed across 169 files using the
 already available certified collection path.
+
+## Selective bootstrap authentication replication
+
+Implementation: `1c4dcd4`.
+
+The operator authorized replicating enabled bootstrap model authentication from an
+existing environment to a fresh deployment, followed by separately bounded model
+checks. A dedicated Ansible role/playbook uses protected delegated capture and
+module stdin, with no persistent credential bundle. It copies supported native
+credential documents and only the explicitly allowlisted provider/onboarding
+material required for each context. Existing target credentials remain untouched;
+project-role refresh streams, workspaces, sessions, SSH and broker secrets are
+excluded. Work and private profiles remain independent.
+
+No-follow directory traversal, private permissions, active bootstrap writer
+guards, complete manifest preflight and atomic missing-only publication protect
+source and destination state. Each profile rolls back only its own new files on
+publication failure. The target's secret-free metadata report lists restored,
+skipped and missing profiles and accepted vault material paths/field names. A
+later external vault stage remains separate and has not been implemented. No
+legal consent, paid fallback, native restart or model inference occurs in this
+transfer playbook.
+
+Validation passed: the full 263-test suite, an additional focused writer-scope
+regression (14 transfer tests total), and production Ansible lint with zero
+findings across 176 files. These were synthetic/local checks, not proof of live
+provider entitlement. Actual transfer and bounded access checks remain pending
+the successful fresh AAP deployment and are not claimed as completed.
