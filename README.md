@@ -880,3 +880,9 @@ Installed acceptance confirmed the native Gemini session can read its inbox, lis
 participants and reply to its original readiness ask through the adapter. This
 followed a controlled saved-session resume and one-time approvals for those exact
 broker tools; it does not establish automatic wake-up or unattended permissions.
+
+A bounded installed check also verified automatic idle ask wake-up: the stock
+broker notification started a Gemini turn, its exact reply tool was approved
+once, and the waiting orchestrator received the correlated response. Earlier
+schema-error messages remain historical conversation entries. This test does
+not establish unattended approvals, busy-queue recovery or tell-only wake-up.

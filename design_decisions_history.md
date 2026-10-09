@@ -1186,3 +1186,15 @@ roster and posted a reply to its original readiness ask. Broker metadata confirm
 the recipient authored that correlated reply. One-time approvals covered only
 those exact tools. This proves native protocol compatibility after manual recovery,
 not automatic wake-up, which requires separate verification.
+
+## Verify automatic idle ask delivery after native recovery
+
+Relevant implementation: `4a8fc99`; previous acceptance documentation: `8c4e740`.
+
+After receiving all original rollcall replies, the orchestrator sent one bounded
+readiness ask to the idle Gemini role. The stock notification path started that
+role without manual input. The exact reply call was approved once, SQLite
+confirmed author and ask correlation, and the waiting orchestrator received
+the response. Thus the existing idle ask wake path works with native approval.
+No claim is made for unattended permission handling, busy-queue recovery or
+tell-only wake behavior; those were not exercised.

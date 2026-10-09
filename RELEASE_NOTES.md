@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.21.26
+
+Document the native idle ask-wake roundtrip: broker notification activated Gemini,
+its correlated reply reached the waiting orchestrator after one-time approval.
+Busy-queue and tell-only wake behavior remain unverified.
+
 ## 0.21.25
 
 Document successful native Gemini inbox, roster and original rollcall reply after
