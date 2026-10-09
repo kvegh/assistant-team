@@ -85,7 +85,8 @@ use separate role credential streams and need not be stopped. This is not a glob
 credential lease across independent native harnesses.
 
 Ansible runs secret-bearing tasks with `no_log` and `diff: false` for reports.
-The capture travels in controller memory and protected module stdin; no persistent
+The capture is explicitly JSON-serialized across Ansible native templating and
+travels in controller memory and protected module stdin; no persistent
 payload staging file, archive or controller artifact is created. Normal temporary
 Ansible module transport still applies. Helper-only temporary directories are
 removed, and secret-bearing registered facts are discarded even on failure.
@@ -99,7 +100,8 @@ existing target before rerunning. No native session restarts, automatic model
 calls, paid fallbacks, source authentication changes or external vault deployment
 are part of this playbook.
 
-Validation: synthetic six-provider/context roundtrips, missing-only preservation,
+Validation: actual disposable local Ansible preflight/restore/idempotent-rerun
+transport acceptance, synthetic six-provider/context roundtrips, missing-only preservation,
 metadata-only preflight, malformed manifests, source/destination link attacks,
 provider mismatch, dotenv rejection and per-profile failure rollback. Production
 Ansible lint covers the role and playbook. Real transfer and entitlement results

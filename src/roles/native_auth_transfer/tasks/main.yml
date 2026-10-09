@@ -64,7 +64,7 @@
           - "{{ native_auth_transfer_destination_profiles_root }}"
           - --environment-config
           - "{{ native_auth_transfer_destination_environment_config }}"
-        stdin: "{{ native_auth_transfer_capture.stdout }}"
+        stdin: "{{ native_auth_transfer_capture.stdout | from_json | to_json }}"
         stdin_add_newline: false
       register: native_auth_transfer_restore
       changed_when: "'\"status\": \"restored\"' in native_auth_transfer_restore.stdout"

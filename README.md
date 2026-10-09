@@ -979,3 +979,8 @@ credentials. See [the transfer guide](docs/AUTH_TRANSFER.md) for the exact file 
 config-field manifest, encrypted endpoint bindings and separate bounded model
 checks. Model authentication never belongs in Git, even encrypted. The future
 external vault remains a separate task; no automatic credential archive is built.
+
+The auth-transfer transport is verified through an actual local Ansible fixture:
+metadata-only preflight, six-context missing-only restore and idempotent rerun.
+Explicit JSON serialization preserves native credential documents across Ansible
+templating. These disposable checks do not access real model authentication.

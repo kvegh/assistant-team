@@ -109,3 +109,6 @@ Bootstrap auth replication: `src/transfer_native_auth.yml` via AAP, metadata-onl
 by default; missing-only restore after explicit authorization. See
 [AUTH_TRANSFER.md](docs/AUTH_TRANSFER.md). Existing credentials and projects stay
 unchanged. External vault implementation is a later task.
+
+Auth transfer transport: synthetic local Ansible preflight/copy/rerun verified;
+real AAP transfer remains gated on fresh environment readiness.

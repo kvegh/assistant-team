@@ -3,6 +3,9 @@ import base64
 import copy
 import importlib.util
 import json
+import getpass
+import shutil
+import subprocess
 import os
 from pathlib import Path
 import tempfile
@@ -172,6 +175,35 @@ class TransferTests(unittest.TestCase):
         with mock.patch.object(mod, 'idle', side_effect=mod.TransferError('bootstrap_writer_active')):
             with self.assertRaises(mod.TransferError):
                 self.capture()
+
+    @unittest.skipUnless(shutil.which('ansible-playbook'), 'Existing Ansible is needed for local transport acceptance')
+    def test_ansible_transport_preflight_restore_and_idempotence(self):
+        root = SOURCE.parents[4]
+        fixture = Path(self.tmp.name)
+        inventory = fixture / 'inventory'
+        inventory.write_text('\n'.join(name + ' ansible_connection=local ansible_python_interpreter=' + os.sys.executable +
+                                      ' ansible_remote_tmp=' + str(fixture / 'remote-tmp')
+                                      for name in ['source_fixture', 'destination_fixture']) + '\n')
+        variables = {'ansible_become': False, 'native_auth_transfer_runtime_user': getpass.getuser(),
+                     'native_auth_transfer_source_host': 'source_fixture',
+                     'native_auth_transfer_source_profiles_root': str(self.source),
+                     'native_auth_transfer_source_environment_config': str(self.configs[0]),
+                     'native_auth_transfer_destination_profiles_root': str(self.target),
+                     'native_auth_transfer_destination_environment_config': str(self.configs[1]),
+                     'native_auth_transfer_report_directory': str(fixture / 'reports')}
+        environment = os.environ.copy()
+        environment.update(ANSIBLE_ROLES_PATH=str(root / 'src/roles'), ANSIBLE_LOCAL_TEMP=str(fixture / 'ansible-tmp'))
+        play = fixture / 'play.json'
+        for execute, expected in [(False, 'present_unverified'), (True, 'restored'), (True, 'skipped_existing')]:
+            variables['native_auth_transfer_execute'] = execute
+            play.write_text(json.dumps([{'name': 'Synthetic native auth transport', 'hosts': 'destination_fixture',
+                                         'gather_facts': False, 'vars': variables, 'roles': ['native_auth_transfer']}]))
+            result = subprocess.run(['ansible-playbook', '-i', str(inventory), str(play)], env=environment,
+                                    cwd=root, capture_output=True, text=True, timeout=90)
+            self.assertEqual(result.returncode, 0, 'Synthetic Ansible transfer failed; no secret-bearing output is displayed')
+            report = json.loads((fixture / 'reports/latest.json').read_text())
+            self.assertEqual(sum(row['status'] == expected for row in report['report']), 6)
+            self.assertNotIn('synthetic-access', json.dumps(report))
 
     def test_writer_guard_distinguishes_bootstrap_and_project_container_streams(self):
         procroot = Path(self.tmp.name) / 'proc'

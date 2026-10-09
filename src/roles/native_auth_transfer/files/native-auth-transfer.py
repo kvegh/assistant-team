@@ -432,8 +432,9 @@ def main():
         result = capture(args.profiles_root, args.environment_config, args.metadata_only) if args.action == 'capture' else restore(args.profiles_root, args.environment_config, object_json(sys.stdin.read(16777217)))
         print(json.dumps(result))
         return 0
-    except (TransferError, OSError, UnicodeError, TypeError, KeyError):
-        print(json.dumps({'error': 'transfer_failed_safely', 'report': []}))
+    except (TransferError, OSError, UnicodeError, TypeError, KeyError) as error:
+        code = str(error) if isinstance(error, TransferError) else 'transfer_failed_safely'
+        print(json.dumps({'error': code, 'report': []}))
         return 1
 
 

@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.32.2
+
+Preserve JSON text across Ansible native templating and protected restore stdin.
+Verify the actual local Ansible metadata preflight, restore and missing-only rerun
+using disposable synthetic credentials, with safe diagnostic error codes.
+
 ## 0.32.1
 
 Document selective bootstrap transfer boundaries, the accepted future-vault
