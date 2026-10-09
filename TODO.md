@@ -7,6 +7,12 @@
 
 ## Priority after bug fixes and blocking features
 
+- [ ] Extend installed communication acceptance beyond the verified idle ask/reply
+  roundtrip: test tell-only wake-up, delivery while a native role is busy, recovery
+  of queued messages, and approval-blocked delivery. Verify unattended permission
+  handling only after its scoped design is approved; do not infer it from a test
+  that explicitly approves one reply.
+
 - [ ] Select the model used by each native harness for the task it receives,
   balancing cost or subscription allowance with outcome quality. Investigate
   supported model-selection controls, task-based recommendations and evaluation

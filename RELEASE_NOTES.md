@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.21.27
+
+Document remaining communication acceptance cases in TODO, preserving the
+boundary between verified idle ask/reply and untested delivery states.
+
 ## 0.21.26
 
 Document the native idle ask-wake roundtrip: broker notification activated Gemini,

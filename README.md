@@ -886,3 +886,6 @@ broker notification started a Gemini turn, its exact reply tool was approved
 once, and the waiting orchestrator received the correlated response. Earlier
 schema-error messages remain historical conversation entries. This test does
 not establish unattended approvals, busy-queue recovery or tell-only wake-up.
+
+The remaining installed communication acceptance cases are tracked in TODO: busy
+roles, tell-only wake-up, queued recovery and approval-blocked delivery.
