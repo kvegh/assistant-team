@@ -25,6 +25,12 @@ vi ~/projects/example/assistant-prompt.md          # fill [Project] and [Role: N
 ~/team apply-prompts example                       # effective next launch
 ```
 
+Finish a project with one of these alternatives:
+`~/team archive NAME` stops it if running and moves its full contents/config to
+`~/project-archive/NAME`; `~/team destroy NAME` stops it if running and deletes it.
+Both remove only its containers; account profiles and other projects stay intact.
+Archive rejects an existing destination. Do not run same-project start/edit operations concurrently.
+
 Artifacts: `~/projects/example/workspace` (`/workspace/shared` in containers).
 Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses scoped Antigravity (`cd ~/gemini-priv; ./login`, then `./agy`). Its team adapter is pending; use Gemini work for project roles.
 Native SSH/container auth uses local file permissions, not encryption at rest.

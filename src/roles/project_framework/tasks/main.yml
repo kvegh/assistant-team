@@ -16,6 +16,24 @@
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0700"
+- name: Inspect archive parent without following links
+  ansible.builtin.stat:
+    path: "{{ __project_framework_home }}/project-archive"
+    follow: false
+  register: __project_framework_archive_parent
+- name: Require an ordinary archive directory before maintaining permissions
+  ansible.builtin.assert:
+    that:
+      - not (__project_framework_archive_parent.stat.islnk | default(false))
+      - not __project_framework_archive_parent.stat.exists or __project_framework_archive_parent.stat.isdir | default(false)
+    quiet: true
+- name: Create protected archive parent without moving existing projects
+  ansible.builtin.file:
+    path: "{{ __project_framework_home }}/project-archive"
+    state: directory
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
 - name: Install project-scoped operator control
   ansible.builtin.copy:
     src: project-team.py

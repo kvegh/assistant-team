@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.16.0
+
+Add `destroy NAME` and `archive NAME`. Check and stop only the named running team,
+verify writer/container shutdown, then delete its project/config or move their
+whole contents into private `~/project-archive/NAME`. Preserve other projects,
+shared authentication profiles and images. Reject unsafe paths/archive collisions
+before shutdown; record both operations in JSON and human-readable diagnostics.
+
 ## 0.15.9
 
 Record verified Antigravity saved-auth detection. Helper-only deployment recognizes

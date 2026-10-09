@@ -32,3 +32,14 @@ overwritten; legacy role headers remain supported by the renderer.
 project names only to migrate legacy prompts to bracket sections. Migration makes
 0600 backups and preserves custom instructions and meaningful heading text; it is
 idempotent and does not restart or apply prompts to running sessions.
+
+`destroy NAME` and `archive NAME` require only an initialized named project and
+its regular home-level config, never saved model authentication. They stop running
+named service instances/orphan containers, disable enabled named units, verify
+quiescence and remove stopped project containers. Destroy deletes only that
+project/config; archive moves the whole directory with config into a private
+`~/project-archive/NAME`, rejecting collisions before shutdown. Whole-directory
+rename preserves SQLite auxiliary files and internal symlinks. Config placement
+is rolled back if the archive rename fails. Shared templates, images, provider
+homes and other projects are preserved. Do not run concurrent lifecycle/edit
+operations against the same project. There is no restore command yet.

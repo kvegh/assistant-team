@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Project-scoped control of the existing native container/broker foundation."""
-import argparse, importlib.util, json, os, pathlib, re, sqlite3, subprocess, sys, time
+import argparse, importlib.util, json, os, pathlib, re, sqlite3, subprocess, sys, time, shutil, socket
 INSTALL = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL.parent
 PROJECTS = ACCOUNT_HOME/'projects'
 ROLES = ['orchestrator','builder','investigator','challenger','summarizer','observer','private-connector','corporate-connector']
 PROJECT_ACTIONS = ['create-project','start','stop','restart','status','watch','attach','launch',
                    'apply-prompts','refresh-observer','deliver-observer-report','preflight',
-                   'launch-all','stop-containers']
+                   'launch-all','stop-containers','destroy','archive']
 GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup','diagnostics']
 HELP = '''Usage: ~/team COMMAND [PARAMETERS]
 
@@ -23,6 +23,8 @@ Projects:
   create-project NAME                Create project directories, prompts, configs and database.
   start NAME                         Check authentication and start this project's team.
   stop NAME                          Stop this project's target and services.
+  destroy NAME                       Stop if running, remove its containers, then delete project/config.
+  archive NAME                       Stop if running and move its full content/config to ~/project-archive/NAME.
   restart NAME                       Check authentication and restart this project's team.
   status NAME                        Show this project's target and role/container states.
   watch NAME                         Follow messages; Ctrl-C stops only the viewer.
@@ -204,6 +206,107 @@ def stop_containers(name):
     if existing:core.run(['podman','stop','--time','10',*existing],stdout=subprocess.DEVNULL)
     for role in ROLES:(core.PROFILES/role/'launched').unlink(missing_ok=True)
 
+def lifecycle_paths(name, archive=False):
+    path=verify_project(name);config=ACCOUNT_HOME/('projects.'+name+'.config')
+    if not archive and not shutil.rmtree.avoids_symlink_attacks:
+        raise ValueError('This platform cannot safely remove a project directory')
+    if ACCOUNT_HOME.is_symlink() or config.is_symlink() or not config.is_file():
+        raise ValueError('Project configuration must be a regular file inside the account home')
+    destination=None
+    if archive:
+        parent=ACCOUNT_HOME/'project-archive';destination=parent/name
+        if parent.is_symlink() or parent.exists() and not parent.is_dir():
+            raise ValueError('Archive parent must be a directory, not a symlink')
+        if destination.exists() or destination.is_symlink():
+            raise ValueError('Archive already exists; it was not overwritten and the project was not stopped')
+        embedded=path/config.name
+        if embedded.exists() or embedded.is_symlink():
+            raise ValueError('Archive configuration destination already exists; project was not stopped')
+    return path,config,destination
+
+def service_state(unit):
+    result=subprocess.run(['systemctl','--user','show',unit,
+                           '--property=ActiveState,LoadState,UnitFileState'],
+                          env=user_env(),capture_output=True,text=True)
+    values=dict(line.split('=',1) for line in result.stdout.splitlines() if '=' in line)
+    absent=values.get('LoadState')=='not-found' and values.get('ActiveState')=='inactive'
+    if (result.returncode and not absent or
+        values.get('LoadState') not in ['loaded','masked','not-found'] or
+        values.get('ActiveState') not in ['active','activating','deactivating','reloading','inactive','failed']):
+        raise ValueError('Cannot establish project service state; project files were preserved')
+    return values
+
+def project_container_state(name, role):
+    c='acp-'+name+'-'+role
+    exists=subprocess.run(['podman','container','exists',c],
+                          stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    if exists.returncode==1:return None
+    if exists.returncode!=0:raise ValueError('Cannot establish project container state; project files were preserved')
+    state=subprocess.run(['podman','inspect','--format','{{.State.Running}}',c],capture_output=True,text=True)
+    if state.returncode or state.stdout.strip() not in ['true','false']:
+        raise ValueError('Cannot establish project container state; project files were preserved')
+    return state.stdout.strip()=='true'
+
+def verify_no_project_listener(path):
+    endpoints=[path/'broker.sock']+[path/'profiles'/role/'ipc/agent.sock' for role in ROLES]
+    for endpoint in endpoints:
+        if endpoint.is_symlink() or endpoint.parent.is_symlink():
+            raise ValueError('Project socket paths must not be symlinks')
+        if not endpoint.exists():continue
+        with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as probe:
+            probe.settimeout(0.2)
+            try:probe.connect(str(endpoint))
+            except (ConnectionRefusedError,FileNotFoundError):continue
+            except OSError as error:
+                raise ValueError('Cannot establish project writer state; project files were preserved') from error
+            raise ValueError('A project broker or gateway is still listening; project files were preserved')
+
+def quiesce_project(name, path):
+    units=['assistant-connector@'+name+'.target']+[
+        'assistant-connector-'+kind+'@'+name+'.service' for kind in ['broker','gateway','containers']]
+    states={unit:service_state(unit) for unit in units}
+    running=[unit for unit,state in states.items() if state['ActiveState'] not in ['inactive','failed']]
+    if running:subprocess.run(['systemctl','--user','stop',*running],env=user_env(),check=True)
+    for unit,state in states.items():
+        if state.get('UnitFileState') in ['enabled','enabled-runtime']:
+            args=['systemctl','--user','disable']
+            if state['UnitFileState']=='enabled-runtime':args.append('--runtime')
+            subprocess.run(args+[unit],env=user_env(),check=True)
+    containers=['acp-'+name+'-'+role for role in ROLES if project_container_state(name,role)]
+    if containers:subprocess.run(['podman','stop','--time','10',*containers],check=True,stdout=subprocess.DEVNULL)
+    if any(service_state(unit)['ActiveState'] not in ['inactive','failed'] for unit in units):
+        raise ValueError('Project services did not stop; project files were preserved')
+    remaining=[]
+    for role in ROLES:
+        state=project_container_state(name,role)
+        if state is True:raise ValueError('Project containers did not stop; project files were preserved')
+        if state is False:remaining.append('acp-'+name+'-'+role)
+    verify_no_project_listener(path)
+    if remaining:subprocess.run(['podman','rm',*remaining],check=True,stdout=subprocess.DEVNULL)
+
+def retire_project(name, archive=False):
+    path,config,destination=lifecycle_paths(name,archive)
+    quiesce_project(name,path)
+    # Recheck operator-editable paths after shutdown, before destructive filesystem work.
+    lifecycle_paths(name,archive)
+    if archive:
+        destination.parent.mkdir(mode=0o700,exist_ok=True)
+        destination.parent.chmod(0o700)
+        embedded=path/config.name
+        config.rename(embedded)
+        try:
+            embedded.chmod(0o600);path.chmod(0o700)
+            path.rename(destination)
+        except OSError:
+            embedded.rename(config)
+            raise
+        print('Archived project '+name+' to '+str(destination)+'; account profiles and other projects were preserved.')
+    else:
+        shutil.rmtree(path)
+        config.unlink()
+        print('Destroyed project '+name+'; account profiles, images and other projects were preserved.')
+
+
 def status(name):
     core=load(name)
     result=subprocess.run(['systemctl','--user','is-active','assistant-connector@'+name+'.target'],env=user_env(),capture_output=True,text=True)
@@ -234,11 +337,13 @@ def main():
         if len(sys.argv)!=4 or sys.argv[2]!='--export':raise ValueError('Use ~/team diagnostics --export PATH')
         diagnostics().export(ACCOUNT_HOME,sys.argv[3]);return
     p=argparse.ArgumentParser();p.add_argument('action',choices=PROJECT_ACTIONS);p.add_argument('project');p.add_argument('role',nargs='?',choices=ROLES);a=p.parse_args()
+    if a.action in ['destroy','archive'] and a.role:p.error(a.action+' takes exactly NAME')
     if a.action=='create-project':create(a.project);return
     verify_project(a.project)
     if a.action in ['start','restart']:
         required_auth(a.project);control(a.action,a.project)
     elif a.action=='stop':control('stop',a.project)
+    elif a.action in ['destroy','archive']:retire_project(a.project,archive=a.action=='archive')
     elif a.action=='status':status(a.project)
     elif a.action=='preflight':required_auth(a.project)
     elif a.action=='launch-all':launch_all(a.project)

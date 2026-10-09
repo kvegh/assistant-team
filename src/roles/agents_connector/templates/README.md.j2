@@ -41,6 +41,23 @@ Each `~/projects.NAME.config` contains `version`, `project` and `roles`; for exa
 
 Changing a role account requires stopping and starting that project. Separate per-profile role homes and sessions prevent previous-account credentials carrying over. Native provider approvals remain enabled. Codex uses workspace-write/on-request; observer tools are restricted and connector general tools disabled. Connector service credentials/plugins are not configured.
 
+Project completion commands are `~/team archive NAME` and `~/team destroy NAME`.
+Both first check the named target, broker, gateway and containers, stop them only
+if running, and verify that no project writer remains. Stopped containers are
+removed without deleting images or shared model account profiles. A failed stop
+leaves project data and configuration in place; an inactive project needs no
+native harness or login to complete either operation.
+
+Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
+prompts and role state—to `~/project-archive/NAME`, with its former home-level
+`projects.NAME.config` inside. It rejects existing destinations before stopping
+anything. Archive directories are private (0700), the assignment config is 0600,
+and internal file modes and symlinks are preserved. Archives can include private
+role-local authentication copies and must stay outside Git. Restore is not provided.
+Destroy permanently deletes the project directory and its home-level config.
+Enabled named service instances are disabled; shared systemd templates remain.
+Do not start, restart or edit the same project concurrently with either operation.
+
 ## Project files and sessions
 
 `~/team --help` shows every supported command, required parameters and a brief

@@ -485,6 +485,23 @@ native logins. Listing distinguishes enabled, installed and locally saved
 credentials, without making model requests. Disabling a profile preserves its
 credentials and existing projects, but prevents new starts that require it.
 
+Project completion commands are `~/team archive NAME` and `~/team destroy NAME`.
+Both first check the named target, broker, gateway and containers, stop them only
+if running, and verify that no project writer remains. Stopped containers are
+removed without deleting images or shared model account profiles. A failed stop
+leaves project data and configuration in place; an inactive project needs no
+native harness or login to complete either operation.
+
+Archive moves the whole project—including SQLite history/WAL/SHM, artifacts,
+prompts and role state—to `~/project-archive/NAME`, with its former home-level
+`projects.NAME.config` inside. It rejects existing destinations before stopping
+anything. Archive directories are private (0700), the assignment config is 0600,
+and internal file modes and symlinks are preserved. Archives can include private
+role-local authentication copies and must stay outside Git. Restore is not provided.
+Destroy permanently deletes the project directory and its home-level config.
+Enabled named service instances are disabled; shared systemd templates remain.
+Do not start, restart or edit the same project concurrently with either operation.
+
 `~/projects.NAME.config` is the sole authority for role-to-profile assignments.
 Both configuration files use JSON and contain no authentication secrets. Project
 assignments must select enabled profiles. Connector roles whose required account

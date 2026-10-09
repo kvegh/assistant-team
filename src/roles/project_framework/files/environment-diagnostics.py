@@ -9,12 +9,14 @@ import tarfile
 import tempfile
 import uuid
 
-ACTIONS={'broker_init','gateway','containers_prepare','containers_stop','deployment','setup','login','clear','create-project','start','stop','restart','status','preflight','launch-all','launch','apply-prompts','refresh-observer','deliver-observer-report','stop-containers','watch','attach'}
+ACTIONS={'broker_init','gateway','containers_prepare','containers_stop','deployment','setup','login','clear','create-project','start','stop','restart','status','preflight','launch-all','launch','apply-prompts','refresh-observer','deliver-observer-report','stop-containers','watch','attach','destroy','archive'}
 RESULTS={'started','completed','failed','cancelled','credentials_saved','credentials_unconfirmed'}
 MODULES={'unknown','redhat.rhel_system_roles.podman_image'}|{'ansible.builtin.'+name for name in ['setup','assert','include_vars','add_host','getent','set_fact','file','copy','template','command','shell','stat','user','dnf','unarchive','get_url','include_role','include_tasks','systemd_service','slurp']}
 
 
 EXPLANATIONS = {
+    ('destroy', 'failed'): 'Project removal did not complete. Check service/container state and project paths before retrying; shared account profiles are outside this operation.',
+    ('archive', 'failed'): 'Project archival did not complete. Check service/container state, project paths and archive collisions before retrying.',
     ('start', 'failed'): 'Project services could not start. Inspect systemctl --user status and the user journal for the failing dependency.',
     ('login', 'failed'): 'Authentication did not complete. Follow the login wrapper instructions and retry the same account profile.',
     ('login', 'credentials_unconfirmed'): 'Credentials are saved; model access remains unverified.',
