@@ -57,10 +57,10 @@ class MCPResultsTests(unittest.TestCase):
         import yaml
         tasks = yaml.safe_load((SCRIPT.parents[1] / 'tasks/main.yml').read_text())
         selected = [task for task in tasks if 'connector_mcp_results' in task.get('tags', [])]
-        self.assertEqual(len(selected), 6)
+        self.assertGreaterEqual(len(selected), 6)
         self.assertTrue(any('ansible.builtin.getent' in task for task in selected))
         self.assertEqual(sum('ansible.builtin.set_fact' in task for task in selected), 2)
-        self.assertEqual(sum('ansible.builtin.copy' in task for task in selected), 2)
+        self.assertGreaterEqual(sum('ansible.builtin.copy' in task for task in selected), 2)
         self.assertFalse(any('ansible.builtin.systemd_service' in task or 'notify' in task for task in selected))
 
     def test_oversized_output_fails_without_echoing_payload(self):

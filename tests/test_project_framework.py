@@ -39,7 +39,7 @@ class ProjectFrameworkTests(unittest.TestCase):
    p=core.PROFILES/name;(p/'workspace').mkdir(parents=True);(p/'profile.json').write_text('{"flavour":"claude"}')
   core.apply_prompts()
   worker=(core.PROFILES/'builder/workspace/CLAUDE.md').read_text();observer=(core.PROFILES/'observer/workspace/CLAUDE.md').read_text()
-  self.assertIn('/workspace/shared',worker);self.assertIn('Read/write project artifacts',worker);self.assertNotIn('UNIQUE_observer',worker);self.assertIn('Read-only access',observer)
+  self.assertIn('/workspace/shared',worker);self.assertIn('Read/write project artifacts',worker);self.assertNotIn('UNIQUE_observer',worker);self.assertIn('/context/batch.jsonl',observer);self.assertNotIn('/workspace/shared',observer)
  def test_missing_auth_refuses_before_systemd_start(self):
   core=type('Core',(),{'PROFILES':self.root/'profiles','role_home':lambda _self,role:self.root/'profiles'/role/'home'})()
   for name in self.m.ROLES:

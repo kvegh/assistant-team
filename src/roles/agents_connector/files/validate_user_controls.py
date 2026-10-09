@@ -17,7 +17,7 @@ for name in team.ALL:
     if name not in team.VISIBLE:
         assert not (team.PROFILES/name/'home/mcp.json').exists()
         assert not (team.PROFILES/name/'ipc/agent.sock').exists()
-    if name=='observer':assert any(m['Destination']=='/context' and not m['RW'] for m in data['Mounts'])
+    if name in team.READERS:assert any(m['Destination']=='/context' and not m['RW'] for m in data['Mounts'])
 for directory,cli in [('claude-work','claude'),('claude-priv','claude'),('gemini','gemini'),('codex','codex'),('mistral','vibe')]:
     p=root.parent/directory
     assert (p/'.native-install.json').is_file() and (p/'login').is_file()
@@ -25,7 +25,7 @@ for directory,cli in [('claude-work','claude'),('claude-priv','claude'),('gemini
 for global_path in ['.claude.json','.claude','.codex','.gemini','.vibe']:
     assert not (root.parent/global_path).exists(),'Provider state escaped a scoped directory'
 # Confirm actual stock event subscription and hidden report exclusion.
-viewer=subprocess.Popen([str(root.parent/'team'),'watch'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+viewer=subprocess.Popen([str(root.parent/'team'),'watch','-f'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 fixture='OFFLINE_USER_VIEW_FIXTURE'
 try:
     selector=selectors.DefaultSelector();selector.register(viewer.stdout,selectors.EVENT_READ)
@@ -39,15 +39,9 @@ try:
 finally:
     viewer.terminate();viewer.wait(timeout=5)
     with sqlite3.connect(team.STATE/'db.sqlite') as db:db.execute('delete from messages where text=?',(fixture,))
-team.refresh_observer()
-report=team.PROFILES/'observer/workspace/report.md'
-assert not report.exists(),'Do not replace a real observer report with a fixture'
 try:
-    report.write_text('OFFLINE_PRIVATE_REVIEW_FIXTURE')
     team.deliver_observer_report()
-    assert (team.PROFILES/'orchestrator/workspace/private-review.md').read_text()=='OFFLINE_PRIVATE_REVIEW_FIXTURE'
-    assert all(not (team.PROFILES/n/'workspace/private-review.md').exists() for n in team.VISIBLE if n!='orchestrator')
-finally:
-    report.unlink(missing_ok=True)
-    (team.PROFILES/'orchestrator/workspace/private-review.md').unlink(missing_ok=True)
+    raise AssertionError('Private feedback unexpectedly enabled')
+except ValueError:
+    pass
 print('Eight tmux containers, five scoped native installations, live event viewer and private report boundary passed without model calls')

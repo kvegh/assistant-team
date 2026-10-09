@@ -34,9 +34,10 @@ material uncertainty rather than inventing history.
   permission. Ask before significant new decisions, purchases, accepting legal
   terms, security bypasses, or destructive actions outside the authorized scope.
   Missing tools require installation permission unless already authorized.
-- Inspect asynchronous outcomes through completion. While active, check about
-  every 20 seconds and give meaningful progress updates at least every minute.
-  Respect explicit stop or pause instructions.
+- Inspect asynchronous outcomes through completion. Prefer automatic subagent
+  completion notifications; check status only for a blocker, missing notification
+  or task-specific need. External jobs without notifications still require
+  appropriately spaced checks. Give meaningful updates and respect stop requests.
 
 ## Access and secrets
 
@@ -140,8 +141,8 @@ material uncertainty rather than inventing history.
 - Keep current instructions compatible with the provider's supported clients.
   Personal Gemini migration to Antigravity is a provider compatibility issue;
   neither installation nor an OAuth callback alone proves usable access.
-- Model selection per task is priority work after blockers: balance quality and
-  cost using supported harness controls. Do not claim this routing exists yet.
+- Model selection per task is ON HOLD BUT PRIORITY when resumed: balance quality
+  and cost using supported controls. Do not implement it or claim it exists yet.
 
 ## Projects and communication
 
@@ -178,25 +179,26 @@ material uncertainty rather than inventing history.
 | Builder | Implement and debug | Codex private |
 | Investigator | Analyze issues, root causes, and fixes | Claude work |
 | Challenger | Debate substantial design questions and relevant alternatives | Gemini work |
-| Summarizer | Give high-level progress and provide details on request | Claude work |
+| Summarizer | Privately summarize raw team communication into dense operator-only output, never participating | Claude work |
 | Observer/evaluator | Read communication, assess output quality and role suitability, and identify significant design improvements | Claude work |
 | Private connector | Retrieve or update private-context data with limited tools | Claude private |
 | Corporate connector | Retrieve or update work-context data with limited tools | Claude work |
 
 - These are defaults, not a statement that every account is authenticated or every
   provider can yet be assigned to any role. Check current routing restrictions.
-- Participant prompts should explain the visible roles and collaboration protocol.
-  The observer/evaluator is an exception: creators should not be told about it.
-  Prompt omission is not proof of technical concealment; verify access boundaries
-  before claiming other agents cannot discover it.
-- The evaluator should assess useful outcomes rather than suggest changes to meet
-  a quota. Recommend design changes only when they materially benefit the project.
-- It may tell the orchestrator that discussion is becoming unproductive and ask
-  it to stop the discussion. The orchestrator controls the participants.
-- The observer reads central communication through its supported read-only path.
-  Do not claim automatic refresh or report delivery when the implementation still
-  uses explicit commands. Likewise distinguish summarizer capability from an
-  automatic orchestration policy that has not been verified.
+- Only orchestrator, builder, investigator and challenger participate in team
+  messaging. The orchestrator coordinates those three working roles.
+- Summarizer and observer are private passive readers, omitted from participant
+  prompts, broker registration, message targets and shared workspace mounts.
+  A deterministic host listener supplies raw communication to read-only private
+  contexts, coalesces events, and requests bounded analysis without timed model
+  polling or orchestrator requests. Neither reader answers or contacts the team.
+- Summarizer output and observer capability/quality/design evaluations remain
+  separate operator-only files. The observer no longer sends stop suggestions or
+  feedback to the orchestrator under this updated design.
+- Do not claim absolute concealment: the host operator knows the roles, existing
+  sessions/history can retain earlier knowledge, and reviewing this framework's
+  source can reveal its implementation. New role deployment is explicitly held.
 - Connectors are separate private and corporate roles with limited tools; native
   CLI plugins are acceptable, but configuring a role is not proof that its external
   integrations and restrictions are installed and verified.

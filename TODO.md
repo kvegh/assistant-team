@@ -7,6 +7,12 @@
 
 ## Priority after bug fixes and blocking features
 
+- [ ] **SOURCE ONLY — DO NOT DEPLOY:** Review and explicitly approve the stopped
+  migration to private passive summarizer/observer readers. Verify native callback
+  readiness, event batching, quota/approval handling, private output append and
+  restart recovery before claiming live acceptance. Preserve existing history and
+  user prompts; old conversations cannot retroactively forget former roles.
+
 - [ ] Extend installed communication acceptance beyond the verified idle ask/reply
   roundtrip: test tell-only wake-up, delivery while a native role is busy, recovery
   of queued messages, and approval-blocked delivery. Verify unattended permission

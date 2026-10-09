@@ -1,5 +1,11 @@
 # agents_connector
 
+Source-only passive readers are not deployed: four worker identities participate;
+summarizer/observer use private lifecycle-only callbacks and raw read-only contexts,
+with drafts published to operator-only outputs. No feedback reaches the team.
+Host helper files stay in routing, outside worker-mounted helper binaries.
+Native acceptance and stopped migration require explicit operator approval.
+
 Install the pinned stock broker, restricted routing and native tmux image extensions.
 
 ## Interface

@@ -35,7 +35,7 @@ def main():
    run([TEAM,'create-project',name],stdout=subprocess.DEVNULL);made.append(name)
    path=ACCOUNT_HOME/'projects'/name
    with sqlite3.connect(path/'db.sqlite') as db:
-    assert db.execute('select count(*) from agents').fetchone()[0]==5
+    assert db.execute('select count(*) from agents where removed_at IS NULL').fetchone()[0]==4
     assert db.execute('select count(*) from messages').fetchone()[0]==0
    assert (path/'assistant-prompt.md').is_file()
    for role in ['orchestrator','builder','investigator','challenger','summarizer']:
@@ -84,7 +84,7 @@ for role in c.ALL:
   private=ACCOUNT_HOME/'projects'/a/'profiles/private-connector/home/private-fixture';private.write_text('offline-private')
   hidden=subprocess.run(['podman','exec','acp-'+a+'-builder','test','-e','/workspace/shared/private-fixture'],env=ENV);assert hidden.returncode!=0
   assert os.stat(ACCOUNT_HOME/'projects'/a/'db.sqlite').st_ino!=os.stat(ACCOUNT_HOME/'projects'/b/'db.sqlite').st_ino
-  watcher=subprocess.Popen([str(TEAM),'watch',a],env=ENV,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
+  watcher=subprocess.Popen([str(TEAM),'watch',a,'-f'],env=ENV,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
   sel=selectors.DefaultSelector();sel.register(watcher.stdout,selectors.EVENT_READ)
   assert sel.select(5);assert 'Live worker discussion' in watcher.stdout.readline()
   # Snapshot streaming start; request delivery uses admin only within our test broker.

@@ -53,6 +53,11 @@ blockers requiring a significant decision or approval back to the main conversat
 Background execution does not waive validation, outcome monitoring, security rules,
 or required approvals.
 
+Use automatic subagent completion notifications rather than fixed-interval polling.
+Check their status only for a blocker, missing notification or task-specific need.
+External jobs without notifications still require appropriately spaced checks and
+verified outcomes; elapsed waiting time is not evidence of completion.
+
 ## Release versions
 
 Use "Document" rather than "Record" in documentation-only commit subjects and

@@ -1,5 +1,50 @@
 # assistant-team
 
+## Source-only passive reader design — not deployed
+
+The new role arrangement is implemented only on its feature branch. Do not deploy
+it, restart role services or change existing conversations without explicit approval.
+The current environment retains its previous role arrangement. The earlier
+DECISIONS.log verification failed because its Ansible-created file had user_home_t
+rather than the shared mount's container_file_t label; the file remains empty.
+That orchestrator-requested workflow is superseded, and no label fix was deployed.
+
+The participating team is orchestrator plus builder, investigator and challenger.
+Summarizer and observer are independent private raw-discussion readers, not team
+participants. Neither registers with the worker broker, accepts addressed messages,
+answers questions, contacts the orchestrator or receives a shared-workspace mount.
+Private/corporate connectors retain their separate existing scope.
+
+A deterministic host listener subscribes to broker events and rebuilds allowlisted
+raw worker communication from SQLite message rows. Event bursts and work arriving
+while a reader is busy are coalesced; there is no timed model polling. Each reader
+gets read-only /context inputs and writes only its own private draft. Private native
+lifecycle callbacks report start/busy/done, granting no team messaging capability.
+The host appends changed drafts to operator-only outputs and suppresses unchanged
+content. No new paid fallback or task-specific model selection is introduced.
+
+After a future explicitly approved migration, the operator can use:
+
+```sh
+tail -f ~/projects/NAME/operator-reports/SUMMARY.log
+tail -f ~/projects/NAME/operator-reports/ASSESSMENT.log
+```
+
+The first is a dense high-level summary of accepted outcomes, significant open
+questions and blockers; the second is an evidence-based capability/quality/design
+assessment. Routine progress, raw tool chatter and private connector content are
+excluded. The observer sends no feedback into team activity. Current private-reader
+support requires Claude profiles; unsupported assignments fail explicitly without
+silently changing vendor or account. Native permission and onboarding gates remain
+in force. Source tests are not proof of deployed native lifecycle behavior.
+
+Visibility isolation does not erase previous conversations or hide this framework
+from an agent asked to inspect its source. Operator-owned project files, previous
+role instructions and historical messages may disclose old role information; a
+stopped migration and clean conversations need separate review. Do not represent
+same-host-user isolation as a boundary against the trusted host administrator.
+
+
 For another working session, start with [the reusable session rules](SESSION_RULES.md)
 and `AGENTS.md`. The rules collect our collaboration, security, deployment, design,
 and versioning decisions without including environment credentials.
@@ -930,15 +975,3 @@ replies once each. Follow subscribes before taking its history snapshot and skip
 queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
-
-For a concise decision feed, run `tail -f ~/projects/NAME/workspace/DECISIONS.log`.
-The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
-meaningful accepted outcomes, agreed direction changes or blockers requiring
-user input. The orchestrator requests these updates at milestones, without timers.
-The summarizer is the sole intended writer; proposals, repetitive progress,
-credentials, private connector content and hidden-role identities stay out.
-This is an agent instruction policy, not a filesystem enforcement of append-only
-writes: project workspace collaborators retain their existing write permissions.
-Existing user prompts and log content are preserved during deployment. Already
-running harness conversations need an explicit instruction refresh to adopt it;
-updating files alone does not guarantee they re-read their role instructions.

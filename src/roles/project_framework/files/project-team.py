@@ -37,7 +37,7 @@ Projects:
   stop-containers NAME               Stop only this project's role containers.
   apply-prompts NAME                 Render project instructions; effective on next launch.
   refresh-observer NAME              Update the private observer's discussion snapshot.
-  deliver-observer-report NAME       Deliver its report privately to the orchestrator.
+  deliver-observer-report NAME       Disabled: private evaluations are operator-only.
 
 NAME: 1-40 lowercase letters/digits, underscores or hyphens; start with a letter/digit.
 ROLE: orchestrator, builder, investigator, challenger, summarizer, observer,
@@ -63,6 +63,7 @@ def configure_roles(name):
     for role,account in mapping.items():
         p=path/'profiles'/role;cfg=json.loads((p/'profile.json').read_text())
         vendor=module.PROFILES[account]['vendor']
+        if role in ['summarizer','observer'] and vendor!='claude':raise ValueError('Private readers currently require a Claude profile; no assignment was changed')
         c='acp-'+name+'-'+role
         existing=subprocess.run(['podman','inspect','--format','{{.State.Running}}',c],capture_output=True,text=True)
         if existing.returncode==0 and existing.stdout.strip()=='true' and cfg.get('account_profile')!=account:
@@ -212,7 +213,7 @@ def create(name):
             with sqlite3.connect(path/'db.sqlite') as db:
                 tables={r[0] for r in db.execute("select name from sqlite_master where type='table'")}
                 if not {'agents','messages','asks','replies'}<=tables:raise ValueError('Stock broker schema initialization incomplete')
-                if db.execute('select count(*) from agents').fetchone()[0]!=5:raise ValueError('Worker registration incomplete')
+                if db.execute('select count(*) from agents where removed_at IS NULL').fetchone()[0]!=len(core.VISIBLE):raise ValueError('Worker registration incomplete')
         finally:
             broker.terminate()
             try:broker.wait(timeout=10)

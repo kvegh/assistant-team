@@ -1,5 +1,21 @@
 # Assistant team: commands
 
+## Source-only passive readers — not deployed
+
+Future team: orchestrator + builder/investigator/challenger. Summarizer/observer
+privately read raw communication, never join or answer the team, and produce
+operator-only SUMMARY.log/ASSESSMENT.log outside the shared workspace. Event-driven
+host dispatch; no timed model polling. Claude profiles supported initially.
+Current sessions remain unchanged; deployment and native acceptance are pending.
+The superseded DECISIONS.log remains empty after its SELinux access failure.
+
+After an explicitly approved migration:
+
+```sh
+tail -f ~/projects/NAME/operator-reports/SUMMARY.log
+tail -f ~/projects/NAME/operator-reports/ASSESSMENT.log
+```
+
 Run as the runtime user. One environment per user; credentials stay local.
 
 ```sh
@@ -88,15 +104,3 @@ replies once each. Follow subscribes before taking its history snapshot and skip
 queued events already included in that snapshot. The existing upstream live
 stream can drop notifications for an excessively slow viewer; it is not a durable
 subscription. History reads only the project’s message table, with no model calls.
-
-For a concise decision feed, run `tail -f ~/projects/NAME/workspace/DECISIONS.log`.
-The summarizer appends timestamped DECIDED, DIRECTION or BLOCKED lines only after
-meaningful accepted outcomes, agreed direction changes or blockers requiring
-user input. The orchestrator requests these updates at milestones, without timers.
-The summarizer is the sole intended writer; proposals, repetitive progress,
-credentials, private connector content and hidden-role identities stay out.
-This is an agent instruction policy, not a filesystem enforcement of append-only
-writes: project workspace collaborators retain their existing write permissions.
-Existing user prompts and log content are preserved during deployment. Already
-running harness conversations need an explicit instruction refresh to adopt it;
-updating files alone does not guarantee they re-read their role instructions.

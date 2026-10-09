@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.29.0 — source only, not deployed
+
+Make summarizer and observer passive private raw-discussion readers. Register only
+the orchestrator and three working agents; remove private readers from worker MCP,
+message targets and shared workspace mounts. Host event dispatch coalesces analysis
+turns and appends changed drafts to operator-only SUMMARY/ASSESSMENT logs. No
+feedback is sent to team members. Supersede the unverified DECISIONS.log workflow.
+Deployment and native lifecycle acceptance remain explicitly held.
+
 ## 0.27.1
 
 Document decision-feed ownership, preservation, privacy and active-session refresh.
