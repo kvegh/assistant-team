@@ -41,22 +41,44 @@ operator identities, deployment addresses, credentials or private repository dat
 - Consider developing our own Ansible modules and packaging them as a collection
   when repeated project-specific deployment behavior justifies it.
 
-## Active release acceptance
+## Release acceptance and remaining follow-up
 
-- [ ] Publish the consolidated 1.0.0 source/tag/release, then run the complete fresh
-  deployment end to end through AAP with the new encrypted destination identity.
-  Preserve the original working environment; retired test resources stay scoped
-  to their exact authorization.
-- [ ] Run selective bootstrap-auth metadata preflight and the explicitly authorized
-  missing-only copy, followed by bounded provider/model checks. Preserve refreshed
-  credentials; never commit any auth material. This transfer is active work,
-  separate from the external-vault design still on hold.
-- [ ] Create and run `project-autotest-1`, verify addressed team replies, shared
-  artifacts, private SUMMARY.md/assessment updates, lifecycle and archive behavior.
-  Investigate and fix scoped failures until acceptance passes; do not claim live
-  success from source tests. Native private-provider legal consent is authorized
-  for this acceptance run; preserve explicit data-use choices and never infer
-  permission to expose credentials or change billing.
+Status reconciled after the initial fresh-deployment and authenticated team test.
+Completed checks describe that test run, not current service health or permanent
+provider access. No further model calls, deployment or recommended fixes are
+performed by this backlog update.
+
+- [x] Publish the consolidated 1.0.0 source/tag/release and complete a fresh
+  deployment through AAP using the new installation layout. Preserve the original
+  working environment and keep test-resource retirement explicitly scoped.
+- [x] Complete selective authentication transfer and same-account recovery, then
+  confirm bounded native model access for the six enabled account profiles.
+  Authentication material remains outside Git, including encrypted copies.
+- [x] Verify genuine orchestrator-to-peer broker replies and isolated private
+  summarizer/observer outputs during the acceptance project run.
+- [ ] Finish acceptance for `project-autotest-1`: verify a corrected challenger
+  role identity and accurate reported names/model identifiers. Builder and
+  challenger previously reported their model as unknown; do not invent model
+  versions or treat a harness name as a project role. Preserve successful
+  round-trip evidence and repeat only checks needed to resolve remaining gaps.
+- [ ] Confirm final project stop/archive acceptance and preserve the test evidence.
+  Final correction and archiving have not been verified; inspect existing state
+  before repeating operations.
+- [ ] Recheck current target health and authentication validity before resuming
+  live acceptance. Previous successful probes do not establish current validity;
+  use bounded, explicitly authorized model checks only where needed.
+- [ ] After acceptance, reconcile deployed operator guides and version/build
+  metadata with the final accepted source. The fresh runtime baseline and later
+  authentication recovery updates are distinct; do not claim a new full
+  deployment from a focused authentication job.
+- [ ] Finalize and publish the existing CLI naming proposal as a decision document
+  only. Preserve compatibility and current commands until a scheme is approved;
+  do not implement command renaming as part of this follow-up.
+- [ ] Finalize and publish the existing plain-language assessment of all 13 team
+  review findings, including benefit, risk, effort and suggested decisions.
+  Reassess its 1.0.4 source observations against the current accepted release and
+  incorporate actual deployment/test evidence. Keep rejected allegations rejected
+  and leave recommendations unimplemented pending the user's decision.
 
 ## Priority after bug fixes and blocking features
 
@@ -136,15 +158,19 @@ operator identities, deployment addresses, credentials or private repository dat
 
 ## Required later
 
-- [ ] **On hold:** external model-authentication vault and save/restore automation.
-  Analysis and the exact provider-file manifest are documented in
-  `docs/AUTH_REPLICATION.md`, including pushed-code references for resuming later.
-  No secret export or vault has been created. Keep `agent-secret-vault.yml` and
-  its backups outside Git, preserve bootstrap and project-role stream identities,
-  require consistent capture, and never overwrite refreshed runtime credentials
-  with an older seed. Resume only when requested by the user.
+- [ ] After final team acceptance, complete the already requested external
+  authentication-vault export. An exporter and tests exist as an unpublished draft;
+  no real vault has been created. Publish the generic code/documentation and create
+  `auth_copy_vault.yml` beside the operator's existing `vpf`, outside Git. Encrypt
+  with that password file and verify protected permissions and decryptability
+  without exposing contents. Capture the explicitly identified, successfully tested
+  destination bootstrap stream after bounded checks, including refreshed/recovered
+  credentials; do not select stale source caches by modification time. Preserve
+  account/provider boundaries and provenance. Model authentication must never
+  enter Git, even encrypted. Broader save/restore automation remains a separate
+  design item; see `docs/AUTH_REPLICATION.md` for the provider-file manifest.
 
-- [ ] Deploy and accept the source-implemented installation layout on an explicitly
+- [x] Deploy and accept the source-implemented installation layout on an explicitly
   authorized fresh environment. Source now supports `PREFIX/ac-agents`, destination
   home as default parent, canonical paths and project-local singular configuration.
   The existing environment remains unchanged by explicit instruction. Implement

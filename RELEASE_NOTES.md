@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.17
+
+Document completed fresh-deployment/authentication checks and remaining team acceptance, external vault, CLI proposal and 13-point review follow-up. No runtime behavior changes.
+
 ## 1.0.16
 
 Document verified recovery of the recognized cleared native target state and static refusal diagnostics without exposing credentials.
