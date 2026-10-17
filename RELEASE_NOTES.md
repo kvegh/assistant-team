@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.19
+
+Document isolated onboarding defaults, exact native Codex hook-trust boundaries and verified source checks. Native target startup acceptance follows deployment.
+
 ## 1.0.18
 
 Prepare isolated fresh-project Claude/Gemini CLI onboarding and scoped workspace trust; verify and persist native Codex hashes only for the three exact generated broker hooks. Preserve tool approvals, sandboxing, existing preferences and explicit distrust.

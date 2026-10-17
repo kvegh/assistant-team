@@ -1606,3 +1606,28 @@ Implementation `c88bdcd` adds a separate private Claude recovery role without ch
 ## Recover a recognized token-cleared private Claude target
 
 Implementation `ed7009b` handles the exact native destination state left by a failed expired-auth request: empty access/refresh strings with the seven correctly typed native OAuth fields retained. The previous recovery parser required an existing usable credential and therefore refused the cache it was intended to repair. The exception is destination-only and rejects arbitrary empty/malformed records or API-key additions. Source refresh-bearing validation, matching preserved account/organization metadata, context, private ownership/modes, no-follow paths and writer guards remain mandatory. Helper errors expose only static allowlisted refusal codes; protected logging stays enabled. Twelve focused tests plus one additional diagnostic-redaction regression pass, including actual disposable Ansible cleared-target validation/replacement/rerun, account mismatch refusal and malformed target preservation. Role/playbook production lint passes with zero findings. Live source and target credentials were not changed by diagnosis or source validation.
+
+## Prepare isolated native setup before the first project turn
+
+Implementation `5f7b3cb` addresses fresh projects stopping at vendor onboarding
+while their copied authentication is already present. Project creation seeds
+Claude theme/onboarding and exact workspace trust, and Gemini CLI workspace trust
+and container update defaults. Launch reconciles missing defaults after account
+selection, preserving existing preferences, explicit distrust and authentication.
+Private JSON writes refuse symlinked directories/files and malformed state.
+
+Before the Codex TUI starts, the installed native app-server reports current hook
+hashes. Only three exact generated token-bound broker commands, expected events,
+source path and behavior qualify for persisted native trust; unexpected hooks
+require operator review. Native configuration writes are verified by a second
+hook query. No algorithm is invented for vendor hashes, no trust is copied from
+another project, and no blanket hook/tool/sandbox bypass is used. Provider legal
+consent and login remain separate from project setup. The original home-level
+environment is not migrated.
+
+Validation passed 315 unit/fixture tests, including native-stdio synthetic trust
+roundtrip, token/source/behavior mismatch refusal, malformed/symlink state guards,
+explicit distrust preservation and idempotent defaults. Offline production Ansible
+lint passed across 204 files with the already installed pinned certified
+collection. Native fresh-project acceptance on the target is a separate check;
+these source results do not claim model access or unattended tool approval.
