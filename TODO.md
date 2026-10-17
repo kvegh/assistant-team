@@ -43,6 +43,10 @@ operator identities, deployment addresses, credentials or private repository dat
 
 ## Release acceptance and remaining follow-up
 
+- [ ] Verify fresh-project native onboarding after the setup-preparation fix: all
+  eight terminals must pass theme/welcome/workspace-trust/managed-hook setup without
+  granting blanket tool permissions. Keep provider login and task approvals separate.
+
 Status reconciled after the initial fresh-deployment and authenticated team test.
 Completed checks describe that test run, not current service health or permanent
 provider access. No further model calls, deployment or recommended fixes are

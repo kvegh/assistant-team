@@ -6,6 +6,12 @@ Communication stays on agents-connector + tmux; alternatives await review and
 decision in [TODO](TODO.md).
 
 Fresh installs use PREFIX/ac-agents. Existing home-level installations require a separately approved migration; see [migration prerequisites](INSTALLATION_MIGRATION.md).
+New projects have their own shared workspace, eight role homes/workspaces and
+eight containers when started. Claude/Gemini CLI setup defaults are prepared in
+those isolated homes; Codex trusts only its three verified generated broker hooks.
+Authentication and normal tool approvals remain separate.
+Existing explicit distrust is preserved.
+
 ## Private passive readers
 
 Team: orchestrator + builder/investigator/challenger. Summarizer/observer

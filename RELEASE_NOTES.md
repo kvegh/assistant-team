@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.18
+
+Prepare isolated fresh-project Claude/Gemini CLI onboarding and scoped workspace trust; verify and persist native Codex hashes only for the three exact generated broker hooks. Preserve tool approvals, sandboxing, existing preferences and explicit distrust.
+
 ## 1.0.17
 
 Document completed fresh-deployment/authentication checks and remaining team acceptance, external vault, CLI proposal and 13-point review follow-up. No runtime behavior changes.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Operator-owned lifecycle and narrowly scoped stock connector IPC adapters."""
-import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, socket, sqlite3, shlex, stat, struct, subprocess, sys, time, types
+import argparse, asyncio, ctypes, ctypes.util, importlib.util, json, os, pathlib, re, selectors, socket, sqlite3, shlex, stat, struct, subprocess, sys, tempfile, time, types
 INSTALL_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCOUNT_HOME = INSTALL_ROOT.parent
 
@@ -39,6 +39,129 @@ def role_directory(name, kind):
     return base/'accounts'/account/kind if account else base/kind
 
 def role_home(name):return role_directory(name,'home')
+
+
+def startup_json(home, relative, update):
+    """Merge setup defaults privately; refuse links and malformed native state."""
+    path=home/relative
+    directory_fd=private_directory(path.parent,create=True)
+    os.close(directory_fd)
+    if path.is_symlink():raise ValueError('Native startup file must not be a symlink')
+    if path.exists() and (not path.is_file() or path.stat().st_uid!=os.getuid()):
+        raise ValueError('Native startup file must be an owned regular file')
+    try:data=json.loads(path.read_text()) if path.exists() else {}
+    except (ValueError,OSError):raise ValueError('Invalid native startup JSON; existing state preserved') from None
+    if not isinstance(data,dict):raise ValueError('Native startup JSON must be an object')
+    before=json.dumps(data,sort_keys=True)
+    update(data)
+    if path.exists() and json.dumps(data,sort_keys=True)==before:
+        path.chmod(0o600);return
+    descriptor,temporary=tempfile.mkstemp(prefix='.startup-',dir=path.parent)
+    try:
+        with os.fdopen(descriptor,'w') as stream:
+            json.dump(data,stream);stream.write('\n')
+        os.replace(temporary,path)
+    finally:
+        pathlib.Path(temporary).unlink(missing_ok=True)
+
+
+def prepare_native_startup(name):
+    """Prepare only isolated project homes, never global provider authentication."""
+    if not PROJECT:return
+    cfg=json.loads((PROFILES/name/'profile.json').read_text())
+    home=role_home(name)
+    if cfg['flavour']=='claude':
+        def defaults(data):
+            if not isinstance(data.get('projects',{}),dict):raise ValueError('Invalid native project setup state')
+            if not isinstance(data.get('projects',{}).get('/workspace',{}),dict):raise ValueError('Invalid native workspace setup state')
+            data.setdefault('theme','dark')
+            data.setdefault('hasCompletedOnboarding',True)
+            data.setdefault('lastOnboardingVersion',VERSIONS['claude'])
+            workspace=data.setdefault('projects',{}).setdefault('/workspace',{})
+            workspace.setdefault('hasTrustDialogAccepted',True)
+        startup_json(home,'.claude.json',defaults)
+    elif cfg['flavour']=='gemini' and cfg.get('auth_directory')!='gemini-priv':
+        # Trust this role's generated mount, not its parent or arbitrary folders.
+        startup_json(home,'.gemini/trustedFolders.json',lambda data:data.setdefault('/workspace','TRUST_FOLDER'))
+        def defaults(data):
+            if not isinstance(data.get('general',{}),dict):raise ValueError('Invalid native general setup state')
+            general=data.setdefault('general',{})
+            general.setdefault('enableAutoUpdate',False)
+            general.setdefault('enableAutoUpdateNotification',False)
+        startup_json(home,'.gemini/settings.json',defaults)
+
+
+def managed_codex_hooks(result, current_token):
+    """Trust only the three exact project-generated definitions, not extra hooks."""
+    events={'userPromptSubmit':'user_prompt_submit','postToolUse':'post_tool_use','stop':'stop'}
+    data=result.get('data',[])
+    if len(data)!=1 or data[0].get('cwd')!='/workspace' or data[0].get('errors') or data[0].get('warnings'):
+        raise ValueError('Native Codex hook discovery requires operator review')
+    hooks=data[0].get('hooks',[]);found=set()
+    if len(hooks)!=3:raise ValueError('Only the three managed project hooks can be prepared automatically')
+    for hook in hooks:
+        event=events.get(hook.get('eventName'))
+        expected=['/opt/connector/bin/agents-connector','hook','--socket','/ipc/agent.sock',
+                  '--agent-token',current_token,'--event',event,'--cli-kind','codex']
+        try:command=shlex.split(hook.get('command',''))
+        except ValueError:raise ValueError('Unrecognized native Codex hook definition') from None
+        key='/home/agent/.codex/config.toml:'+str(event)+':0:0'
+        if (event is None or event in found or command!=expected or hook.get('key')!=key
+                or hook.get('sourcePath')!='/home/agent/.codex/config.toml'
+                or hook.get('handlerType')!='command' or hook.get('matcher') is not None
+                or hook.get('timeoutSec')!=600 or hook.get('async') is not False
+                or hook.get('isManaged') is not False
+                or not re.fullmatch(r'sha256:[a-f0-9]{64}',hook.get('currentHash',''))):
+            raise ValueError('Changed native Codex hooks require explicit operator review')
+        found.add(event)
+    return hooks
+
+
+def prepare_codex_hooks(name):
+    """Ask the installed CLI for its hashes; retain its sandbox and tool approvals."""
+    if not PROJECT:return
+    process=subprocess.Popen(['podman','exec','-i',container(name),'codex','app-server','--stdio'],
+                             stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+    selector=selectors.DefaultSelector();selector.register(process.stdout,selectors.EVENT_READ)
+    buffer=b'';deadline=time.monotonic()+45;sequence=0
+    def write(value):
+        process.stdin.write(json.dumps(value).encode()+b'\n');process.stdin.flush()
+    def request(method,params):
+        nonlocal buffer,sequence
+        sequence+=1;write({'id':sequence,'method':method,'params':params})
+        while time.monotonic()<deadline:
+            while b'\n' in buffer:
+                line,buffer=buffer.split(b'\n',1)
+                try:response=json.loads(line)
+                except ValueError:raise ValueError('Invalid native Codex setup response') from None
+                if response.get('id')==sequence:
+                    if 'error' in response:raise ValueError('Native Codex setup request failed; tool permissions were preserved')
+                    return response.get('result',{})
+            if not selector.select(max(0,deadline-time.monotonic())):break
+            chunk=os.read(process.stdout.fileno(),65536)
+            if not chunk:break
+            buffer+=chunk
+            if len(buffer)>1048576:raise ValueError('Oversized native Codex setup response')
+        raise ValueError('Native Codex setup timed out or exited; no blanket trust was granted')
+    try:
+        request('initialize',{'clientInfo':{'name':'ac_agents_startup','version':'1'},'capabilities':{'experimentalApi':True}})
+        write({'method':'initialized','params':{}})
+        hooks=managed_codex_hooks(request('hooks/list',{'cwds':['/workspace']}),token(name))
+        pending=[hook for hook in hooks if hook.get('enabled',True) and hook.get('trustStatus')!='trusted']
+        if pending:
+            edits=[{'keyPath':'hooks.state.'+json.dumps(hook['key'])+'.trusted_hash',
+                    'value':hook['currentHash'],'mergeStrategy':'replace'} for hook in pending]
+            request('config/batchWrite',{'filePath':'/home/agent/.codex/config.toml','edits':edits,'reloadUserConfig':True})
+            verified=managed_codex_hooks(request('hooks/list',{'cwds':['/workspace']}),token(name))
+            if any(hook.get('enabled',True) and hook.get('trustStatus')!='trusted' for hook in verified):
+                raise ValueError('Native Codex did not confirm exact managed-hook trust')
+    finally:
+        selector.close()
+        if process.stdin:process.stdin.close()
+        process.terminate()
+        try:process.wait(timeout=5)
+        except subprocess.TimeoutExpired:process.kill();process.wait()
+        if process.stdout:process.stdout.close()
 
 
 def antigravity_executable(name):
@@ -446,7 +569,9 @@ def launch(name):
         if dead!='1':raise ValueError('session already launched; attach instead')
         (PROFILES/name/'launched').unlink()
     seed_auth(name)
+    prepare_native_startup(name)
     start_container(name);spec=json.loads((PROFILES/name/'profile.json').read_text());flavour=spec['flavour']
+    if PROJECT and flavour=='codex':prepare_codex_hooks(name)
     apply_prompts()
     cmd={'claude':['claude','--mcp-config','/home/agent/mcp.json','--settings','/home/agent/settings.json'],'codex':['codex','--no-daemon','-c','check_for_update_on_startup=false','--sandbox','workspace-write','--ask-for-approval','on-request'],'gemini':['gemini']}[flavour]
     if antigravity_executable(name) is not None:

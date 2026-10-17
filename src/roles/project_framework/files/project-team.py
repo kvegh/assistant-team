@@ -218,6 +218,7 @@ def create(name):
         broker=subprocess.Popen([str(core.BIN),'broker','--socket',str(core.ADMIN),'--db',str(path/'db.sqlite'),'--session',name],env=env,stdout=logfile,stderr=logfile)
         try:
             core.initialize()
+            for role in ROLES:core.prepare_native_startup(role)
             with sqlite3.connect(path/'db.sqlite') as db:
                 tables={r[0] for r in db.execute("select name from sqlite_master where type='table'")}
                 if not {'agents','messages','asks','replies'}<=tables:raise ValueError('Stock broker schema initialization incomplete')

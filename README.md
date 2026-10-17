@@ -15,6 +15,27 @@ Fresh installs use PREFIX/ac-agents. Existing home-level installations require a
 Permission management is a scoped design proposal, not implemented automation:
 [generated policies and private approval notifications](docs/PERMISSION_MANAGEMENT.md).
 Current roles retain native approvals; a running process alone does not prove readiness.
+## Fresh project startup
+
+Each project owns its shared workspace and eight isolated role homes/workspaces.
+Starting it creates eight project-specific containers. Project creation prepares
+native setup defaults, and launch reconciles missing defaults after account
+selection: Claude's theme/onboarding state and trust for its generated `/workspace`,
+and Gemini CLI's exact workspace trust and disabled in-container self-updates.
+Before its first interactive launch, Codex queries its own native hook hashes,
+checks the exact three generated broker commands/source/events against this
+project's token, and persists only those hashes through its native config API.
+Additional or modified hook definitions require operator review; no hash is copied
+from another project and no hook-trust bypass flag is used.
+
+Existing preferences and explicit distrust are preserved; malformed or linked
+configuration is refused. Provider authentication is separate and is never marked
+successful by onboarding preparation. No other project's home/history is copied.
+
+Tool approvals, sandboxing and private-reader isolation remain in force. These
+setup defaults apply only to project role homes; they do not migrate the original
+home-level environment or silently accept new provider legal/data-use terms.
+
 ## Private passive reader design
 
 Fresh installations include the new role arrangement. Existing environments retain
@@ -49,8 +70,7 @@ questions and blockers; the second is an evidence-based capability/quality/desig
 assessment. Routine progress, raw tool chatter and private connector content are
 excluded. The observer sends no feedback into team activity. Current private-reader
 support requires Claude profiles; unsupported assignments fail explicitly without
-silently changing vendor or account. Native permission and onboarding gates remain
-in force. Source tests are not proof of deployed native lifecycle behavior.
+silently changing vendor or account. Native tool permission gates remain in force; project setup defaults are described above. Source tests are not proof of deployed native lifecycle behavior.
 
 Visibility isolation does not erase previous conversations or hide this framework
 from an agent asked to inspect its source. Operator-owned project files, previous
