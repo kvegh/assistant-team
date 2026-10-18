@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.23
+
+Check the selected role container and native tmux session before attach. Explain start, role launch or status actions instead of exposing a raw Podman failure; preserve live-session diagnostic access and never auto-start work.
+
 ## 1.0.22
 
 Document the companion-store policy implementation, encrypted capture verification and distinction between completed onboarding and unresolved private-Claude restart authentication.

@@ -386,3 +386,12 @@ and a separate deployment definition. Capture used the existing external vpf and
 passed private encryption/decryption comparison. It did not refresh credentials
 or prove model access, and it did not merge project-role caches. The generic
 exporter draft and automatic restore integration remain unfinished.
+
+## Attach readiness
+
+`attach PROJECT ROLE` checks the selected container and native tmux pane first.
+For a created/stopped project it recommends `team start PROJECT`; for an absent
+role in an otherwise running project it recommends `team launch PROJECT ROLE`.
+Transitional/failed states point to `team status PROJECT`. Attach never starts a
+project, launches a model or changes permissions implicitly. A live role remains
+attachable for diagnosis even when another role or service has failed.

@@ -276,6 +276,30 @@ def verify_project(name):
     if not (path/'initialized').is_file():raise ValueError('Project is not initialized; create-project NAME first')
     return path
 
+def attach_role(name,role,core):
+    """Attach only to a live native session; never start work implicitly."""
+    try:phase=container_phase(name,role)
+    except ValueError:
+        raise ValueError('Cannot verify whether role '+role+' is running. Check: team status '+name) from None
+    if phase!='running':
+        state=project_summary(name)
+        if phase in ['paused','stopping','removing'] or state in ['starting','stopping','failed','unknown']:
+            raise ValueError('Cannot attach: role '+role+' is '+phase+'; project '+name+' is '+state+'. Check: team status '+name)
+        command='team launch '+name+' '+role if state in ['running','partial'] else 'team start '+name
+        raise ValueError('Cannot attach: role '+role+' in project '+name+' is not running. Run: '+command)
+    container=core.container(role)
+    session=subprocess.run(['podman','exec',container,'tmux','has-session','-t','native'],capture_output=True,text=True)
+    if session.returncode:
+        raise ValueError('Role '+role+' has no available native tmux session. Check: team status '+name)
+    pane=subprocess.run(['podman','exec',container,'tmux','display-message','-p','-t','native:agent','#{pane_dead}'],capture_output=True,text=True)
+    if pane.returncode or pane.stdout.strip() not in ['0','1']:
+        raise ValueError('Cannot verify the native session for role '+role+'. Check: team status '+name)
+    if pane.stdout.strip()=='1':
+        raise ValueError('Native session for role '+role+' has exited. Run: team launch '+name+' '+role)
+    try:core.run(['podman','exec','-it',container,'tmux','attach-session','-t','native'])
+    except subprocess.CalledProcessError:
+        raise ValueError('Could not attach to role '+role+'; its session may have stopped. Check: team status '+name) from None
+
 def project_summary(name):
     """Read service/container metadata only; running does not imply model readiness."""
     try:
@@ -618,7 +642,7 @@ def main():
         elif a.action in ['attach','launch']:
             if not a.role:p.error('ROLE required')
             if a.action=='launch':required_auth(a.project);core.launch(a.role);(core.PROFILES/a.role/'launched').touch()
-            else:core.run(['podman','exec','-it',core.container(a.role),'tmux','attach-session','-t','native'])
+            else:attach_role(a.project,a.role,core)
 
 if __name__=='__main__':
     action=sys.argv[1] if len(sys.argv)>1 else None

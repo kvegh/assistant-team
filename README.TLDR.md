@@ -158,3 +158,9 @@ Encrypted model/deployment snapshots may live only in the private companion
 assistant-team-secrets repository, not this code repository. The Vault password
 and all plaintext credentials stay outside Git. The current snapshot is saved
 source state, not proof of working login or automatic restore integration.
+
+## Attach readiness
+
+Attach requires a running role and live native tmux pane. If the project has only
+been created or is stopped, run `team start PROJECT` before `team attach PROJECT ROLE`.
+Failures explain the next command; attach never starts anything implicitly.

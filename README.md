@@ -1119,3 +1119,12 @@ A rejected private Codex bootstrap cache can be recovered explicitly from a know
 [Private Claude recovery](docs/CLAUDE_AUTH_RECOVERY.md) separately validates an explicitly bound archived private-connector cache against destination account and organization metadata. It preserves both account metadata files, copies only the existing-target credential on explicit execution, and allows expired access when a refresh token is present. A later bounded native check must establish usability; the playbook makes no model or refresh call.
 
 Private Claude recovery also recognizes the exact native target cache with empty access/refresh strings and correctly typed remaining native fields after a failed login check. This exception applies only to the destination; source refresh-bearing validation and matching account/organization metadata remain mandatory. Arbitrary empty documents, malformed fields and API-key fallback records are refused.
+
+## Attach readiness
+
+`attach PROJECT ROLE` checks the selected container and native tmux pane first.
+For a created/stopped project it recommends `team start PROJECT`; for an absent
+role in an otherwise running project it recommends `team launch PROJECT ROLE`.
+Transitional/failed states point to `team status PROJECT`. Attach never starts a
+project, launches a model or changes permissions implicitly. A live role remains
+attachable for diagnosis even when another role or service has failed.
