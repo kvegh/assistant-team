@@ -56,6 +56,12 @@ vi ~/ac-agents/projects/example/assistant-prompt.md          # fill [Project] an
 ~/ac-agents/bin/team apply-prompts example                       # effective next launch
 ```
 
+Stop/start resumes each role's exact saved native conversation for its assigned
+account; history, credentials, workspace and database persist. No new task prompt
+is submitted. Missing or ambiguous history fails clearly; no newest-session guess.
+In-flight tools/process memory are not checkpointed. Expired auth and native
+approvals still require attention.
+
 Finish a project with one of these alternatives:
 `~/ac-agents/bin/team archive PROJECT` stops it if running and moves its full contents/config to
 `~/ac-agents/project-archive/PROJECT-ddmmyyhhmm` (local 24-hour time); `~/ac-agents/bin/team destroy PROJECT` stops it if running and deletes it.

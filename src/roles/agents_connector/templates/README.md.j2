@@ -194,7 +194,20 @@ and are not rewritten. Duplicate, missing or unknown roles are rejected before r
 
 `"$AC_AGENTS_ROOT/bin/team" apply-prompts PROJECT` renders each role’s own instructions. Changes apply on next native launch, not halfway through an active conversation. Never put credentials in prompts or shared artifacts. Coordinate ownership before editing the same file.
 
-`"$AC_AGENTS_ROOT/bin/team" start PROJECT` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. Native interactive trust/approval gates may still require attention. `"$AC_AGENTS_ROOT/bin/team" attach PROJECT ROLE` attaches the selected session; detach with Ctrl-B then D. Restart retains disk history but starts fresh processes; automatic native session resumption is not promised.
+`"$AC_AGENTS_ROOT/bin/team" start PROJECT` checks enabled assignments and saved auth before starting any project service, then starts eight native tmux sessions without an initial task prompt. `"$AC_AGENTS_ROOT/bin/team" attach PROJECT ROLE` attaches the selected session; detach with Ctrl-B then D.
+
+Stop saves each role's native conversation identity. Start resumes that exact
+conversation for the same project role and account profile; fresh roles begin new
+conversations. Mounted native homes retain credentials, history and native
+conversation databases; project workspaces and the communication database also
+persist. Missing or ambiguous saved history produces an error rather than a silent
+new conversation. Resume never guesses the newest conversation or submits a new
+task prompt.
+
+Saved conversation context is restored, but process memory and in-flight tool
+actions are not checkpointed. Stop between tasks when practical. Expired auth,
+workspace trust and native tool approvals may still need operator attention;
+resume does not grant permissions or refresh authentication automatically.
 
 The per-project systemd target is `assistant-connector@PROJECT.target`. It is not enabled at boot. There is no original default group or all-project master target. Direct user-systemd use after switching users may require:
 

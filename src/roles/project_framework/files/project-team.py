@@ -180,6 +180,9 @@ def control_command(command,deadline):
 
 
 def stop_project(name,deadline):
+    # Refuse an ambiguous conversation before asking systemd to tear down services.
+    if any(container_phase(name,role)=='running' for role in ROLES):
+        load(name).capture_sessions()
     # A target stop alone can complete before PartOf-dependent service stops.
     control_command(['systemctl','--user','stop',*project_units(name)],deadline)
     orphaned = ['acp-'+name+'-'+role for role in ROLES if container_phase(name,role) in ['running','paused']]
@@ -344,6 +347,8 @@ def list_projects():
 
 def launch_all(name):
     core=required_auth(name)
+    # Validate all saved conversations before launching the first native harness.
+    for role in ROLES:core.session_arguments(role)
     # Credential seeding is selective; container commands do not inherit host API-key variables.
     for role in ROLES:
         cfg=json.loads((core.PROFILES/role/'profile.json').read_text())
@@ -351,10 +356,11 @@ def launch_all(name):
     core.apply_prompts()
     for role in ROLES:
         core.launch(role);(core.PROFILES/role/'launched').touch()
-    print('Eight native sessions launched without an initial task prompt. Attach the orchestrator; native approvals remain enabled.')
+    print('Eight native sessions started; saved conversations resumed where available. No initial task prompt sent; native approvals remain enabled.')
 
 def stop_containers(name):
     core=load(name)
+    core.capture_sessions()
     existing=[core.container(role) for role in ROLES if subprocess.run(['podman','container','exists',core.container(role)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0]
     if existing:core.run(['podman','stop','--time','10',*existing],stdout=subprocess.DEVNULL)
     for role in ROLES:(core.PROFILES/role/'launched').unlink(missing_ok=True)

@@ -18,10 +18,18 @@ class ProjectControlTests(unittest.TestCase):
         self.assertEqual(events,[['systemctl','--user','stop',*team.project_units('fixture')],'verified'])
 
     def test_orphan_container_is_stopped_without_removal_or_disabling(self):
-        with patch.object(team,'control_command') as command, patch.object(team,'container_phase',side_effect=lambda name,role:'running' if role=='builder' else 'absent'), patch.object(team,'wait_project_stopped'):
+        with patch.object(team,'load') as load, patch.object(team,'control_command') as command, patch.object(team,'container_phase',side_effect=lambda name,role:'running' if role=='builder' else 'absent'), patch.object(team,'wait_project_stopped'):
             team.control('stop','fixture')
+        load.return_value.capture_sessions.assert_called_once_with()
         self.assertEqual(command.call_args_list[1].args[0],['podman','stop','--time','10','acp-fixture-builder'])
         self.assertEqual(len(command.call_args_list),2)
+
+    def test_ambiguous_conversation_refuses_stop_before_systemd_teardown(self):
+        core=Mock();core.capture_sessions.side_effect=ValueError('Multiple native conversations')
+        with patch.object(team,'load',return_value=core), patch.object(team,'container_phase',return_value='running'), patch.object(team,'control_command') as command:
+            with self.assertRaisesRegex(ValueError,'Multiple native'):
+                team.stop_project('fixture',10)
+        command.assert_not_called()
 
     def test_start_waits_for_shutdown_before_submitting_start(self):
         events=[]

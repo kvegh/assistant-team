@@ -677,8 +677,17 @@ upstream agents-connector pull request.
 
 The user target `assistant-connector@PROJECT.target` orders that project's broker,
 gateway and native container services. Project targets are not enabled at boot.
-Stop/restart affect only that project and preserve its database and role state;
-restart launches new CLI sessions, without claiming automatic conversation resume.
+Stop/restart affect only that project. Each role keeps its mounted native home,
+workspace, credentials, history and project database. Stop saves the native
+conversation identity; start resumes that exact conversation for the same role
+and account profile, without submitting a new task prompt. Fresh roles begin new
+conversations. Missing or ambiguous saved history fails clearly instead of silently
+starting over; selection never guesses the newest conversation.
+
+This restores saved conversation context, not process memory or an in-flight tool
+action. Stop between tasks when practical. Expired credentials, workspace trust
+and native tool approvals can still require operator attention; resume does not
+grant additional permissions or refresh authentication automatically.
 Only four collaboration roles join its broker; the observer and connector roles
 remain separately scoped. Observer snapshots/private report delivery remain manual,
 and external connector tools and automated orchestration remain unconfigured.

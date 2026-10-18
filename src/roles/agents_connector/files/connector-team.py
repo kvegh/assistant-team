@@ -41,6 +41,44 @@ def role_directory(name, kind):
 def role_home(name):return role_directory(name,'home')
 
 
+def native_sessions():
+    source=pathlib.Path(__file__).with_name('native-sessions.py')
+    spec=importlib.util.spec_from_file_location('native_sessions',source)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
+def session_profile(name):
+    cfg=json.loads((PROFILES/name/'profile.json').read_text())
+    vendor='antigravity' if antigravity_executable(name) is not None else cfg['flavour']
+    account=cfg.get('account_profile') or cfg.get('auth_directory') or cfg['flavour']
+    return vendor,account
+
+
+def session_arguments(name):
+    if not PROJECT:return []
+    vendor,account=session_profile(name)
+    home=role_home(name)
+    descriptor=private_directory(home)
+    os.close(descriptor)
+    return native_sessions().resume_arguments(home,vendor,account,name)
+
+
+def capture_sessions():
+    """Capture exact current native identities before stopping any role."""
+    if not PROJECT:return
+    for name in ALL:
+        result=subprocess.run(['podman','inspect','--format','{{.State.Running}}',container(name)],
+                              capture_output=True,text=True,timeout=10)
+        if result.returncode or result.stdout.strip()!='true':continue
+        vendor,account=session_profile(name)
+        result=subprocess.run(['podman','exec',container(name),'python3',
+                               '/opt/connector/bin/native-sessions.py','capture-live',vendor,account,name],
+                              capture_output=True,text=True,timeout=15)
+        if result.returncode:
+            raise ValueError('Cannot save native conversation for '+name+': '+result.stderr.strip()[:500])
+
+
 def startup_json(home, relative, update):
     """Merge setup defaults privately; refuse links and malformed native state."""
     path=home/relative
@@ -89,6 +127,16 @@ def prepare_native_startup(name):
             general.setdefault('enableAutoUpdate',False)
             general.setdefault('enableAutoUpdateNotification',False)
         startup_json(home,'.gemini/settings.json',defaults)
+        vendor,account=session_profile(name)
+        command=shlex.join(['python3','/opt/connector/bin/native-sessions.py','record-hook',vendor,account,name])
+        def session_hook(data):
+            hooks=data.setdefault('hooks',{})
+            if not isinstance(hooks,dict):raise ValueError('Invalid native hooks configuration')
+            starts=hooks.setdefault('SessionStart',[])
+            if not isinstance(starts,list):raise ValueError('Invalid native session hooks configuration')
+            entry={'matcher':'','hooks':[{'type':'command','command':command}]}
+            if entry not in starts:starts.append(entry)
+        startup_json(home,'.gemini/settings.json',session_hook)
 
 
 def managed_codex_hooks(result, current_token):
@@ -586,6 +634,7 @@ def launch(name):
     else:vertex_command=[]
     if name in READERS:cmd=['claude','--strict-mcp-config','--mcp-config','/home/agent/reader-mcp.json','--settings','/home/agent/reader-settings.json','--tools','Read,Grep,Glob,Write']
     elif name in ['private-connector','corporate-connector']:cmd=['claude','--tools','']
+    cmd+=session_arguments(name)
     run(['podman','exec',container(name),'tmux','set-option','-g','remain-on-exit','on'])
     # Operator launch is explicit; never supply a work prompt or bypass approval.
     run(['podman','exec',container(name),'tmux','respawn-pane','-k','-t','native:agent',shlex.join(vertex_command+cmd)])
@@ -845,6 +894,7 @@ def main():
     elif a.action=='prepare':
         for n in ALL:start_container(n)
     elif a.action=='stop':
+        capture_sessions()
         existing=[container(n) for n in ALL if subprocess.run(['podman','container','exists',container(n)]).returncode==0]
         if existing:run(['podman','stop','--time','10',*existing],stdout=subprocess.DEVNULL)
         for n in ALL:(PROFILES/n/'launched').unlink(missing_ok=True)

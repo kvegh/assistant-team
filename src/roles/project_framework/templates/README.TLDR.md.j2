@@ -92,6 +92,13 @@ template without overwriting an existing destination. Conflicting paths require 
 finish stopping. `team restart NAME` completes that stop before starting again.
 If a bounded wait fails, check status before issuing another start.
 
+Stop/start resumes each role's exact saved native conversation for its assigned
+account; history, credentials, workspace and database persist. No new task prompt
+is submitted. Missing or ambiguous history fails clearly; no newest-session guess.
+In-flight tools/process memory are not checkpointed. Expired auth and native
+approvals still require attention.
+
+
 First run: attach each role, finish native onboarding, then give the task to the
 orchestrator. Gemini work needs an exact Vertex model ID, including any preview
 suffix; saved login does not verify model access.

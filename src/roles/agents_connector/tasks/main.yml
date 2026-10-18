@@ -7,6 +7,7 @@
       tags: [always]
 - name: Inspect dedicated account for focused configuration reruns
   tags:
+    - project_control
     - connector_services
     - auth_sources
     - connector_images
@@ -22,6 +23,7 @@
     key: "{{ containers.runtime_user }}"
 - name: Resolve dedicated home and user manager
   tags:
+    - project_control
     - connector_services
     - auth_sources
     - connector_images
@@ -37,6 +39,7 @@
     agents_connector_runtime_uid: "{{ ansible_facts.getent_passwd[containers.runtime_user][1] }}"
 - name: Define protected connector root
   tags:
+    - project_control
     - connector_services
     - auth_sources
     - connector_images
@@ -159,6 +162,18 @@
     group: "{{ containers.runtime_user }}"
     mode: "0600"
   loop: [passive-readers.py, passive-reader-hook.py]
+
+- name: Install private native conversation lifecycle helper
+  tags: [connector_watch, connector_services, project_control]
+  ansible.builtin.copy:
+    src: native-sessions.py
+    dest: "{{ __agents_connector_root }}/{{ item }}/native-sessions.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0600"
+    setype: container_file_t
+    selevel: s0
+  loop: [routing, bin]
 
 - name: Route broker wake commands through the constrained tmux adapter
   ansible.builtin.file:
