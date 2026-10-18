@@ -64,10 +64,11 @@ no automatic migration command is claimed or approved by this layout decision.
 ## Access and secrets
 
 - The repository is private. Privacy does not replace encryption.
-- Model authentication data must never enter Git, even encrypted. Provider login
-  tokens, refresh tokens, API keys and credential files belong in operator-owned
-  runtime storage or a separate secret manager outside the repository. This is
-  stricter than the Vault allowance for deployment configuration below.
+- Model authentication stays outside the application/code repository. The operator
+  now permits explicitly authorized authentication snapshots as Ansible Vault
+  ciphertext in the private companion assistant-team-secrets repository only.
+  Never commit plaintext credentials, decrypted output or Vault password files.
+  Preserve provider/work/private boundaries and explicit capture provenance.
 - Never commit environment-specific sensitive data in plaintext: credentials,
   tokens, usernames, hostnames, addresses, cloud project identifiers, or similar
   deployment values. Use Ansible Vault and generic documentation placeholders.

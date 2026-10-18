@@ -43,9 +43,15 @@ operator identities, deployment addresses, credentials or private repository dat
 
 ## Release acceptance and remaining follow-up
 
-- [ ] Verify fresh-project native onboarding after the setup-preparation fix: all
-  eight terminals must pass theme/welcome/workspace-trust/managed-hook setup without
-  granting blanket tool permissions. Keep provider login and task approvals separate.
+- [x] Verify fresh-project native onboarding after the setup-preparation fix:
+  all eight native terminals reached input prompts on the fresh target, with
+  no theme/welcome/workspace-trust/managed-hook setup dialog. Installed file hashes
+  matched source; the model-free isolation/lifecycle/streaming suite passed.
+- [ ] Resolve the separate private-Claude authentication preflight failure found
+  during the native restart check. The copied role cache was token-cleared while
+  the bootstrap seed's access token was expired. Do not bypass the guard or assume
+  the encrypted backup proves current provider access. Normal tool approvals
+  remain distinct from onboarding and authentication.
 
 Status reconciled after the initial fresh-deployment and authenticated team test.
 Completed checks describe that test run, not current service health or permanent
@@ -57,7 +63,8 @@ performed by this backlog update.
   working environment and keep test-resource retirement explicitly scoped.
 - [x] Complete selective authentication transfer and same-account recovery, then
   confirm bounded native model access for the six enabled account profiles.
-  Authentication material remains outside Git, including encrypted copies.
+  Authentication material stays outside the code repository; the later operator
+  decision permits ciphertext in the private companion secrets repository.
 - [x] Verify genuine orchestrator-to-peer broker replies and isolated private
   summarizer/observer outputs during the acceptance project run.
 - [ ] Finish acceptance for `project-autotest-1`: verify a corrected challenger
@@ -170,21 +177,22 @@ performed by this backlog update.
   superseded credentials. Coordinate the shared vault-password change across all
   dependent projects; do not rotate this environment in isolation and break other
   consumers. Review narrower vault-password scope to reduce shared dependencies.
-  Keep secret values and all model-authentication material outside Git, including
-  encrypted model-authentication copies. This is planned work, not authorization
+  Keep plaintext secrets and the Vault password outside Git. Model snapshots
+  may enter only the authorized private companion repository as ciphertext.
+  This is planned work, not authorization
   to rotate or revoke credentials now.
 
-- [ ] After final team acceptance, complete the already requested external
-  authentication-vault export. An exporter and tests exist as an unpublished draft;
-  no real vault has been created. Publish the generic code/documentation and create
-  `auth_copy_vault.yml` beside the operator's existing `vpf`, outside Git. Encrypt
-  with that password file and verify protected permissions and decryptability
-  without exposing contents. Capture the explicitly identified, successfully tested
-  destination bootstrap stream after bounded checks, including refreshed/recovered
-  credentials; do not select stale source caches by modification time. Preserve
-  account/provider boundaries and provenance. Model authentication must never
-  enter Git, even encrypted. Broader save/restore automation remains a separate
-  design item; see `docs/AUTH_REPLICATION.md` for the provider-file manifest.
+- [x] Capture the explicitly requested original bootstrap authentication and
+  existing deployment definition into the private companion secrets repository.
+  Six enabled profiles supplied nine allowlisted native input files; two disabled
+  profiles were excluded. Both vaults use the existing external vpf and passed
+  exact private decrypt-and-compare checks. Source state was unchanged; no model
+  access or freshness claim is implied. Companion implementation: `9058235`.
+- [ ] Reconcile the generic exporter draft with the now-authorized encrypted
+  companion repository and design automatic save/restore integration. Preserve
+  explicit source-stream provenance and fresher runtime credentials. The draft
+  and its tests remain unpublished; no automatic AAP restore is installed by the
+  snapshot. See `docs/AUTH_REPLICATION.md`.
 
 - [x] Deploy and accept the source-implemented installation layout on an explicitly
   authorized fresh environment. Source now supports `PREFIX/ac-agents`, destination

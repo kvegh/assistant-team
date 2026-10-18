@@ -9,9 +9,10 @@ rewriting unrelated working code during an active deployment.
 
 Direct SSH access with sudo to the project VM is authorized for project work.
 Keep deployment access credentials and environment-specific values in Ansible Vault.
-Model authentication data must never enter Git, even encrypted. Keep provider
-login tokens, refresh tokens, API keys and credential files in operator-owned
-runtime storage or a separately managed secret store outside the repository.
+Model authentication must remain outside this application/code repository.
+The operator explicitly permits Ansible Vault-encrypted authentication snapshots
+in the private companion repository assistant-team-secrets only. Never commit
+plaintext credentials, decrypted output or the Vault password file anywhere.
 Do not broaden this authorization to unrelated hosts or security-control bypasses.
 
 All read-only APME scans are authorized without repeated approval, provided they

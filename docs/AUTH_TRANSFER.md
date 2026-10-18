@@ -16,7 +16,9 @@ group. Do not add the source to that group.
 
 Keep environment-specific bindings in an Ansible Vault file. Select it with
 `native_auth_transfer_config_file`; no model credentials belong in that file or
-in Git, even encrypted. The file supplies these role variables:
+in this code repository. Encrypted authentication snapshots may be stored only
+in the explicitly authorized private companion secrets repository. The binding
+file supplies these role variables:
 
 | Variable | Meaning |
 | --- | --- |

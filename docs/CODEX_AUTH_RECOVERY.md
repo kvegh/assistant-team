@@ -9,7 +9,8 @@ A dedicated AAP job uses inventory group `native_auth_destinations`, source and
 destination machine access, and a Vault credential. Set
 `codex_auth_recovery_config_file` to the encrypted binding definition. The provided
 `vars/codex_auth_recovery.vault.yml` contains only encrypted environment bindings;
-model authentication never enters Git, even encrypted.
+model authentication never enters this code repository; encrypted snapshots
+are permitted only in the private companion secrets repository.
 
 | Setting | Meaning |
 | --- | --- |

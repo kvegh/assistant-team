@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.21
+
+Document the explicitly authorized encrypted companion secret store and verified source snapshot. Keep plaintext/passwords outside Git and model authentication outside the code repository; clarify fresh-start acceptance and the separate private-Claude restart authentication blocker.
+
 ## 1.0.20
 
 Document planned rotation of all environment secrets and coordinated replacement of the widely reused Vault password. No credentials changed.

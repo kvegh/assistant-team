@@ -373,3 +373,16 @@ future-vault material manifest. It does not prove provider access or copy projec
 role sessions; no credentials belong in Git, even encrypted.
 
 Initial account selection can be supplied through encrypted Ansible deployment enabled_profiles. Empty preserves automatic installed-profile selection; a nonempty list seeds only missing environment.conf by default. Explicit project_framework_reconcile_profiles=true replaces existing selection and must be chosen by the operator. Neither operation copies credentials or restarts teams.
+
+## Credential snapshot storage
+
+Model authentication stays outside this application/code repository. By explicit
+operator decision, the private companion assistant-team-secrets repository may
+store Ansible Vault-encrypted model authentication and deployment configuration.
+Vault passwords, plaintext login caches and decrypted output remain outside Git.
+
+The companion now contains a source-bootstrap snapshot for six enabled profiles
+and a separate deployment definition. Capture used the existing external vpf and
+passed private encryption/decryption comparison. It did not refresh credentials
+or prove model access, and it did not merge project-role caches. The generic
+exporter draft and automatic restore integration remain unfinished.

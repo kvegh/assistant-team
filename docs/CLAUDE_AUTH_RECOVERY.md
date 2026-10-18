@@ -5,8 +5,9 @@ Claude session to the matching installed private account. This is separate from
 Codex recovery and leaves that flow unchanged. Use a dedicated AAP job with
 inventory group `native_auth_destinations`, endpoint machine access and Vault.
 Set `claude_auth_recovery_config_file` to the encrypted definition, such as
-`../vars/claude_auth_recovery.vault.yml`. Authentication files never enter Git,
-even encrypted; the tracked Vault contains only environment bindings.
+`../vars/claude_auth_recovery.vault.yml`. Authentication files never enter this code repository; the tracked Vault
+contains only environment bindings. Encrypted authentication snapshots may live
+only in the explicitly authorized private companion secrets repository.
 
 Bindings use the `claude_auth_recovery_` prefix: `source_host`, `source_role`,
 `source_home`, `source_metadata`, `destination_profiles_root`,

@@ -125,10 +125,16 @@ unsafe links and non-Gemini roles are refused; native processes stay running.
 
 ## Security
 
-Model authentication data must never enter Git, even encrypted. Keep provider
-login tokens, refresh tokens, API keys and native credential files in operator-owned
-runtime storage or a separate secret manager outside the repository. Ansible Vault
-remains available for deployment configuration, not for these model credentials.
+Model authentication stays outside this application/code repository. By explicit
+operator decision, the private companion assistant-team-secrets repository may
+store Ansible Vault-encrypted model authentication and deployment configuration.
+Vault passwords, plaintext login caches and decrypted output remain outside Git.
+
+The companion now contains a source-bootstrap snapshot for six enabled profiles
+and a separate deployment definition. Capture used the existing external vpf and
+passed private encryption/decryption comparison. It did not refresh credentials
+or prove model access, and it did not merge project-role caches. The generic
+exporter draft and automatic restore integration remain unfinished.
 
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
@@ -1081,8 +1087,9 @@ A dedicated Ansible/AAP playbook can preflight and selectively restore enabled
 bootstrap profiles into a fresh installation without replacing existing target
 credentials. See [the transfer guide](docs/AUTH_TRANSFER.md) for the exact file and
 config-field manifest, encrypted endpoint bindings and separate bounded model
-checks. Model authentication never belongs in Git, even encrypted. The future
-external vault remains a separate task; no automatic credential archive is built.
+checks. Model authentication remains outside this code repository; encrypted
+snapshots are now authorized in the private companion secrets repository.
+Automatic vault save/restore integration remains a separate task.
 
 The auth-transfer transport is verified through an actual local Ansible fixture:
 metadata-only preflight, six-context missing-only restore and idempotent rerun.

@@ -1,8 +1,18 @@
 # Native model authentication replication
 
-Status: **on hold at the user's request**. Analysis and proposed secret manifest
-only. No authentication export, secret vault, restore job or live provider check
-has been created by this work. Resume only when the user requests it.
+Status: the operator superseded the outside-all-Git restriction. Encrypted
+model-authentication snapshots are now authorized in the private companion
+assistant-team-secrets repository only; the application repository still excludes
+model credentials. Its initial capture (`9058235`) includes the explicitly chosen
+source bootstrap state and the existing deployment definition, encrypted with the
+external password file and verified by exact private decryption comparison.
+
+No provider refresh/model probe ran during capture. Expiration/revocation remain
+possible, and no automatic restore integration is implied. The reusable exporter
+is still an unpublished draft. Its previous outside-Git output guard requires a
+reviewed policy update before reuse with the companion repository; do not silently
+bypass it. The historical external-vault proposal below remains design context,
+not the current storage-location requirement.
 
 ## Pushed implementation and resume reference
 

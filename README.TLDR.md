@@ -151,3 +151,10 @@ real AAP transfer remains gated on fresh environment readiness.
 
 Mistral auth transfer supports native Vibe metadata; Mistral team integration
 remains pending.
+
+## Secret snapshot storage
+
+Encrypted model/deployment snapshots may live only in the private companion
+assistant-team-secrets repository, not this code repository. The Vault password
+and all plaintext credentials stay outside Git. The current snapshot is saved
+source state, not proof of working login or automatic restore integration.
