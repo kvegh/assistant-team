@@ -162,6 +162,18 @@ performed by this backlog update.
 
 ## Required later
 
+- [ ] Plan and execute rotation of all environment secrets, including the broadly
+  reused Ansible Vault password supplied through `vpf`, deployment credentials,
+  repository/controller tokens and model authentication material. Inventory each
+  secret's consumers first, replace credentials and rekey every dependent vault,
+  update AAP credentials and other consumers, verify access/deployment, then revoke
+  superseded credentials. Coordinate the shared vault-password change across all
+  dependent projects; do not rotate this environment in isolation and break other
+  consumers. Review narrower vault-password scope to reduce shared dependencies.
+  Keep secret values and all model-authentication material outside Git, including
+  encrypted model-authentication copies. This is planned work, not authorization
+  to rotate or revoke credentials now.
+
 - [ ] After final team acceptance, complete the already requested external
   authentication-vault export. An exporter and tests exist as an unpublished draft;
   no real vault has been created. Publish the generic code/documentation and create

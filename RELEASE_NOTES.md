@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.20
+
+Document planned rotation of all environment secrets and coordinated replacement of the widely reused Vault password. No credentials changed.
+
 ## 1.0.19
 
 Document isolated onboarding defaults, exact native Codex hook-trust boundaries and verified source checks. Native target startup acceptance follows deployment.
