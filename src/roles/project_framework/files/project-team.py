@@ -12,32 +12,32 @@ GLOBAL_ACTIONS = ['--help','-h','help','--list','list-projects','version','setup
 HELP = '''Usage: team COMMAND [PARAMETERS]
 
 Environment and discovery:
+  diagnostics --export PATH          Export safe environment diagnostic metadata to PATH.
   --help | -h | help                  Show all supported commands; no project required.
   --list | list-projects             List initialized projects and runtime status; no private content read.
-  version                            Show installed version and build metadata.
   setup                              Select enabled account profiles; login is optional.
   setup --list                       List enabled/installed profiles and saved-auth status.
-  diagnostics --export PATH          Export safe environment diagnostic metadata to PATH.
+  version                            Show installed version and build metadata.
 
 Projects:
-  create-project NAME                Create project directories, prompts, configs and database.
-  start NAME                         Check authentication and start this project's team.
-  stop NAME                          Stop this project's target and services.
-  destroy NAME                       Stop if running, remove its containers, then delete project/config.
+  apply-prompts NAME                 Render project instructions; effective on next launch.
   archive NAME                       Stop if running and retain full content/config; always use NAME-ddmmyyhhmm.
-  unarchive ARCHIVE                  Copy retained archive to its dated project name; enable target, leave stopped.
+  attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
+  create-project NAME                Create project directories, prompts, configs and database.
+  deliver-observer-report NAME       Disabled: private evaluations are operator-only.
+  destroy NAME                       Stop if running, remove its containers, then delete project/config.
+  launch NAME ROLE                   Launch one role after checking project authentication.
+  launch-all NAME                    Launch all eight native role sessions after preflight.
+  preflight NAME                     Validate enabled role assignments and saved authentication.
+  refresh-observer NAME              Update the private observer's discussion snapshot.
   rename-project OLD NEW             Stop OLD, rename identity/config; preserve enablement, leave stopped.
   restart NAME                       Check authentication and restart this project's team.
+  start NAME                         Check authentication and start this project's team.
   status NAME                        Show target/role states, work/priv profiles and configured models.
-  watch [OPTIONS] NAME [OPTIONS]    Last 50 then exit; -NUMBER, -f or -NUMBERf; options either side.
-  attach NAME ROLE                   Attach the role's native tmux session; Ctrl-B D detaches.
-  launch NAME ROLE                   Launch one role after checking project authentication.
-  preflight NAME                     Validate enabled role assignments and saved authentication.
-  launch-all NAME                    Launch all eight native role sessions after preflight.
+  stop NAME                          Stop this project's target and services.
   stop-containers NAME               Stop only this project's role containers.
-  apply-prompts NAME                 Render project instructions; effective on next launch.
-  refresh-observer NAME              Update the private observer's discussion snapshot.
-  deliver-observer-report NAME       Disabled: private evaluations are operator-only.
+  unarchive ARCHIVE                  Copy retained archive to its dated project name; enable target, leave stopped.
+  watch [OPTIONS] NAME [OPTIONS]    Last 50 then exit; -NUMBER, -f or -NUMBERf; options either side.
 
 NAME: 1-40 lowercase letters/digits, underscores or hyphens; start with a letter/digit.
 ROLE: orchestrator, builder, investigator, challenger, summarizer, observer,

@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.25
+
+Alphabetize command entries within each existing team help section, preserving command syntax and descriptions.
+
 ## 1.0.24
 
 Document attach readiness behavior, preserved diagnostic access and 96 passing project-related tests.

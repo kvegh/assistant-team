@@ -1128,3 +1128,6 @@ role in an otherwise running project it recommends `team launch PROJECT ROLE`.
 Transitional/failed states point to `team status PROJECT`. Attach never starts a
 project, launches a model or changes permissions implicitly. A live role remains
 attachable for diagnosis even when another role or service has failed.
+
+Help groups environment/discovery commands and project commands separately,
+with entries alphabetized by command name (ignoring leading option hyphens).
