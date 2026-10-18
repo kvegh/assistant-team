@@ -1658,3 +1658,21 @@ installed hashes matched source and the model-free project suite passed. The
 additional native restart attempt failed the separate private-Claude auth guard:
 its copied role cache was token-cleared and its bootstrap access token expired.
 This is not recorded as successful restart or current provider authentication.
+
+
+## Explain unavailable role sessions before attaching
+
+Implementation `133eb93` checks the requested role container and native tmux
+session before interactive attach. Previously a project that had only been
+created produced a raw Podman missing-container error. Missing/stopped projects
+now explain the start command; missing roles in otherwise running projects explain
+the role launch command. Starting/stopping, paused, failed and unknown states point
+to status inspection; dead native panes explain relaunch. A live role remains
+attachable for debugging even when another dependency is unhealthy.
+
+Attach never starts services, launches models or changes permissions implicitly.
+If the session disappears between preflight and attach, a readable status message
+replaces the subprocess exception. All 96 project-related tests pass, including
+seven dedicated attach scenarios covering negative states, missing/dead tmux
+sessions, live diagnostic attachment and a stop race. Documentation diff checks
+passed. Target application is a focused configuration update, not a VM reprovision.
