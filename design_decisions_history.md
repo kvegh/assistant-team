@@ -1676,3 +1676,29 @@ replaces the subprocess exception. All 96 project-related tests pass, including
 seven dedicated attach scenarios covering negative states, missing/dead tmux
 sessions, live diagnostic attachment and a stop race. Documentation diff checks
 passed. Target application is a focused configuration update, not a VM reprovision.
+
+## Restore the exact native conversation after project stop/start
+
+Implementation `333b74e` preserves each role's exact native session identity in
+its private, mounted account home. Previously the files survived but restart
+opened new conversations. Claude and Codex live identities come from native
+process metadata; Gemini uses a native SessionStart metadata hook, with unique
+main-history adoption for existing sessions; Antigravity uses its native workspace
+conversation map. Startup uses explicit session IDs and refuses ambiguous or
+missing confirmed histories instead of guessing the latest conversation.
+
+Pointers contain identity metadata only, are atomically written with mode 0600,
+and must match the role, provider and account profile. Subagent histories are
+excluded. An empty current session after clearing a conversation cannot revive
+an older history. Stop captures identities before service teardown; start checks
+all role histories before launching harnesses. Saved history is preserved, but
+process memory and in-flight tools are not checkpointed. Existing authentication,
+MCP isolation, sandbox and native approval settings remain enforced.
+
+Validation: the full unit suite passed 348 tests before the final five dedicated
+native-process identity cases were added; all 25 native-session cases then passed.
+Production Ansible lint passed on 208 files. Read-only target metadata probes
+identified current Claude/Codex sessions and the existing Gemini main history,
+including empty connector sessions. No running operator project was restarted or
+assigned additional work for these checks. These checks do not claim a native
+provider inference round trip after restart.

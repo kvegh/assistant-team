@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.1.1
+
+Document exact-conversation lifecycle behavior, implementation evidence and unchanged authentication and permission requirements.
+
 ## 1.1.0
 
 Resume each role's exact saved native conversation after project stop/start. Preserve account boundaries and native permissions, reject ambiguous history, and track empty sessions without reviving older conversations.
