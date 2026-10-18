@@ -1631,3 +1631,30 @@ explicit distrust preservation and idempotent defaults. Offline production Ansib
 lint passed across 204 files with the already installed pinned certified
 collection. Native fresh-project acceptance on the target is a separate check;
 these source results do not claim model access or unattended tool approval.
+
+
+## Store authorized encrypted snapshots in the companion repository
+
+The operator explicitly replaced the previous outside-all-Git rule for model
+credentials. The private assistant-team-secrets companion may now hold Ansible
+Vault-encrypted authentication snapshots and deployment configuration. The code
+repository still excludes model credential payloads; plaintext credentials,
+password files and decrypted output remain excluded from Git. This change makes
+repository access the intended project boundary while retaining encryption.
+
+Documentation implementation `4b45437` updates active collaboration/security rules,
+operator guides, authentication documentation and TODO status. Companion capture
+implementation `9058235` saves the explicitly selected original bootstrap stream
+and its existing deployment definition with the external vpf. Six enabled profiles
+supplied nine allowlisted native inputs; two disabled profiles were excluded.
+Private exact decrypt-and-compare and staged ciphertext/header checks passed.
+No source write, provider call, implicit role-cache selection or automatic restore
+integration occurred. Login freshness and entitlement remain unverified; the
+existing reusable exporter draft still needs a reviewed output-policy update.
+
+The source documentation also records completed native onboarding acceptance at
+1.0.19: all eight fresh role terminals reached input prompts without setup gates,
+installed hashes matched source and the model-free project suite passed. The
+additional native restart attempt failed the separate private-Claude auth guard:
+its copied role cache was token-cleared and its bootstrap access token expired.
+This is not recorded as successful restart or current provider authentication.
