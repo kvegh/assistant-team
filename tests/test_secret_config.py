@@ -39,15 +39,62 @@ class ExternalConfigurationStructureTests(unittest.TestCase):
         self.assertEqual(play['pre_tasks'][1]['vars']['secret_config_file'],
                          '{{ native_auth_transfer_config_file }}')
 
-    def test_supported_environment_mapping_covers_five_configurations(self):
+    def test_supported_environment_mapping_covers_configuration_and_auth(self):
         defaults = yaml.safe_load((ROLE / 'defaults/main.yml').read_text())
         self.assertEqual(set(defaults['secret_config_environment_variables']), {
             'environment', 'fresh_test', 'retire_test', 'claude_auth_recovery',
-            'codex_auth_recovery',
+            'codex_auth_recovery', 'bootstrap_auth',
         })
         tasks = yaml.safe_load((ROLE / 'tasks/main.yml').read_text())
         load = next(task for task in tasks if 'ansible.builtin.include_vars' in task)
         self.assertTrue(load['no_log'])
+
+
+class ControllerSnapshotStructureTests(unittest.TestCase):
+    def test_all_six_ciphertext_inputs_are_injected_as_secret_files(self):
+        defaults = yaml.load(
+            (ROOT / 'src/roles/controller_secret_configs/defaults/main.yml').read_text(),
+            Loader=yaml.BaseLoader,
+        )
+        files = defaults['controller_secret_configs_files']
+        self.assertEqual(len(files), 6)
+        self.assertEqual(files['bootstrap_auth'], 'bootstrap-auth_vault.yml')
+        fields = {field['id']: field for field in
+                  defaults['controller_secret_configs_inputs']['fields']}
+        required = defaults['controller_secret_configs_inputs']['required']
+        injectors = defaults['controller_secret_configs_injectors']
+        for name in files:
+            self.assertEqual(fields[name + '_vault']['secret'], 'true')
+            self.assertIn(name + '_vault', required)
+            self.assertIn('template.' + name, injectors['file'])
+        self.assertEqual(injectors['env']['AC_AGENTS_BOOTSTRAP_AUTH_VAULT_FILE'],
+                         '{{ tower.filename.bootstrap_auth }}')
+        tasks = yaml.safe_load(
+            (ROOT / 'src/roles/controller_secret_configs/tasks/main.yml').read_text())
+        status = next(task['ansible.builtin.command']['argv'] for task in tasks
+                      if task['name'] == 'Require committed encrypted configuration inputs')
+        self.assertIn('vaults/bootstrap-auth_vault.yml', status)
+        slurp = next(task for task in tasks if 'ansible.builtin.slurp' in task)
+        self.assertTrue(slurp['no_log'])
+        self.assertEqual(slurp['ansible.builtin.slurp']['src'],
+                         '{{ controller_secret_configs_checkout }}/vaults/{{ item.value }}')
+
+    def test_migration_attaches_new_then_detaches_only_the_previous_credential(self):
+        defaults = yaml.load(
+            (ROOT / 'src/roles/controller_secret_configs/defaults/main.yml').read_text(),
+            Loader=yaml.BaseLoader,
+        )
+        self.assertNotEqual(defaults['controller_secret_configs_credential_name'],
+                            defaults['controller_secret_configs_previous_credential_name'])
+        tasks = yaml.safe_load(
+            (ROOT / 'src/roles/controller_secret_configs/tasks/associate.yml').read_text())
+        self.assertIn('Attach the snapshot', tasks[1]['name'])
+        detach = tasks[2]
+        self.assertIn("'disassociate': true", detach['ansible.builtin.uri']['body'])
+        self.assertIn('previous.json.results[0].id', detach['ansible.builtin.uri']['body'])
+        self.assertTrue(detach['no_log'])
+        self.assertTrue(any('associations.json.results' in condition
+                            for condition in detach['when']))
 
 
 @unittest.skipUnless(shutil.which('ansible-playbook') and shutil.which('ansible-vault'),
@@ -84,11 +131,11 @@ class ExternalConfigurationAnsibleTests(unittest.TestCase):
         return path
 
     @staticmethod
-    def loader(namespace='', explicit=''):
+    def loader(namespace='', explicit='', name='environment'):
         return {
             'name': 'Load synthetic external configuration',
             'ansible.builtin.include_role': {'name': 'secret_config'},
-            'vars': {'secret_config_name': 'environment',
+            'vars': {'secret_config_name': name,
                      'secret_config_namespace': namespace,
                      'secret_config_file': explicit},
         }
@@ -132,6 +179,29 @@ class ExternalConfigurationAnsibleTests(unittest.TestCase):
         result = self.run_play([self.loader(explicit='configuration/explicit_vault.yml'),
                                {'ansible.builtin.assert': {
                                    'that': ["fixture_marker == 'explicit'"]}}], env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_bootstrap_auth_loads_from_companion_vaults_root(self):
+        self.encrypt('../bootstrap-auth_vault.yml', 'encrypted-bootstrap')
+        result = self.run_play([
+            self.loader('protected_auth', name='bootstrap_auth'),
+            {'ansible.builtin.assert': {'that': [
+                "protected_auth.fixture_marker == 'encrypted-bootstrap'",
+                'fixture_marker is undefined',
+            ]}},
+        ])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_bootstrap_auth_injected_path_overrides_local_snapshot(self):
+        self.encrypt('../bootstrap-auth_vault.yml', 'local-bootstrap')
+        override = self.encrypt('bootstrap_injected_vault.yml', 'injected-bootstrap')
+        env = self.env | {'AC_AGENTS_BOOTSTRAP_AUTH_VAULT_FILE': str(override)}
+        result = self.run_play([
+            self.loader('protected_auth', name='bootstrap_auth'),
+            {'ansible.builtin.assert': {'that': [
+                "protected_auth.fixture_marker == 'injected-bootstrap'",
+            ]}},
+        ], env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_missing_explicit_override_fails_without_silent_fallback(self):

@@ -76,7 +76,8 @@ Run commands as the dedicated runtime user. After entering that user’s shell, 
 ## Quick start
 
 1. Run `"$AC_AGENTS_ROOT/bin/team" setup --list` to inspect profiles, then `"$AC_AGENTS_ROOT/bin/team" setup` to select enabled profiles. Login is optional and runs only when you choose it.
-2. Authenticate selected profiles using their local `./login` commands.
+2. Check restored selected-profile credentials; use the local `./login` command
+   for any profile whose credentials are missing, expired or revoked.
 3. Create a project: `"$AC_AGENTS_ROOT/bin/team" create-project example`.
 4. Edit `{{ assistant_install_root }}/projects/example/project.example.config` to assign enabled profiles to roles. Edit `{{ assistant_install_root }}/projects/example/assistant-prompt.md` for the goal, boundaries and role instructions.
 5. Run `"$AC_AGENTS_ROOT/bin/team" start example`, then `"$AC_AGENTS_ROOT/bin/team" attach example orchestrator` and give the orchestrator a bounded task.
@@ -407,11 +408,18 @@ Encrypted configuration files use the `NAME_vault.yml` filename convention;
 renaming does not change ciphertext, passwords or Vault IDs.
 Vault passwords, plaintext login caches and decrypted output remain outside Git.
 
-The companion now contains a source-bootstrap snapshot for six enabled profiles
-and a separate deployment definition. Capture used the existing external vpf and
-passed private encryption/decryption comparison. It did not refresh credentials
-or prove model access, and it did not merge project-role caches. The generic
-exporter draft and automatic restore integration remain unfinished.
+The companion contains `vaults/bootstrap-auth_vault.yml` with the selected
+bootstrap profiles, separate from deployment definitions. Deployment decrypts it
+through the attached Vault credential and restores only missing allowlisted files
+for enabled profiles. Existing credentials, project-role refresh streams and
+running projects are preserved. Restored credentials are saved/unverified: a
+snapshot neither renews revoked credentials nor proves provider entitlement.
+Refresh the snapshot after a successful operator login; see the source repository's
+`docs/AUTH_REPLICATION.md` for the capture and AAP synchronization workflow.
+The private metadata-only restore report is
+`environment-logs/auth-restore/latest.json` below the installation root. To deploy
+without model authentication intentionally, set
+`native_auth_vault_restore_enabled: false`.
 
 ## Attach readiness
 
@@ -436,7 +444,11 @@ preserved. The source playbooks resolve explicit file overrides first, matching
 
 AAP receives ciphertext files from one custom configuration-snapshot credential
 and decrypts them only with the separately attached Vault-password credential.
-After committing changes to the companion repository, the operator reruns
+Fresh complete/portable deployment restores missing enabled-profile credentials
+from the companion `vaults/bootstrap-auth_vault.yml`; it preserves existing
+credentials and never starts/restarts projects. No source VM is needed for restore.
+The AAP snapshot credential supplies six encrypted files in total. After committing
+configuration or authentication changes to the companion repository, the operator reruns
 `src/sync_secret_configs.yml` from the code checkout with authorized controller
 credentials. This idempotent synchronization records source revision/checksums,
 never decrypts the files, and needs no additional runtime GitHub token. AAP copies

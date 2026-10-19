@@ -1,0 +1,189 @@
+---
+- name: Require explicit protected source and pinned repository access
+  ansible.builtin.assert:
+    that:
+      - native_auth_vault_refresh_source_host in hostvars
+      - native_auth_vault_refresh_source_host != inventory_hostname
+      - native_auth_vault_refresh_source_profiles_root is match('^/')
+      - native_auth_vault_refresh_source_environment_config is match('^/')
+      - native_auth_vault_refresh_runtime_user | length > 0
+      - native_auth_vault_refresh_repo_url is match('^(git@[^:]+:|ssh://)')
+      - native_auth_vault_refresh_ssh_key_file is match('^/')
+      - native_auth_vault_refresh_known_hosts_file is match('^/')
+      - native_auth_vault_refresh_password_file is match('^/')
+      - not ansible_check_mode
+    fail_msg: Authentication refresh requires an inventory source, pinned SSH repository credentials and an injected Vault password file.
+    quiet: true
+  no_log: true
+
+- name: Capture and publish only complete allowlisted authentication
+  no_log: true
+  diff: false
+  environment:
+    GIT_TERMINAL_PROMPT: '0'
+    GIT_SSH_COMMAND: >-
+      ssh -i {{ native_auth_vault_refresh_ssh_key_file | quote }}
+      -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes
+      -o UserKnownHostsFile={{ native_auth_vault_refresh_known_hosts_file | quote }}
+  block:
+    - name: Create a private controller checkout directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ac-auth-vault-refresh-
+      register: __native_auth_vault_refresh_checkout
+      changed_when: false
+
+    - name: Clone the encrypted companion repository with pinned SSH trust
+      ansible.builtin.git:
+        repo: "{{ native_auth_vault_refresh_repo_url }}"
+        dest: "{{ __native_auth_vault_refresh_checkout.path }}/repository"
+        version: "{{ native_auth_vault_refresh_repo_branch }}"
+        accept_hostkey: false
+      changed_when: false
+
+    - name: Load the existing protected authentication snapshot
+      ansible.builtin.include_vars:
+        file: "{{ __native_auth_vault_refresh_checkout.path }}/repository/vaults/bootstrap-auth_vault.yml"
+        name: __native_auth_vault_refresh_existing
+
+    - name: Capture credentials under the source runtime identity
+      become: true
+      become_user: "{{ native_auth_vault_refresh_runtime_user }}"
+      delegate_to: "{{ native_auth_vault_refresh_source_host }}"
+      block:
+        - name: Create a source helper directory without secret payload files
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: ac-auth-vault-refresh-
+          register: __native_auth_vault_refresh_helper
+          changed_when: false
+
+        - name: Install the existing protected allowlist capture helper
+          ansible.builtin.copy:
+            src: "{{ role_path }}/../native_auth_transfer/files/native-auth-transfer.py"
+            dest: "{{ __native_auth_vault_refresh_helper.path }}/native-auth-transfer.py"
+            mode: '0700'
+          changed_when: false
+
+        - name: Capture enabled authentication into protected controller memory
+          ansible.builtin.command:
+            argv:
+              - python3
+              - "{{ __native_auth_vault_refresh_helper.path }}/native-auth-transfer.py"
+              - capture
+              - --profiles-root
+              - "{{ native_auth_vault_refresh_source_profiles_root }}"
+              - --environment-config
+              - "{{ native_auth_vault_refresh_source_environment_config }}"
+          register: __native_auth_vault_refresh_capture
+          changed_when: false
+
+    - name: Decode the in-memory capture
+      ansible.builtin.set_fact:
+        __native_auth_vault_refresh_payload: "{{ __native_auth_vault_refresh_capture.stdout | from_json }}"
+        cacheable: false
+
+    - name: Reject incomplete captures and removal of previously stored profiles
+      ansible.builtin.assert:
+        that:
+          - __native_auth_vault_refresh_existing.native_auth_transfer is mapping
+          - __native_auth_vault_refresh_payload.version == 1
+          - __native_auth_vault_refresh_payload.purpose == 'bootstrap'
+          - __native_auth_vault_refresh_payload.entries | length > 0
+          - >-
+            __native_auth_vault_refresh_payload.report | rejectattr('status', 'in', ['ready', 'disabled']) | list | length == 0
+          - >-
+            __native_auth_vault_refresh_existing.native_auth_transfer.entries | map(attribute='profile') | list |
+            difference(__native_auth_vault_refresh_payload.entries | map(attribute='profile') | list) | length == 0
+        fail_msg: Authentication capture is incomplete or would remove stored profiles; existing encrypted authentication was preserved.
+        quiet: true
+
+    - name: Detect credential changes without capture timestamp churn
+      ansible.builtin.set_fact:
+        __native_auth_vault_refresh_changed: >-
+          {{ (__native_auth_vault_refresh_existing.native_auth_transfer | dict2items |
+              rejectattr('key', 'equalto', 'captured_at') | items2dict) !=
+             (__native_auth_vault_refresh_payload | dict2items |
+              rejectattr('key', 'equalto', 'captured_at') | items2dict) }}
+        cacheable: false
+
+    - name: Encrypt and publish a changed authentication snapshot
+      when: __native_auth_vault_refresh_changed | bool
+      block:
+        - name: Encrypt updated snapshot directly from protected stdin
+          ansible.builtin.command:
+            argv:
+              - ansible-vault
+              - encrypt
+              - --encrypt-vault-id
+              - default
+              - --vault-password-file
+              - "{{ native_auth_vault_refresh_password_file }}"
+              - --output
+              - "{{ __native_auth_vault_refresh_checkout.path }}/repository/vaults/bootstrap-auth_vault.yml"
+            stdin: >-
+              {{ __native_auth_vault_refresh_existing |
+                 combine({'native_auth_transfer': __native_auth_vault_refresh_payload}) | to_json }}
+            stdin_add_newline: false
+          changed_when: true
+
+        - name: Stage only the encrypted authentication snapshot
+          ansible.builtin.command:
+            argv: [git, add, --, vaults/bootstrap-auth_vault.yml]
+            chdir: "{{ __native_auth_vault_refresh_checkout.path }}/repository"
+          changed_when: true
+
+        - name: Commit the encrypted authentication refresh
+          ansible.builtin.command:
+            argv:
+              - git
+              - -c
+              - "user.name={{ native_auth_vault_refresh_git_name }}"
+              - -c
+              - "user.email={{ native_auth_vault_refresh_git_email }}"
+              - commit
+              - -m
+              - Refresh encrypted model authentication
+            chdir: "{{ __native_auth_vault_refresh_checkout.path }}/repository"
+          changed_when: true
+
+        - name: Push without force and fail on concurrent upstream changes
+          ansible.builtin.command:
+            argv: [git, push, origin, "HEAD:{{ native_auth_vault_refresh_repo_branch }}"]
+            chdir: "{{ __native_auth_vault_refresh_checkout.path }}/repository"
+          changed_when: true
+
+    - name: Refresh encrypted AAP file snapshots after successful publication
+      ansible.builtin.include_role:
+        name: controller_secret_configs
+      vars:
+        controller_secret_configs_checkout: "{{ __native_auth_vault_refresh_checkout.path }}/repository"
+
+  always:
+    - name: Remove only the source helper created by this refresh
+      when: __native_auth_vault_refresh_helper.path is defined
+      ansible.builtin.file:
+        path: "{{ __native_auth_vault_refresh_helper.path }}"
+        state: absent
+      delegate_to: "{{ native_auth_vault_refresh_source_host }}"
+      become: true
+      become_user: "{{ native_auth_vault_refresh_runtime_user }}"
+      changed_when: false
+
+    - name: Remove only the temporary encrypted checkout created by this refresh
+      when: __native_auth_vault_refresh_checkout.path is defined
+      ansible.builtin.file:
+        path: "{{ __native_auth_vault_refresh_checkout.path }}"
+        state: absent
+      changed_when: false
+
+    - name: Discard transient controller authentication material
+      ansible.builtin.set_fact:
+        __native_auth_vault_refresh_capture: {}
+        __native_auth_vault_refresh_existing: {}
+        __native_auth_vault_refresh_payload: {}
+        cacheable: false
+
+- name: Confirm encrypted authentication refresh completed
+  ansible.builtin.debug:
+    msg: Authentication snapshot is complete, encrypted, published and synchronized with AAP; model entitlement remains unverified.

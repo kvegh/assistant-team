@@ -1,0 +1,28 @@
+---
+- name: Refresh encrypted model authentication and synchronize its AAP snapshot
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  pre_tasks:
+    - name: Load encrypted deployment bindings for the source installation
+      ansible.builtin.include_role:
+        name: secret_config
+      vars:
+        secret_config_name: environment
+        secret_config_namespace: native_auth_vault_refresh_environment
+    - name: Select the protected authentication refresh bindings
+      ansible.builtin.set_fact:
+        native_auth_vault_refresh_bindings: "{{ native_auth_vault_refresh_environment.auth_vault_refresh | default({}) }}"
+        cacheable: false
+      no_log: true
+    - name: Bind the explicitly selected source connection in transient inventory
+      ansible.builtin.add_host:
+        name: "{{ native_auth_vault_refresh_bindings.source_host }}"
+        ansible_host: "{{ native_auth_vault_refresh_bindings.connection.host }}"
+        ansible_user: "{{ native_auth_vault_refresh_bindings.connection.user }}"
+        ansible_password: "{{ native_auth_vault_refresh_bindings.connection.password }}"
+        ansible_become_password: "{{ native_auth_vault_refresh_bindings.connection.become_password }}"
+      when: native_auth_vault_refresh_bindings.connection is defined
+      no_log: true
+  roles:
+    - native_auth_vault_refresh

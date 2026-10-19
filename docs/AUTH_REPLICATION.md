@@ -1,49 +1,60 @@
-# Native model authentication replication
+# Model authentication from the encrypted secrets repository
 
-Status: the operator superseded the outside-all-Git restriction. Encrypted
-model-authentication snapshots are now authorized in the private companion
-assistant-team-secrets repository only; the application repository still excludes
-model credentials. Its initial capture (`9058235`) includes the explicitly chosen
-source bootstrap state and the existing deployment definition, encrypted with the
-external password file and verified by exact private decryption comparison.
+Fresh complete VM and portable connector deployments restore missing native model
+credentials from the private companion repository automatically. Interactive
+provider login is needed only when the stored authentication is absent or no
+longer usable. Installation performs no OAuth browser flow, token-refresh request,
+paid fallback, entitlement check or model inference.
 
-No provider refresh/model probe ran during capture. Expiration/revocation remain
-possible, and no automatic restore integration is implied. The reusable exporter
-is still an unpublished draft. Its previous outside-Git output guard requires a
-reviewed policy update before reuse with the companion repository; do not silently
-bypass it. The historical external-vault proposal below remains design context,
-not the current storage-location requirement.
+## Deployment flow
 
-## Pushed implementation and resume reference
+1. Install native harnesses and create separate work/private profile homes.
+2. Create environment/profile selection and required Vertex settings.
+3. Resolve `bootstrap_auth` through `secret_config`: an explicit file override,
+   then `AC_AGENTS_BOOTSTRAP_AUTH_VAULT_FILE` supplied by AAP, then the sibling
+   `assistant-team-secrets/vaults/bootstrap-auth_vault.yml` checkout.
+4. Decrypt through the normal Ansible Vault mechanism and run
+   `native_auth_vault_restore` against the selected destination runtime account.
+5. Restore only missing allowlisted credentials and required companion metadata
+   for enabled profiles. Existing credentials are preserved, including independently
+   refreshed project-role caches. No project is created, started or restarted.
 
-Native login wrappers, isolated account contexts, Vertex helpers and saved-auth
-reporting are already implemented in `src/roles/native_auth`,
-`src/roles/vertex_auth`, `src/roles/antigravity_auth` and the project framework.
-These implement local login and runtime seeding, not a central secret vault.
+Restoration is enabled by default. Set `native_auth_vault_restore_enabled: false`
+only for an intentionally unauthenticated deployment. Missing or malformed
+required input fails deployment rather than silently reporting authentication
+success. The private metadata-only outcome report is
+`environment-logs/auth-restore/latest.json` below the installation root.
 
-The legacy-layout deployed baseline is `11d5723` (0.21.8). Source-only layout
-implementation is on `feature/installation-prefix`: `2cf98a7` (0.22.0), with
-decision history `83850a6` (0.22.1) and terminology documentation `d7f5e4d`
-(0.22.2). It uses `PREFIX/ac-agents/model-environments` and project-local
-configuration. It has not been deployed; executable layout migration remains
-future work. The independent broker IPC fix is separate from authentication
-replication and does not create a vault.
+This route does not contact or require the old source VM. It restores bootstrap
+profiles, not running sessions or project backups. A saved credential is reported
+with model access unverified; expiration, revocation, subscriptions and provider
+permissions still determine whether the native harness can use it.
 
-When resuming, recheck the current deployed layout and selected credential
-streams, then use the manifest and validation plan below. Do not treat these
-commit references or a previous structural audit as proof that saved credentials
-remain valid. No private account identifiers or credential contents belong here.
+## AAP ciphertext snapshots
 
-## What belongs in the external vault
+The existing custom configuration-snapshot credential carries six encrypted
+inputs: five deployment/recovery definitions and the bootstrap-auth snapshot.
+Jobs retain their separate Machine and Vault credentials. The runtime server does
+not receive a repository token or clone the secrets repository.
 
-Use one Ansible Vault-encrypted `agent-secret-vault.yml`, stored outside every
-Git checkout and outside the replaceable installation. Its backups must also stay
-outside Git. AAP holds the decryption password and access to the storage location;
-the Vault password credential alone does not contain the authentication payload.
+After committing changes to the companion repository, synchronize its ciphertext
+into AAP using `src/sync_secret_configs.yml`. Synchronization records the source
+revision and checksums without decrypting inputs. AAP uses a snapshot, so a Git
+commit alone does not refresh a deployment job's copy. See [DEPLOYMENT.md](../DEPLOYMENT.md)
+for the synchronization command and controller settings.
+
+## What the bootstrap vault contains
+
+The private companion repository stores `vaults/bootstrap-auth_vault.yml`, a
+whole-file Ansible Vault-encrypted snapshot. No model credential or encrypted
+authentication payload belongs in this application repository. The Vault password
+and decrypted output stay outside every Git repository. AAP's snapshot credential
+contains the ciphertext; its separate Vault credential supplies decryption.
+The password credential alone does not contain the authentication payload.
 
 Paths below are relative to a selected native credential home. For a fresh
 installation this is `PREFIX/ac-agents/model-environments/PROFILE`; existing
-deployments retain their old profile location until an explicit migration.
+deployments retain their profile location until an explicit migration.
 
 | Profile | Required material | Companion settings |
 |---|---|---|
@@ -70,86 +81,73 @@ machine. [Official OpenAI documentation](https://learn.chatgpt.com/docs/auth).
 Vibe stores its setup key in `.vibe/.env`; general settings belong in `config.toml`.
 [Mistral authentication documentation](https://docs.mistral.ai/vibe/code/cli/api-keys-profiles).
 
-Antigravity's native file format was confirmed by local structural inspection.
-Successful authentication transfer to a second installation remains unverified;
-the native login file does not establish agents-connector adapter support.
 
-## Bootstrap profiles and existing project roles are different sources
+## Refresh after authentication changes
 
-The login directories seed project-role homes once. A native harness can later
-refresh its role copy independently. An observed archived role credential differed
-from its login-directory seed; file equality and timestamps cannot tell which
-divergent token stream the provider currently accepts.
+A static vault snapshot can become stale. If a native credential is revoked or
+interactive authorization is required, first run the affected profile's `./login`
+and complete the provider flow as the operator. A refresh job cannot complete
+that authorization on the operator's behalf.
 
-For a new environment, capture explicitly selected bootstrap profiles. For an
-existing-project migration, also capture each selected role's current credential
-home under its logical project/role/profile identity. Never collapse different
-copies into one profile entry based on modification time or token expiry.
+The separate `src/refresh_native_auth_vault.yml` playbook, exposed as AAP's
+**Assistant Team Refresh Model Authentication** job template, captures selected
+bootstrap credentials from the authorized source installation, validates only allowlisted material,
+encrypts the updated snapshot, commits/pushes the companion repository and refreshes
+AAP's ciphertext credential. It must refuse an incomplete capture rather than
+silently replace previously stored authentication with a missing source entry.
+Its maintenance credential uses a repository-scoped writable SSH deploy key,
+verified host keys, the Vault password and a dedicated controller token. Provision
+the template reproducibly with `src/configure_auth_vault_refresh.yml`; its role
+README lists private input file paths and required existing AAP object IDs.
+No operator-wide controller token is copied into the deployment target.
 
-The manifest should contain:
+Run refresh when source bootstrap login/refresh writers are idle. Do not use it
+to collapse project-role refresh streams into bootstrap profiles.
 
-- A schema version, snapshot revision and capture time.
-- Bootstrap entries keyed by account profile, with a fixed relative-file allowlist.
-- Optional project-role entries keyed by logical project, role, account profile
-  and login generation, with the same provider-specific allowlist.
-- Provider configuration and native credential bytes for each selected entry.
-- A declared purpose: bootstrap, migration or recovery. Unknown paths/entries fail.
+The snapshot contains the profiles actually captured; disabled or unauthenticated
+profiles need no invented credentials. Work/private accounts remain separate.
+Credentials missing from the snapshot still require operator login and recapture.
+Restoring authentication does not silently enable a disabled profile or change
+project assignments. Updating the vault does not overwrite existing destination
+credentials; use a separately reviewed recovery operation for replacement.
 
-Real project/account identifiers and all secret contents belong only inside the
-encrypted manifest. Use synthetic placeholders in documentation and tests.
+## Bootstrap profiles and project roles are different streams
+
+The model-environment login directories seed project-role homes once. Native
+harnesses can later refresh their role copies independently. File timestamps or
+token expiration alone cannot establish which divergent stream a provider accepts.
+Vault refresh captures the explicitly chosen bootstrap source, not whichever
+project-role cache happens to be newest. Project archives may contain role
+credentials; keep them private and outside Git.
 
 Codex recommends one auth cache per runner or serialized stream, preserving the
 refreshed cache rather than repeatedly overwriting it with an old seed. Copying a
-cache is not proof that multiple independently refreshing clones can safely share
-one login. [Official OpenAI managed-auth guidance](https://learn.chatgpt.com/docs/auth/ci-cd-auth).
+cache does not prove that independent refresh streams are interchangeable.
+[Official OpenAI managed-auth guidance](https://learn.chatgpt.com/docs/auth/ci-cd-auth).
 
-## What stays out
+## Security boundaries
 
-Do not capture whole profile directories. Exclude CLI installations, caches,
-temporary files, logs, workspaces, conversations, project databases, SSH keys,
-broker tokens, MCP secrets and complete unrelated native settings. These belong
-to reproducible Ansible configuration or a separate project backup, not the
-model-authentication vault. Do not follow symlinks to collect external secrets.
-Project archives retain role authentication too: protect them like credentials,
-and keep complete project backups outside Git as well. Their contents are broader
-than the authentication-only manifest described here.
+Capture and restore use a fixed provider-specific allowlist, format validation,
+private `0700` directories, `0600` credential files and correct runtime ownership.
+Unknown profiles, unsafe paths/symlinks, invalid provider metadata and malformed
+native credentials are errors. Secret-bearing Ansible work uses `no_log: true`
+and disabled diff; human-readable status contains metadata, never token contents.
+Mistral dotenv material is parsed as data, never sourced or executed.
 
-Enabled-profile selection and role assignments are environment/project
-configuration. Ansible or a separate configuration backup must reproduce them;
-restoring credentials must not silently enable a disabled profile or launch it.
+Do not capture complete profile directories, installed CLIs, caches, temporary
+files, logs, workspaces, conversations, databases, SSH keys, broker tokens or
+unrelated MCP/settings. Reproducible Ansible configuration supplies native hooks,
+scoped HOME/XDG paths, trust settings and model-launch configuration; the secret
+vault supplies only account authentication and the necessary allowlisted provider
+settings. It never accepts legal terms or broadens native tool permissions.
 
-## Proposed capture and restore behavior
+The existing [host-to-host transfer](AUTH_TRANSFER.md) remains a separate optional
+operation. It defaults to metadata-only preflight and needs explicit execution to
+copy credentials; fresh deployment no longer depends on that transfer.
 
-1. The operator selects bootstrap profiles and any project-role streams to save.
-   Require the selected native writers to be stopped for a migration-ready
-   snapshot and remain quiescent throughout capture, rather than merely checking
-   once. Refuse active writers without automatically stopping unrelated work.
-2. Collect only allowlisted material through protected transport, validate it,
-   encrypt promptly and atomically update the external vault. Retain a known-good
-   previous revision; conflicting updates must not overwrite newer snapshots.
-3. Restore the selected entries into a new or empty installation, after its native
-   harnesses are installed. Use directories `0700`, files `0600`, correct ownership
-   and atomic writes. Regenerate scoped HOME/XDG/provider settings for the new paths.
-4. Seed missing credentials only. Existing newer runtime credentials remain intact;
-   replacement requires an explicit recovery/migration selection. Leave services
-   stopped. Report saved credentials with model access unverified.
-5. Persist refreshed state at a later safe capture point. A static encrypted
-   snapshot can become stale; native refresh is responsible for renewal. Revocation
-   or expiry can still require another interactive login.
-
-Secret-bearing Ansible tasks require `no_log: true` and disabled diff. Logs contain
-only action, outcome, revision and correlation metadata. Decrypted temporary files
-must be private and cleaned on success or failure. AAP must fetch the encrypted
-bundle through an explicit supported transport; do not assume a host-local file
-is automatically visible inside its execution environment.
-Read Mistral's dotenv entry as data; never source or execute a credential file.
-The eventual parser must match the native supported quoting format without shell
-expansion and reject unsupported content safely.
-
-## Remaining validation before implementation
-
-Test synthetic round trips for every adapter, schema/path rejection, private file
-modes, missing-only restore, snapshot conflicts and secret-free logs. Then test
-each provider's actual portability separately with explicit authorization; do not
-infer entitlement from the presence of a credential file or switch to a paid API
-fallback. Capture/restore automation and central snapshot refresh are future work.
+The maintenance controller token belongs to a dedicated non-administrator account
+with Admin access to the deployment/authentication snapshot credential only. Its
+GitHub SSH deploy key permits writes to the companion repository only. Repository
+host keys are pinned. Maintenance credentials are injected only into the refresh
+job; ordinary VM deployments receive ciphertext and the separate Vault credential.
+Optional encrypted source connection bindings affect transient inventory only.

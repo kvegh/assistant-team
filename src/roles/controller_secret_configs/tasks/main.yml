@@ -14,13 +14,21 @@
   changed_when: false
 - name: Require committed encrypted configuration inputs
   ansible.builtin.command:
-    argv: [git, -C, "{{ controller_secret_configs_checkout }}", status, --porcelain, --, vaults/configuration]
+    argv:
+      - git
+      - -C
+      - "{{ controller_secret_configs_checkout }}"
+      - status
+      - --porcelain
+      - --
+      - vaults/configuration
+      - vaults/bootstrap-auth_vault.yml
   register: __controller_secret_configs_status
   changed_when: false
   failed_when: __controller_secret_configs_status.stdout | length > 0
 - name: Read ciphertext without invoking Vault decryption
   ansible.builtin.slurp:
-    src: "{{ controller_secret_configs_checkout }}/vaults/configuration/{{ item.value }}"
+    src: "{{ controller_secret_configs_checkout }}/vaults/{{ item.value }}"
   loop: "{{ controller_secret_configs_files | dict2items }}"
   register: __controller_secret_configs_ciphertexts
   no_log: true
@@ -130,6 +138,24 @@
     __controller_secret_configs_credential_id: >-
       {{ __controller_secret_configs_credentials.json.results[0].id if __controller_secret_configs_credentials.json.count
       else __controller_secret_configs_credential_write.json.id }}
+  no_log: true
+- name: Inspect only the explicitly named previous snapshot credential
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+      controller_secret_configs_previous_credential_name | urlencode }}&organization={{ controller_secret_configs_organization }}
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    return_content: true
+  when:
+    - controller_secret_configs_job_templates | length > 0
+    - controller_secret_configs_previous_credential_name | length > 0
+    - controller_secret_configs_previous_credential_name != controller_secret_configs_credential_name
+  register: __controller_secret_configs_previous
+  no_log: true
+- name: Require an unambiguous previous snapshot identity
+  ansible.builtin.assert:
+    that: __controller_secret_configs_previous.json.count | int <= 1
+  when: __controller_secret_configs_previous.json is defined
   no_log: true
 - name: Associate the snapshot with explicitly selected job templates
   ansible.builtin.include_tasks: associate.yml

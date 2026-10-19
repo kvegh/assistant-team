@@ -1,0 +1,7 @@
+---
+native_auth_vault_restore_enabled: true
+native_auth_vault_restore_runtime_user: "{{ containers.runtime_user }}"
+native_auth_vault_restore_profiles_root: ''
+native_auth_vault_restore_environment_config: ''
+native_auth_vault_restore_report_directory: ''
+native_auth_vault_restore_payload: "{{ native_auth_vault_restore_snapshot.native_auth_transfer }}"

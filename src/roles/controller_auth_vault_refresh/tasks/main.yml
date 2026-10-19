@@ -1,0 +1,248 @@
+---
+- name: Configure protected authentication maintenance resources
+  no_log: true
+  diff: false
+  block:
+    - name: Require explicit controller and deployment object bindings
+      ansible.builtin.assert:
+        that:
+          - controller_auth_vault_refresh_host is match('^https://')
+          - controller_auth_vault_refresh_token | length > 0
+          - controller_auth_vault_refresh_organization | string is match('^[1-9][0-9]*$')
+          - controller_auth_vault_refresh_project | string is match('^[1-9][0-9]*$')
+          - controller_auth_vault_refresh_inventory | string is match('^[1-9][0-9]*$')
+          - controller_auth_vault_refresh_execution_environment | string is match('^[1-9][0-9]*$')
+          - controller_auth_vault_refresh_credentials is sequence
+          - controller_auth_vault_refresh_credentials is not string
+          - controller_auth_vault_refresh_credentials | length > 0
+          - controller_auth_vault_refresh_repository_url is match('^(git@[^:]+:.+|ssh://.+)$')
+        quiet: true
+
+    - name: Require numeric existing credential identities
+      ansible.builtin.assert:
+        that: item | string is match('^[1-9][0-9]*$')
+        quiet: true
+      loop: "{{ controller_auth_vault_refresh_credentials }}"
+
+    - name: Require explicit private maintenance files
+      ansible.builtin.assert:
+        that: item.value is match('^/')
+        quiet: true
+      loop: "{{ controller_auth_vault_refresh_private_files | dict2items }}"
+
+    - name: Read operator-owned maintenance files without Vault interpolation
+      ansible.builtin.slurp:
+        src: "{{ item.value }}"
+      loop: "{{ controller_auth_vault_refresh_private_files | dict2items }}"
+      register: __controller_auth_vault_refresh_files
+
+    - name: Assemble protected maintenance credential material
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_material: >-
+          {{ __controller_auth_vault_refresh_material | default({}) | combine({item.item.key:
+             (item.content | b64decode | trim) if item.item.key in ['vault_password', 'controller_token']
+             else (item.content | b64decode)}) }}
+      loop: "{{ __controller_auth_vault_refresh_files.results }}"
+
+    - name: Refuse empty maintenance input files
+      ansible.builtin.assert:
+        that: item.value | trim | length > 0
+        quiet: true
+      loop: "{{ __controller_auth_vault_refresh_material | dict2items }}"
+
+    - name: Include nonsecret repository and controller bindings
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_material: >-
+          {{ __controller_auth_vault_refresh_material | combine({
+             'repo_url': controller_auth_vault_refresh_repository_url,
+             'controller_host': controller_auth_vault_refresh_host | regex_replace('/$', ''),
+             'organization': controller_auth_vault_refresh_organization | string}) }}
+
+    - name: Hash complete material for masked-secret idempotence
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_checksum: >-
+          {{ __controller_auth_vault_refresh_material | to_json(sort_keys=true, preprocess_unsafe=false) | hash('sha256') }}
+
+    - name: Inspect the named maintenance credential type
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/?name={{
+          controller_auth_vault_refresh_type_name | urlencode }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_types
+
+    - name: Require an unambiguous maintenance credential type
+      ansible.builtin.assert:
+        that: __controller_auth_vault_refresh_types.json.count | int <= 1
+        quiet: true
+
+    - name: Reconcile maintenance credential type schema and injectors
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/{{
+          (__controller_auth_vault_refresh_types.json.results[0].id | string + '/') if __controller_auth_vault_refresh_types.json.count else '' }}
+        method: "{{ 'PATCH' if __controller_auth_vault_refresh_types.json.count else 'POST' }}"
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body:
+          name: "{{ controller_auth_vault_refresh_type_name }}"
+          kind: cloud
+          inputs: "{{ controller_auth_vault_refresh_inputs }}"
+          injectors: "{{ controller_auth_vault_refresh_injectors }}"
+        status_code: [200, 201]
+      when: >-
+        not __controller_auth_vault_refresh_types.json.count or
+        __controller_auth_vault_refresh_types.json.results[0].inputs != controller_auth_vault_refresh_inputs or
+        __controller_auth_vault_refresh_types.json.results[0].injectors != controller_auth_vault_refresh_injectors
+      register: __controller_auth_vault_refresh_type_write
+      changed_when: true
+
+    - name: Resolve maintenance credential type identity
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_type_id: >-
+          {{ __controller_auth_vault_refresh_types.json.results[0].id if __controller_auth_vault_refresh_types.json.count
+          else __controller_auth_vault_refresh_type_write.json.id }}
+
+    - name: Inspect the named owned maintenance credential
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+          controller_auth_vault_refresh_credential_name | urlencode }}&organization={{ controller_auth_vault_refresh_organization }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_credentials
+
+    - name: Require unambiguous compatible maintenance credential ownership
+      ansible.builtin.assert:
+        that:
+          - __controller_auth_vault_refresh_credentials.json.count | int <= 1
+          - >-
+            not __controller_auth_vault_refresh_credentials.json.count or
+            __controller_auth_vault_refresh_credentials.json.results[0].credential_type | int == __controller_auth_vault_refresh_type_id | int
+        quiet: true
+
+    - name: Update protected maintenance inputs only when their checksum changes
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credentials/{{
+          (__controller_auth_vault_refresh_credentials.json.results[0].id | string + '/') if __controller_auth_vault_refresh_credentials.json.count else '' }}
+        method: "{{ 'PATCH' if __controller_auth_vault_refresh_credentials.json.count else 'POST' }}"
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body: >-
+          {{ {'name': controller_auth_vault_refresh_credential_name,
+              'organization': controller_auth_vault_refresh_organization | int,
+              'credential_type': __controller_auth_vault_refresh_type_id | int,
+              'inputs': __controller_auth_vault_refresh_material | combine({'material_sha256': __controller_auth_vault_refresh_checksum})} | to_json }}
+        status_code: [200, 201]
+      when: >-
+        not __controller_auth_vault_refresh_credentials.json.count or
+        __controller_auth_vault_refresh_credentials.json.results[0].inputs.material_sha256 | default('') != __controller_auth_vault_refresh_checksum
+      register: __controller_auth_vault_refresh_credential_write
+      changed_when: true
+
+    - name: Resolve maintenance credential identity
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_credential_id: >-
+          {{ __controller_auth_vault_refresh_credentials.json.results[0].id if __controller_auth_vault_refresh_credentials.json.count
+          else __controller_auth_vault_refresh_credential_write.json.id }}
+
+    - name: Inspect the named refresh job template
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/?name={{
+          controller_auth_vault_refresh_job_template_name | urlencode }}&organization={{ controller_auth_vault_refresh_organization }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_templates
+
+    - name: Require an unambiguous existing job template
+      ansible.builtin.assert:
+        that: __controller_auth_vault_refresh_templates.json.count | int <= 1
+        quiet: true
+
+    - name: Define the refresh job template settings
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_template_fields: >-
+          {{ {'name': controller_auth_vault_refresh_job_template_name,
+              'job_type': 'run',
+              'inventory': controller_auth_vault_refresh_inventory | int,
+              'project': controller_auth_vault_refresh_project | int,
+              'execution_environment': controller_auth_vault_refresh_execution_environment | int,
+              'playbook': 'src/refresh_native_auth_vault.yml',
+              'allow_simultaneous': false, 'use_fact_cache': false,
+              'ask_variables_on_launch': true} }}
+        __controller_auth_vault_refresh_template_needs_update: false
+
+    - name: Compare existing refresh settings without unrelated template fields
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_template_needs_update: true
+      loop: "{{ __controller_auth_vault_refresh_template_fields | dict2items }}"
+      when:
+        - __controller_auth_vault_refresh_templates.json.count | int > 0
+        - __controller_auth_vault_refresh_templates.json.results[0][item.key] | default(none) != item.value
+
+    - name: Reconcile the refresh job template
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+          (__controller_auth_vault_refresh_templates.json.results[0].id | string + '/') if __controller_auth_vault_refresh_templates.json.count else '' }}
+        method: "{{ 'PATCH' if __controller_auth_vault_refresh_templates.json.count else 'POST' }}"
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body: "{{ __controller_auth_vault_refresh_template_fields | to_json }}"
+        status_code: [200, 201]
+      when: not __controller_auth_vault_refresh_templates.json.count or __controller_auth_vault_refresh_template_needs_update
+      register: __controller_auth_vault_refresh_template_write
+      changed_when: true
+
+    - name: Resolve refresh job template identity
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_template_id: >-
+          {{ __controller_auth_vault_refresh_templates.json.results[0].id if __controller_auth_vault_refresh_templates.json.count
+          else __controller_auth_vault_refresh_template_write.json.id }}
+
+    - name: Inspect existing refresh credential associations
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+          __controller_auth_vault_refresh_template_id }}/credentials/?page_size=200
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_associations
+
+    - name: Attach required credentials without removing existing associations
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+          __controller_auth_vault_refresh_template_id }}/credentials/
+        method: POST
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body: "{{ {'id': item | int} | to_json }}"
+        status_code: [200, 201, 204]
+      loop: "{{ (controller_auth_vault_refresh_credentials + [__controller_auth_vault_refresh_credential_id]) | map('int') | unique | list }}"
+      when: item | int not in __controller_auth_vault_refresh_associations.json.results | map(attribute='id') | list
+      changed_when: true
+
+    - name: Retain only safe maintenance resource identities
+      ansible.builtin.set_fact:
+        controller_auth_vault_refresh_result:
+          credential_type: "{{ __controller_auth_vault_refresh_type_id | int }}"
+          credential: "{{ __controller_auth_vault_refresh_credential_id | int }}"
+          job_template: "{{ __controller_auth_vault_refresh_template_id | int }}"
+
+  always:
+    - name: Discard maintenance secret facts after configuration
+      ansible.builtin.set_fact:
+        __controller_auth_vault_refresh_files: {}
+        __controller_auth_vault_refresh_material: {}
+        __controller_auth_vault_refresh_credential_write: {}
+        __controller_auth_vault_refresh_credentials: {}
+        cacheable: false
+      no_log: true
+
+- name: Report configured maintenance resource identities without secrets
+  ansible.builtin.debug:
+    msg: "{{ controller_auth_vault_refresh_result }}"

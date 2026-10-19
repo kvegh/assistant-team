@@ -1,0 +1,161 @@
+---
+- name: Restore missing bootstrap authentication from the encrypted companion snapshot
+  when: native_auth_vault_restore_enabled | bool
+  block:
+    - name: Resolve canonical installation paths when no explicit destination was supplied
+      ansible.builtin.include_role:
+        name: install_layout
+      when:
+        - assistant_profiles_root is not defined or assistant_install_root is not defined
+        - >-
+          native_auth_vault_restore_profiles_root | length == 0
+          or native_auth_vault_restore_environment_config | length == 0
+          or native_auth_vault_restore_report_directory | length == 0
+
+    - name: Resolve explicit or canonical authentication destinations
+      ansible.builtin.set_fact:
+        __native_auth_vault_restore_profiles_root: >-
+          {{ native_auth_vault_restore_profiles_root if native_auth_vault_restore_profiles_root | length > 0
+             else assistant_profiles_root }}
+        __native_auth_vault_restore_environment_config: >-
+          {{ native_auth_vault_restore_environment_config if native_auth_vault_restore_environment_config | length > 0
+             else assistant_install_root + '/conf/environment.conf' }}
+        __native_auth_vault_restore_report_directory: >-
+          {{ native_auth_vault_restore_report_directory if native_auth_vault_restore_report_directory | length > 0
+             else assistant_install_root + '/environment-logs/auth-restore' }}
+
+    - name: Require absolute destination installation paths
+      ansible.builtin.assert:
+        that:
+          - __native_auth_vault_restore_profiles_root is match('^/')
+          - __native_auth_vault_restore_environment_config is match('^/')
+          - __native_auth_vault_restore_report_directory is match('^/')
+        quiet: true
+
+    - name: Load and consume the protected bootstrap snapshot
+      no_log: true
+      diff: false
+      block:
+        - name: Load external encrypted bootstrap authentication
+          ansible.builtin.include_role:
+            name: secret_config
+          vars:
+            secret_config_name: bootstrap_auth
+            secret_config_namespace: native_auth_vault_restore_snapshot
+
+        - name: Require the allowlisted bootstrap transfer payload
+          ansible.builtin.assert:
+            that:
+              - native_auth_vault_restore_payload is mapping
+              - native_auth_vault_restore_payload.version == 1
+              - native_auth_vault_restore_payload.purpose == 'bootstrap'
+              - native_auth_vault_restore_payload.entries is sequence
+              - native_auth_vault_restore_payload.entries is not string
+            quiet: true
+
+        - name: Read only the destination environment selection for snapshot completeness
+          ansible.builtin.slurp:
+            src: "{{ __native_auth_vault_restore_environment_config }}"
+          register: __native_auth_vault_restore_environment
+          become: true
+          become_user: "{{ native_auth_vault_restore_runtime_user }}"
+
+        - name: Require snapshot credentials for every enabled destination profile before writes
+          ansible.builtin.assert:
+            that:
+              - >-
+                ((__native_auth_vault_restore_environment.content | b64decode | from_json).profiles
+                 | dict2items | selectattr('value.enabled', 'equalto', true) | map(attribute='key') | list)
+                | difference(native_auth_vault_restore_payload.entries | map(attribute='profile') | list)
+                | length == 0
+            quiet: true
+            fail_msg: >-
+              The encrypted bootstrap snapshot must contain credentials for every enabled
+              destination profile. Refresh the snapshot or disable unavailable profiles before deployment.
+
+        - name: Restore under the dedicated runtime identity
+          when: not ansible_check_mode
+          become: true
+          become_user: "{{ native_auth_vault_restore_runtime_user }}"
+          block:
+            - name: Create a private helper directory without authentication payloads
+              ansible.builtin.tempfile:
+                state: directory
+                prefix: ac-auth-vault-restore-
+              register: __native_auth_vault_restore_temporary
+              changed_when: false
+
+            - name: Install the existing allowlisted native restore helper
+              ansible.builtin.copy:
+                src: "{{ role_path }}/../native_auth_transfer/files/native-auth-transfer.py"
+                dest: "{{ __native_auth_vault_restore_temporary.path }}/native-auth-transfer.py"
+                mode: '0700'
+              changed_when: false
+
+            - name: Restore missing credentials without overwriting current authentication
+              ansible.builtin.command:
+                argv:
+                  - python3
+                  - "{{ __native_auth_vault_restore_temporary.path }}/native-auth-transfer.py"
+                  - restore
+                  - --profiles-root
+                  - "{{ __native_auth_vault_restore_profiles_root }}"
+                  - --environment-config
+                  - "{{ __native_auth_vault_restore_environment_config }}"
+                stdin: "{{ native_auth_vault_restore_payload | to_json }}"
+                stdin_add_newline: false
+              register: __native_auth_vault_restore_execution
+              changed_when: >-
+                (__native_auth_vault_restore_execution.stdout | from_json).report
+                | selectattr('status', 'equalto', 'restored') | list | length > 0
+              when: not ansible_check_mode
+
+            - name: Preserve only safe credential restoration outcomes
+              ansible.builtin.set_fact:
+                native_auth_vault_restore_result: >-
+                  {{ (__native_auth_vault_restore_execution.stdout | from_json)
+                     | dict2items | selectattr('key', 'in', ['version', 'purpose', 'report', 'vault_material_manifest'])
+                     | items2dict }}
+                cacheable: false
+              when: not ansible_check_mode
+
+            - name: Create the protected destination-local report directory
+              ansible.builtin.file:
+                path: "{{ __native_auth_vault_restore_report_directory }}"
+                state: directory
+                mode: '0700'
+              when: not ansible_check_mode
+
+            - name: Save secret-free authentication restoration metadata
+              ansible.builtin.copy:
+                content: "{{ native_auth_vault_restore_result | to_nice_json }}\n"
+                dest: "{{ __native_auth_vault_restore_report_directory }}/latest.json"
+                mode: '0600'
+              changed_when: false
+              when: not ansible_check_mode
+
+          always:
+            - name: Remove only the temporary helper directory created by this operation
+              ansible.builtin.file:
+                path: "{{ __native_auth_vault_restore_temporary.path }}"
+                state: absent
+              when: __native_auth_vault_restore_temporary.path is defined
+              changed_when: false
+
+      always:
+        - name: Discard controller facts containing decrypted authentication
+          ansible.builtin.set_fact:
+            native_auth_vault_restore_snapshot: {}
+            __native_auth_vault_restore_execution: {}
+            __native_auth_vault_restore_environment: {}
+            cacheable: false
+
+    - name: Explain check mode without invoking native authentication restoration
+      ansible.builtin.debug:
+        msg: Authentication restoration was not executed in check mode; no provider access was attempted.
+      when: ansible_check_mode
+
+    - name: Report credential restoration without claiming provider authorization
+      ansible.builtin.debug:
+        msg: "{{ native_auth_vault_restore_result }}"
+      when: not ansible_check_mode

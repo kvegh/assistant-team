@@ -16,7 +16,10 @@ For deployment on this same host, add `--local` to initialization and deployment
 
 The destination Vault contains `connection` (`host`, `user`, optional `port`, `password`, `become_password`), `runtime_user`, and optional boolean `install_google_cloud_sdk`. The initializer defaults SDK installation off. Set it true only when you explicitly approve that selected dependency. Google account permissions, enabled Vertex models, billing and provider subscriptions are your prerequisites; deployment does not modify them.
 
-The standalone playbook builds all four pinned native images in the target runtime user’s store, installs the stock broker/native tools and separate roles, then deploys project control and guides. It does not depend on another developer user’s images, a sibling `vpf`, temporary SSH repair files or this repository’s encrypted development inventory. Immutable local program assets may be retained for dependency ordering while environment profile enablement controls authentication/project use. No accounts are authenticated during installation.
+The standalone playbook builds all four pinned native images in the target runtime user’s store, installs the stock broker/native tools and separate roles, then deploys project control and guides. It does not depend on another developer user’s images, a sibling `vpf`, temporary SSH repair files or this repository’s encrypted development inventory. Immutable local program assets may be retained for dependency ordering while environment profile enablement controls authentication/project use. After native profiles and environment selection are configured, installation
+restores missing enabled-profile authentication from the companion encrypted
+bootstrap snapshot. It does not perform a new OAuth login, renew revoked tokens
+or prove entitlement; no projects or model calls are started.
 
 After deployment, enter the dedicated runtime user shell, read `~/README.TLDR.md`, run `~/team setup --list`, select profiles with `~/team setup`, and perform native logins yourself. No project is started automatically. Mistral standalone profiles are installed; Agents Connector’s Vibe adapter remains future work.
 
@@ -41,8 +44,9 @@ matching `AC_AGENTS_*_VAULT_FILE` environment paths injected by AAP, followed by
 companion checkout. Use `assistant_secret_config_root` to select another directory.
 Missing configuration is an error rather than a fallback to the application repo.
 
-AAP uses one custom configuration-snapshot credential with five encrypted file
-inputs, alongside existing Machine and Vault credentials. Refresh these snapshots
+AAP uses one custom configuration-snapshot credential with six encrypted file
+inputs: the five configuration definitions plus `vaults/bootstrap-auth_vault.yml`,
+alongside existing Machine and Vault credentials. Refresh these snapshots
 from the authoritative companion checkout after committing configuration changes:
 
 ```sh
@@ -58,6 +62,29 @@ the snapshot credential while preserving other associations. Synchronization use
 the operator's existing controller authorization, transfers ciphertext only, and
 records source revision and checksums for idempotence. The Vault password remains
 in its separate AAP credential or the operator's external password file. No new
-runtime GitHub token, decrypted configuration file, automatic credential restore
-or model request is introduced. Existing companion snapshots are preserved; old
+runtime GitHub token or model request is introduced. Configuration stays protected
+inside normal Ansible processing; allowlisted native credential files are restored
+only on the intended target under private ownership/modes. Existing companion snapshots are preserved; old
 application Git history is not rewritten and still contains its former ciphertext.
+
+
+## Automatic model authentication restoration
+
+After native profiles, project configuration and Vertex setup, complete VM and
+portable connector deployment run `native_auth_vault_restore`. The role consumes
+`vaults/bootstrap-auth_vault.yml` through the external-file resolver (AAP injects
+`AC_AGENTS_BOOTSTRAP_AUTH_VAULT_FILE`). It restores only missing credentials for
+enabled profiles; existing destination credentials remain authoritative. No source
+VM, new repository token, project restart or model request is needed.
+
+The destination receives only allowlisted native credential files and required
+provider metadata, with private permissions. Safe outcomes are recorded at
+`environment-logs/auth-restore/latest.json` below the installation root. Set
+`native_auth_vault_restore_enabled: false` for an intentionally unauthenticated
+installation; otherwise missing or malformed authentication input is an error.
+
+Credentials must already be usable at the provider. Expired/revoked grants can
+still require operator login; restoration never proves model entitlement. After
+re-login, refresh the encrypted snapshot and AAP ciphertext copy before deploying
+again. See [AUTH_REPLICATION.md](docs/AUTH_REPLICATION.md) for capture/refresh and
+[AUTH_TRANSFER.md](docs/AUTH_TRANSFER.md) for the optional host-to-host alternative.

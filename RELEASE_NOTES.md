@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.4.0
+
+Restore enabled model profiles automatically from the encrypted companion authentication vault after deployment, preserving existing credentials. Add a protected AAP refresh job that captures complete bootstrap logins, encrypts and publishes changes, and updates AAP snapshots. Keep work/private accounts separate and reject incomplete restores or downgraded captures.
+
 ## 1.3.1
 
 Document external configuration migration, adapted AAP templates, idempotent snapshot synchronization and successful protected local/AAP loading checks.

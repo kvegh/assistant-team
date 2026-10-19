@@ -1,0 +1,7 @@
+---
+- name: Configure dedicated AAP authentication snapshot maintenance
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - controller_auth_vault_refresh

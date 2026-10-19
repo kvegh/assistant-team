@@ -153,7 +153,8 @@ Codex containers require the dedicated enforcing-SELinux sandbox policy. Native 
 Bootstrap auth replication: `src/transfer_native_auth.yml` via AAP, metadata-only
 by default; missing-only restore after explicit authorization. See
 [AUTH_TRANSFER.md](docs/AUTH_TRANSFER.md). Existing credentials and projects stay
-unchanged. External vault implementation is a later task.
+unchanged. Fresh deployment restores missing credentials from the encrypted
+bootstrap snapshot automatically; no source VM is required.
 
 Auth transfer transport: synthetic local Ansible preflight/copy/rerun verified;
 real AAP transfer remains gated on fresh environment readiness.
@@ -166,8 +167,11 @@ accounts; team roles use the same pinned native Vibe harness.
 Encrypted model/deployment snapshots may live only in the private companion
 assistant-team-secrets repository, not this code repository. Encrypted configuration
 files are named `NAME_vault.yml`. The Vault password
-and all plaintext credentials stay outside Git. The current snapshot is saved
-source state, not proof of working login or automatic restore integration.
+and all plaintext credentials stay outside Git. Fresh complete/portable deployments
+restore missing enabled-profile credentials from `vaults/bootstrap-auth_vault.yml`;
+existing credentials and running projects are preserved. Saved credentials do not
+prove usable model access. After re-login, refresh the encrypted snapshot and AAP's
+ciphertext copy; deployment does not perform interactive login or model checks.
 
 ## Attach readiness
 
@@ -185,7 +189,9 @@ The five active deployment/recovery Vault files live in the private companion
 Local playbooks use the sibling checkout or `assistant_secret_config_root`; explicit
 file overrides take precedence over AAP-injected configuration file paths. AAP uses
 one configuration-snapshot credential plus the existing Vault-password credential.
-After changing and committing those files, run `src/sync_secret_configs.yml` from
+The same AAP credential includes the encrypted bootstrap-auth snapshot (six files
+in total). After changing and committing configuration or auth snapshots, run
+`src/sync_secret_configs.yml` from
 the code checkout with authorized controller credentials to refresh AAP's ciphertext
 snapshots. Synchronization never decrypts the files. See the source repository's
 README for deployment commands; the runtime team commands do not manage secrets.

@@ -6,9 +6,10 @@ Current communication development continues with agents-connector and tmux.
 The [communication architecture review in TODO](TODO.md) compares this route,
 acpx with a replacement coordinator, and their combination; no migration is agreed.
 
-Model-authentication vault work is on hold. See the
-[replication plan and pushed-code references](docs/AUTH_REPLICATION.md); no secret
-bundle or save/restore automation has been created.
+Fresh complete and portable deployments restore missing model credentials from
+an encrypted snapshot in the private companion secrets repository. See
+[authentication replication](docs/AUTH_REPLICATION.md) for account boundaries,
+refreshing snapshots and the difference between saved credentials and usable access.
 
 Fresh installs use PREFIX/ac-agents. Existing home-level installations require a separately approved migration; see [migration prerequisites](INSTALLATION_MIGRATION.md).
 
@@ -130,11 +131,18 @@ operator decision, the private companion assistant-team-secrets repository may
 store Ansible Vault-encrypted model authentication and deployment configuration.
 Vault passwords, plaintext login caches and decrypted output remain outside Git.
 
-The companion now contains a source-bootstrap snapshot for six enabled profiles
-and a separate deployment definition. Capture used the existing external vpf and
-passed private encryption/decryption comparison. It did not refresh credentials
-or prove model access, and it did not merge project-role caches. The generic
-exporter draft and automatic restore integration remain unfinished.
+The companion contains `vaults/bootstrap-auth_vault.yml` with the selected
+bootstrap profiles, separate from deployment definitions. Deployment decrypts it
+through the attached Vault credential and restores only missing allowlisted files
+for enabled profiles. Existing credentials, project-role refresh streams and
+running projects are preserved. Restored credentials are saved/unverified: a
+snapshot neither renews revoked credentials nor proves provider entitlement.
+Refresh the snapshot after a successful operator login; see the source repository's
+`docs/AUTH_REPLICATION.md` for the capture and AAP synchronization workflow.
+The private metadata-only restore report is
+`environment-logs/auth-restore/latest.json` below the installation root. To deploy
+without model authentication intentionally, set
+`native_auth_vault_restore_enabled: false`.
 
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
@@ -170,12 +178,13 @@ to former files in this code repository. Encrypted files use `NAME_vault.yml`.
 
 ### AAP configuration snapshots
 
-AAP jobs receive the five ciphertext files through one custom credential, alongside
+AAP jobs receive six ciphertext files (five configuration inputs plus the bootstrap
+authentication snapshot) through one custom credential, alongside
 the existing Machine and Vault credentials. The custom credential injects file
 paths, not decrypted values. No additional runtime GitHub token or repository
 checkout is needed inside a deployment job.
 
-After editing and committing the companion configuration files, synchronize their
+After editing and committing companion configuration or authentication files, synchronize their
 ciphertext snapshots into AAP:
 
 ```bash
@@ -199,6 +208,9 @@ The snapshot credential does not replace the Vault-password credential.
 
 - `../assistant-team-secrets/vaults/configuration/`: external encrypted deployment/recovery inputs.
 - `src/roles/secret_config/`: common protected external-file resolver.
+- `src/restore_native_auth_vault.yml`: restore missing authentication on an existing destination.
+- `src/refresh_native_auth_vault.yml`: refresh the encrypted auth snapshot after source re-login.
+- `src/configure_auth_vault_refresh.yml`: configure the dedicated protected AAP refresh job.
 - `src/sync_secret_configs.yml`: synchronize ciphertext snapshots into AAP credentials.
 - `src/deploy_linux_vm.yml`: calls the provisioning, guest verification, and update roles.
 - `src/roles/linux_vm/`: image cloning, cleanup, identity reset, boot, and guest discovery.
@@ -458,7 +470,8 @@ so no partition or filesystem expansion was needed. Host trust was established
 with the user's explicit approval for this fresh demo guest and subsequent SSH
 connections require that recorded key.
 
-Provider authentication and model sessions remain pending operator setup. No
+Provider access still requires valid saved authentication or operator login; deployment
+can restore saved bootstrap credentials, without starting model sessions. No
 credentials were inherited and no model inference, paid API call, integration,
 or external messaging was performed. The existing VM deployment remains verified.
 No orchestrator, discussion service, observer, or persistent agent listener is
@@ -488,7 +501,8 @@ participants in that team, not separate projects. `ROLE` selects a participant
 
 The selected Agents Connector setup below implements continuously running rootless
 Podman containers with inside-container tmux for the four visible Claude/Codex/Gemini
-profiles. Native authenticated sessions require operator login and launch. The
+profiles. Native authenticated sessions require usable saved credentials and explicit
+launch; operator login is needed when credentials are absent or unusable. The
 original foundation launcher remains available for short-lived isolated commands;
 Vibe is not included in the selected connector setup.
 Container launch waits up to 15 seconds for the idle tmux session before starting
@@ -554,9 +568,9 @@ store. Mistral opens Vibe's native setup wizard. Work and private labels for
 Codex and Mistral select separate accounts; they do not imply Vertex support.
 All eight wrappers
 scope HOME, provider configuration, credentials, caches, state and temporary files
-to their respective directory. Provider authentication is performed by the operator,
-never inherited from this development session. Installation does not log in,
-accept provider terms or request model output. Choose the intended account;
+to their respective directory. Initial provider login is performed by the operator;
+deployment can restore the selected encrypted bootstrap snapshot without repeating
+that login. Installation does not accept provider terms or request model output. Choose the intended account;
 there is
 no automatic paid API fallback. Each login reports failure/cancellation or saved
 credentials with model access unverified. Local credentials and a successful
@@ -785,7 +799,7 @@ preserving all bind-mounted data. No images, dependencies or VM resources change
 ### Validation and current limits
 
 All eight local installations pass host-native version/help checks. Native
-project sessions require operator authentication; installation does not launch
+project sessions require usable saved credentials; installation does not launch
 models. Tests cover scoped configuration and login paths, work/private credential
 seeding, retained refresh state, hidden prompt extraction and project lifecycle.
 Live checks use disposable projects and dummy sessions to validate communication,
@@ -1130,7 +1144,13 @@ Outer capabilities stayed zero, no-new-privileges and seccomp stayed enabled,
 and the dedicated domain retained nonzero MCS categories.
 The approved install-prefix layout is currently **source only**. The existing deployment remains on its earlier home-level layout; do not apply these playbooks to it yet. Fresh installs use `PARENT/ac-agents`, with PARENT defaulting to the destination runtime HOME. `--prefix /absolute/parent` selects a destination parent for both local and remote deployment; AAP uses `assistant_install_prefix` or its encrypted definition. See [INSTALLATION_MIGRATION.md](INSTALLATION_MIGRATION.md) before any legacy migration.
 
-Fresh and portable environment deployment include `codex_sandbox` after Podman host preparation and before container creation. External authentication-vault design and automatic permission management remain on hold. Fresh deployment does not copy model credentials automatically; selective bootstrap transfer is a separately authorized Ansible operation.
+Fresh and portable environment deployment include `codex_sandbox` after Podman
+host preparation and before container creation. After native profiles, project
+configuration and Vertex setup exist, `native_auth_vault_restore` automatically
+restores missing bootstrap credentials from the encrypted companion snapshot.
+It never overwrites existing credentials or starts/restarts projects. Automatic
+permission management remains a separate design task; the host-to-host bootstrap
+transfer remains an optional explicit operation.
 
 Fresh deployment also verifies the scoped Antigravity executable without authentication or inference after installing the native profiles. The model-free deployment checks verify private readers have no shared workspace mount and that their SUMMARY.md exists.
 
@@ -1150,7 +1170,9 @@ credentials. See [the transfer guide](docs/AUTH_TRANSFER.md) for the exact file 
 config-field manifest, encrypted endpoint bindings and separate bounded model
 checks. Model authentication remains outside this code repository; encrypted
 snapshots are now authorized in the private companion secrets repository.
-Automatic vault save/restore integration remains a separate task.
+Fresh deployment instead uses the encrypted bootstrap snapshot automatically;
+it does not require the source VM. See [the replication guide](docs/AUTH_REPLICATION.md)
+for refreshing that snapshot when credentials change.
 
 The auth-transfer transport is verified through an actual local Ansible fixture:
 metadata-only preflight, six-context missing-only restore and idempotent rerun.

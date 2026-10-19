@@ -1,0 +1,13 @@
+---
+native_auth_vault_refresh_source_host: "{{ native_auth_vault_refresh_bindings.source_host | default('') }}"
+native_auth_vault_refresh_source_profiles_root: "{{ native_auth_vault_refresh_bindings.source_profiles_root | default('') }}"
+native_auth_vault_refresh_source_environment_config: "{{ native_auth_vault_refresh_bindings.source_environment_config | default('') }}"
+native_auth_vault_refresh_runtime_user: "{{ native_auth_vault_refresh_bindings.runtime_user | default('') }}"
+native_auth_vault_refresh_repo_url: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_REPO_URL') }}"
+native_auth_vault_refresh_repo_branch: main
+native_auth_vault_refresh_ssh_key_file: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_REPO_SSH_KEY_FILE') }}"
+native_auth_vault_refresh_known_hosts_file: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_REPO_KNOWN_HOSTS_FILE') }}"
+native_auth_vault_refresh_password_file: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_VAULT_PASSWORD_FILE') }}"
+native_auth_vault_refresh_git_name: AC Agents automation
+native_auth_vault_refresh_git_email: ac-agents@localhost
+native_auth_vault_refresh_bindings: {}

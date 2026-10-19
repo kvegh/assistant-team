@@ -6,6 +6,16 @@ role credentials, sessions, conversations, tools, workspaces or complete workdir
 Existing target credentials remain untouched. A saved credential does not prove
 model access; bounded provider checks are a separate, explicitly authorized step.
 
+## When to use this playbook
+
+Fresh complete and portable deployments now restore missing enabled-profile
+credentials automatically from the companion `vaults/bootstrap-auth_vault.yml`.
+That route requires no source server at deployment time. See
+[authentication replication](AUTH_REPLICATION.md) for snapshot refresh and AAP
+synchronization. This host-to-host transfer remains available for an explicit
+migration or a controlled copy before a snapshot is refreshed; it is not the
+normal fresh-deployment authentication source.
+
 ## AAP workflow
 
 Run `src/transfer_native_auth.yml` in a dedicated AAP job template after the fresh
@@ -41,8 +51,9 @@ Paths below are relative to the named bootstrap profile. The private target repo
 `environment-logs/auth-transfer/latest.json` records restored/skipped/missing
 profile states and the exact accepted file/field allowlist. It contains no secret
 values, account identifiers, native documents or model entitlement claim. The
-`vault_material_manifest` is the inventory of restored inputs that a later,
-separately authorized external vault implementation must protect.
+`vault_material_manifest` is the inventory of restored inputs protected by the
+bootstrap authentication vault. Both routes retain the same account isolation
+and allowlist; neither restores whole model directories.
 
 | Profile | Relative file | Accepted material |
 | --- | --- | --- |

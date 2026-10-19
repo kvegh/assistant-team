@@ -1,0 +1,24 @@
+---
+argument_specs:
+  main:
+    short_description: Restore missing native credentials from an encrypted bootstrap snapshot
+    options:
+      native_auth_vault_restore_enabled:
+        type: bool
+        default: true
+        description: Disable for deliberately unauthenticated deployments.
+      native_auth_vault_restore_runtime_user:
+        type: str
+        description: Existing dedicated runtime identity owning the native account profiles.
+      native_auth_vault_restore_profiles_root:
+        type: str
+        default: ''
+        description: Absolute model-environments directory; empty resolves the canonical layout.
+      native_auth_vault_restore_environment_config:
+        type: str
+        default: ''
+        description: Absolute existing environment selection file; empty resolves the canonical layout.
+      native_auth_vault_restore_report_directory:
+        type: str
+        default: ''
+        description: Absolute sanitized report directory; empty resolves the canonical layout.

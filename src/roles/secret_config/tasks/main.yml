@@ -14,7 +14,7 @@
       {{ secret_config_file if secret_config_file | length > 0 else
          (lookup('ansible.builtin.env', secret_config_environment_variables[secret_config_name])
           or (assistant_secret_config_root | default(secret_config_default_root))
-             ~ '/' ~ secret_config_name ~ '_vault.yml') }}
+             ~ '/' ~ secret_config_filenames.get(secret_config_name, secret_config_name ~ '_vault.yml')) }}
   no_log: true
 
 - name: Locate the configuration on the Ansible controller

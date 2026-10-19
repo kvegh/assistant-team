@@ -57,3 +57,5 @@
       tags: [vertex_auth]
       vars:
         vertex_auth_install_sdk: "{{ hostvars['localhost'].assistant_environment.agent_connector.vertex_sdk_install_authorized | default(false) }}"
+    - role: native_auth_vault_restore
+      tags: [auth_restore]
