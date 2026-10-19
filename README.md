@@ -1,5 +1,8 @@
 # assistant-team
 
+This code repository is public. Environment configuration and authentication
+snapshots stay encrypted in the private companion repository, `assistant-team-secrets`.
+
 Version 1.0.0 consolidates the approved deployment, environment layout, native team communication and private-reader features. See [release notes](RELEASE_NOTES.md#100) for scope and live-verification limits. Existing deployments are not automatically migrated.
 
 Current communication development continues with agents-connector and tmux.
@@ -251,8 +254,9 @@ Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
 Defaults are 2 vCPUs, 4096 MiB RAM, and a 20 GiB disk. The VM name defaults to
 the encrypted configuration. Environment settings and guest credentials are
 under `provisioning` in the companion `configuration/environment_vault.yml`. AAP must supply the configuration snapshot, Vault
-and hypervisor machine credentials; its project needs a GitHub source-control
-credential with read access to this private repository over HTTPS.
+and hypervisor machine credentials. Its project can read this public code
+repository over HTTPS without a GitHub source-control credential. Access to the
+private companion repository still requires its own authorization.
 
 Provisioning refuses an existing VM or disk and refuses shrinking the golden
 image. A failed deployment preserves resources for investigation; it does not
@@ -297,7 +301,7 @@ restricted, and record deployment details in the encrypted configuration file.
 
 ## Deployment status
 
-The private repository synchronized successfully to its AAP project using a
+Before publication, the repository synchronized successfully to its AAP project using a
 repository-scoped GitHub credential. The Generic Linux VM Deployment template
 has deployed and verified the first guest with 2 vCPUs, 4 GiB allocated RAM,
 and a 40 GiB virtual disk. Installer cleanup, authenticated access, RHEL

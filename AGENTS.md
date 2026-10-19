@@ -37,7 +37,8 @@ For every lasting design or configuration change:
   and the reason for the decision.
 - Implement the resulting configuration in separate Ansible roles called by
   the project playbook so it can be reproduced on a fresh deployment.
-- Commit and push the implementation and README together to the private repository.
+- Commit and push the implementation and README together to the public code repository.
+  Keep encrypted configuration and authentication snapshots in the private companion.
   Record its commit ID in the decision history in a following documentation commit
   when the ID was not known beforehand.
 

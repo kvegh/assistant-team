@@ -1,5 +1,8 @@
 # Assistant team: commands
 
+Code is public; encrypted configuration and authentication snapshots remain in
+the private `assistant-team-secrets` companion repository.
+
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 
 Communication stays on agents-connector + tmux; alternatives await review and

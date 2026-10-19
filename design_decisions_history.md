@@ -1878,3 +1878,18 @@ Old clones must be replaced or independently scrubbed before pushing again.
 Historical releases keep their code but require separately supplied environment
 configuration. Rewriting published refs does not itself purge GitHub's cached
 objects or independently retained copies.
+
+## Publish the code repository after separating private configuration
+
+The operator requested public visibility after the historical deployment and
+recovery Vault files were removed and the current source was checked for
+sensitive information. The reviewed source was `b45ec62` (version 1.4.5).
+GitHub's repository visibility setting was changed to public and verified through
+the API. The companion repository remains private and retains the encrypted
+environment configuration and authentication snapshots.
+
+Current deployment instructions now allow unauthenticated HTTPS access to the
+public code repository. Authorization for the private companion remains separate.
+Existing AAP source-control credentials and project settings were retained.
+The operator declined a GitHub cache purge after reviewing the history rewrite;
+publication does not imply that old cached objects were physically removed.
