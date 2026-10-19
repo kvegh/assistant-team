@@ -102,7 +102,17 @@ At session end, `./login` reports **Failed or cancelled** or **Credentials saved
 
 `./login --clear` clears only that profile’s saved auth and matching stopped project-role copies, then exits. Installation and non-secret provider settings remain. Exit active local CLI sessions and stop projects using that profile first; otherwise clearing refuses before mutation. This clears local credentials, without promising remote token revocation.
 
-Mistral profiles work as standalone native CLI installations. Vibe participation in Agents Connector is required future work; project assignment to Mistral currently fails with an actionable error.
+Mistral Vibe 2.26.0 supports `mistral-work` and `mistral-priv` for the four visible
+collaboration roles: orchestrator, builder, investigator and challenger. Enable the
+intended profile with `team setup`, authenticate it using its own `./login`, then
+stop the project before editing its JSON role mapping in
+`projects/PROJECT/project.PROJECT.config`, for example `"builder": "mistral-priv"`.
+Run `team preflight PROJECT`, then start the project. Private readers and restricted
+connectors continue to require Claude. Existing default assignments do not change.
+Work/private labels select separate native accounts, not Vertex. Local saved-auth
+evidence does not prove model access; no paid API fallback is selected silently.
+The native Vibe adapter uses stock broker MCP and native lifecycle hooks, with
+account-isolated credentials and role-local saved state.
 
 ## Configuration
 

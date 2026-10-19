@@ -122,3 +122,17 @@ and the dedicated domain retained nonzero MCS categories.
 Installation paths resolve through `install_layout`: `assistant_install_prefix` is the destination parent (default runtime HOME), `assistant_install_root=PARENT/ac-agents`, profiles are in `model-environments` and connector tooling in `agent-connector`. Runtime HOME remains unchanged for Podman/systemd. This source-only layout refuses legacy environments until controlled migration; no current deployment was changed.
 
 Fresh prefix installations resolve private native providers under `model-environments`; private-reader outputs remain outside the team workspace.
+
+## Native Mistral images and hooks
+
+The default image set includes the pinned Mistral Vibe 2.26.0 harness. Its connector
+image is named `assistant-connector-mistral`; the credential-free foundation image
+retains its existing `assistant-team-vibe` name. The certified Podman module extends
+that existing image with tmux and runtime helpers, without changing live containers.
+A focused `connector_images` run with `agents_connector_image_flavours: [mistral]`
+builds only this adapter. The `connector_mistral` tag installs its standard-library
+configuration/hook helper and matching routing utility without restarting services.
+Mistral may be selected for the four visible roles using separately enabled
+`mistral-work` or `mistral-priv` accounts. Private readers and restricted connectors
+remain Claude-only; defaults and account enablement are unchanged. Deployment does
+not authenticate accounts or prove model entitlement.

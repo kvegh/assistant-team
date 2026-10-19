@@ -92,9 +92,8 @@ def assignments(home, name):
     for role, profile in data['roles'].items():
         if profile is None:errors.append(role+': select an enabled profile')
         elif not env['profiles'][profile]['enabled']:errors.append(role+': '+profile+' is disabled')
-        elif PROFILES[profile]['vendor']=='mistral':errors.append(role+': Mistral team adapter is not implemented; use Claude/Codex/Gemini')
-        elif PROFILES[profile]['vendor']!=PROFILES[DEFAULTS[role]]['vendor']:errors.append(role+': current role adapter requires '+PROFILES[DEFAULTS[role]]['vendor']+'; choose its enabled work/priv profile')
-        elif role in ['observer','private-connector','corporate-connector'] and PROFILES[profile]['vendor']!='claude':errors.append(role+': current restricted role requires Claude')
+        elif role in ['summarizer','observer','private-connector','corporate-connector'] and PROFILES[profile]['vendor']!='claude':errors.append(role+': current restricted role requires Claude')
+        elif PROFILES[profile]['vendor'] not in [PROFILES[DEFAULTS[role]]['vendor'],'mistral']:errors.append(role+': current role adapter requires '+PROFILES[DEFAULTS[role]]['vendor']+' or Mistral; choose its enabled work/priv profile')
     if errors:raise ValueError('Edit projects/'+name+'/project.'+name+'.config: '+'; '.join(errors))
     return data['roles']
 

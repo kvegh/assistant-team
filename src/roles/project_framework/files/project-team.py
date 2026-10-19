@@ -76,11 +76,12 @@ def configure_roles(name):
         existing=subprocess.run(['podman','inspect','--format','{{.State.Running}}',c],capture_output=True,text=True)
         if existing.returncode==0 and existing.stdout.strip()=='true' and cfg.get('account_profile')!=account:
             raise ValueError('Account change pending: stop '+name+' before changing '+role+'; active container was preserved')
+    reconcile_broker_types(path,{role:module.PROFILES[account]['vendor'] for role,account in mapping.items()})
     for role,account in mapping.items():
         p=path/'profiles'/role;cfg=json.loads((p/'profile.json').read_text())
         base=p/'accounts'/account
         # Preserve the original profile's native state once, only within its original boundary.
-        old=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[cfg['flavour']])
+        old=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work','mistral':'mistral-priv'}[cfg['flavour']])
         old={'codex':'codex-priv','gemini':'gemini-work'}.get(old,old)
         for kind in ['home','workspace']:
             destination=base/kind
@@ -90,6 +91,22 @@ def configure_roles(name):
             else:destination.mkdir(mode=0o700,exist_ok=True)
         cfg.update(account_profile=account,auth_directory=account,flavour=module.PROFILES[account]['vendor'])
         module.atomic(p/'profile.json',cfg)
+
+
+def reconcile_broker_types(path,vendors):
+    """Update stopped-project type metadata without replacing tokens or history."""
+    database=path/'db.sqlite'
+    if database.is_symlink():raise ValueError('Project database must not be a symlink')
+    if not database.exists():return
+    with sqlite3.connect(database) as db:
+        current=dict(db.execute('SELECT name,cli_kind FROM agents WHERE removed_at IS NULL'))
+        changes={role:vendor for role,vendor in vendors.items() if role in current and current[role]!=vendor}
+        if not changes:return
+        verify_no_project_listener(path)
+        if any(container_phase(path.name,role) in ['running','paused','stopping'] for role in ROLES):
+            raise ValueError('Stop the project before changing native agent types; broker metadata was preserved')
+        for role,vendor in changes.items():
+            db.execute('UPDATE agents SET cli_kind=? WHERE name=? AND removed_at IS NULL',(vendor,role))
 
 def project_name_validator():
     source=pathlib.Path(__file__).resolve().with_name('project-names.py')
@@ -239,8 +256,8 @@ def required_auth(name):
     core=load(name);missing=[]
     for role in ROLES:
         cfg=json.loads((core.PROFILES/role/'profile.json').read_text());flavour=cfg['flavour']
-        boundary=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}[flavour])
-        relative={'claude':'.claude/.credentials.json','codex':'.codex/auth.json','gemini':'.gemini/oauth_creds.json'}[flavour]
+        boundary=cfg.get('auth_directory',{'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work','mistral':'mistral-priv'}[flavour])
+        relative={'claude':'.claude/.credentials.json','codex':'.codex/auth.json','gemini':'.gemini/oauth_creds.json','mistral':'.vibe/.env'}[flavour]
         antigravity=flavour=='gemini' and boundary=='gemini-priv'
         if antigravity:
             core.antigravity_executable(role)
@@ -261,6 +278,13 @@ def required_auth(name):
         # Existing role credentials can have their own native refresh state.
         credential=core.role_home(role)/relative
         if not credential.is_file():credential=paths(ACCOUNT_HOME).model(boundary)/relative
+        if flavour=='mistral':
+            try:
+                valid=any(line.strip().startswith('MISTRAL_API_KEY=') and line.partition('=')[2].strip().strip('\"\'')
+                          for line in credential.read_text().splitlines())
+            except (OSError,ValueError):valid=False
+            if not valid and boundary not in missing:missing.append(boundary)
+            continue
         try:
             data=json.loads(credential.read_text())
             if flavour=='claude':valid=isinstance(data.get('claudeAiOauth'),dict) and bool(data['claudeAiOauth'].get('accessToken'))
@@ -543,7 +567,7 @@ def role_model_metadata(core, role):
     cfg=read_json(core.PROFILES/role/'profile.json')
     vendor=cfg.get('flavour')
     profile=cfg.get('account_profile') or cfg.get('auth_directory') or {
-        'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work'}.get(vendor)
+        'claude':'claude-work','codex':'codex-priv','gemini':'gemini-work','mistral':'mistral-priv'}.get(vendor)
     if profile not in {v+'-'+context for v in ['claude','codex','gemini','mistral'] for context in ['work','priv']}:
         return 'unknown','unknown (configuration unavailable)'
     home=core.role_home(role)
@@ -560,13 +584,14 @@ def role_model_metadata(core, role):
             else:config=read_json(home/'.gemini/settings.json')
             selected=model(config.get('model',{}).get('name')) if isinstance(config.get('model'),dict) else model(config.get('model'))
             if not selected and profile=='gemini-work':selected=model(read_json(home/'.vertex.json').get('GEMINI_MODEL'))
-        elif vendor=='codex':
+        elif vendor in ['codex','mistral']:
             try:
-                fd=os.open(home/'.codex/config.toml',os.O_RDONLY|os.O_NOFOLLOW)
+                fd=os.open(home/('.codex/config.toml' if vendor=='codex' else '.vibe/config.toml'),os.O_RDONLY|os.O_NOFOLLOW)
                 with os.fdopen(fd) as stream:text=stream.read(131073)
                 # Only the top-level model applies; ignore unrelated TOML sections.
                 top=re.split(r'^\s*\[',text,maxsplit=1,flags=re.MULTILINE)[0] if len(text)<=131072 else ''
-                match=re.search(r'^model\s*=\s*[\"\']([^\"\']+)[\"\']\s*(?:#.*)?$',top,re.MULTILINE)
+                key='model' if vendor=='codex' else 'active_model'
+                match=re.search(r'^'+key+r'\s*=\s*[\"\']([^\"\']+)[\"\']\s*(?:#.*)?$',top,re.MULTILINE)
                 if match:selected=model(match.group(1))
             except OSError:pass
         if selected:return profile,selected+' (configured)'

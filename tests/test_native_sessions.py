@@ -54,8 +54,132 @@ class NativeSessionTests(unittest.TestCase):
                        (session_id or self.sid, source, thread_source, cwd, archived))
         return path
 
+    def mistral(self, session_id=None, cwd='/workspace', parent=None):
+        sid = session_id or self.sid
+        path = self.write('.vibe/logs/session/session_20261019_120000_' + sid[:8] + '/meta.json',
+                          dict(session_id=sid, environment={'working_directory': cwd},
+                               parent_session_id=parent))
+        path.with_name('messages.jsonl').write_text('not inspected by metadata discovery')
+        return path
+
+    def mistral_unified(self, session_id=None, cwd='/workspace', parent=None):
+        sid = session_id or self.sid
+        base = '.vibe/logs/session/unified/' + sid
+        generation = '0000000000000001'
+        runtime = self.write(base + '/generations/' + generation + '/runtime-state.json',
+                             dict(session_metadata=dict(cwd=cwd, root_session_id=parent or sid,
+                                                        parent_session_id=parent),
+                                  identity=dict(kind='subagent' if parent else 'root',
+                                                depth=1 if parent else 0, session_id=sid,
+                                                root_session_id=parent or sid, parent_session_id=parent)))
+        digest = lambda path: hashlib.sha256(path.read_bytes()[:-1]).hexdigest()
+        manifest = self.write(base + '/generations/' + generation + '/manifest.json',
+                              dict(session_id=sid, generation=generation, snapshot_sequence=0,
+                                   runtime_state=dict(path='runtime-state.json', sha256=digest(runtime))))
+        current = self.write(base + '/CURRENT',
+                             dict(store_format='mistral.vibe.unified-session-store/v1', store_format_minor=8,
+                                  session_id=sid, generation=generation, snapshot_sequence=0,
+                                  manifest_sha256=digest(manifest)))
+        return current, manifest, runtime
+
+    def test_mistral_legacy_exact_resume_preserves_private_and_work_isolation(self):
+        self.mistral()
+        self.assertEqual(['--resume', self.sid], sessions.resume_arguments(self.home, 'mistral', 'mistral-priv', 'builder'))
+        with self.assertRaisesRegex(sessions.SessionError, 'does not match'):
+            sessions.resume_arguments(self.home, 'mistral', 'mistral-work', 'builder')
+        self.mistral(str(uuid.uuid4()))
+        self.assertEqual(['--resume', self.sid], sessions.resume_arguments(self.home, 'mistral', 'mistral-priv', 'builder'))
+
+    def test_mistral_native_opaque_ids_are_valid_but_traversal_is_rejected(self):
+        self.mistral('session_opaque-123')
+        self.assertEqual(['--resume', 'session_opaque-123'], sessions.resume_arguments(self.home, 'mistral', 'mistral-work', 'builder'))
+        for value in ('../unsafe', '', None, 'x' * 129, 'two words'):
+            with self.assertRaises(sessions.SessionError):
+                sessions.session_identifier(value, 'mistral')
+
+    def test_mistral_subagents_foreign_workspace_and_missing_messages_are_excluded(self):
+        self.mistral(parent=str(uuid.uuid4()))
+        self.mistral(str(uuid.uuid4()), cwd='/elsewhere')
+        path = self.mistral(str(uuid.uuid4()))
+        path.with_name('messages.jsonl').unlink()
+        self.assertEqual(set(), sessions.histories(self.home, 'mistral'))
+
+    def test_mistral_unified_reads_published_runtime_metadata_without_transcripts(self):
+        self.mistral_unified()
+        self.mistral_unified(str(uuid.uuid4()), parent=self.sid)
+        self.mistral_unified(str(uuid.uuid4()), cwd='/elsewhere')
+        self.assertEqual(['--resume', self.sid], sessions.resume_arguments(self.home, 'mistral', 'mistral-work', 'investigator'))
+
+    def test_mistral_unified_digest_mismatch_and_invalid_reference_fail_closed(self):
+        current, manifest, runtime = self.mistral_unified()
+        runtime.write_text('{}\n')
+        with self.assertRaisesRegex(sessions.SessionError, 'metadata'):
+            sessions.histories(self.home, 'mistral')
+        current, manifest, runtime = self.mistral_unified()
+        data = json.loads(current.read_text())
+        data['generation'] = '../../foreign'
+        current.write_text(json.dumps(data) + '\n')
+        with self.assertRaisesRegex(sessions.SessionError, 'generation'):
+            sessions.histories(self.home, 'mistral')
+
+    def test_mistral_unified_never_reads_projection_named_as_runtime(self):
+        current, manifest, runtime = self.mistral_unified()
+        data = json.loads(manifest.read_text())
+        data['runtime_state']['path'] = 'projection-state.json'
+        manifest.write_text(json.dumps(data) + '\n')
+        pointer = json.loads(current.read_text())
+        pointer['manifest_sha256'] = hashlib.sha256(manifest.read_bytes()[:-1]).hexdigest()
+        current.write_text(json.dumps(pointer) + '\n')
+        with self.assertRaisesRegex(sessions.SessionError, 'reference'):
+            sessions.histories(self.home, 'mistral')
+
+    def test_mistral_ambiguous_histories_need_exact_active_identity(self):
+        self.mistral()
+        second = str(uuid.uuid4())
+        self.mistral_unified(second)
+        with self.assertRaisesRegex(sessions.SessionError, 'Multiple native'):
+            sessions.resume_arguments(self.home, 'mistral', 'mistral-priv', 'builder')
+        sessions.capture(self.home, 'mistral', 'mistral-priv', 'builder', second)
+        self.assertEqual(['--resume', second], sessions.resume_arguments(self.home, 'mistral', 'mistral-priv', 'builder'))
+
+    def test_mistral_active_id_uses_own_native_process_lock_and_excludes_child(self):
+        child = str(uuid.uuid4())
+        self.mistral(child, parent=self.sid)
+        descriptors = [Path('/proc/123/fd/55'), Path('/proc/123/fd/56')]
+        targets = [str(self.home / '.vibe/logs/session/active' / (sid + '.lock')) for sid in (self.sid, child)]
+        original_iterdir = Path.iterdir
+        with mock.patch.object(sessions, '_descendants', return_value={123}), mock.patch.object(Path, 'iterdir', side_effect=lambda path: iter(descriptors) if str(path).startswith('/proc/') else original_iterdir(path), autospec=True), mock.patch.object(sessions.os, 'readlink', side_effect=targets), mock.patch.object(sessions, 'histories', return_value={self.sid}):
+            self.assertEqual(self.sid, sessions.discover_active(self.home, 'mistral', 123))
+
+    def test_mistral_active_empty_session_is_authoritative_after_clear(self):
+        self.mistral()
+        sessions.capture(self.home, 'mistral', 'mistral-work', 'builder')
+        new_id = str(uuid.uuid4())
+        descriptor = Path('/proc/123/fd/55')
+        target = str(self.home / '.vibe/logs/session/active' / (new_id + '.lock'))
+        original_iterdir = Path.iterdir
+        with mock.patch.object(sessions, '_descendants', return_value={123}), mock.patch.object(Path, 'iterdir', side_effect=lambda path: iter([descriptor]) if str(path).startswith('/proc/') else original_iterdir(path), autospec=True), mock.patch.object(sessions.os, 'readlink', return_value=target):
+            active = sessions.discover_active(self.home, 'mistral', 123)
+        self.assertEqual(new_id, active)
+        self.assertIsNone(sessions.capture(self.home, 'mistral', 'mistral-work', 'builder', active))
+        self.assertEqual([], sessions.resume_arguments(self.home, 'mistral', 'mistral-work', 'builder'))
+        self.assertEqual(new_id, json.loads((self.home / sessions.POINTER).read_text())['session_id'])
+
+    def test_mistral_hook_ignores_subagent_and_records_parent_identity_only(self):
+        import subprocess
+        environment = dict(os.environ, HOME=str(self.home))
+        payload = dict(session_id=self.sid, cwd='/workspace', parent_session_id=str(uuid.uuid4()))
+        command = [os.sys.executable, str(MODULE), 'record-hook', 'mistral', 'mistral-priv', 'builder']
+        result = subprocess.run(command, input=json.dumps(payload), text=True, capture_output=True, env=environment)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertFalse((self.home / sessions.POINTER).exists())
+        payload['parent_session_id'] = None
+        result = subprocess.run(command, input=json.dumps(payload), text=True, capture_output=True, env=environment)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(self.sid, json.loads((self.home / sessions.POINTER).read_text())['session_id'])
+
     def test_new_home_has_no_resume_arguments_for_each_provider(self):
-        for vendor in ('claude', 'gemini', 'codex', 'antigravity'):
+        for vendor in ('claude', 'gemini', 'codex', 'antigravity', 'mistral'):
             self.assertEqual([], sessions.resume_arguments(self.home, vendor, vendor + '-work', 'builder'))
         self.assertFalse((self.home / sessions.POINTER).exists())
 

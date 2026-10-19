@@ -46,9 +46,21 @@ class EnvironmentConfigTests(unittest.TestCase):
             module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
             self.assertEqual(module.assignments(home,'one')['challenger'],'gemini-priv')
 
-    def test_mistral_profile_available_but_team_assignment_rejected(self):
+    def test_mistral_work_and_private_can_be_assigned_to_visible_team_roles(self):
         with tempfile.TemporaryDirectory() as home:
             self.environment(home,module.PROFILES)
-            value=module.project(home,'one');value['roles']['builder']='mistral-priv'
-            module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
-            with self.assertRaisesRegex(ValueError,'adapter'):module.assignments(home,'one')
+            for profile in ['mistral-work','mistral-priv']:
+                value=module.project(home,'one')
+                for role in ['orchestrator','builder','investigator','challenger']:value['roles'][role]=profile
+                module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
+                self.assertEqual(module.assignments(home,'one'),value['roles'])
+
+    def test_mistral_cannot_replace_private_readers_or_restricted_connectors(self):
+        with tempfile.TemporaryDirectory() as home:
+            self.environment(home,module.PROFILES)
+            for role in ['summarizer','observer','private-connector','corporate-connector']:
+                value=module.project(home,'one');value['roles'][role]='mistral-priv'
+                module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)
+                with self.assertRaisesRegex(ValueError,'restricted role requires Claude'):module.assignments(home,'one')
+                value['roles'][role]=module.DEFAULTS[role]
+                module.atomic(pathlib.Path(home)/'projects/one/project.one.config',value)

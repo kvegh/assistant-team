@@ -35,9 +35,74 @@ def identifier(value):
 def provider(vendor):
     aliases = {'agy': 'antigravity', 'agv': 'antigravity'}
     vendor = aliases.get(vendor, vendor)
-    if vendor not in ('claude', 'codex', 'gemini', 'antigravity'):
+    if vendor not in ('claude', 'codex', 'gemini', 'antigravity', 'mistral'):
         raise SessionError('Unsupported native conversation provider')
     return vendor
+
+
+def session_identifier(value, vendor):
+    # Vibe's own session-lease validator permits opaque IDs as well as UUIDs.
+    if vendor == 'mistral':
+        if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}', value):
+            raise SessionError('Invalid native conversation identifier')
+        return value
+    return identifier(value)
+
+
+def _mistral_document(home, path, digest=None):
+    """Read native metadata without opening checkpoints, projections or journals."""
+    path = safe_file(home, path)
+    try:
+        if digest is not None and (not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest)):
+            raise ValueError('invalid native metadata digest')
+        body = path.read_bytes()
+        if not body.endswith(b'\n'):
+            raise ValueError('unterminated native document')
+        body = body[:-1]
+        if digest is not None and hashlib.sha256(body).hexdigest() != digest:
+            raise ValueError('native metadata digest mismatch')
+        value = json.loads(body)
+        if not isinstance(value, dict):
+            raise ValueError('invalid metadata')
+        return value
+    except (OSError, ValueError) as exc:
+        raise SessionError('Cannot read Mistral conversation metadata: ' + path.name) from exc
+
+
+def _mistral_unified(home, base):
+    """Read the published runtime identity; Vibe stores no transcript in it."""
+    found = set()
+    for path in safe_file(home, base / 'unified').glob('*/CURRENT'):
+        current = _mistral_document(home, path)
+        sid = session_identifier(current.get('session_id'), 'mistral')
+        generation = current.get('generation')
+        if (path.parent.name != sid
+                or current.get('store_format') != 'mistral.vibe.unified-session-store/v1'
+                or not isinstance(current.get('store_format_minor', 1), int)
+                or not 1 <= current.get('store_format_minor', 1) <= 8
+                or not isinstance(generation, str) or not re.fullmatch(r'[0-9]{16}', generation)):
+            raise SessionError('Invalid Mistral conversation generation')
+        directory = path.parent / 'generations' / generation
+        manifest = _mistral_document(home, directory / 'manifest.json', current.get('manifest_sha256', ''))
+        if (manifest.get('session_id') != sid or manifest.get('generation') != generation
+                or manifest.get('snapshot_sequence') != current.get('snapshot_sequence')):
+            raise SessionError('Mistral conversation generation identity mismatch')
+        descriptor = manifest.get('runtime_state')
+        filename = descriptor.get('path') if isinstance(descriptor, dict) else None
+        if filename != 'runtime-state.json':
+            raise SessionError('Invalid Mistral runtime metadata reference')
+        runtime = _mistral_document(home, directory / filename, descriptor.get('sha256', ''))
+        metadata, identity = runtime.get('session_metadata'), runtime.get('identity')
+        if not isinstance(metadata, dict) or not isinstance(identity, dict):
+            raise SessionError('Invalid Mistral runtime identity')
+        if (metadata.get('cwd') == WORKSPACE and not metadata.get('parent_session_id')
+                and metadata.get('root_session_id') == sid
+                and identity.get('session_id') == sid
+                and identity.get('root_session_id') == sid
+                and identity.get('kind') == 'root' and identity.get('depth') == 0
+                and not identity.get('parent_session_id')):
+            found.add(sid)
+    return found
 
 
 def safe_file(home, path):
@@ -134,6 +199,19 @@ def histories(home, vendor):
                 session_id = _uuid(entry.get('sessionId'))
                 if session_id:
                     found.add(session_id)
+    elif vendor == 'mistral':
+        base = safe_file(home, home / '.vibe/logs/session')
+        for path in base.glob('session_*/meta.json'):
+            entry = read_json(home, path)
+            if not isinstance(entry, dict):
+                raise SessionError('Invalid Mistral conversation metadata')
+            environment = entry.get('environment')
+            if (isinstance(environment, dict)
+                    and environment.get('working_directory') == WORKSPACE
+                    and not entry.get('parent_session_id')
+                    and safe_file(home, path.parent / 'messages.jsonl').is_file()):
+                found.add(session_identifier(entry.get('session_id'), vendor))
+        found.update(_mistral_unified(home, base))
     elif vendor == 'codex':
         path = safe_file(home, home / '.codex/state_5.sqlite')
         if path.exists():
@@ -191,7 +269,7 @@ def _load(home, vendor, account_profile, role):
             or value.get('vendor') != vendor or value.get('account_profile') != account_profile
             or value.get('role') != role):
         raise SessionError('Saved conversation pointer does not match this role and account')
-    identifier(value.get('session_id'))
+    session_identifier(value.get('session_id'), vendor)
     if not isinstance(value.get('pending'), bool):
         raise SessionError('Invalid saved conversation pointer')
     return value
@@ -205,7 +283,7 @@ def _save(home, vendor, account_profile, role, session_id, pending=False):
     if path.exists():
         _load(home, vendor, account_profile, role)
     value = dict(schema=1, vendor=vendor, account_profile=account_profile,
-                 role=role, session_id=identifier(session_id), pending=pending)
+                 role=role, session_id=session_identifier(session_id, vendor), pending=pending)
     fd, temporary = tempfile.mkstemp(prefix='.ac-agents-session-', dir=home)
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as stream:
@@ -226,7 +304,7 @@ def capture(home, vendor, account_profile, role, session_id=None):
     eligible = histories(home, vendor)
     authoritative = session_id is not None
     if session_id is not None:
-        session_id = identifier(session_id)
+        session_id = session_identifier(session_id, vendor)
     elif existing:
         session_id = existing['session_id']
     elif len(eligible) == 1:
@@ -254,7 +332,7 @@ def resume_arguments(home, vendor, account_profile, role):
     if session_id is None:
         return []
     return [{'claude': '--resume', 'gemini': '--resume',
-             'codex': 'resume', 'antigravity': '--conversation'}[vendor], session_id]
+             'codex': 'resume', 'antigravity': '--conversation', 'mistral': '--resume'}[vendor], session_id]
 
 
 def _descendants(parent):
@@ -287,7 +365,7 @@ def discover_active(home, vendor, native_pid=None):
         except (OSError, ValueError, subprocess.SubprocessError):
             return None
     candidates = set()
-    if vendor in ('claude', 'codex'):
+    if vendor in ('claude', 'codex', 'mistral'):
         for pid in _descendants(native_pid):
             if vendor == 'claude':
                 path = safe_file(home, home / '.claude/sessions' / (str(pid) + '.json'))
@@ -312,9 +390,11 @@ def discover_active(home, vendor, native_pid=None):
                         target = os.readlink(fd)
                     except OSError:
                         continue
-                    match = re.fullmatch(re.escape(str(home / '.codex/thread-writer-locks')) + r'/([0-9a-fA-F-]+)\.lock', target)
+                    lock_home = (home / '.vibe/logs/session/active' if vendor == 'mistral'
+                                 else home / '.codex/thread-writer-locks')
+                    match = re.fullmatch(re.escape(str(lock_home)) + r'/([A-Za-z0-9_-]+)\.lock', target)
                     if match:
-                        candidates.add(identifier(match.group(1)))
+                        candidates.add(session_identifier(match.group(1), vendor))
     elif vendor == 'antigravity':
         path = safe_file(home, home / '.gemini/antigravity-cli/cache/last_conversations.json')
         if path.exists():
@@ -331,6 +411,17 @@ def discover_active(home, vendor, native_pid=None):
         if database.exists():
             known_ids = {entry['id'] for entry in rows(home, database, 'threads', ('id',))}
             candidates.difference_update(known_ids - histories(home, vendor))
+    if vendor == 'mistral' and candidates:
+        eligible = histories(home, vendor)
+        base = safe_file(home, home / '.vibe/logs/session')
+        known = {path.parent.name for path in safe_file(home, base / 'unified').glob('*/CURRENT')}
+        for path in base.glob('session_*/meta.json'):
+            entry = read_json(home, path)
+            if isinstance(entry, dict):
+                known.add(entry.get('session_id'))
+        # Keep a just-created, empty live session authoritative after /clear,
+        # while removing persisted subagents and foreign-workspace sessions.
+        candidates.difference_update(known - eligible)
     if len(candidates) > 1:
         raise SessionError('Multiple active native main conversations were detected')
     return next(iter(candidates), None)
@@ -348,9 +439,11 @@ def main():
         vendor = provider(args.vendor)
         if args.action == 'record-hook':
             payload = json.load(sys.stdin)
+            if isinstance(payload, dict) and vendor == 'mistral' and payload.get('parent_session_id'):
+                return 0  # A native subagent must never replace its parent's pointer.
             if not isinstance(payload, dict) or payload.get('cwd') != WORKSPACE:
                 raise SessionError('Session hook workspace does not match')
-            session_id = identifier(payload.get('session_id'))
+            session_id = session_identifier(payload.get('session_id'), vendor)
             _save(home, vendor, args.account_profile, args.role, session_id,
                   pending=session_id not in histories(home, vendor))
         else:

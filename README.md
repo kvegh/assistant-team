@@ -650,10 +650,11 @@ Do not start, restart or edit the same project concurrently with either operatio
 Both configuration files use JSON and contain no authentication secrets. Project
 assignments must select enabled profiles. Connector roles whose required account
 is unavailable need an explicit assignment before startup; they do not silently
-switch private and corporate contexts. The observer and two restricted connector
-roles currently require Claude. The collaboration roles retain their current native adapter and can select its
-enabled work/private profile; changing the role’s vendor adapter is not implemented. Mistral profiles support standalone login and
-CLI use; assigning them to team roles is refused until its adapter is implemented.
+switch private and corporate contexts. The two private readers and two restricted connector roles require Claude.
+The four visible collaboration roles can select enabled `mistral-work` or
+`mistral-priv` profiles as an alternative native Vibe adapter. Other vendor changes
+retain their existing adapter restrictions. Work/private names identify separate
+Mistral accounts, not Vertex authentication.
 
 Creation uses the stock broker to initialize `~/ac-agents/projects/PROJECT/db.sqlite` and its
 five-worker registry. Eight profiles have separate native homes, workspaces, IPC
@@ -672,8 +673,21 @@ without an initial work prompt. Login directories remain outside projects; only
 missing provider credential files are seeded into each role home. Existing role
 refresh state is preserved. This preflight cannot establish remote token validity.
 Native onboarding, workspace trust and Codex hook approval are not bypassed.
-Native Mistral team support is tracked as required future work, including an
-upstream agents-connector pull request.
+Native Mistral team support uses the pinned Vibe 2.26.0 harness, stock broker MCP
+and native lifecycle hooks. Mistral credentials and native state stay inside the
+selected account and role boundaries; no paid API fallback is selected silently.
+An upstream integration contribution remains a separate follow-up.
+
+To use Mistral, run `~/ac-agents/bin/team setup` to enable the intended profile,
+then `cd ~/ac-agents/model-environments/mistral-priv && ./login` (or
+`mistral-work`). Stop the project before editing its JSON role mapping, for example
+`"builder": "mistral-priv"`, in `projects/PROJECT/project.PROJECT.config`; run
+`team preflight PROJECT` before starting again. No default role assignment changes.
+Saved credentials establish local login evidence, not model entitlement.
+
+The certified Podman image build extends the existing credential-free
+`assistant-team-vibe:2.26.0` base into `assistant-connector-mistral:2.26.0`;
+work/private profiles share immutable program files and keep separate credentials.
 
 The user target `assistant-connector@PROJECT.target` orders that project's broker,
 gateway and native container services. Project targets are not enabled at boot.
@@ -772,7 +786,7 @@ including documentation commits, increment patch. Installed version and commit
 metadata belong in diagnostics. Release automation is still being prepared.
 
 [Future work](TODO.md) distinguishes required later work—custom roles based on
-the default templates and Mistral team support—from optional custom account
+the default templates and an upstream Mistral contribution—from optional custom account
 contexts and multiple environments. Multiple environments are not supported now;
 use separate Linux users for isolated environments.
 
@@ -1108,8 +1122,8 @@ The [team review backlog](TODO.md#team-source-review--review-only-not-approved-f
 
 Mistral bootstrap profiles use the installed native Vibe harness metadata; the
 transfer accepts its `vibe` flavour while keeping `mistral-work` and
-`mistral-priv` credential boundaries separate. Mistral team integration remains
-a separate unfinished task.
+`mistral-priv` credential boundaries separate. Native team assignment is available
+for the four visible roles; authenticated model access still requires verification.
 
 Source authentication capture accepts only the historical labels `gemini` for `gemini-work`, `codex` for `codex-priv`, and `mistral` for `mistral-priv`. Provider and harness-flavour validation remain strict; destination installations must use canonical profile names. No source metadata is rewritten.
 

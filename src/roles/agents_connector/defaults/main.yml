@@ -14,7 +14,7 @@ agents_connector_profiles:
 agents_connector_validate_lifecycle: false
 
 # Focused rebuilds do not replace active containers automatically.
-agents_connector_image_flavours: [claude, codex, gemini]
+agents_connector_image_flavours: [claude, codex, gemini, mistral]
 agents_connector_image_force: false
 agents_connector_repair_codex_project: ''
 agents_connector_repair_codex_restore_marker_only: false

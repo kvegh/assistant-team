@@ -214,9 +214,14 @@ performed by this backlog update.
   exposing credentials. Keep provider authentication and inference tests separate
   from ordinary deployment checks and require explicit authorization for model calls.
 
-- [ ] Build native Mistral Vibe support for agents-connector and submit an
-  upstream pull request. Implement and verify MCP configuration, native event
-  handling and session wake-up so Mistral agents can participate in team roles.
+- [x] Implement native Mistral Vibe team adapters with separate `mistral-priv`
+  and `mistral-work` accounts, MCP configuration, addressed inbox hooks, container
+  images and exact native session restoration. Account enablement and authenticated
+  model access remain separate operator checks; work credentials are not inferred
+  from a private login.
+- [ ] Contribute native Mistral launcher/hook support upstream to agents-connector
+  where useful. The local integration registers the real Mistral type through
+  the existing broker protocol and does not require an upstream fork.
 
 - [ ] Allow users to define additional custom roles for their projects.
   Keep the current roles as the defaults and offer their definitions as templates

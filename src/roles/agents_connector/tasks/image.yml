@@ -6,7 +6,11 @@
     HOME: "{{ agents_connector_runtime_home }}"
     XDG_RUNTIME_DIR: "/run/user/{{ agents_connector_runtime_uid }}"
   ansible.builtin.command:
-    argv: [podman, image, exists, "localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }}"]
+    argv:
+      - podman
+      - image
+      - exists
+      - "localhost/assistant-team-{{ connector_image.base_flavour | default(connector_image.flavour) }}:{{ connector_image.version }}"
   register: __agents_connector_base
   changed_when: false
   failed_when: __agents_connector_base.rc not in [0, 1]
@@ -21,7 +25,7 @@
           source_uid=$(id -u {{ assistant_source_user | quote }})
           runuser -u {{ assistant_source_user | quote }} -- env \
             HOME=/home/{{ assistant_source_user | quote }} XDG_RUNTIME_DIR=/run/user/$source_uid \
-            podman save localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }} |
+            podman save localhost/assistant-team-{{ connector_image.base_flavour | default(connector_image.flavour) }}:{{ connector_image.version }} |
           runuser -u {{ containers.runtime_user | quote }} -- env \
             HOME={{ agents_connector_runtime_home | quote }} XDG_RUNTIME_DIR=/run/user/{{ agents_connector_runtime_uid }} \
             podman load
@@ -43,7 +47,8 @@
     path: "{{ __agents_connector_root }}/build"
     build:
       file: "{{ __agents_connector_root }}/build/Containerfile"
-      extra_args: "--build-arg BASE_IMAGE=localhost/assistant-team-{{ connector_image.flavour }}:{{ connector_image.version }}"
+      extra_args: >-
+        --build-arg BASE_IMAGE=localhost/assistant-team-{{ connector_image.base_flavour | default(connector_image.flavour) }}:{{ connector_image.version }}
   async: 600
   poll: 20
 

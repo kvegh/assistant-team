@@ -17,6 +17,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_mistral
     - connector_passive_readers
   ansible.builtin.getent:
     database: passwd
@@ -33,6 +34,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_mistral
     - connector_passive_readers
   ansible.builtin.set_fact:
     agents_connector_runtime_home: "{{ ansible_facts.getent_passwd[containers.runtime_user][4] }}"
@@ -49,6 +51,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_mistral
     - connector_passive_readers
   ansible.builtin.set_fact:
     __agents_connector_root: "{{ assistant_connector_root }}"
@@ -84,7 +87,7 @@
     group: "{{ containers.runtime_user }}"
     mode: "0755"
 - name: Install Gemini stock MCP result compatibility adapter
-  tags: [connector_mcp_results, connector_antigravity]
+  tags: [connector_mcp_results, connector_antigravity, connector_mistral]
   ansible.builtin.copy:
     src: mcp-results.py
     dest: "{{ __agents_connector_root }}/bin/mcp-results.py"
@@ -134,6 +137,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_mistral
     - connector_passive_readers
   ansible.builtin.copy:
     src: connector-team.py
@@ -154,6 +158,7 @@
     - connector_mcp_results
     - connector_antigravity
     - connector_watch
+    - connector_mistral
     - connector_passive_readers
   ansible.builtin.copy:
     src: "{{ item }}"
@@ -163,8 +168,20 @@
     mode: "0600"
   loop: [passive-readers.py, passive-reader-hook.py]
 
+- name: Install native Mistral configuration and lifecycle hook helper
+  tags: [connector_mistral, connector_watch, connector_services, connector_images, project_control]
+  ansible.builtin.copy:
+    src: mistral-hook.py
+    dest: "{{ __agents_connector_root }}/{{ item }}/mistral-hook.py"
+    owner: "{{ containers.runtime_user }}"
+    group: "{{ containers.runtime_user }}"
+    mode: "0700"
+    setype: container_file_t
+    selevel: s0
+  loop: [routing, bin]
+
 - name: Install private native conversation lifecycle helper
-  tags: [connector_watch, connector_services, project_control]
+  tags: [connector_watch, connector_services, project_control, connector_mistral]
   ansible.builtin.copy:
     src: native-sessions.py
     dest: "{{ __agents_connector_root }}/{{ item }}/native-sessions.py"
@@ -204,7 +221,7 @@
     src: role_instruction.md.j2
     dest: >-
       {{ __agents_connector_root }}/profiles/{{ item.name }}/workspace/{{
-      {'claude': 'CLAUDE.md', 'codex': 'AGENTS.md', 'gemini': 'GEMINI.md'}[item.flavour] }}
+      {'claude': 'CLAUDE.md', 'codex': 'AGENTS.md', 'gemini': 'GEMINI.md', 'mistral': 'AGENTS.md'}[item.flavour] }}
     owner: "{{ containers.runtime_user }}"
     group: "{{ containers.runtime_user }}"
     mode: "0600"
@@ -252,7 +269,7 @@
   ansible.builtin.assert:
     that:
       - agents_connector_image_flavours | length > 0
-      - agents_connector_image_flavours | difference(['claude', 'codex', 'gemini']) | length == 0
+      - agents_connector_image_flavours | difference(['claude', 'codex', 'gemini', 'mistral']) | length == 0
     quiet: true
 - name: Transfer and extend selected native images sequentially
   tags: [connector_images]
@@ -265,6 +282,7 @@
     - { flavour: claude, version: "2.1.292" }
     - { flavour: codex, version: "0.160.1" }
     - { flavour: gemini, version: "0.63.0" }
+    - { flavour: mistral, base_flavour: vibe, version: "2.26.0" }
   loop_control:
     loop_var: connector_image
 - name: Create dedicated user service directory

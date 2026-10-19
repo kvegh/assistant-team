@@ -13,7 +13,7 @@ argument_specs:
       agents_connector_image_flavours:
         type: list
         elements: str
-        default: [claude, codex, gemini]
+        default: [claude, codex, gemini, mistral]
         description: Native image subset to build; active containers are preserved.
       agents_connector_image_force:
         type: bool

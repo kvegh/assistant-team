@@ -73,7 +73,10 @@ partial (orphan components) or unknown (metadata unavailable); it does not verif
 Artifacts: `{{ assistant_install_root }}/projects/example/workspace` (`/workspace/shared` in containers).
 Vertex work profiles require the scoped Cloud SDK (operator-selected during deployment); private Gemini uses scoped Antigravity (`cd "$AC_AGENTS_ROOT/model-environments/gemini-priv"; ./login`, then `./agy`). Select gemini-priv for native Antigravity; native consent and model entitlement must be verified.
 Native SSH/container auth uses local file permissions, not encryption at rest.
-Mistral native login is supported; team adapter is not implemented yet.
+Mistral Vibe supports enabled `mistral-work` and `mistral-priv` assignments for
+orchestrator, builder, investigator and challenger. Stop before editing the project
+role mapping; private readers and restricted connectors require Claude. Login and
+model entitlement remain separate checks; no default assignments change.
 Login reports failed/cancelled or credentials saved/model access unverified; no automatic inference.
 All eight role sessions start only after enabled assignments and saved auth pass; connectors lack service tools, private readers receive event-driven raw discussion. Details: `{{ assistant_install_root }}/README.md`.
 

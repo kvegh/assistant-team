@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.0
+
+Add native Mistral Vibe team agents with isolated work/private profiles, certified Podman image deployment, authenticated MCP inbox hooks and exact saved-session restoration. Keep native approvals and Claude-only passive/restricted roles; preserve broker tokens and history when changing a stopped role's harness.
+
 ## 1.1.2
 
 Document the available Codex work account and pending work-profile implementation and acceptance checks.
