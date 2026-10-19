@@ -455,3 +455,8 @@ never decrypts the files, and needs no additional runtime GitHub token. AAP copi
 are snapshots, so changes require synchronization before a job uses them. Vault
 passwords and decrypted output remain outside Git; historical encrypted files in
 old application commits are retained without rewriting history.
+
+After re-login on the configured bootstrap source, launch AAP
+**Assistant Team Refresh Model Authentication** to update the encrypted companion
+vault and AAP snapshots. New complete deployments restore missing credentials
+automatically; revoked authorization still requires operator login.

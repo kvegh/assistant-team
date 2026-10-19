@@ -1804,3 +1804,55 @@ changes. Ciphertext bytes were compared against their source versions. No VM
 provisioning, retirement, provider request or authentication transfer was run for
 the migration. The temporary validation template is removed after acceptance;
 the read-only validation playbook remains available for future checks.
+
+## Restore model authentication from the companion vault and refresh it through AAP
+
+The operator requested that complete deployments restore model authentication
+from encrypted companion Git rather than require a source VM or repeated logins.
+Implementation `bf45d18` adds a separate missing-only restore role after native
+installation, environment selection and Vertex configuration. Enabled destination
+profiles must all have snapshot entries before any credential is written. Existing
+credentials and work/private account boundaries are preserved; project sessions,
+conversations, workspace data, permissions and legal consent are excluded.
+Decrypted payloads use protected module stdin, private native files and temporary
+facts with no_log, diff protection, cleanup and a secret-free local report.
+Saved credentials are not evidence of current model entitlement or unrevoked
+provider grants. No inference runs automatically during deployment.
+
+The same implementation adds the dedicated refresh playbook and a reproducible
+AAP-template setup role. After operator reauthentication, the explicitly selected
+bootstrap source supplies only allowlisted credential/provider files. Missing or
+invalid enabled profiles and removal of stored profiles abort publication.
+Unchanged captures do not create commits. Changed captures are encrypted from
+stdin and committed/pushed only to the private companion; successful publication
+is followed by synchronization of AAP's ciphertext snapshots. A repeat unchanged
+refresh can repair an earlier interrupted synchronization. Work/private source
+bindings stay encrypted; companion changes are `e707939` and `eaac37c`.
+
+AAP now injects six encrypted inputs. Because an in-use credential schema cannot
+be edited, a separate six-file type/credential replaces the previous association
+on explicitly selected templates. Other credentials and prior schema objects are
+preserved. Deployments receive ciphertext plus normal Vault credentials, never
+the maintenance Git key or controller token.
+
+Fix `0d04576` makes source capture/cleanup explicitly use SSH and resolves the
+existing-target restore runtime account from the connector environment. Fix
+`0c78750` injects a trusted controller CA bundle into the refresh execution
+environment while keeping certificate checks enabled, and verifies a dedicated
+non-superuser/non-auditor maintenance identity. Setup grants Admin only on the
+snapshot credential; its GitHub deploy key is writable only for the companion
+repository. No global roles or trust bypasses are introduced. Only unused
+maintenance resources created during this implementation were removed.
+Fix `1baeb89` excludes temporary inventory binding from persistent change counts.
+
+Validation includes the full secret-free suite, production Ansible lint and
+synthetic encrypted restore/refresh safeguards. Actual AAP restoration into a
+disposable destination restored six enabled profiles; its repeat reported zero
+changes (jobs 2065/2068). Existing-target restoration preserved all six current
+credential streams (job 2088). The refresh completed source capture and encrypted
+AAP synchronization with the dedicated credentials and verified TLS (job 2086).
+The real capture matched stored authentication, so publication was
+correctly skipped; changed-input encryption was tested synthetically. The
+maintenance setup repeated with zero changes. Temporary acceptance resources
+were removed. No provider requests, team restarts or VM provisioning were part
+of this authentication integration test.

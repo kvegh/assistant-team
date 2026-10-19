@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.4.4
+
+Document automatic authentication restore and the dedicated AAP refresh workflow, including successful six-profile restore, unchanged rerun, preserved existing credentials and verified controller trust. Make refresh safety tests independent of task ordering and unrelated HTTP options.
+
 ## 1.4.3
 
 Report unchanged authentication refreshes without counting temporary inventory bindings as persistent changes.

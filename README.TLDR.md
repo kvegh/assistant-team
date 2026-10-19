@@ -195,3 +195,8 @@ in total). After changing and committing configuration or auth snapshots, run
 the code checkout with authorized controller credentials to refresh AAP's ciphertext
 snapshots. Synchronization never decrypts the files. See the source repository's
 README for deployment commands; the runtime team commands do not manage secrets.
+
+Auth maintenance: after re-login on the configured bootstrap source, launch AAP
+**Assistant Team Refresh Model Authentication**. New complete deployments restore
+missing auth automatically from the encrypted companion vault; existing credentials
+are preserved. Successful restoration does not prove unrevoked model access.

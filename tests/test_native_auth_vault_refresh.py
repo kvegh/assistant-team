@@ -12,7 +12,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 ROLE = ROOT / 'src/roles/native_auth_vault_refresh'
 TASKS = yaml.safe_load((ROLE / 'tasks/main.yml').read_text())
-PROTECTED = TASKS[1]
+PROTECTED = next(task for task in TASKS if task.get('name') ==
+                 'Capture and publish only complete allowlisted authentication')
 GUARD = next(task for task in PROTECTED['block'] if task['name'].startswith('Reject incomplete'))
 COMPARE = next(task for task in PROTECTED['block'] if task['name'].startswith('Detect credential'))
 
@@ -30,7 +31,18 @@ class RefreshStructureTests(unittest.TestCase):
         self.assertIn('stdin', encrypted['ansible.builtin.command'])
         argv = encrypted['ansible.builtin.command']['argv']
         self.assertEqual(argv[:4], ['ansible-vault', 'encrypt', '--encrypt-vault-id', 'default'])
-        self.assertNotIn('content:', text)
+        def copy_actions(value):
+            if isinstance(value, dict):
+                if 'ansible.builtin.copy' in value:
+                    yield value['ansible.builtin.copy']
+                for child in value.values():
+                    yield from copy_actions(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from copy_actions(child)
+
+        for action in copy_actions(TASKS):
+            self.assertNotIn('content', action)
         self.assertIn('always', PROTECTED)
 
     @unittest.skipUnless(shutil.which('ansible-vault'), 'Ansible Vault is required')

@@ -1214,3 +1214,11 @@ attachable for diagnosis even when another role or service has failed.
 
 Help groups environment/discovery commands and project commands separately,
 with entries alphabetized by command name (ignoring leading option hyphens).
+
+### Authentication deployment acceptance
+
+Automatic encrypted-vault restore was verified through AAP with six enabled
+profiles in a disposable destination and an unchanged rerun. Existing installation
+credentials were preserved. The dedicated refresh job passed with pinned GitHub
+SSH trust, verified controller TLS and a snapshot-scoped maintenance identity.
+Provider/model access was not invoked or inferred from saved credentials.
