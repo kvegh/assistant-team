@@ -152,16 +152,20 @@ Ansible uses a project-specific temporary directory under `/tmp` for local work.
 
 ```bash
 export ANSIBLE_VAULT_PASSWORD_FILE=/private/vpf
-ansible-vault edit vars/environment.vault.yml
+ansible-vault edit vars/environment_vault.yml
 ansible-vault encrypt path/to/environment-specific.yml
-ansible-vault view vars/environment.vault.yml
+ansible-vault view vars/environment_vault.yml
 ```
 
 The last command displays plaintext locally; do not capture or commit its output.
 
+Encrypted configuration files use the `NAME_vault.yml` naming convention in this
+repository and the private companion secrets repository. Renaming preserves the
+encrypted contents and Vault ID; it does not rekey secrets.
+
 ## Layout
 
-- `vars/environment.vault.yml`: encrypted environment configuration.
+- `vars/environment_vault.yml`: encrypted environment configuration.
 - `src/deploy_linux_vm.yml`: calls the provisioning, guest verification, and update roles.
 - `src/roles/linux_vm/`: image cloning, cleanup, identity reset, boot, and guest discovery.
 - `src/roles/linux_guest/`: guest access, identity, resource, and cleanup verification.
@@ -194,7 +198,7 @@ artifacts report allocated RAM, guest-visible RAM, and the crash reservation sep
 Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
 Defaults are 2 vCPUs, 4096 MiB RAM, and a 20 GiB disk. The VM name defaults to
 the encrypted configuration. Environment settings and guest credentials are
-under `provisioning` in `vars/environment.vault.yml`. AAP must supply the Vault
+under `provisioning` in `vars/environment_vault.yml`. AAP must supply the Vault
 and hypervisor machine credentials; its project needs a GitHub source-control
 credential with read access to this private repository over HTTPS.
 
@@ -258,7 +262,7 @@ the encrypted configuration. Application design has not started yet.
 Check that encrypted configuration decrypts without displaying its contents:
 
 ```bash
-ansible-vault view vars/environment.vault.yml >/dev/null
+ansible-vault view vars/environment_vault.yml >/dev/null
 git diff --check
 ansible-playbook --syntax-check -i 'localhost,' src/deploy_linux_vm.yml
 python3 -m unittest discover -s tests -v

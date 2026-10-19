@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.2
+
+Standardize encrypted configuration filenames as `NAME_vault.yml`, update playbook and operator references, and preserve ciphertext and Vault IDs unchanged.
+
 ## 1.2.1
 
 Document Mistral account isolation, native hook limitations, reproducible deployment and validation boundaries.

@@ -6,7 +6,7 @@
   tasks:
     - name: Read the explicitly selected test clone definition
       ansible.builtin.include_vars:
-        file: ../vars/retire_test.vault.yml
+        file: ../vars/retire_test_vault.yml
         name: retired_definition
 
 - name: Safely retire only the selected disposable Linux test clone

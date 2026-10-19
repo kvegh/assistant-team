@@ -7,7 +7,7 @@
   tasks:
     - name: Load the encrypted deployment definition
       ansible.builtin.include_vars:
-        file: "{{ assistant_vm_configuration | default('../vars/fresh_test.vault.yml') }}"
+        file: "{{ assistant_vm_configuration | default('../vars/fresh_test_vault.yml') }}"
         name: fresh_definition
     - name: Restore the guest group for a configuration-only recovery
       ansible.builtin.add_host:

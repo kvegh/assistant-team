@@ -402,6 +402,8 @@ Initial account selection can be supplied through encrypted Ansible deployment e
 Model authentication stays outside this application/code repository. By explicit
 operator decision, the private companion assistant-team-secrets repository may
 store Ansible Vault-encrypted model authentication and deployment configuration.
+Encrypted configuration files use the `NAME_vault.yml` filename convention;
+renaming does not change ciphertext, passwords or Vault IDs.
 Vault passwords, plaintext login caches and decrypted output remain outside Git.
 
 The companion now contains a source-bootstrap snapshot for six enabled profiles

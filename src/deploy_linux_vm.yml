@@ -6,7 +6,7 @@
   no_log: true
   tags: [provision]
   vars_files:
-    - ../vars/environment.vault.yml
+    - ../vars/environment_vault.yml
   roles:
     - linux_vm
 
@@ -17,7 +17,7 @@
   no_log: true
   tags: [guest_config, offline_recovery]
   vars_files:
-    - ../vars/environment.vault.yml
+    - ../vars/environment_vault.yml
   roles:
     - linux_guest
     - linux_root_growth

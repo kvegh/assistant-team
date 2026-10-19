@@ -15,6 +15,11 @@ in the private companion repository assistant-team-secrets only. Never commit
 plaintext credentials, decrypted output or the Vault password file anywhere.
 Do not broaden this authorization to unrelated hosts or security-control bypasses.
 
+Name encrypted configuration files `NAME_vault.yml`, including files in the
+private companion repository. Update current code and documentation references
+when renaming. A filename change does not change the Vault ID, encryption key,
+credential boundaries or ciphertext contents.
+
 All read-only APME scans are authorized without repeated approval, provided they
 leave systems and project code unchanged. Preserve existing installation,
 credential-protection, and security-control rules. Assess findings for relevance

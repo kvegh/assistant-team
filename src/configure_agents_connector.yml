@@ -7,7 +7,7 @@
   tasks:
     - name: Load the encrypted deployment definition
       ansible.builtin.include_vars:
-        file: ../vars/environment.vault.yml
+        file: ../vars/environment_vault.yml
         name: assistant_environment
     - name: Register the destination in transient inventory
       ansible.builtin.add_host:

@@ -7,7 +7,7 @@
   tasks:
     - name: Load encrypted environment without reserved variable collisions
       ansible.builtin.include_vars:
-        file: ../vars/environment.vault.yml
+        file: ../vars/environment_vault.yml
         name: assistant_environment
     - name: Add the project guest
       ansible.builtin.add_host:

@@ -7,9 +7,9 @@ Prerequisites: RHEL-compatible x86_64 Linux with systemd, sudo access, adequate 
 Create a private Vault-password file outside Git, mode 0600. Initialize your own encrypted destination settings:
 
 ```sh
-python3 src/deploy-environment.py --init-vault --vault-file /private/destination.vault.yml --vault-password-file /private/vpf
-python3 src/deploy-environment.py --syntax-check --vault-file /private/destination.vault.yml --vault-password-file /private/vpf
-python3 src/deploy-environment.py --vault-file /private/destination.vault.yml --vault-password-file /private/vpf
+python3 src/deploy-environment.py --init-vault --vault-file /private/destination_vault.yml --vault-password-file /private/vpf
+python3 src/deploy-environment.py --syntax-check --vault-file /private/destination_vault.yml --vault-password-file /private/vpf
+python3 src/deploy-environment.py --vault-file /private/destination_vault.yml --vault-password-file /private/vpf
 ```
 
 For deployment on this same host, add `--local` to initialization and deployment. This uses Ansible’s local connection, without SSH credentials. Sudo credentials, if required, remain in the operator-owned Vault. For remote deployment, normal SSH host-key checking remains enabled; verify destination trust yourself before deployment. The runtime user must differ from the login/controller user.
@@ -26,4 +26,4 @@ Protected controller diagnostics live under `~/.local/state/assistant-team/deplo
 python3 src/deploy-environment.py --run-directory /private/deployment-run --export /private/deployment-metadata.tar.gz
 ```
 
-Share only the prescribed metadata bundle. It excludes Vaults, target access details, raw Ansible output, account credentials, databases and conversations. After a deployment attempt the runner transfers allowlisted stage/result metadata to runtime `~/environment-logs` when the target and runtime account are reachable. Otherwise the protected controller spool remains available; use `python3 src/deploy-environment.py --vault-file /private/destination.vault.yml --vault-password-file /private/vpf --transfer-run /private/deployment-logs/RUN_ID` to replay that earlier run’s safe metadata once the target is ready (add `--local` for same-host deployment). The target retains 32 deployment runs and runtime events rotate at 1 MiB across four files; the controller retains ten runs. Raw output is excluded from target transfer. `~/team diagnostics --export /private/environment-metadata.tar.gz` exports prescribed target metadata only. Fresh-VM end-to-end installation has not yet been performed by this development session.
+Share only the prescribed metadata bundle. It excludes Vaults, target access details, raw Ansible output, account credentials, databases and conversations. After a deployment attempt the runner transfers allowlisted stage/result metadata to runtime `~/environment-logs` when the target and runtime account are reachable. Otherwise the protected controller spool remains available; use `python3 src/deploy-environment.py --vault-file /private/destination_vault.yml --vault-password-file /private/vpf --transfer-run /private/deployment-logs/RUN_ID` to replay that earlier run’s safe metadata once the target is ready (add `--local` for same-host deployment). The target retains 32 deployment runs and runtime events rotate at 1 MiB across four files; the controller retains ten runs. Raw output is excluded from target transfer. `~/team diagnostics --export /private/environment-metadata.tar.gz` exports prescribed target metadata only. Fresh-VM end-to-end installation has not yet been performed by this development session.

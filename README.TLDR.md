@@ -164,7 +164,8 @@ accounts; team roles use the same pinned native Vibe harness.
 ## Secret snapshot storage
 
 Encrypted model/deployment snapshots may live only in the private companion
-assistant-team-secrets repository, not this code repository. The Vault password
+assistant-team-secrets repository, not this code repository. Encrypted configuration
+files are named `NAME_vault.yml`. The Vault password
 and all plaintext credentials stay outside Git. The current snapshot is saved
 source state, not proof of working login or automatic restore integration.
 
