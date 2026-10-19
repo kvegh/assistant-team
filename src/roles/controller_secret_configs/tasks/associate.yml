@@ -1,6 +1,7 @@
 ---
 - name: Inspect the selected job template credentials
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{ controller_secret_configs_job_template }}/credentials/
     headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
@@ -9,6 +10,7 @@
   no_log: true
 - name: Attach the snapshot without removing other credentials
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{ controller_secret_configs_job_template }}/credentials/
     method: POST
@@ -21,6 +23,7 @@
   no_log: true
 - name: Detach only the previous owned snapshot after the replacement is attached
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{ controller_secret_configs_job_template }}/credentials/
     method: POST

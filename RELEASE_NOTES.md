@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.4.2
+
+Inject trusted controller CA material into the refresh execution environment while retaining TLS verification. Verify the dedicated maintenance token is not an administrator/auditor and grant only snapshot-credential administration. Check connectivity before capture and migrate maintenance credentials without editing in-use schemas.
+
 ## 1.4.1
 
 Use explicit SSH for delegated authentication capture and cleanup. Resolve the existing-target restore account from the connector environment rather than the legacy container account.

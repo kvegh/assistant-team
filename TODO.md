@@ -192,11 +192,12 @@ performed by this backlog update.
   profiles were excluded. Both vaults use the existing external vpf and passed
   exact private decrypt-and-compare checks. Source state was unchanged; no model
   access or freshness claim is implied. Companion implementation: `9058235`.
-- [ ] Reconcile the generic exporter draft with the now-authorized encrypted
-  companion repository and design automatic save/restore integration. Preserve
-  explicit source-stream provenance and fresher runtime credentials. The draft
-  and its tests remain unpublished; no automatic AAP restore is installed by the
-  snapshot. See `docs/AUTH_REPLICATION.md`.
+- [x] Implement automatic missing-only authentication restore from the encrypted
+  companion snapshot after deployment, plus a dedicated AAP refresh job after
+  source reauthentication. Preserve source provenance and existing runtime
+  credentials; reject incomplete restores or captures that remove stored profiles.
+  See `docs/AUTH_REPLICATION.md`. The unrelated generic exporter draft remains
+  unpublished and is not required by this implementation.
 
 - [x] Deploy and accept the source-implemented installation layout on an explicitly
   authorized fresh environment. Source now supports `PREFIX/ac-agents`, destination
@@ -204,7 +205,8 @@ performed by this backlog update.
   The existing environment remains unchanged by explicit instruction. Implement
   and test a controlled migration before migrating any existing installation;
   `INSTALLATION_MIGRATION.md` currently documents its design only. Keep any future
-  authentication vault outside the installation and Git.
+  authentication vault outside the installation and application Git; ciphertext
+  is allowed only in the authorized private companion repository.
 
 - [ ] Define a reusable post-deployment acceptance suite with documented test cases
   and a command or AAP verification job to run them after installation. Build on

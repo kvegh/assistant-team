@@ -6,8 +6,10 @@ controller_auth_vault_refresh_project: ''
 controller_auth_vault_refresh_inventory: ''
 controller_auth_vault_refresh_execution_environment: ''
 controller_auth_vault_refresh_credentials: []
-controller_auth_vault_refresh_type_name: Assistant Team authentication maintenance
-controller_auth_vault_refresh_credential_name: Assistant Team authentication maintenance
+controller_auth_vault_refresh_snapshot_credential_name: Assistant Team deployment and authentication snapshots
+controller_auth_vault_refresh_type_name: Assistant Team authentication maintenance with controller trust
+controller_auth_vault_refresh_credential_name: Assistant Team authentication maintenance with controller trust
+controller_auth_vault_refresh_previous_credential_name: Assistant Team authentication maintenance
 controller_auth_vault_refresh_job_template_name: Assistant Team Refresh Model Authentication
 controller_auth_vault_refresh_repository_url: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_MAINTENANCE_REPO_URL') }}"
 controller_auth_vault_refresh_private_files:
@@ -15,6 +17,7 @@ controller_auth_vault_refresh_private_files:
   known_hosts: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_MAINTENANCE_KNOWN_HOSTS_FILE') }}"
   vault_password: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_MAINTENANCE_VAULT_PASSWORD_FILE') }}"
   controller_token: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_MAINTENANCE_CONTROLLER_TOKEN_FILE') }}"
+  controller_ca: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_AUTH_MAINTENANCE_CONTROLLER_CA_FILE') }}"
 controller_auth_vault_refresh_inputs:
   fields:
     - {id: repository_ssh_key, type: string, label: Repository SSH private key, secret: true, multiline: true}
@@ -22,15 +25,17 @@ controller_auth_vault_refresh_inputs:
     - {id: controller_token, type: string, label: Snapshot maintenance controller token, secret: true}
     - {id: repo_url, type: string, label: Private secrets repository SSH URL}
     - {id: known_hosts, type: string, label: Trusted repository host keys, multiline: true}
+    - {id: controller_ca, type: string, label: Trusted controller CA certificate bundle, multiline: true}
     - {id: controller_host, type: string, label: Controller HTTPS URL}
     - {id: organization, type: string, label: Controller organization ID}
     - {id: material_sha256, type: string, label: Maintenance input checksum}
-  required: [repository_ssh_key, vault_password, controller_token, repo_url, known_hosts, controller_host, organization, material_sha256]
+  required: [repository_ssh_key, vault_password, controller_token, repo_url, known_hosts, controller_ca, controller_host, organization, material_sha256]
 controller_auth_vault_refresh_injectors:
   file:
     template.repository_ssh_key: !unsafe '{{ repository_ssh_key }}'
     template.known_hosts: !unsafe '{{ known_hosts }}'
     template.vault_password: !unsafe '{{ vault_password }}'
+    template.controller_ca: !unsafe '{{ controller_ca }}'
   env:
     AC_AGENTS_AUTH_REPO_URL: !unsafe '{{ repo_url }}'
     AC_AGENTS_AUTH_REPO_SSH_KEY_FILE: !unsafe '{{ tower.filename.repository_ssh_key }}'
@@ -39,3 +44,4 @@ controller_auth_vault_refresh_injectors:
     CONTROLLER_HOST: !unsafe '{{ controller_host }}'
     CONTROLLER_OAUTH_TOKEN: !unsafe '{{ controller_token }}'
     CONTROLLER_ORGANIZATION: !unsafe '{{ organization }}'
+    AC_AGENTS_CONTROLLER_CA_FILE: !unsafe '{{ tower.filename.controller_ca }}'

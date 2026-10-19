@@ -50,6 +50,66 @@
         quiet: true
       loop: "{{ __controller_auth_vault_refresh_material | dict2items }}"
 
+    - name: Identify the principal of the dedicated maintenance token
+      ansible.builtin.uri:
+        url: "{{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/me/"
+        headers: {Authorization: "Bearer {{ __controller_auth_vault_refresh_material.controller_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_principal
+
+    - name: Refuse privileged or ambiguous maintenance identities
+      ansible.builtin.assert:
+        that:
+          - __controller_auth_vault_refresh_principal.json.count | int == 1
+          - __controller_auth_vault_refresh_principal.json.results[0].id | int > 0
+          - __controller_auth_vault_refresh_principal.json.results[0].is_superuser is defined
+          - not __controller_auth_vault_refresh_principal.json.results[0].is_superuser | bool
+          - __controller_auth_vault_refresh_principal.json.results[0].is_system_auditor is defined
+          - not __controller_auth_vault_refresh_principal.json.results[0].is_system_auditor | bool
+        quiet: true
+
+    - name: Resolve the intended owned deployment and authentication snapshot
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+          controller_auth_vault_refresh_snapshot_credential_name | urlencode }}&organization={{ controller_auth_vault_refresh_organization }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_snapshot
+
+    - name: Require the intended snapshot and its administrator role
+      ansible.builtin.assert:
+        that:
+          - __controller_auth_vault_refresh_snapshot.json.count | int == 1
+          - __controller_auth_vault_refresh_snapshot.json.results[0].summary_fields.object_roles.admin_role.id | int > 0
+          - >-
+            __controller_auth_vault_refresh_snapshot.json.results[0].id | int in
+            controller_auth_vault_refresh_credentials | map('int') | list
+        quiet: true
+
+    - name: Inspect direct maintenance membership on the snapshot administrator role
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/roles/{{
+          __controller_auth_vault_refresh_snapshot.json.results[0].summary_fields.object_roles.admin_role.id }}/users/?id={{
+          __controller_auth_vault_refresh_principal.json.results[0].id }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_snapshot_membership
+
+    - name: Grant the maintenance identity administrator access only to the snapshot credential
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/roles/{{
+          __controller_auth_vault_refresh_snapshot.json.results[0].summary_fields.object_roles.admin_role.id }}/users/
+        method: POST
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body: "{{ {'id': __controller_auth_vault_refresh_principal.json.results[0].id | int} | to_json }}"
+        status_code: [200, 201, 204]
+      when: __controller_auth_vault_refresh_snapshot_membership.json.count | int == 0
+      changed_when: true
+
     - name: Include nonsecret repository and controller bindings
       ansible.builtin.set_fact:
         __controller_auth_vault_refresh_material: >-
@@ -226,6 +286,38 @@
       when: item | int not in __controller_auth_vault_refresh_associations.json.results | map(attribute='id') | list
       changed_when: true
 
+    - name: Locate only the previous owned maintenance credential
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+          controller_auth_vault_refresh_previous_credential_name | urlencode }}&organization={{ controller_auth_vault_refresh_organization }}
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        return_content: true
+      register: __controller_auth_vault_refresh_previous
+
+    - name: Require an unambiguous previous maintenance credential
+      ansible.builtin.assert:
+        that: __controller_auth_vault_refresh_previous.json.count | int <= 1
+        quiet: true
+
+    - name: Detach only previous maintenance after attaching its replacement
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_auth_vault_refresh_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+          __controller_auth_vault_refresh_template_id }}/credentials/
+        method: POST
+        headers: {Authorization: "Bearer {{ controller_auth_vault_refresh_token }}"}
+        body_format: json
+        body: "{{ {'id': __controller_auth_vault_refresh_previous.json.results[0].id | int, 'disassociate': true} | to_json }}"
+        status_code: [200, 201, 204]
+      when:
+        - __controller_auth_vault_refresh_previous.json.count | int == 1
+        - __controller_auth_vault_refresh_previous.json.results[0].id | int != __controller_auth_vault_refresh_credential_id | int
+        - >-
+          __controller_auth_vault_refresh_previous.json.results[0].id | int in
+          __controller_auth_vault_refresh_associations.json.results | map(attribute='id') | list
+      changed_when: true
+
     - name: Retain only safe maintenance resource identities
       ansible.builtin.set_fact:
         controller_auth_vault_refresh_result:
@@ -240,6 +332,7 @@
         __controller_auth_vault_refresh_material: {}
         __controller_auth_vault_refresh_credential_write: {}
         __controller_auth_vault_refresh_credentials: {}
+        __controller_auth_vault_refresh_principal: {}
         cacheable: false
       no_log: true
 

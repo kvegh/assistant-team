@@ -96,7 +96,11 @@ encrypts the updated snapshot, commits/pushes the companion repository and refre
 AAP's ciphertext credential. It must refuse an incomplete capture rather than
 silently replace previously stored authentication with a missing source entry.
 Its maintenance credential uses a repository-scoped writable SSH deploy key,
-verified host keys, the Vault password and a dedicated controller token. Provision
+verified host keys, the Vault password and a dedicated controller token. Setup
+rejects superuser/system-auditor tokens and grants the dedicated identity Admin
+only on the named deployment/authentication snapshot credential. Account/token and
+single-repository writable deploy-key creation remain operator bootstrap
+prerequisites; do not reuse an operator-wide administrator token. Provision
 the template reproducibly with `src/configure_auth_vault_refresh.yml`; its role
 README lists private input file paths and required existing AAP object IDs.
 No operator-wide controller token is copied into the deployment target.
@@ -156,3 +160,8 @@ The refresh job explicitly uses SSH for the delegated source; localhost controll
 execution is never inherited by source capture or cleanup. Existing-target restore
 uses the configured connector runtime account, with the matching guest Machine
 credential supplied to its AAP template.
+
+The refresh execution environment receives the trusted controller CA bundle as an
+injected file. Certificate verification remains enabled, and an unauthenticated
+public controller health check runs before credentials are captured. A deployment
+host's system trust is not assumed to exist inside an execution environment.

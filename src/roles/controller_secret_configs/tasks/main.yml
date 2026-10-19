@@ -57,6 +57,7 @@
   no_log: true
 - name: Inspect the named credential type
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/?name={{
       controller_secret_configs_type_name | urlencode }}
@@ -70,6 +71,7 @@
   no_log: true
 - name: Reconcile the named file credential type
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/{{
       (__controller_secret_configs_types.json.results[0].id | string + '/') if __controller_secret_configs_types.json.count else '' }}
@@ -97,6 +99,7 @@
   no_log: true
 - name: Inspect the named ciphertext snapshot credential
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
       controller_secret_configs_credential_name | urlencode }}&organization={{ controller_secret_configs_organization }}
@@ -114,6 +117,7 @@
   no_log: true
 - name: Refresh the encrypted snapshot only when its source changes
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/{{
       (__controller_secret_configs_credentials.json.results[0].id | string + '/') if __controller_secret_configs_credentials.json.count else '' }}
@@ -141,6 +145,7 @@
   no_log: true
 - name: Inspect only the explicitly named previous snapshot credential
   ansible.builtin.uri:
+    ca_path: "{{ controller_secret_configs_ca_path or omit }}"
     url: >-
       {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
       controller_secret_configs_previous_credential_name | urlencode }}&organization={{ controller_secret_configs_organization }}

@@ -1,4 +1,12 @@
 ---
+- name: Verify controller connectivity and certificate trust before capturing authentication
+  ansible.builtin.uri:
+    url: "{{ lookup('ansible.builtin.env', 'CONTROLLER_HOST') | regex_replace('/$', '') }}/api/controller/v2/ping/"
+    ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_FILE') or omit }}"
+    validate_certs: true
+    return_content: false
+  changed_when: false
+
 - name: Require explicit protected source and pinned repository access
   ansible.builtin.assert:
     that:

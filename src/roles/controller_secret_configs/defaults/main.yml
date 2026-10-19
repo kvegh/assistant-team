@@ -40,3 +40,4 @@ controller_secret_configs_injectors:
     AC_AGENTS_CLAUDE_AUTH_RECOVERY_VAULT_FILE: !unsafe '{{ tower.filename.claude_auth_recovery }}'
     AC_AGENTS_CODEX_AUTH_RECOVERY_VAULT_FILE: !unsafe '{{ tower.filename.codex_auth_recovery }}'
     AC_AGENTS_BOOTSTRAP_AUTH_VAULT_FILE: !unsafe '{{ tower.filename.bootstrap_auth }}'
+controller_secret_configs_ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_FILE') }}"
