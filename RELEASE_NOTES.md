@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.4.3
+
+Report unchanged authentication refreshes without counting temporary inventory bindings as persistent changes.
+
 ## 1.4.2
 
 Inject trusted controller CA material into the refresh execution environment while retaining TLS verification. Verify the dedicated maintenance token is not an administrator/auditor and grant only snapshot-credential administration. Check connectivity before capture and migrate maintenance credentials without editing in-use schemas.

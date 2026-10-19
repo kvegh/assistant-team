@@ -24,5 +24,6 @@
         ansible_become_password: "{{ native_auth_vault_refresh_bindings.connection.become_password }}"
       when: native_auth_vault_refresh_bindings.connection is defined
       no_log: true
+      changed_when: false
   roles:
     - native_auth_vault_refresh

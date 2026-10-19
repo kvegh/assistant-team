@@ -209,7 +209,7 @@ The snapshot credential does not replace the Vault-password credential.
 - `../assistant-team-secrets/vaults/configuration/`: external encrypted deployment/recovery inputs.
 - `src/roles/secret_config/`: common protected external-file resolver.
 - `src/restore_native_auth_vault.yml`: restore missing authentication on an existing destination.
-- `src/refresh_native_auth_vault.yml`: refresh the encrypted auth snapshot after source re-login.
+- `src/refresh_native_auth_vault.yml`: refresh the encrypted auth snapshot after source re-login; unchanged credentials produce no new commit or persistent changes.
 - `src/configure_auth_vault_refresh.yml`: configure the dedicated protected AAP refresh job.
 - `src/sync_secret_configs.yml`: synchronize ciphertext snapshots into AAP credentials.
 - `src/deploy_linux_vm.yml`: calls the provisioning, guest verification, and update roles.
