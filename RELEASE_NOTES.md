@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.3
+
+Document Vault filename migration and successful model-free Mistral integration checks for both account contexts.
+
 ## 1.2.2
 
 Standardize encrypted configuration filenames as `NAME_vault.yml`, update playbook and operator references, and preserve ciphertext and Vault IDs unchanged.

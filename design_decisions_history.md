@@ -1734,3 +1734,35 @@ checks, and production Ansible lint. Generated MCP and hook definitions were als
 accepted by the installed native Vibe schemas without provider calls. Deployment
 and disposable model-free integration checks do not establish current subscription
 entitlement or authenticated model access for either account.
+
+## Identify encrypted configuration consistently by filename
+
+The operator requested the `filename_vault.yml` pattern for encrypted configuration.
+Implementation follows the same convention in both the application repository and
+its private companion store. Application implementation `d5f7ae9` renames
+five tracked Vault files and updates operational playbook paths, current operator
+examples and lint exclusions. The companion implementation `751ce89` renames its
+three encrypted snapshots and updates its README and repository rules.
+
+All eight files retained identical ciphertext bytes; no key, password, Vault ID,
+secret content or credential boundary changed. The CaC capture remains encrypted
+with its original Vault label. Historical release snapshots and decision entries
+retain their original paths because they describe earlier source revisions.
+
+Validation: all thirteen operational application references resolve to existing
+files following the new naming rule; all nine affected playbooks pass syntax
+checks and production Ansible lint passes. A read-only controller scan found no
+current credential, job-template or inventory-source filename reference requiring
+a patch for the renamed companion snapshots. No VM provision, provider request or
+credential transfer was run for this naming change.
+
+### Deployed Mistral integration acceptance
+
+The 1.2.1 source was deployed successfully through the existing AAP configuration
+job. Disposable, networkless checks passed separately for both account contexts:
+the actual Vibe image/version and full native configuration schema, real Mistral
+broker registration, authenticated MCP gateway/shim, addressed message delivery,
+busy/idle transitions and native session-pointer recording. All test-owned
+resources were removed. Existing operator containers and environment account
+selection remained unchanged. No provider credentials were loaded or copied and
+no model calls ran, so this does not claim current authenticated model access.
