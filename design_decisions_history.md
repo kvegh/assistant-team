@@ -1893,3 +1893,19 @@ public code repository. Authorization for the private companion remains separate
 Existing AAP source-control credentials and project settings were retained.
 The operator declined a GitHub cache purge after reviewing the history rewrite;
 publication does not imply that old cached objects were physically removed.
+
+## Verify a complete fresh installation with automatic authentication
+
+The operator authorized removal of only the previous disposable clone and a
+complete installation of the next clone. AAP jobs 2100 and 2102 verified the exact
+retirement and preserved all other domains and the golden image. Complete job
+2104 passed on release 1.4.4 without retries or code repairs, including all six
+enabled authentication restores, full OS updates and project-isolation checks.
+The execution revision was `9049fcd384c6e826a75771cecb81f7d35e9504e6`, before
+the subsequent history cleanup; the corresponding rewritten source is `3459e0e`.
+Companion implementation `69c0a99` preserves the new encrypted recovery binding
+while retaining the original, narrowly authorized retirement target.
+
+This establishes fresh deployment reproducibility and private credential-file
+restoration, not live model entitlement. No model calls were made. Detailed
+acceptance evidence belongs in DEPLOYMENT_TEST_RESULTS.md.

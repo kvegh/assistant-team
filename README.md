@@ -1232,3 +1232,11 @@ profiles in a disposable destination and an unchanged rerun. Existing installati
 credentials were preserved. The dedicated refresh job passed with pinned GitHub
 SSH trust, verified controller TLS and a snapshot-scoped maintenance identity.
 Provider/model access was not invoked or inferred from saved credentials.
+
+### Complete fresh deployment acceptance
+
+AAP job 2104 completed the full clean installation at release 1.4.4 in 31.6 minutes,
+including six automatic authentication restores, full OS updates, CLI checks and
+disposable project isolation. The guarded prior-clone retirement preserved the
+original installation and every other domain. No model inference was performed.
+See [deployment test results](DEPLOYMENT_TEST_RESULTS.md) for scope and evidence.

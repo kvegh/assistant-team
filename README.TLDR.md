@@ -207,3 +207,6 @@ Auth maintenance: after re-login on the configured bootstrap source, launch AAP
 **Assistant Team Refresh Model Authentication**. New complete deployments restore
 missing auth automatically from the encrypted companion vault; existing credentials
 are preserved. Successful restoration does not prove unrevoked model access.
+
+Fresh-install acceptance: AAP job 2104 passed at 1.4.4, including six encrypted-vault
+auth restores and model-free installation checks. See DEPLOYMENT_TEST_RESULTS.md.

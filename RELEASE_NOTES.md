@@ -1,5 +1,17 @@
 # Release notes
 
+## 1.4.7
+
+Document successful complete fresh AAP deployment, six automatic authentication restores, preserved unrelated virtual machines and model-free installation acceptance.
+
+## 1.4.6
+
+Document the public code repository and separate private encrypted configuration repository.
+
+## 1.4.5
+
+Document removal of historical deployment Vault files from the code repository.
+
 ## 1.4.4
 
 Document automatic authentication restore and the dedicated AAP refresh workflow, including successful six-profile restore, unchanged rerun, preserved existing credentials and verified controller trust. Make refresh safety tests independent of task ordering and unrelated HTTP options.
