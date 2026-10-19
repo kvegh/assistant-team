@@ -43,6 +43,10 @@ operator identities, deployment addresses, credentials or private repository dat
 
 ## Release acceptance and remaining follow-up
 
+- [ ] Implement and verify `codex-work`: a work account is now available.
+  Complete work-profile authentication, deployment and role assignment support,
+  then test bounded model access and project stop/start conversation restoration.
+  Reuse existing preparation where suitable and preserve work/private separation.
 - [x] Verify fresh-project native onboarding after the setup-preparation fix:
   all eight native terminals reached input prompts on the fresh target, with
   no theme/welcome/workspace-trust/managed-hook setup dialog. Installed file hashes

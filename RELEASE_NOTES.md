@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.1.2
+
+Document the available Codex work account and pending work-profile implementation and acceptance checks.
+
 ## 1.1.1
 
 Document exact-conversation lifecycle behavior, implementation evidence and unchanged authentication and permission requirements.
