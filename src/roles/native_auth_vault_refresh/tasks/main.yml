@@ -47,6 +47,8 @@
         name: __native_auth_vault_refresh_existing
 
     - name: Capture credentials under the source runtime identity
+      vars:
+        ansible_connection: ssh
       become: true
       become_user: "{{ native_auth_vault_refresh_runtime_user }}"
       delegate_to: "{{ native_auth_vault_refresh_source_host }}"
@@ -161,6 +163,8 @@
 
   always:
     - name: Remove only the source helper created by this refresh
+      vars:
+        ansible_connection: ssh
       when: __native_auth_vault_refresh_helper.path is defined
       ansible.builtin.file:
         path: "{{ __native_auth_vault_refresh_helper.path }}"

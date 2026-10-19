@@ -3,6 +3,10 @@
   hosts: native_auth_destinations
   become: true
   gather_facts: false
+  vars:
+    containers:
+      runtime_user: "{{ native_auth_vault_restore_environment.agent_connector.runtime_user }}"
+    assistant_install_prefix: "{{ native_auth_vault_restore_environment.agent_connector.install_prefix | default('') }}"
   pre_tasks:
     - name: Load the external encrypted runtime environment
       ansible.builtin.include_role:
@@ -11,6 +15,7 @@
           tags: [always]
       vars:
         secret_config_name: environment
+        secret_config_namespace: native_auth_vault_restore_environment
       tags: [always]
   roles:
     - role: native_auth_vault_restore

@@ -151,3 +151,8 @@ GitHub SSH deploy key permits writes to the companion repository only. Repositor
 host keys are pinned. Maintenance credentials are injected only into the refresh
 job; ordinary VM deployments receive ciphertext and the separate Vault credential.
 Optional encrypted source connection bindings affect transient inventory only.
+
+The refresh job explicitly uses SSH for the delegated source; localhost controller
+execution is never inherited by source capture or cleanup. Existing-target restore
+uses the configured connector runtime account, with the matching guest Machine
+credential supplied to its AAP template.

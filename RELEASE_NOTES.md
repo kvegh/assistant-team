@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.4.1
+
+Use explicit SSH for delegated authentication capture and cleanup. Resolve the existing-target restore account from the connector environment rather than the legacy container account.
+
 ## 1.4.0
 
 Restore enabled model profiles automatically from the encrypted companion authentication vault after deployment, preserving existing credentials. Add a protected AAP refresh job that captures complete bootstrap logins, encrypts and publishes changes, and updates AAP snapshots. Keep work/private accounts separate and reject incomplete restores or downgraded captures.
