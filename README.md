@@ -11,6 +11,12 @@ an encrypted snapshot in the private companion secrets repository. See
 [authentication replication](docs/AUTH_REPLICATION.md) for account boundaries,
 refreshing snapshots and the difference between saved credentials and usable access.
 
+Deployment and recovery Vault files were removed from all published branch and
+tag histories in version 1.4.5. Active configuration remains in the private
+companion repository. Existing clones must be replaced or scrubbed before further
+pushes; merging the old history would restore the removed files. Historical tags
+preserve their code but no longer include environment configuration.
+
 Fresh installs use PREFIX/ac-agents. Existing home-level installations require a separately approved migration; see [migration prerequisites](INSTALLATION_MIGRATION.md).
 
 Permission management is a scoped design proposal, not implemented automation:

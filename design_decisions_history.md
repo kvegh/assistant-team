@@ -2,7 +2,7 @@
 
 ## Check unfinished background work every ten minutes
 
-Documentation: `54f38c9`.
+Documentation: `11c0367`.
 
 The user refined notification-driven monitoring with a ten-minute health check for
 unfinished agents that may be blocked, deferred, stalled or need resuming. Results
@@ -11,7 +11,7 @@ tasks must remain undisturbed; the old fixed 20-second polling rule stays remove
 
 ## Prefer background completion notifications over fixed polling
 
-Documentation: `305be6a`.
+Documentation: `cd4dcd3`.
 
 The user removed fixed 20-second subagent polling because completion is already
 reported automatically and repeated checks add processing overhead. Background
@@ -21,7 +21,7 @@ appropriately spaced checks and verified outcomes.
 
 ## Hold task-specific model selection while retaining its priority
 
-Documentation: `2cf4bcb`.
+Documentation: `ebbe5cf`.
 
 The user put cost- and quality-based task-specific model selection on hold,
 but explicitly retained its priority when resumed. No model-selection behavior
@@ -29,7 +29,7 @@ or runtime configuration changed.
 
 ## Continue the current communication route while evaluating alternatives
 
-Documentation: `dad244c`.
+Documentation: `0bcd6ba`.
 
 The user explicitly retained agents-connector with tmux as the active development
 route and requested a pending review and decision covering the current design,
@@ -42,7 +42,7 @@ automation are introduced by the documentation.
 
 ## Initial project setup
 
-Implementation: `83589382dd6311e87564bdcf5529cf511fca7849`.
+Implementation: `816a95bee82f6e57ce24332d201dbe066a7af430`.
 
 The user chose a new private repository rather than adding this project to an
 existing private repository. Privacy does not replace encryption: all sensitive
@@ -62,7 +62,7 @@ assumption, not an explicit user requirement. Provisioning has not run yet.
 
 ## Generic Linux VM provisioning
 
-Implementation: `7d81840541c8066d18bfba0b602957612a733bfc`.
+Implementation: `5617a579d7835c5682ea2b4e9b6ab840408a5291`.
 
 The user requested a reusable job template named Generic Linux VM Deployment.
 The existing AAP-specific golden-image playbook was adapted into this private
@@ -92,7 +92,7 @@ the user's choice of how to grant the controller private repository access.
 
 ## Clean generic VM clones
 
-Implementation: `e9bc9235ad303763977082262d69e3dee346d757`.
+Implementation: `0b9a8f691022fec65743bca636582653d9252a31`.
 
 The user requested removal of the pre-staged AAP installer and unnecessary clutter.
 Read-only image inspection through AAP confirmed roughly 3.8 GiB of installer
@@ -112,7 +112,7 @@ input-validation and cleanup-guard tests passed. Live deployment remains pending
 
 ## Fully update each guest after boot
 
-Implementation: `adb09a88dbb456ca8664edad694ee5d760bdfd5c`.
+Implementation: `970a16c5994f082edb3fa1b5373524c93c66946c`.
 
 The user requested a complete DNF update after the VM starts. Guest configuration
 uses the existing encrypted RHEL activation key if registration is needed,
@@ -136,7 +136,7 @@ credential in AAP with read-only access to this repository.
 
 ## Private repository sync and deployment access status
 
-Implementation: `f122084131c012bd325c4e9f7ac889f487f095e9`.
+Implementation: `bc57da2cbb689c8028d0f92861faaddb53da85f5`.
 
 The user supplied the repository-scoped GitHub token, which was stored in AAP's
 encrypted credential store without adding it to repository files. The private
@@ -152,7 +152,7 @@ secrets. Authentication must be restored before controller work can continue.
 
 ## Keep the current GitHub token lifetime
 
-Related configuration commit: `f122084131c012bd325c4e9f7ac889f487f095e9`.
+Related configuration commit: `bc57da2cbb689c8028d0f92861faaddb53da85f5`.
 
 The user decided to leave the repository-scoped GitHub token and its current
 expiration unchanged. Renew or replace it on demand when repository access
@@ -169,8 +169,8 @@ The earlier token-expiration explanation was an unconfirmed hypothesis, not the
 established cause. The requested generic job template was created with the
 existing hypervisor and Vault credentials and the private project.
 
-Implementation: `ff78da81427bcd1cab888854bc40e5f7f7e16abd` and
-`e117eefcba386ffbbed73f8398ae11e47fe291ed`.
+Implementation: `1c696d38c0c5fb16cdca06c1fcca3eff17c26464` and
+`0d708036bd5b21e2fd27abbf6fb38dfe0a5ab301`.
 
 The first deployment preserved its cloned disk when offline identity reset
 failed because the image lacked the legacy D-Bus directory. Recovery now
@@ -181,9 +181,9 @@ Temporary identity diagnostics remain disabled by default.
 
 ## Verify guest resources and resume guest configuration
 
-Implementation: `e27958ce5b6972da979f720cc85e2acade748084`,
-`2d8343a319d05b1388e3466bba8d3288a4fcaa3b`, and
-`a73848a9acc75f6bfcd4d2a480d99ec6b80b1346`.
+Implementation: `d9ec3f165b760487551ba27d3a54194f37d278dc`,
+`4d3b9b71d1ed8046ffd52d3b17f42ec0c0bff341`, and
+`643f751f2e1c1ca0b4b576a21f39f146b64b62f9`.
 
 Authenticated access succeeded after boot. The initial memory assertion was
 too strict for the guest's usable memory; the user accepted the small difference.
@@ -203,7 +203,7 @@ remain encrypted rather than appearing in this history.
 
 ## Reproduce lasting configuration through separate roles
 
-Implementation: `8c0497114b15efbd83b424e0c2675698f59c80e5`.
+Implementation: `4dff22eff68cb5d03fdf3d67b4b9ce1da63c0c01`.
 
 The user authorized direct SSH access with sudo for work on the project VM.
 Every lasting design or configuration change must be documented and represented
@@ -222,7 +222,7 @@ eight tests, and guest-configuration task selection passed.
 
 ## Delegate settled decisions to a background implementation agent
 
-Implementation: `318ec83a7af06efec1be920da2fc2a24915836d3`.
+Implementation: `2fe0ba1df59d477be2081e1184856b4756d59a9e`.
 
 The user chose one reusable background subagent to keep the main conversation
 focused on building and design. Settled decisions are handed off sequentially
@@ -239,7 +239,7 @@ workflow only and does not change the VM or require additional infrastructure.
 
 ## Establish trusted container host preflight
 
-Implementation: `f7c3f7ae3b3da40397e2d130e57d9baafb084255`.
+Implementation: `e761de2190c75ab896fe6c4684dc0f9ae238a847`.
 
 The user authorized a rootless Podman foundation with native Claude Code, Codex
 CLI, Mistral Vibe, and Gemini CLI harnesses. Content preparation is in progress;
@@ -257,7 +257,7 @@ and encrypted configuration.
 
 ## Build reusable native assistant containers with certified Podman
 
-Implementation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+Implementation: `15fc0046de7bedc0134d24f69f32e1a25ca84130`.
 
 The user chose Podman and native Claude Code, Codex CLI, Mistral Vibe, and Gemini
 CLI harnesses, reusable across independently configured roles and instances.
@@ -288,7 +288,7 @@ occurred. Runtime account and verified deployment metadata remain Vault encrypte
 
 ## Keep observer roles outside worker-visible collaboration context
 
-Implementation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+Implementation: `15fc0046de7bedc0134d24f69f32e1a25ca84130`.
 
 Working roles know the responsibilities of their collaborating participants,
 without gaining access to their data, credentials, or restricted contexts. The
@@ -301,7 +301,7 @@ No production roster or provider-role assignment is hardcoded.
 
 ## Record the next communication and connector architecture
 
-Design documentation: `5fb75abd8650da07e6af68c5f4bebc16c04d1b0e`.
+Design documentation: `15fc0046de7bedc0134d24f69f32e1a25ca84130`.
 
 The accepted next design uses SQLite for central discussions, handoffs, verified
 outcomes, and connector execution audit. Summarizing and orchestration remain
@@ -340,7 +340,7 @@ The container foundation does not deploy them.
 
 ## Require attachable native sessions and event-driven delivery
 
-Design documentation: `d2c60126cbe38bd4e550c226424271c97d016a0a`.
+Design documentation: `723e00aac76755330cde6e60a2ab347b59ea0a06`.
 
 The user requires native harness sessions in tmux inside continuously running
 rootless Podman containers, so the operator can attach. This is a TODO rather
@@ -359,7 +359,7 @@ remain requirements.
 
 ## Set up Agents Connector with native isolated tmux sessions
 
-Implementation: `c6a79cb6a17c17a2ae8a06db97e0bfd6c81903b5`.
+Implementation: `bbd190028c4dfa3e402b1406388697d8674df6e8`.
 
 The user selected Agents Connector and authorized a dedicated Linux account with
 the setup in its home, using the existing Claude Code, Codex and Gemini images
@@ -401,7 +401,7 @@ necessary. The setup performs no paid inference or external connector action.
 
 ## Control the connector group through a user target
 
-Implementation: `d8e2e7b05a7c34f6055eb5d281f52c1131a864d7`.
+Implementation: `b1852f91cbc4c8b4843687c0fd81f8df75b71d59`.
 
 The user chose `assistant-connector.target` for one start/stop/restart control.
 Only this target is enabled for the lingering user manager's startup. It requires
@@ -425,7 +425,7 @@ containers running. Authentication and live model sessions remain pending.
 
 ## Scope native logins and provide all eight role containers
 
-Implementation: `1e4236ccb521134750b94e40ae6b8235012823e1`.
+Implementation: `508cd85fdcf11b016ef8b58a13dcc2f27a977c83`.
 
 The user requested actual native CLI installations in five separate home directories:
 work and private Claude accounts, Codex, Gemini and Mistral. Each directory has
@@ -470,7 +470,7 @@ metadata remains Vault-encrypted. VM resources were not changed.
 
 ## Create and operate isolated assistant projects
 
-Implementation: `61d1709b0b028db42cede35dfcceeeaa72c128e7`.
+Implementation: `04f1272b9b5649e68815dd59db43c5650b860a7f`.
 
 The user approved a reusable project framework, with each named project under
 the runtime home projects directory. The create-project command invokes the
@@ -518,7 +518,7 @@ secrets; environment metadata remains Vault-encrypted. VM resources were unchang
 
 ## Retire the redundant original runtime
 
-Implementation: `f9d0eeb9272c45b0e951059974ba36c3cb94894b`.
+Implementation: `4aba22d3df3bf518d5ccebaffe56afa698b01967`.
 
 The user approved retiring the original non-project group now that the named
 project framework provides the intended lifecycle. A separate retirement role
@@ -548,7 +548,7 @@ secrets, and runtime metadata remains Vault-encrypted.
 
 ## Share project artifacts while retaining private role context
 
-Implementation: `8ea9a05f5fc7e6359eff3154d26e5057aa22efe7`.
+Implementation: `79f748666b30bdcdd861896ac7bb7217f9f359a2`.
 
 The user requested a shared project workspace. Creation now prepares a project
 workspace directory, mounted at /workspace/shared in role containers. All seven
@@ -582,53 +582,53 @@ backend; the shared-workspace validation does not claim authenticated model star
 
 ## Isolated work/private native authentication and initial release boundary
 
-The user chose work and private profiles for all four native harness vendors. Each profile keeps its own installation, configuration and authentication state; existing personal data is migrated without importing it into work contexts. Work Claude and Gemini use Vertex ADC, while private Gemini uses Google OAuth and private Claude uses its supported account plan. Native login outcomes distinguish local credential evidence from model entitlement. Explicit local clearing preserves unrelated settings and refuses active use. Personal Gemini restricts its native authentication choice to OAuth so the API-key dialog cannot accept an OAuth verification code. Concurrent profile login refuses existing native sessions rather than stopping user work. Google Cloud SDK installation remains approval-gated; Mistral team integration remains future work. Implementation: `45c8784`.
+The user chose work and private profiles for all four native harness vendors. Each profile keeps its own installation, configuration and authentication state; existing personal data is migrated without importing it into work contexts. Work Claude and Gemini use Vertex ADC, while private Gemini uses Google OAuth and private Claude uses its supported account plan. Native login outcomes distinguish local credential evidence from model entitlement. Explicit local clearing preserves unrelated settings and refuses active use. Personal Gemini restricts its native authentication choice to OAuth so the API-key dialog cannot accept an OAuth verification code. Concurrent profile login refuses existing native sessions rather than stopping user work. Google Cloud SDK installation remains approval-gated; Mistral team integration remains future work. Implementation: `251eb3b`.
 
-At the user's explicit request, release `v0.0.1` was tagged and published from existing committed baseline `df70417418b8a2e88658e8772df96a26d0acb293` before these pending changes were committed. Subsequent feature commits increment minor versions, and fixes/documentation commits increment patch versions; release notes record each version. This preserves the published baseline rather than representing uncommitted development VM changes as its content.
+At the user's explicit request, release `v0.0.1` was tagged and published from existing committed baseline `d49c400f3268f7a509d5f27a020a8b90bebe9c50` before these pending changes were committed. Subsequent feature commits increment minor versions, and fixes/documentation commits increment patch versions; release notes record each version. This preserves the published baseline rather than representing uncommitted development VM changes as its content.
 
 ## Selectable environment profiles and authoritative project assignments
 
 The user chose one environment per Linux user, with eight available work/private profiles and enablement recorded in a strict non-secret home-level JSON file. Separate home-level project configs own role-to-profile assignments; project prompt files retain only goals and role prose. This avoids conflicting editable account settings and keeps unsupported or disabled assignments actionable before startup. Native state is separated per account and live account replacement is refused, preventing stale credentials from another context. Existing data and disabled profiles are preserved. Current roles retain their native adapter; Mistral team participation remains a required future upstream integration.
 
-The user requested concise home and repository README.TLDR guides alongside the full guide, and protected bounded environment metadata for diagnostics. Metadata excludes authentication values, conversations, prompts, databases and raw CLI output; manual exports contain only prescribed fields/files. Backlog items distinguish required custom roles/Mistral integration from optional custom account contexts and multiple environments. Implementation: `a587343`.
+The user requested concise home and repository README.TLDR guides alongside the full guide, and protected bounded environment metadata for diagnostics. Metadata excludes authentication values, conversations, prompts, databases and raw CLI output; manual exports contain only prescribed fields/files. Backlog items distinguish required custom roles/Mistral integration from optional custom account contexts and multiple environments. Implementation: `5af65c8`.
 
 The personal Gemini OAuth input stage was verified without submitting authentication or model input. The user then encountered a provider restriction rejecting this native client for individuals. This is an access limitation, not authorization to alter client identity or switch to paid API authentication. Work Vertex access remains a separate setup path.
 
 ## Recognizable login status messages
 
-The user requested the exact `[AC-Agents]:` prefix for wrapper-owned login outcomes, clear confirmations and errors so these messages are distinguishable from native provider output. The native providers retain their own output, and local credential evidence still does not imply model access. Atomic helper updates preserve active login processes and existing credentials. Implementation: `ccf07f2`.
+The user requested the exact `[AC-Agents]:` prefix for wrapper-owned login outcomes, clear confirmations and errors so these messages are distinguishable from native provider output. The native providers retain their own output, and local credential evidence still does not imply model access. Atomic helper updates preserve active login processes and existing credentials. Implementation: `657e0b1`.
 
 ## Actionable login follow-up guidance
 
-The user requested useful next steps after each wrapper login result. Guidance distinguishes local saved evidence from model access and points to provider-specific prerequisites or retirement limitations. It does not launch model checks, switch to paid APIs or erase credentials. Native Vibe authentication storage was checked against the installed source before advising a retry. Implementation: `c880a3d`.
+The user requested useful next steps after each wrapper login result. Guidance distinguishes local saved evidence from model access and points to provider-specific prerequisites or retirement limitations. It does not launch model checks, switch to paid APIs or erase credentials. Native Vibe authentication storage was checked against the installed source before advising a retry. Implementation: `1178ae1`.
 
 ## Operator-owned deployment and primary target diagnostics
 
-The user chose a fresh deployment path that does not grant this coding agent destination access. An operator-owned external Vault provides connection settings; the complete role chain supports both local connections and SSH destinations without developer-specific account/image/Vault dependencies. No provider authentication or inference occurs during installation. Protected target environment logs are primary; controller metadata covers preconnection failures and can be replayed later. Only prescribed, validated metadata is exported, excluding raw output, credentials, prompts and conversations. Fresh-VM end-to-end deployment remains untested; local/SSH fixtures, failure/export tests and syntax checks establish the current validation boundary. The version helper follows feature-minor and fix/documentation-patch increments, while formal releases also require pushed annotated tags and published GitHub notes. Implementation: `decdc5c`.
+The user chose a fresh deployment path that does not grant this coding agent destination access. An operator-owned external Vault provides connection settings; the complete role chain supports both local connections and SSH destinations without developer-specific account/image/Vault dependencies. No provider authentication or inference occurs during installation. Protected target environment logs are primary; controller metadata covers preconnection failures and can be replayed later. Only prescribed, validated metadata is exported, excluding raw output, credentials, prompts and conversations. Fresh-VM end-to-end deployment remains untested; local/SSH fixtures, failure/export tests and syntax checks establish the current validation boundary. The version helper follows feature-minor and fix/documentation-patch increments, while formal releases also require pushed annotated tags and published GitHub notes. Implementation: `0233adf`.
 
 ## Headless Vibe browser authorization
 
-Installed Vibe 2.26.0 stops its authorization worker when a GUI browser cannot open, before native polling begins, while retaining the generated link and later waiting-step text. The user can complete that link in a browser but the stopped worker cannot receive the result. A profile-local supported Python browser handoff reports successful handoff so native polling, expiry and PKCE exchange continue unchanged; it does not read authorization codes or bypass authentication. Native fake-gateway validation confirmed the difference without network/model calls. Session guards recognize rewritten native process titles and preserve active user work. Implementation: `4bd241e`.
+Installed Vibe 2.26.0 stops its authorization worker when a GUI browser cannot open, before native polling begins, while retaining the generated link and later waiting-step text. The user can complete that link in a browser but the stopped worker cannot receive the result. A profile-local supported Python browser handoff reports successful handoff so native polling, expiry and PKCE exchange continue unchanged; it does not read authorization codes or bypass authentication. Native fake-gateway validation confirmed the difference without network/model calls. Session guards recognize rewritten native process titles and preserve active user work. Implementation: `6917426`.
 
 ## Full root capacity for fresh 20 GiB clones
 
-The user chose 20 GiB as the default cloned disk capacity for future Linux VM provisioning, with automatic growth of the existing direct last GPT root partition and XFS filesystem. The golden image retains a small filesystem, so virtual resizing alone leaves capacity unused. A separate root-growth role provides protected partition-table backups, partition-identity checks and idempotence. The existing VM had already completed an explicitly authorized 50 GiB expansion and is preserved without shrinking or another reboot. No separate additional-disk resize feature is retained. An unchanged guest-role rerun validates current idempotence, while a fresh 20 GiB end-to-end VM deployment remains untested. Implementation: `282f06b`.
+The user chose 20 GiB as the default cloned disk capacity for future Linux VM provisioning, with automatic growth of the existing direct last GPT root partition and XFS filesystem. The golden image retains a small filesystem, so virtual resizing alone leaves capacity unused. A separate root-growth role provides protected partition-table backups, partition-identity checks and idempotence. The existing VM had already completed an explicitly authorized 50 GiB expansion and is preserved without shrinking or another reboot. No separate additional-disk resize feature is retained. An unchanged guest-role rerun validates current idempotence, while a fresh 20 GiB end-to-end VM deployment remains untested. Implementation: `4ebdd7d`.
 
 ## Approved scoped Google Cloud SDK for work Vertex login
 
-The user approved the required SDK dependency. Google Cloud CLI 588.0.0 is installed within the two work profiles, with independent configuration and ADC paths and only immutable program assets reused. Work login guides operator-selected project, location and enabled model IDs without enabling cloud APIs, altering billing or making model requests. The versioned archive pin was corrected by verifying its full payload against the official rolling archive and published digest; different tarball packaging must not share an assumed checksum. Installed release checks and owned archive cleanup make the installation repeatable. Native Gemini selects Vertex only after scoped ADC completion while preserving unrelated settings. User authentication and model entitlement are not inferred from installation. Implementation: `8971d51`.
+The user approved the required SDK dependency. Google Cloud CLI 588.0.0 is installed within the two work profiles, with independent configuration and ADC paths and only immutable program assets reused. Work login guides operator-selected project, location and enabled model IDs without enabling cloud APIs, altering billing or making model requests. The versioned archive pin was corrected by verifying its full payload against the official rolling archive and published digest; different tarball packaging must not share an assumed checksum. Installed release checks and owned archive cleanup make the installation repeatable. Native Gemini selects Vertex only after scoped ADC completion while preserving unrelated settings. User authentication and model entitlement are not inferred from installation. Implementation: `2bd04aa`.
 
 ## Fresh complete installation through normal AAP jobs
 
-The user requested a separate fresh VM as an end-to-end automation test, with all target changes performed by normal AAP job templates rather than ad-hoc commands or manual SSH. A separate encrypted definition protects the existing deployment. The new playbook uses the discovered guest for root growth, complete updates and the full native environment role chain, then exercises disposable dummy-harness project isolation without authentication or model calls. Configuration-only recovery uses a vaulted guest address and skips successful provisioning. Installed metadata can use the AAP project revision. At this commit, syntax is verified and the actual deployment remains pending. Implementation: `7034bc1`.
+The user requested a separate fresh VM as an end-to-end automation test, with all target changes performed by normal AAP job templates rather than ad-hoc commands or manual SSH. A separate encrypted definition protects the existing deployment. The new playbook uses the discovered guest for root growth, complete updates and the full native environment role chain, then exercises disposable dummy-harness project isolation without authentication or model calls. Configuration-only recovery uses a vaulted guest address and skips successful provisioning. Installed metadata can use the AAP project revision. At this commit, syntax is verified and the actual deployment remains pending. Implementation: `583065f`.
 
 ## Explain full Vertex model identifiers at login
 
-The operator encountered unclear rejection of display names and aliases. Model prompts now show a complete Vertex identifier and explain invalid input while keeping project/location entitlement unverified. This improves guided login without cloud lookups, model calls or changes to existing sessions. Seven scoped regression tests pass. Implementation: `b1f2d02`.
+The operator encountered unclear rejection of display names and aliases. Model prompts now show a complete Vertex identifier and explain invalid input while keeping project/location entitlement unverified. This improves guided login without cloud lookups, model calls or changes to existing sessions. Seven scoped regression tests pass. Implementation: `218a799`.
 
 ## Explicit Vault password configuration
 
-The checkout-relative password setting resolved to an unrelated missing path under AAP even though its attached Vault credential worked. Tracked configuration now delegates Vault access to explicit operator input or AAP credential injection, avoiding developer workspace assumptions. Syntax and portable deployment tests pass. Implementation: `3ba883f`.
+The checkout-relative password setting resolved to an unrelated missing path under AAP even though its attached Vault credential worked. Tracked configuration now delegates Vault access to explicit operator input or AAP credential injection, avoiding developer workspace assumptions. Syntax and portable deployment tests pass. Implementation: `9000692`.
 
 ## Prefer suitable Ansible and certified content
 
@@ -636,23 +636,23 @@ The user chose Ansible for clear deployment/configuration tasks and an obviously
 
 ## Fresh native launcher bootstrap and safe recovery
 
-The first normal AAP fresh deployment reached native CLI installation after provisioning, full filesystem growth, updates, image builds and broker installation. Its launcher imported a helper that was installed only after version validation, causing the fresh bootstrap to fail. The helper now precedes launcher invocation, and all contexts are checked on recovery to detect incomplete metadata markers. A behavioral regression reproduces missing-helper failure and successful installation without inference. The discovered endpoint remains encrypted and recovery skips provisioning. Implementation: `9a56278`. Separate sudo recovery credentials were corrected in `178fc83`. The Ansible/certified-content policy and exploratory collection backlog were recorded in `a35bf43`.
+The first normal AAP fresh deployment reached native CLI installation after provisioning, full filesystem growth, updates, image builds and broker installation. Its launcher imported a helper that was installed only after version validation, causing the fresh bootstrap to fail. The helper now precedes launcher invocation, and all contexts are checked on recovery to detect incomplete metadata markers. A behavioral regression reproduces missing-helper failure and successful installation without inference. The discovered endpoint remains encrypted and recovery skips provisioning. Implementation: `da703c7`. Separate sudo recovery credentials were corrected in `c721404`. The Ansible/certified-content policy and exploratory collection backlog were recorded in `ead23b7`.
 
 ## Practical Ansible good practices and verified fresh deployment
 
-The user requested applicable parts of the Red Hat good-practices guide without unnecessary framework complexity. Role-owned variables and typed/documented interfaces now clarify inputs; explicit escalation, a reboot handler, built-in retention and a single role-instruction template improve maintainability and repeatability. Shared encrypted dictionaries and legacy VM resource aliases remain compatible. Full check-mode and zero-change convergence are not claimed where live builds or disposable verification require mutation. Implementation: `c79caea`. Production-profile lint reports no findings and 71 tests pass. Normal AAP configuration recovery job 1376 completed the original fresh bootstrap; job 1380 verified the refactored full role chain, native CLI and SDK versions, full cloned root capacity, and two-project isolation without authentication or inference. The good-practices review records remaining gaps, including controller configuration-as-code and CI, rather than claiming complete compliance.
+The user requested applicable parts of the Red Hat good-practices guide without unnecessary framework complexity. Role-owned variables and typed/documented interfaces now clarify inputs; explicit escalation, a reboot handler, built-in retention and a single role-instruction template improve maintainability and repeatability. Shared encrypted dictionaries and legacy VM resource aliases remain compatible. Full check-mode and zero-change convergence are not claimed where live builds or disposable verification require mutation. Implementation: `8d82d7f`. Production-profile lint reports no findings and 71 tests pass. Normal AAP configuration recovery job 1376 completed the original fresh bootstrap; job 1380 verified the refactored full role chain, native CLI and SDK versions, full cloned root capacity, and two-project isolation without authentication or inference. The good-practices review records remaining gaps, including controller configuration-as-code and CI, rather than claiming complete compliance.
 
 ## Reuse existing quality tools without silent installation
 
-Practical guide adoption now includes one tested quality command shared by local pre-commit configuration and a manually dispatched trusted-runner CI workflow. It runs tests and production-profile lint, preserves failure status, and requires explicit external Vault access without installing dependencies. CI registration and pre-commit installation remain operator choices; no hosted secret or paid platform configuration is introduced. Three behavioral tests cover stopped execution after failure, missing Vault input and test-only execution. Implementation: `9c0f1a3`.
+Practical guide adoption now includes one tested quality command shared by local pre-commit configuration and a manually dispatched trusted-runner CI workflow. It runs tests and production-profile lint, preserves failure status, and requires explicit external Vault access without installing dependencies. CI registration and pre-commit installation remain operator choices; no hosted secret or paid platform configuration is introduced. Three behavioral tests cover stopped execution after failure, missing Vault input and test-only execution. Implementation: `c217861`.
 
 ## Reusable rules for future sessions
 
-The user requested one comprehensive context document for future assistants. SESSION_RULES.md consolidates explicit working rules and settled boundaries while directing readers to current source, release notes and verified deployment outcomes. It contains no credentials or environment identifiers and does not turn pending capabilities into completion claims. Implementation: `140dccc`.
+The user requested one comprehensive context document for future assistants. SESSION_RULES.md consolidates explicit working rules and settled boundaries while directing readers to current source, release notes and verified deployment outcomes. It contains no credentials or environment identifiers and does not turn pending capabilities into completion claims. Implementation: `dad99e9`.
 
 ## Evaluate APME locally without broadening deployment
 
-The user authorized a pinned isolated APME installation and local OPA container evaluation. Its full-project scan failed certified collection provisioning, so a builtin-only role subset was evaluated separately and coverage limitations were retained. The partial scan reported no remaining policy violations and proposed only value-preserving YAML formatting. No automatic fixes, AI requests, authentication reuse or mandatory gate were introduced. Installation capture and reproducible audit instructions are documented. Implementation: `5692d3c`.
+The user authorized a pinned isolated APME installation and local OPA container evaluation. Its full-project scan failed certified collection provisioning, so a builtin-only role subset was evaluated separately and coverage limitations were retained. The partial scan reported no remaining policy violations and proposed only value-preserving YAML formatting. No automatic fixes, AI requests, authentication reuse or mandatory gate were introduced. Installation capture and reproducible audit instructions are documented. Implementation: `5a3b61f`.
 
 ## Enable only account profiles the operator currently uses
 
@@ -660,15 +660,15 @@ The operator disabled unused work profiles in the current environment while reta
 
 ## Safely replace a disposable deployment test clone
 
-The user explicitly authorized removal of only the second test VM and a fresh third-clone end-to-end deployment. A dedicated normal AAP retirement playbook defaults to read-only preflight, validates the selected disposable naming convention, verifies one exclusive regular clone disk against all other domains, gracefully shuts down the selected guest and checks that the golden image and other domains remain intact. Separate encrypted retirement and fresh definitions prevent accidental reuse of the old recovery address. Safety rejection tests pass and the new role passes production lint. Actual AAP retirement and fresh deployment results are tracked separately after execution. Implementation: `e1545f9`.
+The user explicitly authorized removal of only the second test VM and a fresh third-clone end-to-end deployment. A dedicated normal AAP retirement playbook defaults to read-only preflight, validates the selected disposable naming convention, verifies one exclusive regular clone disk against all other domains, gracefully shuts down the selected guest and checks that the golden image and other domains remain intact. Separate encrypted retirement and fresh definitions prevent accidental reuse of the old recovery address. Safety rejection tests pass and the new role passes production lint. Actual AAP retirement and fresh deployment results are tracked separately after execution. Implementation: `30e99ff`.
 
 ## Interpret completed APME checks against the supported deployment
 
-The user authorized all read-only APME scans without repeated approval and relevant fixes after contextual security, compliance and stability assessment. The certified dependency was supplied through upstream proxy conversion/cache using its original SHA256-verified artifact. Full-codebase Native, OPA and Ansible checks completed, followed by optional collection-health and Python auditing. Findings include intentional privileged actions, statically unresolved encrypted inputs and future-version migration warnings; these do not justify blanket rewriting. Optional dependency coverage limits are retained, including the non-PyPI certified wheel and old pip in the disposable scanner environment. No project code defect was selected from this first assessment, and no automatic source edits or AI requests were made. Implementation: `e169e6b`.
+The user authorized all read-only APME scans without repeated approval and relevant fixes after contextual security, compliance and stability assessment. The certified dependency was supplied through upstream proxy conversion/cache using its original SHA256-verified artifact. Full-codebase Native, OPA and Ansible checks completed, followed by optional collection-health and Python auditing. Findings include intentional privileged actions, statically unresolved encrypted inputs and future-version migration warnings; these do not justify blanket rewriting. Optional dependency coverage limits are retained, including the non-PyPI certified wheel and old pip in the disposable scanner environment. No project code defect was selected from this first assessment, and no automatic source edits or AI requests were made. Implementation: `fd8a858`.
 
 ## Supported personal Antigravity with scoped native authentication
 
-Implementation: `3a5a1b9` (version 0.10.0).
+Implementation: `acd659f` (version 0.10.0).
 
 Personal Gemini moved to the supported official Antigravity native CLI because
 Google retired the former personal Gemini CLI client. Keep the existing profile
@@ -699,23 +699,23 @@ personal team integration remain separate subsequent verification steps.
 
 ## Make Ansible operations easier to read without changing behavior
 
-After the APME assessment, the user requested an end-to-end Ansible readability review that retains relevant practices and functionality. Entry playbooks and roles were reviewed from provisioning through validation. Three shell pipelines now use explicit cmd/executable/chdir mappings; normalized parsed tasks confirm identical commands, conditions and async settings. A repeated internal root-growth result name was simplified and the user module desired state made explicit. No new architecture or role consolidation was introduced. All 80 tests and production lint pass; the APME rescan completes with the three M027 pipeline indicators removed and other contextual limitations preserved. Implementation: `00af762`.
+After the APME assessment, the user requested an end-to-end Ansible readability review that retains relevant practices and functionality. Entry playbooks and roles were reviewed from provisioning through validation. Three shell pipelines now use explicit cmd/executable/chdir mappings; normalized parsed tasks confirm identical commands, conditions and async settings. A repeated internal root-growth result name was simplified and the user module desired state made explicit. No new architecture or role consolidation was introduced. All 80 tests and production lint pass; the APME rescan completes with the three M027 pipeline indicators removed and other contextual limitations preserved. Implementation: `73e2b7d`.
 
 ## List existing projects without needing a project argument
 
-The user tried the natural team --list command and requested it after the router incorrectly reported a missing project. The operator router now hands off --list and list-projects before requiring a selected project, including when a project environment variable is present. Listing inspects only valid-name regular project directories with initialization markers, expected files and workspace; it does not open databases, prompts or credentials or start services. Six new tests cover actual installed-router execution, empty/multiple/partial/invalid/symlink cases and authentication isolation. All 86 tests and production lint pass. Targeted Ansible project-framework deployment succeeded on the original VM and both actual listing aliases returned exit zero. Implementation: `fb49a04`.
+The user tried the natural team --list command and requested it after the router incorrectly reported a missing project. The operator router now hands off --list and list-projects before requiring a selected project, including when a project environment variable is present. Listing inspects only valid-name regular project directories with initialization markers, expected files and workspace; it does not open databases, prompts or credentials or start services. Six new tests cover actual installed-router execution, empty/multiple/partial/invalid/symlink cases and authentication isolation. All 86 tests and production lint pass. Targeted Ansible project-framework deployment succeeded on the original VM and both actual listing aliases returned exit zero. Implementation: `99d7695`.
 
 ## Make operator help and command errors explicit
 
-The user requested complete team --help and clear invalid-command errors after create NAME produced a misleading missing-project message. The project framework now lists every public command with parameters and brief explanations; the router delegates discovery and environment commands without requiring project or auth state. Unknown commands explicitly identify the invalid action, while valid commands with missing project parameters retain a separate error. No create alias was invented. All 90 tests and production lint pass, including real installed-router checks with and without a project environment. Targeted original-VM project-framework deployment completed successfully before the subsequent deployment pause. Read-only runtime verification confirmed complete help, explicit invalid create and successful listing. Further original-VM deployment is held at the user's request; installed metadata remains the implementation version. Implementation: `83ebd8f`.
+The user requested complete team --help and clear invalid-command errors after create NAME produced a misleading missing-project message. The project framework now lists every public command with parameters and brief explanations; the router delegates discovery and environment commands without requiring project or auth state. Unknown commands explicitly identify the invalid action, while valid commands with missing project parameters retain a separate error. No create alias was invented. All 90 tests and production lint pass, including real installed-router checks with and without a project environment. Targeted original-VM project-framework deployment completed successfully before the subsequent deployment pause. Read-only runtime verification confirmed complete help, explicit invalid create and successful listing. Further original-VM deployment is held at the user's request; installed metadata remains the implementation version. Implementation: `04ea09d`.
 
 ## Distinguish project prompt sections from inactive examples
 
-The user selected bracket sections such as [Role: Investigator] with # comment lines rather than Markdown role headings. All starter example prose and human guidance are comments, removed before delivery to harnesses in the new format; no fallback activates examples. The shared goal uses [Project]. Authors add their active text or uncomment examples. Each supported role must appear exactly once and receives only its own active section plus the shared goal and existing workspace context. Legacy # Role: files retain their prior interpretation and existing project files are preserved; new projects convert old default-template prose into commented samples. Seven new tests exercise comment exclusion, blank roles, legacy compatibility, aliases, validation and private-observer isolation; all 97 tests and production lint pass and the contextual APME rescan completes. The operator explicitly holds deployment of the new template/parser/generator to the original VM while starting a first team; these changes are committed source only. Implementation: `14914da`.
+The user selected bracket sections such as [Role: Investigator] with # comment lines rather than Markdown role headings. All starter example prose and human guidance are comments, removed before delivery to harnesses in the new format; no fallback activates examples. The shared goal uses [Project]. Authors add their active text or uncomment examples. Each supported role must appear exactly once and receives only its own active section plus the shared goal and existing workspace context. Legacy # Role: files retain their prior interpretation and existing project files are preserved; new projects convert old default-template prose into commented samples. Seven new tests exercise comment exclusion, blank roles, legacy compatibility, aliases, validation and private-observer isolation; all 97 tests and production lint pass and the contextual APME rescan completes. The operator explicitly holds deployment of the new template/parser/generator to the original VM while starting a first team; these changes are committed source only. Implementation: `0b79361`.
 
 ## Wait for idle tmux before native harness launch
 
-Implementation: `c7d4473`.
+Implementation: `f0b1fdf`.
 
 The first project launch reached tmux commands before a newly detached Podman
 container had finished its idle entrypoint. Restarting that idle container made
@@ -729,7 +729,7 @@ Ansible lint with zero failures or warnings.
 
 ## Protected editable-prompt migration and parallel implementation
 
-Implementation: `2e3c616` (0.14.0).
+Implementation: `508272a` (0.14.0).
 
 The operator requested converting an already edited project to explicit bracket
 sections rather than leaving legacy role headings. Conversion is opt-in through
@@ -741,7 +741,7 @@ coordinated to prevent conflicting writes.
 
 ## Human-readable operational diagnostics
 
-Implementation: `373b8f7` (0.15.0).
+Implementation: `062bb5c` (0.15.0).
 
 The operator wanted logs made for humans alongside structured JSON. Runtime events
 now have matching readable lines, correlation IDs, protected permissions and bounded
@@ -753,12 +753,12 @@ cases passed; production Ansible lint passed for the affected role and transfer 
 
 ## Verify the guarded lifecycle with a complete fresh AAP run
 
-The guarded retirement design (`e1545f9`) was exercised through read-only preflight job 1389 and removal job 1391. The selected disposable test clone and its exclusive disk were removed while other domain names and the source image were preserved. Fresh deployment job 1394 then completed all roles in one pass without recovery or retries at `405c24f2f44259dab90545a63d0bd6832b867972`, version 0.9.1. The run verified full root growth, package updates/reboot, container and host-native clients, the scoped SDK and disposable two-project isolation, without copying provider authentication or invoking models. Later changes are outside this tested snapshot; further deployments remain separately authorized. Detailed results and limitations are recorded in DEPLOYMENT_TEST_RESULTS.md.
+The guarded retirement design (`30e99ff`) was exercised through read-only preflight job 1389 and removal job 1391. The selected disposable test clone and its exclusive disk were removed while other domain names and the source image were preserved. Fresh deployment job 1394 then completed all roles in one pass without recovery or retries at `9f5b4f4792f931afb13847ac67840035de4b37b2`, version 0.9.1. The run verified full root growth, package updates/reboot, container and host-native clients, the scoped SDK and disposable two-project isolation, without copying provider authentication or invoking models. Later changes are outside this tested snapshot; further deployments remain separately authorized. Detailed results and limitations are recorded in DEPLOYMENT_TEST_RESULTS.md.
 
 ## Verified operator prompt and log deployment
 
-Deployment source: `949d2c6` (0.15.2), including prompt migration `2e3c616`
-and readable diagnostics `373b8f7`.
+Deployment source: `b6648e4` (0.15.2), including prompt migration `508272a`
+and readable diagnostics `062bb5c`.
 
 The targeted Ansible project-framework deployment completed successfully with zero
 failed or unreachable tasks. The explicitly selected operator-edited project was
@@ -769,7 +769,7 @@ sessions were not changed or restarted. No prompt contents were included in repo
 
 ## Supply Codex process inspection and repair only its failed builder
 
-Implementation: `c1806f8`.
+Implementation: `308d764`.
 
 The real authenticated Codex session exposed a runtime dependency missed by CLI
 version checks: its managed app server invokes `ps`. The tmux image extension now
@@ -792,7 +792,7 @@ Ansible Vault. No new secret manager or credential migration was introduced.
 
 ## Restore event wake-up bookkeeping after builder repair
 
-Implementation: `24fa9a8`.
+Implementation: `f9ab0b0`.
 
 Final project status inspection found that the image-repair path started the native
 builder but omitted the launch marker used by event wake-up. Normal launch callers
@@ -810,7 +810,7 @@ or provider credential content was sent to the chat.
 
 ## Recognize native Antigravity saved authentication correctly
 
-Implementation: `a990e87`.
+Implementation: `be17249`.
 
 The operator completed personal Antigravity authorization, but the reporting
 wrapper classified it as failed because its detector expected top-level OAuth
@@ -833,7 +833,7 @@ credential clearing was performed, and historical diagnostic records were preser
 
 ## Complete named projects through archive or destroy
 
-Implementation: `7113c71`.
+Implementation: `bec47a2`.
 
 The user defined two explicit completion operations: both check whether the named
 team is running and stop it if necessary; destroy deletes the project and home
@@ -858,7 +858,7 @@ existing project was archived/destroyed and no model request was performed.
 
 ## Include read-only runtime status in project listings
 
-Implementation: `235a6cc`.
+Implementation: `eb25042`.
 
 The user requested project status beside each listed name. Listing now distinguishes
 running, starting, stopping, stopped, failed, partial orphan components and unknown
@@ -877,7 +877,7 @@ unchanged by listing, and existing project/config files were retained.
 
 ## Move the editable default into the templates directory
 
-Implementation: `db1c663`.
+Implementation: `622bb30`.
 
 The user requested that the default new-project prompt live in
 `~/templates/assistant-prompts.md` rather than the home directory. Project
@@ -899,7 +899,7 @@ read and no inference was performed. The stopped original team was not started.
 
 ## Always date archives and forget retired systemd instances
 
-Implementation: `6368773`.
+Implementation: `269ba14`.
 
 The user requested a dated directory for every archive, using the operation-start
 local time in day/month/two-digit-year/24-hour-hour/minute order. Existing archive
@@ -923,7 +923,7 @@ The real project was not archived, deleted or started.
 
 ## Restore retained archives as dated projects
 
-Implementation: `9cc9321` (0.20.0).
+Implementation: `038b65e` (0.20.0).
 
 The operator chose copying rather than moving archived projects: the full retained
 archive remains unchanged and restoration explicitly reports that fact. The dated
@@ -951,7 +951,7 @@ is reported separately after completion.
 
 ## Rename project identity without rewriting user content
 
-Implementation: `75842fb` (0.21.0).
+Implementation: `a1aba43` (0.21.0).
 
 The operator requested a project rename command, including renaming restored
 dated project names. `team rename-project OLD NEW` stops and forgets only the
@@ -976,7 +976,7 @@ config identity, unchanged user content and database bytes, retained native
 fixture state, enabled but stopped new target, and human/JSON lifecycle logs.
 The fixtures were cleaned; no real project was renamed and no model was invoked.
 
-Rename rollback follow-up: implementation `7ec7121` (0.21.2) also handles
+Rename rollback follow-up: implementation `f319aec` (0.21.2) also handles
 unexpected renderer exceptions and terminal interruption, because transactional
 protection must cover these failures as well as ordinary filesystem/systemd
 errors. The old directory, exact config and generated instructions are restored
@@ -986,7 +986,7 @@ error and interruption regression cases; no Ansible content changed in this fix.
 
 ## Restore native cache state safely within the existing layout
 
-Implementations: `d687ceb`, `489aa88`, `22fd447`.
+Implementations: `8e54f02`, `a3b34a0`, `e2802eb`.
 
 A native Codex archive included regenerated launch/control links, a daemon cache
 pointer referring to its container home, and a daemon updater socket. Blanket
@@ -1015,7 +1015,7 @@ and stopped project state. The archive remains retained; no models were started.
 
 ## SELinux gateway listener socket identity
 
-Implementation: `9b1fe2a5e8cdd12b298b4b597e99ff843dfe52a9`.
+Implementation: `264c8d83c9c14f374d2f9b3ebfb248c8ab827c16`.
 
 A native startup hook could not connect even though its private socket inode and
 container process had matching MCS mount labels. Sanitized audit metadata showed
@@ -1050,7 +1050,7 @@ and the [SELinux socket-context API](https://github.com/SELinuxProject/selinux/b
 
 ## Complete shutdown before subsequent start
 
-Implementation: `e119e2dd04bb6b637a90e73879747d2a6ab8798b`.
+Implementation: `0e359cbb0391929338d42c80967326d1a7db06b1`.
 
 Stopping only a systemd target could return while its PartOf-dependent services
 and containers were still shutting down. An immediate start could then conflict
@@ -1078,7 +1078,7 @@ was deployed.
 
 ## Keep Codex updates under deployment control
 
-Implementation: `82ba8a6`.
+Implementation: `6e64c58`.
 
 A Codex startup update prompt attempted a global npm update inside a read-only
 container and exited on the resulting filesystem error. Disable the documented
@@ -1106,7 +1106,7 @@ Technical basis: [official Codex configuration reference](https://learn.chatgpt.
 
 ## Container-owned Codex session lifecycle
 
-Implementation: `c48cab5`.
+Implementation: `2b093ef`.
 
 During authorized startup recovery, normal Codex startup still displayed sign-in
 after explicit role authentication, while the installed CLI's supported
@@ -1128,7 +1128,7 @@ modified by this implementation.
 
 ## Exact Vertex model IDs and first-run onboarding
 
-Documentation: `1df4e5f9b12a7207455c4b27a60857dc752b9329`.
+Documentation: `d734bcc892c5b8e6a0208fbea4167900a1bf5e35`.
 
 A Gemini work role used `gemini-3.1-pro`, which was not a valid provider model ID.
 The published Gemini 3.1 Pro ID is `gemini-3.1-pro-preview`; verification against
@@ -1154,7 +1154,7 @@ lint passed. No runtime sessions were changed by this documentation work.
 
 ## Keep stock MCP behavior compatible with Gemini JSON promotion
 
-Implementation: `67c5ac4` (0.21.19).
+Implementation: `53f8292` (0.21.19).
 
 Read-only probes of the installed stock shim confirmed inbox and peer-list tools
 return text content, with no structuredContent field. Its pinned upstream source
@@ -1185,7 +1185,7 @@ across 145 files.
 
 ## Apply the MCP compatibility fix without replacing active native sessions
 
-Implementations: `e63b2b3` (0.21.21) and `471916d` (0.21.22).
+Implementations: `fe4d33d` (0.21.21) and `fb27959` (0.21.22).
 
 The focused adapter tag now includes all account/path prerequisites; its model-free
 regression verifies file-copy actions without service handlers. A guarded opt-in
@@ -1213,7 +1213,7 @@ Ansible lint reported zero failures/warnings across 148 files.
 
 ## Preserve Gemini adapter access during focused live updates
 
-Implementation: `4a8fc99`.
+Implementation: `41ff0b1`.
 
 The newly copied adapter initially retained a home-file SELinux type, so an already
 running container could not read it. The exact adapter file now uses the same
@@ -1229,7 +1229,7 @@ not automatic wake-up, which requires separate verification.
 
 ## Verify automatic idle ask delivery after native recovery
 
-Relevant implementation: `4a8fc99`; previous acceptance documentation: `8c4e740`.
+Relevant implementation: `41ff0b1`; previous acceptance documentation: `0519d8c`.
 
 After receiving all original rollcall replies, the orchestrator sent one bounded
 readiness ask to the idle Gemini role. The stock notification path started that
@@ -1241,7 +1241,7 @@ tell-only wake behavior; those were not exercised.
 
 ## Add personal Antigravity to the existing team architecture
 
-Implementation: `43ee337`; credential/stop-state correction: `f936ccf`.
+Implementation: `301ac88`; credential/stop-state correction: `1c1cb2b`.
 
 The personal Gemini profile uses the official native Antigravity CLI, while its
 work counterpart retains Gemini CLI/Vertex. Reusing the existing Gemini container
@@ -1266,7 +1266,7 @@ Task-specific model selection remains ON HOLD BUT PRIORITY by explicit decision.
 
 ## Role account and model visibility
 
-Implementation: `6d575c8` (0.24.0).
+Implementation: `d636fa0` (0.24.0).
 
 Display the account profile and configured model with each role’s lifecycle state
 in `team status NAME`, so operators can distinguish private/work assignments
@@ -1282,7 +1282,7 @@ layout migration. Validation: 226 unit tests; production Ansible lint passed.
 
 ## Color live discussion routing labels
 
-Implementation: `101cc13` (0.25.0).
+Implementation: `2135750` (0.25.0).
 
 Use a stable color for each sender and recipient label in terminal watch output,
 so operators can follow multiple conversations without coloring message content.
@@ -1298,7 +1298,7 @@ Validation: 232 unit tests passed; production Ansible lint passed.
 
 ## Tail-style communication history
 
-Implementation: `ca641e8` (0.26.0).
+Implementation: `2898e4c` (0.26.0).
 
 Make bare watch show the last 50 communication entries and exit. Explicit -f
 follows new entries only; an optional -NUMBER selects preceding history, with
@@ -1317,7 +1317,7 @@ coverage; production Ansible lint passed.
 
 ## High-level project decision feed
 
-Implementation: `b3242fb` (0.27.0).
+Implementation: `1da98f2` (0.27.0).
 
 Provide workspace/DECISIONS.log for tail-followable, brief timestamped accepted
 decisions, agreed direction changes and blockers that require user input. The
@@ -1340,7 +1340,7 @@ idempotence and unsafe path rejection; production Ansible lint passed.
 
 ## Confined Codex native sandbox compatibility
 
-Implementation: `96eec40` (0.28.0).
+Implementation: `2fb935a` (0.28.0).
 
 The native Bubblewrap sandbox could not start inside the original constrained
 rootless container on enforcing SELinux. A dedicated Codex-only domain preserves
@@ -1376,7 +1376,7 @@ source-only work and were not deployed by this fix.
 
 ## Flexible watch arguments — 0.28.2
 
-Implementation: `10177d8`. Accept watch options before or after the single project
+Implementation: `e44327e`. Accept watch options before or after the single project
 name, and compact `-NUMBERf`, because users naturally apply familiar tail syntax.
 Preserve last-50 snapshot defaults, new-only `-f`, explicit history limits and
 zero-history support. Reject duplicate options, unsupported flags and missing or
@@ -1390,7 +1390,7 @@ already available certified collection path.
 
 ## Canonical installation root without migrating the running environment
 
-Implementation: `2cf98a7` (0.22.0).
+Implementation: `40c98bd` (0.22.0).
 
 A single `PREFIX/ac-agents` root makes future fresh installations easier to locate,
 reproduce and inspect. The prefix is a parent directory and defaults to the destination
@@ -1420,7 +1420,7 @@ socket limits, destination-prefix forwarding and rendered systemd path quoting.
 
 ## Clarify project ownership and defer CLI renaming
 
-The installation-layout implementation `2cf98a7` retains the existing command
+The installation-layout implementation `40c98bd` retains the existing command
 behavior. Operator documentation now calls its named unit `PROJECT`: one project
 owns one team, and roles identify participants within it. Current command parameters
 are documented to make this distinction explicit. A proposed shorter verb scheme
@@ -1431,7 +1431,7 @@ without a claim that the source-only layout or these documentation changes fix i
 
 ## Generate scoped permissions and communicate blocked approvals
 
-Proposal documentation: `f6f900b` (0.22.4).
+Proposal documentation: `70c686d` (0.22.4).
 
 The next permission-management design separates workspace trust and onboarding
 from tool approval. Generate operator-controlled allow/ask/deny policies per
@@ -1450,7 +1450,7 @@ while completing interactive native introductions. Documentation diff checks
 passed; new runtime behavior was neither implemented nor tested.
 ## Private passive summarizer and observer — source only
 
-Implementation: `6f6141a` (0.29.0), isolated feature branch; no deployment.
+Implementation: `e6b2a60` (0.29.0), isolated feature branch; no deployment.
 
 The user changed the role design: only orchestrator, builder, investigator and
 challenger participate in team activity. Summarizer and observer read raw
@@ -1492,20 +1492,20 @@ outcomes. This aligns with the separately documented source-layout session rule.
 
 ## Fresh integrated installation and private readers
 
-Implementation `a3d4f07` combines the approved prefix layout with the latest runtime fixes. Implementation `eded349` integrates private event-driven readers, the operator-only SUMMARY.md, and the dedicated Codex sandbox role in complete and portable deployment. This provides one current fresh-install configuration while preserving existing environments until their separate migration is approved. The authentication vault, model selection and general permission automation remain on hold. Unit checks cover the merged runtime paths and private-reader boundaries; deployed native acceptance remains a separate verification.
+Implementation `6d18113` combines the approved prefix layout with the latest runtime fixes. Implementation `515e2b5` integrates private event-driven readers, the operator-only SUMMARY.md, and the dedicated Codex sandbox role in complete and portable deployment. This provides one current fresh-install configuration while preserving existing environments until their separate migration is approved. The authentication vault, model selection and general permission automation remain on hold. Unit checks cover the merged runtime paths and private-reader boundaries; deployed native acceptance remains a separate verification.
 
-Implementation `7656f7d` aligns native provider verification and disposable deployment checks with the prefix layout and private-reader isolation. This avoids deploying a passing unit-tested source tree with an obsolete shared-observer acceptance check. The existing development VM is not changed by these integrated fresh-install commits.
+Implementation `c21218d` aligns native provider verification and disposable deployment checks with the prefix layout and private-reader isolation. This avoids deploying a passing unit-tested source tree with an obsolete shared-observer acceptance check. The existing development VM is not changed by these integrated fresh-install commits.
 
 ## Exact disposable-clone retirement and fresh replacement
 
 The encrypted retirement definition now binds its selected name to an explicit
 authorized name; other clones, the original environment and source image remain
 protected. A fresh replacement clears the previous recovery address so provisioning
-discovers only the new guest. Implementation: `4a67ef7`. Four focused retirement
+discovers only the new guest. Implementation: `4bc66f5`. Four focused retirement
 safety tests passed.
 ## Selective bootstrap authentication replication
 
-Implementation: `1c4dcd4`.
+Implementation: `bf22a56`.
 
 The operator authorized replicating enabled bootstrap model authentication from an
 existing environment to a fresh deployment, followed by separately bounded model
@@ -1533,7 +1533,7 @@ the successful fresh AAP deployment and are not claimed as completed.
 
 ## Preserve native JSON across Ansible transport
 
-Fix: `ffd661e`.
+Fix: `01ced81`.
 
 A disposable local Ansible acceptance test found that native templating could
 convert captured JSON text into a mapping before passing command stdin. Explicit
@@ -1548,17 +1548,17 @@ profiles present), missing-only restore (six restored) and an idempotent rerun
 checks used synthetic credentials and did not copy or read real authentication.
 ## Preserve source-review findings for later assessment
 
-Implementation `5eb9f18` adds thirteen review-only backlog items from the team review of snapshot `12ac41f` (0.28.1). The purpose is to preserve evidence and open questions without approving fixes or carrying rejected claims into the active defect list. Current-source reassessment and live verification are required because the installation and private-reader design have changed since that snapshot. Only generic findings were retained; raw conversation and environment information were excluded. Validation: documentation diff check passed; no runtime or system change was made.
+Implementation `613b5cf` adds thirteen review-only backlog items from the team review of snapshot `6b314eb` (0.28.1). The purpose is to preserve evidence and open questions without approving fixes or carrying rejected claims into the active defect list. Current-source reassessment and live verification are required because the installation and private-reader design have changed since that snapshot. Only generic findings were retained; raw conversation and environment information were excluded. Validation: documentation diff check passed; no runtime or system change was made.
 
 ## Consolidate parallel development for version 1.0.0
 
-The release integrates `511c76c` (fresh definition and guarded retirement), `288abfb` (selective authentication transfer, including its synthetic Ansible transport validation), and `43f476b` (review-only backlog) with integrated source `7b84c4d`. Branch release-note collisions were combined without rewriting their original commit histories. The final release snapshot is 1.0.0; these integration/documentation commits belong to that same consolidation rather than claiming separate released versions. Subsequent fixes resume patch increments. Existing environments remain unchanged by source publication. Provider auth material is excluded from Git; encrypted deployment definitions are permitted. Live AAP, auth and team acceptance remain separate checks after publication.
+The release integrates `f8a4305` (fresh definition and guarded retirement), `1cee4f2` (selective authentication transfer, including its synthetic Ansible transport validation), and `c7c656b` (review-only backlog) with integrated source `a61ce4e`. Branch release-note collisions were combined without rewriting their original commit histories. The final release snapshot is 1.0.0; these integration/documentation commits belong to that same consolidation rather than claiming separate released versions. Subsequent fixes resume patch increments. Existing environments remain unchanged by source publication. Provider auth material is excluded from Git; encrypted deployment definitions are permitted. Live AAP, auth and team acceptance remain separate checks after publication.
 
-Release implementation `160385d` reconciles the 1.0.0 source scope and incremental branch history. Documentation `09515b3` updates the active acceptance plan. The active fresh-install/transfer/native-team acceptance plan replaces obsolete fresh-test holds, while existing environment migration, external auth vault and broad permission automation remain separately constrained.
+Release implementation `036aaa4` reconciles the 1.0.0 source scope and incremental branch history. Documentation `d969bb8` updates the active acceptance plan. The active fresh-install/transfer/native-team acceptance plan replaces obsolete fresh-test holds, while existing environment migration, external auth vault and broad permission automation remain separately constrained.
 
 ## Match Mistral's native Vibe installation metadata
 
-Fix: `54434f5`.
+Fix: `b1bec8f`.
 
 Mistral work/private directories retain their public profile names, while the
 installed vendor harness identifies its flavour as `vibe`. The bootstrap transfer
@@ -1567,49 +1567,49 @@ otherwise supported source. The fixtures use the same native flavour. All 15
 focused tests, including actual local Ansible preflight, six-profile restore and
 missing-only rerun, passed again using synthetic credentials only.
 
-Release source also includes Vibe metadata compatibility implementation `9a7680c`: native Mistral installations identify their harness flavour as vibe. Synthetic protected Ansible transfer checks verify capture, missing-only restore and rerun preservation without reading live credentials.
+Release source also includes Vibe metadata compatibility implementation `8113b41`: native Mistral installations identify their harness flavour as vibe. Synthetic protected Ansible transfer checks verify capture, missing-only restore and rerun preservation without reading live credentials.
 
 The final 1.0.0 source validation passed 283 unit/fixture tests and offline production Ansible lint across 183 files with zero findings, using the pinned certified collection. The test suite includes synthetic protected Ansible authentication preflight/restore/rerun; no live auth data or VM was changed by these source checks. Native AAP/team acceptance follows the published source release.
 
 ## Fresh account preflight under non-native Ansible templating
 
-Implementation `a2a2b52` normalizes an absent passwd record to an empty list before any home inspection, and requires a valid record before resolving installation paths. Ansible core 2.16.19 converted None to an empty string, causing the previous None test to succeed and index a missing home field. A real localhost read-only regression now includes the actual preflight tasks against a nonexistent synthetic account and verifies legacy home checks are skipped. Existing-account legacy migration guards are retained. Focused layout tests and role production lint passed; no live host or credentials were changed by the reproduction.
+Implementation `2667dce` normalizes an absent passwd record to an empty list before any home inspection, and requires a valid record before resolving installation paths. Ansible core 2.16.19 converted None to an empty string, causing the previous None test to succeed and index a missing home field. A real localhost read-only regression now includes the actual preflight tasks against a nonexistent synthetic account and verifies legacy home checks are skipped. Existing-account legacy migration guards are retained. Focused layout tests and role production lint passed; no live host or credentials were changed by the reproduction.
 
 Full validation passed 284 tests and production Ansible lint across 183 files with zero findings before publishing the patch. Live AAP recovery remains a separate outcome check.
 
 ## Resume an existing clone without provisioning again
 
-Implementation `5284ae6` fills only the encrypted recovery guest address in the current test definition. The clone already existed when preflight failed; a guest_config rerun registers it from the recovery context and skips image cloning/provisioning. A future fresh run must select an unused clone identity and an empty recovery address in a separate definition. Encryption roundtrip and structural comparison verified that no other environment values changed. Ten focused portable-deployment tests and the documentation diff check passed. No VM or model authentication was changed by this source update.
+Implementation `db3baa6` fills only the encrypted recovery guest address in the current test definition. The clone already existed when preflight failed; a guest_config rerun registers it from the recovery context and skips image cloning/provisioning. A future fresh run must select an unused clone identity and an empty recovery address in a separate definition. Encryption roundtrip and structural comparison verified that no other environment values changed. Ten focused portable-deployment tests and the documentation diff check passed. No VM or model authentication was changed by this source update.
 
 ## Reproduce enabled account selection on fresh deployment
 
-Implementation `5c4d683` adds an optional explicit enabled-profile list to Ansible deployment. Previously the runtime initialized absent environment.conf by enabling every installed native profile, which differed from the intended selected-account environment. A nonempty known unique list seeds the exact existing eight-profile schema with private permissions; empty/default keeps previous behavior. Existing operator edits are preserved unless reconciliation is explicitly enabled. The encrypted test definition selects six profiles independently of source auth state. Real Ansible tests verify default no-op, exact schema/mode, rerun preservation, explicit replacement and invalid-list refusal. No credentials are copied and no services are restarted by this selection task.
+Implementation `224e5ad` adds an optional explicit enabled-profile list to Ansible deployment. Previously the runtime initialized absent environment.conf by enabling every installed native profile, which differed from the intended selected-account environment. A nonempty known unique list seeds the exact existing eight-profile schema with private permissions; empty/default keeps previous behavior. Existing operator edits are preserved unless reconciliation is explicitly enabled. The encrypted test definition selects six profiles independently of source auth state. Real Ansible tests verify default no-op, exact schema/mode, rerun preservation, explicit replacement and invalid-list refusal. No credentials are copied and no services are restarted by this selection task.
 
 Full validation passed 287 tests and offline production Ansible lint across 186 files with zero findings before publication. Target application remains an explicitly authorized separate AAP operation.
 
 ## Fresh personal-provider bootstrap dependency order
 
-Implementation `16e1ad1` installs the canonical native launcher, login-result helper and installation-path helper before Antigravity publishes agy/gemini/login command links. The personal-provider role previously assumed generic native_auth had already left the launcher behind, but generic fresh deployment invokes the provider first. Shared-source copies make both standalone and generic bootstrap independent of that accidental ordering; no forced dangling links or authentication reads are introduced. Two real Ansible regressions use a local fake artifact on empty profiles, verify functioning version-only commands and idempotent reruns, and confirm no provider token was created. Those checks and thirty native-auth/login/provider regressions pass; full production lint passes across 187 files with zero findings. Live recovery remains a separate AAP operation.
+Implementation `e8c3d9e` installs the canonical native launcher, login-result helper and installation-path helper before Antigravity publishes agy/gemini/login command links. The personal-provider role previously assumed generic native_auth had already left the launcher behind, but generic fresh deployment invokes the provider first. Shared-source copies make both standalone and generic bootstrap independent of that accidental ordering; no forced dangling links or authentication reads are introduced. Two real Ansible regressions use a local fake artifact on empty profiles, verify functioning version-only commands and idempotent reruns, and confirm no provider token was created. Those checks and thirty native-auth/login/provider regressions pass; full production lint passes across 187 files with zero findings. Live recovery remains a separate AAP operation.
 
 ## Capture authentication from historically renamed profiles
 
-Implementation `8fdf3b4` accepts only three known original installation directory labels on source capture: gemini-work/gemini, codex-priv/codex, and mistral-priv/mistral. Earlier context renames left this nonsecret metadata unchanged, so strict canonical source checks incorrectly rejected otherwise matching profiles. Compatibility is explicitly capture-only: fresh destinations still require canonical labels, and provider, native flavour, private filesystem permissions and context separation remain enforced. No source metadata or authentication is modified. Eighteen synthetic transfer tests pass, including preflight, three-label capture/restore, unchanged source files, wrong-context/provider/flavour refusal and strict destination rejection. The actual disposable Ansible transport regression remains passing; role/playbook production lint passes with zero findings. Live transfer remains a separately authorized AAP operation.
+Implementation `d4b19f2` accepts only three known original installation directory labels on source capture: gemini-work/gemini, codex-priv/codex, and mistral-priv/mistral. Earlier context renames left this nonsecret metadata unchanged, so strict canonical source checks incorrectly rejected otherwise matching profiles. Compatibility is explicitly capture-only: fresh destinations still require canonical labels, and provider, native flavour, private filesystem permissions and context separation remain enforced. No source metadata or authentication is modified. Eighteen synthetic transfer tests pass, including preflight, three-label capture/restore, unchanged source files, wrong-context/provider/flavour refusal and strict destination rejection. The actual disposable Ansible transport regression remains passing; role/playbook production lint passes with zero findings. Live transfer remains a separately authorized AAP operation.
 
 ## Explicit recovery from a known working private Codex stream
 
-Implementation `4e8c6f2` introduces a separate protected Ansible recovery role for an explicitly selected archived builder cache. A bootstrap cache can remain structurally valid yet be rejected by server routing, while a later user-authenticated role session of the same identity has a separate working stream. Selection requires a named known session rather than file age. Source binding, private ownership/modes, no-follow traversal, canonical enabled destination and stopped native/container writers are checked. Account IDs, JWT subjects and issuers must match, and the candidate access must be unexpired. Validation-only is the default and checks both endpoints without replacement. Explicit execution atomically replaces only the existing matching-account .codex/auth.json; source/archive remain unchanged. Local audit stores safe named-stream provenance and unverified model access only. Six recovery regressions include actual disposable Ansible preflight/replacement/rerun and mismatch refusal; eighteen existing transfer regressions pass too. Full production lint passes across 195 files with zero findings. No live model request or credential change was made by source validation.
+Implementation `b70e435` introduces a separate protected Ansible recovery role for an explicitly selected archived builder cache. A bootstrap cache can remain structurally valid yet be rejected by server routing, while a later user-authenticated role session of the same identity has a separate working stream. Selection requires a named known session rather than file age. Source binding, private ownership/modes, no-follow traversal, canonical enabled destination and stopped native/container writers are checked. Account IDs, JWT subjects and issuers must match, and the candidate access must be unexpired. Validation-only is the default and checks both endpoints without replacement. Explicit execution atomically replaces only the existing matching-account .codex/auth.json; source/archive remain unchanged. Local audit stores safe named-stream provenance and unverified model access only. Six recovery regressions include actual disposable Ansible preflight/replacement/rerun and mismatch refusal; eighteen existing transfer regressions pass too. Full production lint passes across 195 files with zero findings. No live model request or credential change was made by source validation.
 
 ## Recover a refresh-capable private Claude session explicitly
 
-Implementation `c88bdcd` adds a separate private Claude recovery role without changing the verified Codex flow. An explicitly selected archived private-connector session can retain a refresh token missing from an older bootstrap cache. Source HOME/.claude.json is bound explicitly rather than discovered by fallback; account UUID and organization UUID must both match preserved destination .claude/.claude.json metadata. Claude opaque credentials are checked structurally, not interpreted as JWTs; an expired access token is allowed only with a candidate refresh token present, leaving native refresh and usable-access confirmation to a separately authorized bounded request. The default validates both endpoints without replacement. Explicit execution replaces only the existing private credential after permission/context/writer and account checks. Source/archive and both account metadata files remain unchanged. Four Claude regressions include actual disposable protected Ansible validation/replacement/rerun and mismatch refusal; six existing Codex recovery regressions still pass. Focused role/playbook production lint passes with zero findings. No provider requests or live credentials changes occurred during source validation.
+Implementation `cd5b79c` adds a separate private Claude recovery role without changing the verified Codex flow. An explicitly selected archived private-connector session can retain a refresh token missing from an older bootstrap cache. Source HOME/.claude.json is bound explicitly rather than discovered by fallback; account UUID and organization UUID must both match preserved destination .claude/.claude.json metadata. Claude opaque credentials are checked structurally, not interpreted as JWTs; an expired access token is allowed only with a candidate refresh token present, leaving native refresh and usable-access confirmation to a separately authorized bounded request. The default validates both endpoints without replacement. Explicit execution replaces only the existing private credential after permission/context/writer and account checks. Source/archive and both account metadata files remain unchanged. Four Claude regressions include actual disposable protected Ansible validation/replacement/rerun and mismatch refusal; six existing Codex recovery regressions still pass. Focused role/playbook production lint passes with zero findings. No provider requests or live credentials changes occurred during source validation.
 
 ## Recover a recognized token-cleared private Claude target
 
-Implementation `ed7009b` handles the exact native destination state left by a failed expired-auth request: empty access/refresh strings with the seven correctly typed native OAuth fields retained. The previous recovery parser required an existing usable credential and therefore refused the cache it was intended to repair. The exception is destination-only and rejects arbitrary empty/malformed records or API-key additions. Source refresh-bearing validation, matching preserved account/organization metadata, context, private ownership/modes, no-follow paths and writer guards remain mandatory. Helper errors expose only static allowlisted refusal codes; protected logging stays enabled. Twelve focused tests plus one additional diagnostic-redaction regression pass, including actual disposable Ansible cleared-target validation/replacement/rerun, account mismatch refusal and malformed target preservation. Role/playbook production lint passes with zero findings. Live source and target credentials were not changed by diagnosis or source validation.
+Implementation `403a847` handles the exact native destination state left by a failed expired-auth request: empty access/refresh strings with the seven correctly typed native OAuth fields retained. The previous recovery parser required an existing usable credential and therefore refused the cache it was intended to repair. The exception is destination-only and rejects arbitrary empty/malformed records or API-key additions. Source refresh-bearing validation, matching preserved account/organization metadata, context, private ownership/modes, no-follow paths and writer guards remain mandatory. Helper errors expose only static allowlisted refusal codes; protected logging stays enabled. Twelve focused tests plus one additional diagnostic-redaction regression pass, including actual disposable Ansible cleared-target validation/replacement/rerun, account mismatch refusal and malformed target preservation. Role/playbook production lint passes with zero findings. Live source and target credentials were not changed by diagnosis or source validation.
 
 ## Prepare isolated native setup before the first project turn
 
-Implementation `5f7b3cb` addresses fresh projects stopping at vendor onboarding
+Implementation `d4ecf6d` addresses fresh projects stopping at vendor onboarding
 while their copied authentication is already present. Project creation seeds
 Claude theme/onboarding and exact workspace trust, and Gemini CLI workspace trust
 and container update defaults. Launch reconciles missing defaults after account
@@ -1642,7 +1642,7 @@ repository still excludes model credential payloads; plaintext credentials,
 password files and decrypted output remain excluded from Git. This change makes
 repository access the intended project boundary while retaining encryption.
 
-Documentation implementation `4b45437` updates active collaboration/security rules,
+Documentation implementation `20af2ae` updates active collaboration/security rules,
 operator guides, authentication documentation and TODO status. Companion capture
 implementation `9058235` saves the explicitly selected original bootstrap stream
 and its existing deployment definition with the external vpf. Six enabled profiles
@@ -1662,7 +1662,7 @@ This is not recorded as successful restart or current provider authentication.
 
 ## Explain unavailable role sessions before attaching
 
-Implementation `133eb93` checks the requested role container and native tmux
+Implementation `7bf1d51` checks the requested role container and native tmux
 session before interactive attach. Previously a project that had only been
 created produced a raw Podman missing-container error. Missing/stopped projects
 now explain the start command; missing roles in otherwise running projects explain
@@ -1679,7 +1679,7 @@ passed. Target application is a focused configuration update, not a VM reprovisi
 
 ## Restore the exact native conversation after project stop/start
 
-Implementation `333b74e` preserves each role's exact native session identity in
+Implementation `7e740fa` preserves each role's exact native session identity in
 its private, mounted account home. Previously the files survived but restart
 opened new conversations. Claude and Codex live identities come from native
 process metadata; Gemini uses a native SessionStart metadata hook, with unique
@@ -1705,7 +1705,7 @@ provider inference round trip after restart.
 
 ## Add native Mistral work and private team agents
 
-Implementation `023cbed` adds Mistral Vibe as an alternative for each visible team
+Implementation `8cd4e57` adds Mistral Vibe as an alternative for each visible team
 role, with separate work/private native homes, authentication, prompts and saved
 conversation identities. Passive readers and restricted external connectors stay
 on Claude to retain their existing tool boundaries. The default team assignments
@@ -1739,7 +1739,7 @@ entitlement or authenticated model access for either account.
 
 The operator requested the `filename_vault.yml` pattern for encrypted configuration.
 Implementation follows the same convention in both the application repository and
-its private companion store. Application implementation `d5f7ae9` renames
+its private companion store. Application implementation `7797d68` renames
 five tracked Vault files and updates operational playbook paths, current operator
 examples and lint exclusions. The companion implementation `751ce89` renames its
 three encrypted snapshots and updates its README and repository rules.
@@ -1769,7 +1769,7 @@ no model calls ran, so this does not claim current authenticated model access.
 
 ## Separate active encrypted configuration from application code
 
-Implementation `bdf458e` removes five active encrypted deployment/recovery inputs
+Implementation `005b403` removes five active encrypted deployment/recovery inputs
 from the current application tree. Their unchanged ciphertext is committed under
 `vaults/configuration` in the private companion store, implemented by `bf46465`
 there. The original bootstrap/deployment snapshots and CaC capture remain separate
@@ -1809,7 +1809,7 @@ the read-only validation playbook remains available for future checks.
 
 The operator requested that complete deployments restore model authentication
 from encrypted companion Git rather than require a source VM or repeated logins.
-Implementation `bf45d18` adds a separate missing-only restore role after native
+Implementation `9e144ed` adds a separate missing-only restore role after native
 installation, environment selection and Vertex configuration. Enabled destination
 profiles must all have snapshot entries before any credential is written. Existing
 credentials and work/private account boundaries are preserved; project sessions,
@@ -1835,15 +1835,15 @@ on explicitly selected templates. Other credentials and prior schema objects are
 preserved. Deployments receive ciphertext plus normal Vault credentials, never
 the maintenance Git key or controller token.
 
-Fix `0d04576` makes source capture/cleanup explicitly use SSH and resolves the
+Fix `4ac2f71` makes source capture/cleanup explicitly use SSH and resolves the
 existing-target restore runtime account from the connector environment. Fix
-`0c78750` injects a trusted controller CA bundle into the refresh execution
+`d869a8a` injects a trusted controller CA bundle into the refresh execution
 environment while keeping certificate checks enabled, and verifies a dedicated
 non-superuser/non-auditor maintenance identity. Setup grants Admin only on the
 snapshot credential; its GitHub deploy key is writable only for the companion
 repository. No global roles or trust bypasses are introduced. Only unused
 maintenance resources created during this implementation were removed.
-Fix `1baeb89` excludes temporary inventory binding from persistent change counts.
+Fix `3b93aba` excludes temporary inventory binding from persistent change counts.
 
 Validation includes the full secret-free suite, production Ansible lint and
 synthetic encrypted restore/refresh safeguards. Actual AAP restoration into a
@@ -1856,3 +1856,25 @@ correctly skipped; changed-input encryption was tested synthetically. The
 maintenance setup repeated with zero changes. Temporary acceptance resources
 were removed. No provider requests, team restarts or VM provisioning were part
 of this authentication integration test.
+
+## Remove deployment and recovery Vault files from code history
+
+The operator requested removal of the old encrypted environment, fresh-test,
+retirement and provider-recovery configuration files from the code repository's
+entire history. Both historical filename conventions were removed from all
+published branches and tags. Current encrypted configuration and authentication
+snapshots remain in the private companion repository; repository visibility and
+credential boundaries are unchanged. This extends the external-configuration
+migration implemented by `005b403`.
+
+The history rewrite preserves every commit and parent relationship. Validation
+compared all 247 rewritten commit trees with their originals and confirmed that
+only the ten selected Vault paths were removed. The rewritten pre-documentation
+main commit is `3459e0ecc45ba186192233aa43e770a68530d6a5`; it retains the same
+current application tree. An external encrypted recovery backup was verified
+before publication, and local working changes, staging and stashes were preserved.
+
+Old clones must be replaced or independently scrubbed before pushing again.
+Historical releases keep their code but require separately supplied environment
+configuration. Rewriting published refs does not itself purge GitHub's cached
+objects or independently retained copies.

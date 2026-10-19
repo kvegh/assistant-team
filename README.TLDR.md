@@ -12,6 +12,10 @@ those isolated homes; Codex trusts only its three verified generated broker hook
 Authentication and normal tool approvals remain separate.
 Existing explicit distrust is preserved.
 
+Version 1.4.5 removes old deployment/recovery Vault files from branch and tag
+history. Configuration stays in the private companion repository. Replace or
+scrub older clones before pushing; do not merge their previous history.
+
 ## Private passive readers
 
 Team: orchestrator + builder/investigator/challenger. Summarizer/observer
