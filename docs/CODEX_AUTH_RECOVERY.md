@@ -7,10 +7,17 @@ an automatic login refresh, or generic project-to-bootstrap copying.
 
 A dedicated AAP job uses inventory group `native_auth_destinations`, source and
 destination machine access, and a Vault credential. Set
-`codex_auth_recovery_config_file` to the encrypted binding definition. The provided
-`vars/codex_auth_recovery_vault.yml` contains only encrypted environment bindings;
+`codex_auth_recovery_config_file` to an explicit encrypted binding definition when
+overriding the default. Otherwise the shared resolver uses AAP-injected
+`AC_AGENTS_CODEX_AUTH_RECOVERY_VAULT_FILE`, then the sibling companion file
+`../assistant-team-secrets/vaults/configuration/codex_auth_recovery_vault.yml`.
+Use `assistant_secret_config_root` for a different private checkout layout. This
+Vault contains only encrypted environment bindings;
 model authentication never enters this code repository; encrypted snapshots
-are permitted only in the private companion secrets repository.
+are permitted only in the private companion secrets repository. AAP also needs the
+synchronized configuration snapshot credential alongside its existing Vault
+credential. Rerun `src/sync_secret_configs.yml` after committing changed bindings;
+this synchronization reads ciphertext only and does not copy model login state.
 
 | Setting | Meaning |
 | --- | --- |

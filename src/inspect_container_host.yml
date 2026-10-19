@@ -3,11 +3,16 @@
   hosts: localhost
   gather_facts: false
   no_log: true
-  tasks:
+  pre_tasks:
     - name: Load encrypted environment without reserved variable collisions
-      ansible.builtin.include_vars:
-        file: ../vars/environment_vault.yml
-        name: assistant_environment
+      ansible.builtin.include_role:
+        name: secret_config
+        apply:
+          tags: [always]
+      vars:
+        secret_config_name: environment
+        secret_config_namespace: assistant_environment
+      tags: [always]
     - name: Add the project guest
       ansible.builtin.add_host:
         name: assistant_container_host

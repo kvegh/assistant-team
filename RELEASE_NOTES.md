@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.3.0
+
+Move active encrypted deployment/recovery inputs into the companion secrets repository. Add shared external configuration loading and repeatable AAP ciphertext-file synchronization, preserving separate Vault credentials and existing job-template credentials.
+
 ## 1.2.3
 
 Document Vault filename migration and successful model-free Mistral integration checks for both account contexts.

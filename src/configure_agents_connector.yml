@@ -4,11 +4,16 @@
   tags: [always]
   gather_facts: false
   no_log: true
-  tasks:
+  pre_tasks:
     - name: Load the encrypted deployment definition
-      ansible.builtin.include_vars:
-        file: ../vars/environment_vault.yml
-        name: assistant_environment
+      ansible.builtin.include_role:
+        name: secret_config
+        apply:
+          tags: [always]
+      vars:
+        secret_config_name: environment
+        secret_config_namespace: assistant_environment
+      tags: [always]
     - name: Register the destination in transient inventory
       ansible.builtin.add_host:
         name: assistant_connector_host

@@ -143,29 +143,63 @@ generic placeholders. Never commit the Vault password file or decrypted output.
 
 ## Vault setup
 
-Ansible and Git must already be available. Run commands from this repository.
-Supply an external password file explicitly using `--vault-password-file` or
-`ANSIBLE_VAULT_PASSWORD_FILE`; the checkout does not assume a workspace layout.
-The password file stays outside this repository; do not copy it here.
-AAP supplies its own attached Vault credential without a checkout password path.
-Ansible uses a project-specific temporary directory under `/tmp` for local work.
+All five active encrypted deployment/recovery inputs live in the private companion
+checkout at `../assistant-team-secrets/vaults/configuration/`, outside this code
+repository. Their names are `environment_vault.yml`, `fresh_test_vault.yml`,
+`retire_test_vault.yml`, `claude_auth_recovery_vault.yml` and
+`codex_auth_recovery_vault.yml`. Existing encrypted snapshots elsewhere in that
+companion repository are preserved separately; they are not these active inputs.
+
+Ansible and Git must already be available. Keep the Vault password file outside
+Git and supply it using `--vault-password-file` or `ANSIBLE_VAULT_PASSWORD_FILE`.
+AAP uses its attached Vault credential. This migration preserves ciphertext and
+the existing encryption password; it does not rotate secrets or rewrite old Git
+history, which still contains the previously committed encrypted files.
 
 ```bash
 export ANSIBLE_VAULT_PASSWORD_FILE=/private/vpf
-ansible-vault edit vars/environment_vault.yml
-ansible-vault encrypt path/to/environment-specific.yml
-ansible-vault view vars/environment_vault.yml
+ansible-vault edit ../assistant-team-secrets/vaults/configuration/environment_vault.yml
+ansible-vault encrypt /private/environment-specific_vault.yml
 ```
 
-The last command displays plaintext locally; do not capture or commit its output.
+Playbooks resolve an explicit configuration-file override first, then the matching
+`AC_AGENTS_*_VAULT_FILE` injected environment variable, then the companion checkout.
+Set `assistant_secret_config_root` to another private configuration directory when
+using a different checkout layout. Missing files fail clearly; there is no fallback
+to former files in this code repository. Encrypted files use `NAME_vault.yml`.
 
-Encrypted configuration files use the `NAME_vault.yml` naming convention in this
-repository and the private companion secrets repository. Renaming preserves the
-encrypted contents and Vault ID; it does not rekey secrets.
+### AAP configuration snapshots
+
+AAP jobs receive the five ciphertext files through one custom credential, alongside
+the existing Machine and Vault credentials. The custom credential injects file
+paths, not decrypted values. No additional runtime GitHub token or repository
+checkout is needed inside a deployment job.
+
+After editing and committing the companion configuration files, synchronize their
+ciphertext snapshots into AAP:
+
+```bash
+export CONTROLLER_HOST=https://controller.example.invalid
+export CONTROLLER_OAUTH_TOKEN  # supplied securely by the operator
+export CONTROLLER_ORGANIZATION=ORG_ID
+ansible-playbook src/sync_secret_configs.yml
+```
+
+Use `controller_secret_configs_checkout` when the secrets checkout is not the
+standard sibling directory. An explicit `controller_secret_configs_job_templates`
+list of template IDs also attaches the snapshot credential to those templates,
+preserving their other credentials. Synchronization uses the existing authorized
+controller token, never decrypts the Vault files, and tracks their source Git
+revision and checksums for repeatable updates. The secrets repository remains the
+authoritative source: repeat synchronization after configuration changes; AAP's
+injected files are a deployment snapshot, not an automatically refreshed checkout.
+The snapshot credential does not replace the Vault-password credential.
 
 ## Layout
 
-- `vars/environment_vault.yml`: encrypted environment configuration.
+- `../assistant-team-secrets/vaults/configuration/`: external encrypted deployment/recovery inputs.
+- `src/roles/secret_config/`: common protected external-file resolver.
+- `src/sync_secret_configs.yml`: synchronize ciphertext snapshots into AAP credentials.
 - `src/deploy_linux_vm.yml`: calls the provisioning, guest verification, and update roles.
 - `src/roles/linux_vm/`: image cloning, cleanup, identity reset, boot, and guest discovery.
 - `src/roles/linux_guest/`: guest access, identity, resource, and cleanup verification.
@@ -178,7 +212,7 @@ encrypted contents and Vault ID; it does not rekey secrets.
 - `tests/test_deployment.py`: launch-validation tests without VM changes.
 - `tests/test_clone_cleanup.py`: checks that cleanup preserves protected accounts.
 - `tests/test_identity_reset.py`: identity reset with a missing legacy D-Bus directory.
-- `ansible.cfg`: local Vault password-file configuration.
+- `ansible.cfg`: project Ansible defaults; Vault passwords are supplied externally.
 - `design_decisions_history.md`: decisions and implementation commit references.
 
 Add application source in `src/`, tests in `tests/`, and static assets in `assets/`
@@ -198,7 +232,7 @@ artifacts report allocated RAM, guest-visible RAM, and the crash reservation sep
 Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
 Defaults are 2 vCPUs, 4096 MiB RAM, and a 20 GiB disk. The VM name defaults to
 the encrypted configuration. Environment settings and guest credentials are
-under `provisioning` in `vars/environment_vault.yml`. AAP must supply the Vault
+under `provisioning` in the companion `configuration/environment_vault.yml`. AAP must supply the configuration snapshot, Vault
 and hypervisor machine credentials; its project needs a GitHub source-control
 credential with read access to this private repository over HTTPS.
 
@@ -262,7 +296,7 @@ the encrypted configuration. Application design has not started yet.
 Check that encrypted configuration decrypts without displaying its contents:
 
 ```bash
-ansible-vault view vars/environment_vault.yml >/dev/null
+ansible-vault view ../assistant-team-secrets/vaults/configuration/environment_vault.yml >/dev/null
 git diff --check
 ansible-playbook --syntax-check -i 'localhost,' src/deploy_linux_vm.yml
 python3 -m unittest discover -s tests -v
@@ -847,7 +881,7 @@ The immutable versioned SDK archive is checksum-pinned. Its payload was verified
 
 ## AAP-only fresh deployment validation
 
-`src/deploy_complete_linux_vm.yml` provisions an isolated VM from its own Vault-encrypted definition, fully updates it, grows the cloned root filesystem and installs the entire environment through normal AAP jobs. The committed test definition is separate from the existing deployment. Use a dedicated job template with the hypervisor inventory, machine and Vault credentials, and the pinned certified collection available in its execution environment. Do not retain obsolete disk-size overrides.
+`src/deploy_complete_linux_vm.yml` provisions an isolated VM from its own Vault-encrypted definition, fully updates it, grows the cloned root filesystem and installs the entire environment through normal AAP jobs. The companion configuration directory keeps the test definition separate from the existing deployment. Use a dedicated job template with the hypervisor inventory, machine and Vault credentials, and the pinned certified collection available in its execution environment. Do not retain obsolete disk-size overrides.
 
 After provisioning succeeds, recovery must skip the `provision` tag: record the discovered guest address in the encrypted `recovery.guest_ip` field and rerun with `guest_config`. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. The fresh AAP deployment originally completed through configuration recovery job 1376. A later clean end-to-end run, job 1394, completed in one pass at version 0.9.1 with no recovery or retry; no provider credentials or model calls were used. See [DEPLOYMENT_TEST_RESULTS.md](DEPLOYMENT_TEST_RESULTS.md) for the tested snapshot, safety checks and limits. AAP project revision metadata is recorded when available.
 

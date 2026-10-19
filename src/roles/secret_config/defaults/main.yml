@@ -1,0 +1,11 @@
+---
+secret_config_default_root: "{{ playbook_dir }}/../../assistant-team-secrets/vaults/configuration"
+secret_config_name: ''
+secret_config_namespace: ''
+secret_config_file: ''
+secret_config_environment_variables:
+  environment: AC_AGENTS_ENVIRONMENT_VAULT_FILE
+  fresh_test: AC_AGENTS_FRESH_TEST_VAULT_FILE
+  retire_test: AC_AGENTS_RETIRE_TEST_VAULT_FILE
+  claude_auth_recovery: AC_AGENTS_CLAUDE_AUTH_RECOVERY_VAULT_FILE
+  codex_auth_recovery: AC_AGENTS_CODEX_AUTH_RECOVERY_VAULT_FILE

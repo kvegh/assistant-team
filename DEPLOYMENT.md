@@ -27,3 +27,37 @@ python3 src/deploy-environment.py --run-directory /private/deployment-run --expo
 ```
 
 Share only the prescribed metadata bundle. It excludes Vaults, target access details, raw Ansible output, account credentials, databases and conversations. After a deployment attempt the runner transfers allowlisted stage/result metadata to runtime `~/environment-logs` when the target and runtime account are reachable. Otherwise the protected controller spool remains available; use `python3 src/deploy-environment.py --vault-file /private/destination_vault.yml --vault-password-file /private/vpf --transfer-run /private/deployment-logs/RUN_ID` to replay that earlier run’s safe metadata once the target is ready (add `--local` for same-host deployment). The target retains 32 deployment runs and runtime events rotate at 1 MiB across four files; the controller retains ten runs. Raw output is excluded from target transfer. `~/team diagnostics --export /private/environment-metadata.tar.gz` exports prescribed target metadata only. Fresh-VM end-to-end installation has not yet been performed by this development session.
+
+## Shared deployment and recovery definitions
+
+The standard VM deployment and recovery playbooks load five active Vault-encrypted
+inputs from the sibling private `assistant-team-secrets/vaults/configuration/`
+checkout. They are no longer tracked under this application's `vars/` directory.
+The standalone runner above still accepts its operator-owned `--vault-file`; its
+portable destination schema and local/remote deployment choices are unchanged.
+
+For standard playbooks, explicit configuration-file overrides take precedence over
+matching `AC_AGENTS_*_VAULT_FILE` environment paths injected by AAP, followed by the
+companion checkout. Use `assistant_secret_config_root` to select another directory.
+Missing configuration is an error rather than a fallback to the application repo.
+
+AAP uses one custom configuration-snapshot credential with five encrypted file
+inputs, alongside existing Machine and Vault credentials. Refresh these snapshots
+from the authoritative companion checkout after committing configuration changes:
+
+```sh
+export CONTROLLER_HOST=https://controller.example.invalid
+export CONTROLLER_OAUTH_TOKEN  # supplied securely by the operator
+export CONTROLLER_ORGANIZATION=ORG_ID
+ansible-playbook src/sync_secret_configs.yml
+```
+
+Set `controller_secret_configs_checkout` for a different checkout location. Pass an
+explicit `controller_secret_configs_job_templates` list of template IDs to attach
+the snapshot credential while preserving other associations. Synchronization uses
+the operator's existing controller authorization, transfers ciphertext only, and
+records source revision and checksums for idempotence. The Vault password remains
+in its separate AAP credential or the operator's external password file. No new
+runtime GitHub token, decrypted configuration file, automatic credential restore
+or model request is introduced. Existing companion snapshots are preserved; old
+application Git history is not rewritten and still contains its former ciphertext.

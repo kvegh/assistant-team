@@ -3,9 +3,25 @@
   hosts: native_auth_destinations
   become: true
   gather_facts: false
-  vars_files:
-    - ../vars/environment_vault.yml
-    - "{{ native_auth_transfer_config_file | default('../vars/environment_vault.yml') }}"
+  pre_tasks:
+    - name: Load the external encrypted environment
+      ansible.builtin.include_role:
+        name: secret_config
+        apply:
+          tags: [always]
+      vars:
+        secret_config_name: environment
+      tags: [always]
+    - name: Load an explicitly selected encrypted transfer definition
+      ansible.builtin.include_role:
+        name: secret_config
+        apply:
+          tags: [always]
+      vars:
+        secret_config_name: environment
+        secret_config_file: "{{ native_auth_transfer_config_file }}"
+      when: native_auth_transfer_config_file | default('') | length > 0
+      tags: [always]
   roles:
     - role: native_auth_transfer
       tags: [native_auth_transfer]

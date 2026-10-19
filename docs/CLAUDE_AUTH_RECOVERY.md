@@ -4,10 +4,18 @@
 Claude session to the matching installed private account. This is separate from
 Codex recovery and leaves that flow unchanged. Use a dedicated AAP job with
 inventory group `native_auth_destinations`, endpoint machine access and Vault.
-Set `claude_auth_recovery_config_file` to the encrypted definition, such as
-`../vars/claude_auth_recovery_vault.yml`. Authentication files never enter this code repository; the tracked Vault
-contains only environment bindings. Encrypted authentication snapshots may live
-only in the explicitly authorized private companion secrets repository.
+The encrypted definition is
+`../assistant-team-secrets/vaults/configuration/claude_auth_recovery_vault.yml`
+in the sibling companion checkout. The shared resolver uses
+`claude_auth_recovery_config_file` first, then AAP-injected
+`AC_AGENTS_CLAUDE_AUTH_RECOVERY_VAULT_FILE`, then that companion location. Set
+`assistant_secret_config_root` for another private checkout layout. Authentication
+files never enter this code repository; this configuration Vault contains only
+environment bindings. Encrypted authentication snapshots may live
+only in the explicitly authorized private companion secrets repository. AAP requires
+the synchronized configuration snapshot credential as well as the existing Vault
+credential; rerun `src/sync_secret_configs.yml` after committing changed bindings.
+Snapshot synchronization never decrypts configuration or transfers a login cache.
 
 Bindings use the `claude_auth_recovery_` prefix: `source_host`, `source_role`,
 `source_home`, `source_metadata`, `destination_profiles_root`,

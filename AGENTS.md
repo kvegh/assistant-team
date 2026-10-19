@@ -10,6 +10,10 @@ rewriting unrelated working code during an active deployment.
 Direct SSH access with sudo to the project VM is authorized for project work.
 Keep deployment access credentials and environment-specific values in Ansible Vault.
 Model authentication must remain outside this application/code repository.
+Active encrypted deployment and recovery configurations also belong in the
+private companion repository under `vaults/configuration`, not this code tree.
+Load them through the shared external configuration role; refresh AAP's encrypted
+file snapshots after committed changes and retain separate Vault credentials.
 The operator explicitly permits Ansible Vault-encrypted authentication snapshots
 in the private companion repository assistant-team-secrets only. Never commit
 plaintext credentials, decrypted output or the Vault password file anywhere.

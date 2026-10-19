@@ -393,7 +393,8 @@ not a team command. It preflights enabled profiles and can restore only missing
 allowlisted credentials to a fresh environment. Target-local
 `environment-logs/auth-transfer/latest.json` reports safe status and the exact
 future-vault material manifest. It does not prove provider access or copy project
-role sessions; no credentials belong in Git, even encrypted.
+role sessions; credentials never enter the application repository. Explicitly
+authorized encrypted snapshots belong only in the private companion secrets repo.
 
 Initial account selection can be supplied through encrypted Ansible deployment enabled_profiles. Empty preserves automatic installed-profile selection; a nonempty list seeds only missing environment.conf by default. Explicit project_framework_reconcile_profiles=true replaces existing selection and must be chosen by the operator. Neither operation copies credentials or restarts teams.
 
@@ -423,3 +424,22 @@ attachable for diagnosis even when another role or service has failed.
 
 Help groups environment/discovery commands and project commands separately,
 with entries alphabetized by command name (ignoring leading option hyphens).
+
+## Deployment configuration storage
+
+The five active deployment and recovery definitions are encrypted files in the
+private companion `assistant-team-secrets/vaults/configuration/`, outside the
+application repository. Existing bootstrap/capture snapshots are separate and
+preserved. The source playbooks resolve explicit file overrides first, matching
+`AC_AGENTS_*_VAULT_FILE` paths second, and the local sibling checkout last;
+`assistant_secret_config_root` supports another private checkout layout.
+
+AAP receives ciphertext files from one custom configuration-snapshot credential
+and decrypts them only with the separately attached Vault-password credential.
+After committing changes to the companion repository, the operator reruns
+`src/sync_secret_configs.yml` from the code checkout with authorized controller
+credentials. This idempotent synchronization records source revision/checksums,
+never decrypts the files, and needs no additional runtime GitHub token. AAP copies
+are snapshots, so changes require synchronization before a job uses them. Vault
+passwords and decrypted output remain outside Git; historical encrypted files in
+old application commits are retained without rewriting history.

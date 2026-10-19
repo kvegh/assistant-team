@@ -1,0 +1,37 @@
+---
+controller_secret_configs_host: "{{ lookup('ansible.builtin.env', 'CONTROLLER_HOST') }}"
+controller_secret_configs_token: "{{ lookup('ansible.builtin.env', 'CONTROLLER_OAUTH_TOKEN') }}"
+controller_secret_configs_organization: "{{ lookup('ansible.builtin.env', 'CONTROLLER_ORGANIZATION') }}"
+controller_secret_configs_checkout: "{{ playbook_dir }}/../../assistant-team-secrets"
+controller_secret_configs_type_name: Assistant Team encrypted configuration files
+controller_secret_configs_credential_name: Assistant Team configuration snapshots
+controller_secret_configs_job_templates: []
+controller_secret_configs_files:
+  environment: environment_vault.yml
+  fresh_test: fresh_test_vault.yml
+  retire_test: retire_test_vault.yml
+  claude_auth_recovery: claude_auth_recovery_vault.yml
+  codex_auth_recovery: codex_auth_recovery_vault.yml
+controller_secret_configs_inputs:
+  fields:
+    - {id: environment_vault, type: string, label: Encrypted environment configuration, secret: true, multiline: true}
+    - {id: fresh_test_vault, type: string, label: Encrypted fresh VM configuration, secret: true, multiline: true}
+    - {id: retire_test_vault, type: string, label: Encrypted retirement configuration, secret: true, multiline: true}
+    - {id: claude_auth_recovery_vault, type: string, label: Encrypted Claude recovery configuration, secret: true, multiline: true}
+    - {id: codex_auth_recovery_vault, type: string, label: Encrypted Codex recovery configuration, secret: true, multiline: true}
+    - {id: source_revision, type: string, label: Secrets repository revision}
+    - {id: ciphertext_sha256, type: string, label: Ciphertext set checksum}
+  required: [environment_vault, fresh_test_vault, retire_test_vault, claude_auth_recovery_vault, codex_auth_recovery_vault]
+controller_secret_configs_injectors:
+  file:
+    template.environment: !unsafe '{{ environment_vault }}'
+    template.fresh_test: !unsafe '{{ fresh_test_vault }}'
+    template.retire_test: !unsafe '{{ retire_test_vault }}'
+    template.claude_auth_recovery: !unsafe '{{ claude_auth_recovery_vault }}'
+    template.codex_auth_recovery: !unsafe '{{ codex_auth_recovery_vault }}'
+  env:
+    AC_AGENTS_ENVIRONMENT_VAULT_FILE: !unsafe '{{ tower.filename.environment }}'
+    AC_AGENTS_FRESH_TEST_VAULT_FILE: !unsafe '{{ tower.filename.fresh_test }}'
+    AC_AGENTS_RETIRE_TEST_VAULT_FILE: !unsafe '{{ tower.filename.retire_test }}'
+    AC_AGENTS_CLAUDE_AUTH_RECOVERY_VAULT_FILE: !unsafe '{{ tower.filename.claude_auth_recovery }}'
+    AC_AGENTS_CODEX_AUTH_RECOVERY_VAULT_FILE: !unsafe '{{ tower.filename.codex_auth_recovery }}'

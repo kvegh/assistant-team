@@ -177,3 +177,15 @@ Failures explain the next command; attach never starts anything implicitly.
 
 Help groups environment/discovery commands and project commands separately,
 with entries alphabetized by command name (ignoring leading option hyphens).
+
+## Deployment configuration storage
+
+The five active deployment/recovery Vault files live in the private companion
+`assistant-team-secrets/vaults/configuration/`, outside the application repository.
+Local playbooks use the sibling checkout or `assistant_secret_config_root`; explicit
+file overrides take precedence over AAP-injected configuration file paths. AAP uses
+one configuration-snapshot credential plus the existing Vault-password credential.
+After changing and committing those files, run `src/sync_secret_configs.yml` from
+the code checkout with authorized controller credentials to refresh AAP's ciphertext
+snapshots. Synchronization never decrypts the files. See the source repository's
+README for deployment commands; the runtime team commands do not manage secrets.

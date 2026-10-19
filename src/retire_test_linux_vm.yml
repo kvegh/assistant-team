@@ -3,11 +3,16 @@
   hosts: localhost
   gather_facts: false
   no_log: true
-  tasks:
+  pre_tasks:
     - name: Read the explicitly selected test clone definition
-      ansible.builtin.include_vars:
-        file: ../vars/retire_test_vault.yml
-        name: retired_definition
+      ansible.builtin.include_role:
+        name: secret_config
+        apply:
+          tags: [always]
+      vars:
+        secret_config_name: retire_test
+        secret_config_namespace: retired_definition
+      tags: [always]
 
 - name: Safely retire only the selected disposable Linux test clone
   hosts: hypervisor

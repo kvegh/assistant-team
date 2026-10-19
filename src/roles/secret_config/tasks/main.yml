@@ -1,0 +1,48 @@
+---
+- name: Validate the requested external configuration
+  ansible.builtin.assert:
+    that:
+      - secret_config_name in secret_config_environment_variables
+      - secret_config_namespace is string
+      - secret_config_file is string
+    fail_msg: Select a supported external encrypted configuration.
+    quiet: true
+
+- name: Resolve the external encrypted configuration file
+  ansible.builtin.set_fact:
+    _secret_config_selected_file: >-
+      {{ secret_config_file if secret_config_file | length > 0 else
+         (lookup('ansible.builtin.env', secret_config_environment_variables[secret_config_name])
+          or (assistant_secret_config_root | default(secret_config_default_root))
+             ~ '/' ~ secret_config_name ~ '_vault.yml') }}
+  no_log: true
+
+- name: Locate the configuration on the Ansible controller
+  ansible.builtin.stat:
+    path: >-
+      {{ _secret_config_selected_file if _secret_config_selected_file is abs else
+         playbook_dir ~ '/' ~ _secret_config_selected_file }}
+  delegate_to: localhost
+  connection: local
+  become: false
+  register: _secret_config_stat
+  no_log: true
+
+- name: Require an accessible external encrypted configuration
+  ansible.builtin.assert:
+    that:
+      - _secret_config_stat.stat.exists | default(false)
+      - _secret_config_stat.stat.isreg | default(false)
+      - _secret_config_stat.stat.readable | default(false)
+    fail_msg: >-
+      External encrypted configuration is unavailable. Synchronize the companion
+      secrets project, set assistant_secret_config_root, or provide the matching
+      AC_AGENTS configuration-file credential or explicit playbook override.
+      No configuration from the application repository is used.
+    quiet: true
+
+- name: Load the protected configuration into its requested namespace
+  ansible.builtin.include_vars:
+    file: "{{ _secret_config_stat.stat.path }}"
+    name: "{{ secret_config_namespace if secret_config_namespace | length > 0 else omit }}"
+  no_log: true

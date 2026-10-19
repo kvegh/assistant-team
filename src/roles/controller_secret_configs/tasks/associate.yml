@@ -1,0 +1,21 @@
+---
+- name: Inspect the selected job template credentials
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{ controller_secret_configs_job_template }}/credentials/
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    return_content: true
+  register: __controller_secret_configs_associations
+  no_log: true
+- name: Attach the snapshot without removing other credentials
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{ controller_secret_configs_job_template }}/credentials/
+    method: POST
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    body_format: json
+    body: "{{ {'id': __controller_secret_configs_credential_id | int} | to_json }}"
+    status_code: [200, 201, 204]
+  when: __controller_secret_configs_credential_id | int not in __controller_secret_configs_associations.json.results | map(attribute='id') | list
+  changed_when: true
+  no_log: true

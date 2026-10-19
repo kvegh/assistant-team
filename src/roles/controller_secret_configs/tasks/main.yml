@@ -1,0 +1,138 @@
+---
+- name: Require explicit controller access for ciphertext synchronization
+  ansible.builtin.assert:
+    that:
+      - controller_secret_configs_host is match('^https://')
+      - controller_secret_configs_token | length > 0
+      - controller_secret_configs_organization | string | length > 0
+    fail_msg: Set CONTROLLER_HOST, CONTROLLER_OAUTH_TOKEN and CONTROLLER_ORGANIZATION before synchronization.
+  no_log: true
+- name: Identify the source secrets revision
+  ansible.builtin.command:
+    argv: [git, -C, "{{ controller_secret_configs_checkout }}", rev-parse, HEAD]
+  register: __controller_secret_configs_revision
+  changed_when: false
+- name: Require committed encrypted configuration inputs
+  ansible.builtin.command:
+    argv: [git, -C, "{{ controller_secret_configs_checkout }}", status, --porcelain, --, vaults/configuration]
+  register: __controller_secret_configs_status
+  changed_when: false
+  failed_when: __controller_secret_configs_status.stdout | length > 0
+- name: Read ciphertext without invoking Vault decryption
+  ansible.builtin.slurp:
+    src: "{{ controller_secret_configs_checkout }}/vaults/configuration/{{ item.value }}"
+  loop: "{{ controller_secret_configs_files | dict2items }}"
+  register: __controller_secret_configs_ciphertexts
+  no_log: true
+- name: Require whole-file Ansible Vault encryption for every input
+  ansible.builtin.assert:
+    that: (item.content | b64decode).startswith('$ANSIBLE_VAULT;')
+    fail_msg: Configuration synchronization accepts only whole-file Ansible Vault ciphertext.
+  loop: "{{ __controller_secret_configs_ciphertexts.results }}"
+  no_log: true
+- name: Assemble encrypted credential inputs
+  ansible.builtin.set_fact:
+    __controller_secret_configs_payload: >-
+      {{ __controller_secret_configs_payload | default({}) | combine({item.item.key + '_vault': item.content | b64decode}) }}
+  loop: "{{ __controller_secret_configs_ciphertexts.results }}"
+  no_log: true
+- name: Calculate reproducible ciphertext provenance
+  ansible.builtin.set_fact:
+    __controller_secret_configs_checksum: >-
+      {{ __controller_secret_configs_payload | to_json(sort_keys=true, preprocess_unsafe=false) | hash('sha256') }}
+  no_log: true
+- name: Add source metadata to the encrypted payload
+  ansible.builtin.set_fact:
+    __controller_secret_configs_payload: >-
+      {{ __controller_secret_configs_payload | combine({'source_revision': __controller_secret_configs_revision.stdout,
+      'ciphertext_sha256': __controller_secret_configs_checksum}) }}
+  no_log: true
+- name: Inspect the named credential type
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/?name={{
+      controller_secret_configs_type_name | urlencode }}
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    return_content: true
+  register: __controller_secret_configs_types
+  no_log: true
+- name: Require an unambiguous credential type
+  ansible.builtin.assert:
+    that: __controller_secret_configs_types.json.count | int <= 1
+  no_log: true
+- name: Reconcile the named file credential type
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/{{
+      (__controller_secret_configs_types.json.results[0].id | string + '/') if __controller_secret_configs_types.json.count else '' }}
+    method: "{{ 'PATCH' if __controller_secret_configs_types.json.count else 'POST' }}"
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    body_format: json
+    body:
+      name: "{{ controller_secret_configs_type_name }}"
+      kind: cloud
+      inputs: "{{ controller_secret_configs_inputs }}"
+      injectors: "{{ controller_secret_configs_injectors }}"
+    status_code: [200, 201]
+  when: >-
+    not __controller_secret_configs_types.json.count or
+    __controller_secret_configs_types.json.results[0].inputs != controller_secret_configs_inputs or
+    __controller_secret_configs_types.json.results[0].injectors != controller_secret_configs_injectors
+  register: __controller_secret_configs_type_write
+  changed_when: true
+  no_log: true
+- name: Resolve the credential type identity
+  ansible.builtin.set_fact:
+    __controller_secret_configs_type_id: >-
+      {{ __controller_secret_configs_types.json.results[0].id if __controller_secret_configs_types.json.count
+      else __controller_secret_configs_type_write.json.id }}
+  no_log: true
+- name: Inspect the named ciphertext snapshot credential
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+      controller_secret_configs_credential_name | urlencode }}&organization={{ controller_secret_configs_organization }}
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    return_content: true
+  register: __controller_secret_configs_credentials
+  no_log: true
+- name: Require an unambiguous owned snapshot credential
+  ansible.builtin.assert:
+    that:
+      - __controller_secret_configs_credentials.json.count | int <= 1
+      - >-
+        not __controller_secret_configs_credentials.json.count or
+        __controller_secret_configs_credentials.json.results[0].credential_type | int == __controller_secret_configs_type_id | int
+  no_log: true
+- name: Refresh the encrypted snapshot only when its source changes
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_secret_configs_host | regex_replace('/$', '') }}/api/controller/v2/credentials/{{
+      (__controller_secret_configs_credentials.json.results[0].id | string + '/') if __controller_secret_configs_credentials.json.count else '' }}
+    method: "{{ 'PATCH' if __controller_secret_configs_credentials.json.count else 'POST' }}"
+    headers: {Authorization: "Bearer {{ controller_secret_configs_token }}"}
+    body_format: json
+    body:
+      name: "{{ controller_secret_configs_credential_name }}"
+      organization: "{{ controller_secret_configs_organization | int }}"
+      credential_type: "{{ __controller_secret_configs_type_id | int }}"
+      inputs: "{{ __controller_secret_configs_payload }}"
+    status_code: [200, 201]
+  when: >-
+    not __controller_secret_configs_credentials.json.count or
+    __controller_secret_configs_credentials.json.results[0].inputs.source_revision | default('') != __controller_secret_configs_revision.stdout or
+    __controller_secret_configs_credentials.json.results[0].inputs.ciphertext_sha256 | default('') != __controller_secret_configs_checksum
+  changed_when: true
+  register: __controller_secret_configs_credential_write
+  no_log: true
+- name: Resolve the snapshot credential identity
+  ansible.builtin.set_fact:
+    __controller_secret_configs_credential_id: >-
+      {{ __controller_secret_configs_credentials.json.results[0].id if __controller_secret_configs_credentials.json.count
+      else __controller_secret_configs_credential_write.json.id }}
+  no_log: true
+- name: Associate the snapshot with explicitly selected job templates
+  ansible.builtin.include_tasks: associate.yml
+  loop: "{{ controller_secret_configs_job_templates }}"
+  loop_control:
+    loop_var: controller_secret_configs_job_template
