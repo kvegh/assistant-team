@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.1
+
+Document Mistral account isolation, native hook limitations, reproducible deployment and validation boundaries.
+
 ## 1.2.0
 
 Add native Mistral Vibe team agents with isolated work/private profiles, certified Podman image deployment, authenticated MCP inbox hooks and exact saved-session restoration. Keep native approvals and Claude-only passive/restricted roles; preserve broker tokens and history when changing a stopped role's harness.

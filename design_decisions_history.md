@@ -1702,3 +1702,35 @@ identified current Claude/Codex sessions and the existing Gemini main history,
 including empty connector sessions. No running operator project was restarted or
 assigned additional work for these checks. These checks do not claim a native
 provider inference round trip after restart.
+
+## Add native Mistral work and private team agents
+
+Implementation `023cbed` adds Mistral Vibe as an alternative for each visible team
+role, with separate work/private native homes, authentication, prompts and saved
+conversation identities. Passive readers and restricted external connectors stay
+on Claude to retain their existing tool boundaries. The default team assignments
+and environment enablement are unchanged; a work account never falls back to a
+private credential. Existing native login preparation is reused.
+
+The stock broker protocol already accepts the real Mistral type. A small local
+adapter generates native Vibe MCP/hook configuration, scopes folder trust, retains
+operator configuration and tool approvals, and delivers addressed inbox updates.
+The native configuration helper uses the already installed profile-local Python
+runtime; no additional host Python dependency is needed. Certified Podman content
+builds the pinned connector extension from the existing Vibe base image. Stopped
+project type changes update broker type metadata without rotating tokens or
+removing discussion history; active projects are not changed implicitly.
+
+Native Vibe has no prompt-start hook before its first tool, so busy-state reporting
+cannot cover that initial interval exactly. Its post-agent continuation is bounded
+by the native retry limit. Normal tool/inbox hooks and fixed terminal nudges remain
+the delivery mechanism; no new polling process, broad permissions or paid-provider
+fallback is introduced. Exact conversation restoration supports both native legacy
+and unified session metadata and excludes nested agents.
+
+Validation includes the full 388-test suite before final focused identity/config
+cases were added, dedicated account-isolation and broker-metadata regression
+checks, and production Ansible lint. Generated MCP and hook definitions were also
+accepted by the installed native Vibe schemas without provider calls. Deployment
+and disposable model-free integration checks do not establish current subscription
+entitlement or authenticated model access for either account.
