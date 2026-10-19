@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.3.1
+
+Document external configuration migration, adapted AAP templates, idempotent snapshot synchronization and successful protected local/AAP loading checks.
+
 ## 1.3.0
 
 Move active encrypted deployment/recovery inputs into the companion secrets repository. Add shared external configuration loading and repeatable AAP ciphertext-file synchronization, preserving separate Vault credentials and existing job-template credentials.

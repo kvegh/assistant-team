@@ -1766,3 +1766,41 @@ busy/idle transitions and native session-pointer recording. All test-owned
 resources were removed. Existing operator containers and environment account
 selection remained unchanged. No provider credentials were loaded or copied and
 no model calls ran, so this does not claim current authenticated model access.
+
+## Separate active encrypted configuration from application code
+
+Implementation `bdf458e` removes five active encrypted deployment/recovery inputs
+from the current application tree. Their unchanged ciphertext is committed under
+`vaults/configuration` in the private companion store, implemented by `bf46465`
+there. The original bootstrap/deployment snapshots and CaC capture remain separate
+historical captures; they were not replaced or merged.
+
+A shared Ansible role resolves explicit caller overrides, then AAP-injected file
+paths, then the sibling private checkout. All nine existing consumer playbooks use
+that loader, retaining their namespaces and operational guards. Missing inputs
+fail without falling back to application files. Configuration loading remains
+protected by no_log. Current code contains no Vault ciphertext blobs; old Git
+history is deliberately not rewritten.
+
+One custom AAP credential supplies five encrypted temporary files. Its separate
+Vault-password credential performs normal runtime decryption. The synchronization
+playbook reads ciphertext using slurp, verifies Vault headers and records source
+revision/checksum metadata. It refreshes changed snapshots and optionally adds
+associations while preserving existing credentials. This uses documented named
+file injectors and available Ansible built-ins; no runtime GitHub token, new
+collection installation or repository checkout is required inside deployment jobs.
+The private repository is authoritative, and operators resynchronize AAP after
+committed configuration changes.
+
+Six affected job templates retain their existing credentials and now receive the
+snapshot credential. Obsolete application-relative recovery overrides were removed
+without changing their remaining variables. Existing source-control credentials,
+VM guard definitions, provider boundaries and native login states were preserved.
+
+Validation: all 401 tests and production Ansible lint passed. All five real inputs
+loaded successfully in a protected localhost-only Ansible run and in AAP through
+the actual injected-file credential. The repeat synchronization reported zero
+changes. Ciphertext bytes were compared against their source versions. No VM
+provisioning, retirement, provider request or authentication transfer was run for
+the migration. The temporary validation template is removed after acceptance;
+the read-only validation playbook remains available for future checks.
