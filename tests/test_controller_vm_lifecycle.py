@@ -69,3 +69,32 @@ class LifecycleLaunchTests(unittest.TestCase):
             },
         })
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_existing_numeric_controller_ids_do_not_cause_template_updates(self):
+        settings = next(task for task in TEMPLATE if task['name'].startswith('Define lifecycle'))
+        comparison = next(task for task in TEMPLATE if task['name'].startswith('Compare managed'))
+        values = {
+            'name': 'Synthetic shutdown', 'job_type': 'run', 'inventory': 2,
+            'project': 56, 'execution_environment': 6, 'playbook': 'src/shutdown_linux_vm.yml',
+            'allow_simultaneous': False, 'use_fact_cache': False,
+            'survey_enabled': True, 'ask_variables_on_launch': False, 'extra_vars': '{}',
+        }
+        variables = {
+            'controller_vm_lifecycle_inventory': '2',
+            'controller_vm_lifecycle_project': '56',
+            'controller_vm_lifecycle_execution_environment': '6',
+            '__controller_vm_lifecycle_template': {
+                'name': values['name'], 'playbook': values['playbook'],
+                'description': 'Synthetic target', 'variable': 'shutdown_vm_name',
+            },
+            '__controller_vm_lifecycle_existing_template': {'json': {'count': 1, 'results': [values]}},
+        }
+        assertion = {'name': 'Check normalized comparison', 'ansible.builtin.assert': {
+            'that': ['not __controller_vm_lifecycle_template_needs_update'],
+        }}
+        result = self.run_tasks([settings, comparison, assertion], variables)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        values['inventory'] = 3
+        assertion['ansible.builtin.assert']['that'] = ['__controller_vm_lifecycle_template_needs_update']
+        result = self.run_tasks([settings, comparison, assertion], variables)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

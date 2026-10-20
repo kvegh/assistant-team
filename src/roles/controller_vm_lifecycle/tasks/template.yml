@@ -69,7 +69,10 @@
   loop: "{{ __controller_vm_lifecycle_template_fields | dict2items }}"
   when:
     - __controller_vm_lifecycle_existing_template.json.count | int > 0
-    - __controller_vm_lifecycle_existing_template.json.results[0][item.key] | default(none) != item.value
+    - >-
+      (__controller_vm_lifecycle_existing_template.json.results[0][item.key] | default(0) | int != item.value | int)
+      if item.key in ['inventory', 'project', 'execution_environment'] else
+      (__controller_vm_lifecycle_existing_template.json.results[0][item.key] | default(none) != item.value)
 
 - name: Reconcile lifecycle job template
   ansible.builtin.uri:

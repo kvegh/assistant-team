@@ -241,3 +241,5 @@ private files, alongside explicit existing AAP object bindings; see its role REA
 Mark a verified deployment as production by placing its host in inventory group
 `prod`. Production marking is a separate inventory action after acceptance; it
 is never inferred from a VM name or stored in libvirt metadata.
+
+Lifecycle setup is repeatable without rewriting unchanged AAP templates.

@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.5.3
+
+Normalize numeric controller resource IDs so unchanged lifecycle setup does not rewrite job templates. Add regression coverage.
+
 ## 1.5.2
 
 Keep shared encrypted teardown configuration loading active during tagged runs.
