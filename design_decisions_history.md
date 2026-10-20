@@ -1909,3 +1909,25 @@ while retaining the original, narrowly authorized retirement target.
 This establishes fresh deployment reproducibility and private credential-file
 restoration, not live model entitlement. No model calls were made. Detailed
 acceptance evidence belongs in DEPLOYMENT_TEST_RESULTS.md.
+
+## Govern VM lifecycle through inventory and launch surveys
+
+Implementation `a8af7f2` replaces per-clone Vault edits with required deployment,
+teardown and graceful-shutdown target surveys. Infrastructure and authentication
+remain encrypted, but live AAP inventory is authoritative for exact VM bindings,
+managed membership and inherited `prod` deletion protection. Unknown, ambiguous
+or incomplete inventory responses fail closed. A dedicated nonadministrator
+identity has inventory-only administration; neither the existing authentication
+maintenance identity nor its permissions were reused. Arbitrary launch variables
+and simultaneous runs are disabled on lifecycle templates.
+
+Provisioning registers the discovered guest before configuration, and recovery
+uses inventory addressing. Teardown retains original-installation, exclusive-disk,
+survivor-domain and golden-image safeguards, rechecks production membership before
+deletion, and removes only the retired inventory entry after successful checks.
+Shutdown preserves domain definitions and disks. Production marking is a separate
+inventory action after acceptance, never libvirt metadata.
+
+The operator authorized keeping the original installation shut down, retiring
+only the current disposable clone, deploying its successor independently of the
+original, testing it and then marking that successor production in inventory.

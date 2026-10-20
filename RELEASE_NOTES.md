@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.5.1
+
+Document inventory-authoritative VM lifecycle decisions and the implementation reference.
+
 ## 1.5.0
 
 Select fresh deployment, teardown and graceful shutdown targets through required AAP surveys. Use live inventory as the source of truth for VM bindings and inherited production protection. Register discovered guests automatically and resolve recovery addresses from inventory, eliminating per-test Vault edits. Preserve exclusive-disk, original-installation and golden-image safeguards.
