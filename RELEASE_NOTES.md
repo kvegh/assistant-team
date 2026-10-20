@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.5.2
+
+Keep shared encrypted teardown configuration loading active during tagged runs.
+
 ## 1.5.1
 
 Document inventory-authoritative VM lifecycle decisions and the implementation reference.

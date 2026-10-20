@@ -13,6 +13,9 @@
     - name: Load shared encrypted infrastructure configuration
       ansible.builtin.include_role:
         name: secret_config
+        apply:
+          tags: [always]
+      tags: [always]
       vars:
         secret_config_name: fresh_test
         secret_config_namespace: retirement_infrastructure
