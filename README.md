@@ -907,7 +907,7 @@ The immutable versioned SDK archive is checksum-pinned. Its payload was verified
 
 `src/deploy_complete_linux_vm.yml` provisions an isolated VM from its own Vault-encrypted definition, fully updates it, grows the cloned root filesystem and installs the entire environment through normal AAP jobs. The companion configuration directory keeps the test definition separate from the existing deployment. Use a dedicated job template with the hypervisor inventory, machine and Vault credentials, and the pinned certified collection available in its execution environment. Do not retain obsolete disk-size overrides.
 
-After provisioning succeeds, recovery must skip the `provision` tag: record the discovered guest address in the encrypted `recovery.guest_ip` field and rerun with `guest_config`. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. The fresh AAP deployment originally completed through configuration recovery job 1376. A later clean end-to-end run, job 1394, completed in one pass at version 0.9.1 with no recovery or retry; no provider credentials or model calls were used. See [DEPLOYMENT_TEST_RESULTS.md](DEPLOYMENT_TEST_RESULTS.md) for the tested snapshot, safety checks and limits. AAP project revision metadata is recorded when available.
+After provisioning succeeds, recovery must skip the `provision` tag: select the same `deployment_vm_name` and rerun with `guest_config`; the guest address comes from live AAP inventory. This protects the existing disk and domain. Installation validation uses disposable dummy harnesses; it neither copies provider credentials nor invokes models. The fresh AAP deployment originally completed through configuration recovery job 1376. A later clean end-to-end run, job 1394, completed in one pass at version 0.9.1 with no recovery or retry; no provider credentials or model calls were used. See [DEPLOYMENT_TEST_RESULTS.md](DEPLOYMENT_TEST_RESULTS.md) for the tested snapshot, safety checks and limits. AAP project revision metadata is recorded when available.
 
 Vertex Claude model selection expects a complete enabled Vertex model ID, such as `claude-opus-5`, rather than `Opus` or `Opus-5`. The example is not an access check: availability depends on the operator-selected Google project and location. Invalid input now explains the format before retrying.
 
@@ -1199,7 +1199,7 @@ Source authentication capture accepts only the historical labels `gemini` for `g
 
 Fresh-account preflight normalizes a missing passwd record to an empty list before inspecting legacy home paths. This avoids Ansible non-native templating turning None into an empty string and accidentally executing checks before the runtime user is created. Existing-account migration protection remains in force.
 
-The current encrypted test definition selects configuration-only recovery of an existing clone. Run `src/deploy_complete_linux_vm.yml` with `guest_config` so its initial recovery task registers the existing guest and provisioning is skipped. A complete fresh provisioning run requires a separate fresh definition with an unused clone identity and an empty recovery address; do not launch the current recovery definition through provisioning. No existing disk is recreated by this recovery choice.
+Fresh deployment now selects the required `deployment_vm_name` survey value and ignores historical clone/recovery bindings in the encrypted infrastructure definition. Configuration-only `guest_config` runs instead resolve the selected host from live AAP inventory; they never recreate its disk or domain.
 
 An optional encrypted deployment `enabled_profiles` list seeds the initial environment account selection before project validation. Empty/default leaves the existing automatic installed-profile behavior unchanged. The seed uses the strict eight-profile schema and preserves existing environment.conf and operator choices unless reconciliation is explicitly requested. Use `project_profile_selection` for a focused configuration-only run; an existing configuration requires explicit reconciliation instead of automatic reseeding.
 
@@ -1240,3 +1240,34 @@ including six automatic authentication restores, full OS updates, CLI checks and
 disposable project isolation. The guarded prior-clone retirement preserved the
 original installation and every other domain. No model inference was performed.
 See [deployment test results](DEPLOYMENT_TEST_RESULTS.md) for scope and evidence.
+
+## Inventory-governed VM deployment and teardown
+
+AAP inventory is the source of truth for VM identity and production protection.
+Each managed host has an explicit `assistant_vm_name` binding and belongs to
+`assistant_team`; membership in `prod`, including inherited membership, prevents
+teardown. Missing, ambiguous or incomplete inventory results fail closed. The
+lifecycle jobs read live inventory over verified HTTPS using a dedicated
+nonadministrator credential scoped to that inventory. Launch surveys accept only
+the target fields; arbitrary extra variables are disabled.
+
+- **Assistant Team Fresh Deployment Test**: enter `deployment_vm_name` and leave
+  job tags empty for a complete new installation. Infrastructure and authentication
+  still come from encrypted companion snapshots; selecting another name needs no
+  Vault edit or snapshot synchronization. Existing inventory/domain/disk names
+  are refused. Provisioning registers the discovered guest in inventory before
+  configuration; selected configuration-only tags use its inventory address.
+- **Assistant Team Disposable Test Retirement**: enter `teardown_vm_name`.
+  `retire_test_execute: false` runs safety preflight; `true` shuts down and removes
+  only the selected clone and exclusive disk. Production membership is rechecked
+  before deletion, and the inventory host is removed only after preservation
+  checks succeed. The original installation cannot be deleted by this job.
+- **Assistant Team Linux VM Shutdown**: enter `shutdown_vm_name` to request graceful
+  shutdown and wait for it, preserving every domain definition and disk.
+
+Use `src/configure_vm_lifecycle.yml` to reproduce the surveys, credential injection
+and inventory groups. Supply the dedicated inventory token and trusted CA through
+private files, alongside explicit existing AAP object bindings; see its role README.
+Mark a verified deployment as production by placing its host in inventory group
+`prod`. Production marking is a separate inventory action after acceptance; it
+is never inferred from a VM name or stored in libvirt metadata.

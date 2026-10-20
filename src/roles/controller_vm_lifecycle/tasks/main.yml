@@ -1,0 +1,219 @@
+---
+- name: Configure protected inventory lifecycle resources
+  no_log: true
+  diff: false
+  block:
+    - name: Require explicit controller bindings and private input files
+      ansible.builtin.assert:
+        that:
+          - controller_vm_lifecycle_host is match('^https://')
+          - controller_vm_lifecycle_token | length > 0
+          - controller_vm_lifecycle_organization | string is match('^[1-9][0-9]*$')
+          - controller_vm_lifecycle_project | string is match('^[1-9][0-9]*$')
+          - controller_vm_lifecycle_inventory | string is match('^[1-9][0-9]*$')
+          - controller_vm_lifecycle_execution_environment | string is match('^[1-9][0-9]*$')
+          - controller_vm_lifecycle_credentials is sequence
+          - controller_vm_lifecycle_credentials is not string
+          - controller_vm_lifecycle_credentials | length > 0
+          - controller_vm_lifecycle_token_file is match('^/')
+          - controller_vm_lifecycle_ca_file is match('^/')
+        quiet: true
+
+    - name: Read protected lifecycle token
+      ansible.builtin.slurp:
+        src: "{{ controller_vm_lifecycle_token_file }}"
+      register: __controller_vm_lifecycle_token_file
+
+    - name: Read trusted lifecycle controller CA bundle
+      ansible.builtin.slurp:
+        src: "{{ controller_vm_lifecycle_ca_file }}"
+      register: __controller_vm_lifecycle_ca_file
+
+    - name: Assemble lifecycle credential material
+      ansible.builtin.set_fact:
+        __controller_vm_lifecycle_material:
+          controller_token: "{{ __controller_vm_lifecycle_token_file.content | b64decode | trim }}"
+          controller_ca: "{{ __controller_vm_lifecycle_ca_file.content | b64decode }}"
+          controller_host: "{{ controller_vm_lifecycle_host | regex_replace('/$', '') }}"
+          inventory_id: "{{ controller_vm_lifecycle_inventory | string }}"
+
+    - name: Require nonempty private lifecycle material
+      ansible.builtin.assert:
+        that:
+          - __controller_vm_lifecycle_material.controller_token | length > 0
+          - __controller_vm_lifecycle_material.controller_ca | trim | length > 0
+        quiet: true
+
+    - name: Identify dedicated inventory lifecycle principal
+      ansible.builtin.uri:
+        url: "{{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/me/"
+        headers: {Authorization: "Bearer {{ __controller_vm_lifecycle_material.controller_token }}"}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        return_content: true
+      register: __controller_vm_lifecycle_principal
+
+    - name: Refuse administrator and auditor lifecycle tokens
+      ansible.builtin.assert:
+        that:
+          - __controller_vm_lifecycle_principal.json.count | int == 1
+          - __controller_vm_lifecycle_principal.json.results[0].id | int > 0
+          - __controller_vm_lifecycle_principal.json.results[0].is_superuser is defined
+          - not __controller_vm_lifecycle_principal.json.results[0].is_superuser | bool
+          - __controller_vm_lifecycle_principal.json.results[0].is_system_auditor is defined
+          - not __controller_vm_lifecycle_principal.json.results[0].is_system_auditor | bool
+        quiet: true
+
+    - name: Read the authoritative inventory and administrator role
+      ansible.builtin.uri:
+        url: "{{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/inventories/{{ controller_vm_lifecycle_inventory }}/"
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        return_content: true
+      register: __controller_vm_lifecycle_inventory
+
+    - name: Inspect direct lifecycle grant on the authoritative inventory only
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/roles/{{
+          __controller_vm_lifecycle_inventory.json.summary_fields.object_roles.admin_role.id }}/users/?id={{
+          __controller_vm_lifecycle_principal.json.results[0].id }}
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        return_content: true
+      register: __controller_vm_lifecycle_grant
+
+    - name: Require explicit inventory ownership and the preauthorized scoped grant
+      ansible.builtin.assert:
+        that:
+          - __controller_vm_lifecycle_inventory.json.organization | int == controller_vm_lifecycle_organization | int
+          - __controller_vm_lifecycle_grant.json.count | int == 1
+        quiet: true
+
+    - name: Hash private material for masked credential idempotence
+      ansible.builtin.set_fact:
+        __controller_vm_lifecycle_checksum: >-
+          {{ __controller_vm_lifecycle_material | to_json(sort_keys=true, preprocess_unsafe=false) | hash('sha256') }}
+
+    - name: Inspect the named lifecycle credential type
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/?name={{
+          controller_vm_lifecycle_type_name | urlencode }}
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        return_content: true
+      register: __controller_vm_lifecycle_types
+
+    - name: Require an unambiguous lifecycle credential type
+      ansible.builtin.assert:
+        that: __controller_vm_lifecycle_types.json.count | int <= 1
+        quiet: true
+
+    - name: Reconcile lifecycle credential type schema and injectors
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/credential_types/{{
+          (__controller_vm_lifecycle_types.json.results[0].id | string + '/') if __controller_vm_lifecycle_types.json.count else '' }}
+        method: "{{ 'PATCH' if __controller_vm_lifecycle_types.json.count else 'POST' }}"
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        body_format: json
+        body:
+          name: "{{ controller_vm_lifecycle_type_name }}"
+          kind: cloud
+          inputs: "{{ controller_vm_lifecycle_inputs }}"
+          injectors: "{{ controller_vm_lifecycle_injectors }}"
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        status_code: [200, 201]
+      when: >-
+        not __controller_vm_lifecycle_types.json.count or
+        __controller_vm_lifecycle_types.json.results[0].inputs != controller_vm_lifecycle_inputs or
+        __controller_vm_lifecycle_types.json.results[0].injectors != controller_vm_lifecycle_injectors
+      register: __controller_vm_lifecycle_type_write
+      changed_when: true
+
+    - name: Resolve lifecycle credential type identity
+      ansible.builtin.set_fact:
+        __controller_vm_lifecycle_type_id: >-
+          {{ __controller_vm_lifecycle_types.json.results[0].id if __controller_vm_lifecycle_types.json.count
+          else __controller_vm_lifecycle_type_write.json.id }}
+
+    - name: Inspect the named owned lifecycle credential
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/credentials/?name={{
+          controller_vm_lifecycle_credential_name | urlencode }}&organization={{ controller_vm_lifecycle_organization }}
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        return_content: true
+      register: __controller_vm_lifecycle_credentials
+
+    - name: Require unambiguous compatible lifecycle credential ownership
+      ansible.builtin.assert:
+        that:
+          - __controller_vm_lifecycle_credentials.json.count | int <= 1
+          - >-
+            not __controller_vm_lifecycle_credentials.json.count or
+            __controller_vm_lifecycle_credentials.json.results[0].credential_type | int == __controller_vm_lifecycle_type_id | int
+        quiet: true
+
+    - name: Update protected lifecycle inputs only when their checksum changes
+      ansible.builtin.uri:
+        url: >-
+          {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/credentials/{{
+          (__controller_vm_lifecycle_credentials.json.results[0].id | string + '/') if __controller_vm_lifecycle_credentials.json.count else '' }}
+        method: "{{ 'PATCH' if __controller_vm_lifecycle_credentials.json.count else 'POST' }}"
+        headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+        body_format: json
+        body: >-
+          {{ {'name': controller_vm_lifecycle_credential_name,
+              'organization': controller_vm_lifecycle_organization | int,
+              'credential_type': __controller_vm_lifecycle_type_id | int,
+              'inputs': __controller_vm_lifecycle_material | combine({'material_sha256': __controller_vm_lifecycle_checksum})} | to_json }}
+        ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+        status_code: [200, 201]
+      when: >-
+        not __controller_vm_lifecycle_credentials.json.count or
+        __controller_vm_lifecycle_credentials.json.results[0].inputs.material_sha256 | default('') != __controller_vm_lifecycle_checksum
+      register: __controller_vm_lifecycle_credential_write
+      changed_when: true
+
+    - name: Resolve lifecycle credential identity
+      ansible.builtin.set_fact:
+        __controller_vm_lifecycle_credential_id: >-
+          {{ __controller_vm_lifecycle_credentials.json.results[0].id if __controller_vm_lifecycle_credentials.json.count
+          else __controller_vm_lifecycle_credential_write.json.id }}
+
+    - name: Ensure inventory lifecycle groups without changing existing membership
+      ansible.builtin.include_tasks: group.yml
+      loop: [assistant_team, prod]
+      loop_control:
+        loop_var: __controller_vm_lifecycle_group_name
+
+    - name: Reconcile narrowly prompted lifecycle job templates
+      ansible.builtin.include_tasks: template.yml
+      loop: "{{ controller_vm_lifecycle_templates }}"
+      loop_control:
+        loop_var: __controller_vm_lifecycle_template
+
+    - name: Retain safe lifecycle resource identities
+      ansible.builtin.set_fact:
+        controller_vm_lifecycle_result:
+          credential_type: "{{ __controller_vm_lifecycle_type_id | int }}"
+          credential: "{{ __controller_vm_lifecycle_credential_id | int }}"
+          inventory: "{{ controller_vm_lifecycle_inventory | int }}"
+
+  always:
+    - name: Discard protected lifecycle facts
+      ansible.builtin.set_fact:
+        __controller_vm_lifecycle_material: {}
+        __controller_vm_lifecycle_token_file: {}
+        __controller_vm_lifecycle_ca_file: {}
+        __controller_vm_lifecycle_credential_write: {}
+        __controller_vm_lifecycle_credentials: {}
+        __controller_vm_lifecycle_principal: {}
+        cacheable: false
+      no_log: true
+
+- name: Report configured lifecycle identities without private material
+  ansible.builtin.debug:
+    msg: "{{ controller_vm_lifecycle_result }}"

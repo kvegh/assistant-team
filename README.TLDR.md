@@ -210,3 +210,34 @@ are preserved. Successful restoration does not prove unrevoked model access.
 
 Fresh-install acceptance: AAP job 2104 passed at 1.4.4, including six encrypted-vault
 auth restores and model-free installation checks. See DEPLOYMENT_TEST_RESULTS.md.
+
+## Inventory-governed VM deployment and teardown
+
+AAP inventory is the source of truth for VM identity and production protection.
+Each managed host has an explicit `assistant_vm_name` binding and belongs to
+`assistant_team`; membership in `prod`, including inherited membership, prevents
+teardown. Missing, ambiguous or incomplete inventory results fail closed. The
+lifecycle jobs read live inventory over verified HTTPS using a dedicated
+nonadministrator credential scoped to that inventory. Launch surveys accept only
+the target fields; arbitrary extra variables are disabled.
+
+- **Assistant Team Fresh Deployment Test**: enter `deployment_vm_name` and leave
+  job tags empty for a complete new installation. Infrastructure and authentication
+  still come from encrypted companion snapshots; selecting another name needs no
+  Vault edit or snapshot synchronization. Existing inventory/domain/disk names
+  are refused. Provisioning registers the discovered guest in inventory before
+  configuration; selected configuration-only tags use its inventory address.
+- **Assistant Team Disposable Test Retirement**: enter `teardown_vm_name`.
+  `retire_test_execute: false` runs safety preflight; `true` shuts down and removes
+  only the selected clone and exclusive disk. Production membership is rechecked
+  before deletion, and the inventory host is removed only after preservation
+  checks succeed. The original installation cannot be deleted by this job.
+- **Assistant Team Linux VM Shutdown**: enter `shutdown_vm_name` to request graceful
+  shutdown and wait for it, preserving every domain definition and disk.
+
+Use `src/configure_vm_lifecycle.yml` to reproduce the surveys, credential injection
+and inventory groups. Supply the dedicated inventory token and trusted CA through
+private files, alongside explicit existing AAP object bindings; see its role README.
+Mark a verified deployment as production by placing its host in inventory group
+`prod`. Production marking is a separate inventory action after acceptance; it
+is never inferred from a VM name or stored in libvirt metadata.

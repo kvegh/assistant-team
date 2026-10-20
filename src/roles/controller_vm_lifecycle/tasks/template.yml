@@ -1,0 +1,143 @@
+---
+- name: Inspect exact lifecycle job template
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/?name={{
+      __controller_vm_lifecycle_template.name | urlencode }}&project={{ controller_vm_lifecycle_project }}
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    return_content: true
+  register: __controller_vm_lifecycle_existing_template
+
+- name: Refuse ambiguous lifecycle job template names
+  ansible.builtin.assert:
+    that: __controller_vm_lifecycle_existing_template.json.count | int <= 1
+    quiet: true
+
+- name: Define lifecycle template settings without arbitrary launch variables
+  ansible.builtin.set_fact:
+    __controller_vm_lifecycle_template_fields:
+      name: "{{ __controller_vm_lifecycle_template.name }}"
+      job_type: run
+      inventory: "{{ controller_vm_lifecycle_inventory | int }}"
+      project: "{{ controller_vm_lifecycle_project | int }}"
+      execution_environment: "{{ controller_vm_lifecycle_execution_environment | int }}"
+      playbook: "{{ __controller_vm_lifecycle_template.playbook }}"
+      allow_simultaneous: false
+      use_fact_cache: false
+      survey_enabled: true
+      ask_variables_on_launch: false
+      extra_vars: '{}'
+    __controller_vm_lifecycle_template_needs_update: false
+    __controller_vm_lifecycle_survey:
+      name: Inventory governed VM target
+      description: Select an exact VM name; inventory protection and disk checks remain mandatory
+      spec:
+        - question_name: VM name
+          question_description: "{{ __controller_vm_lifecycle_template.description }}"
+          required: true
+          type: text
+          variable: "{{ __controller_vm_lifecycle_template.variable }}"
+          min: 1
+          max: 63
+          default: ''
+          choices: ''
+          new_question: true
+
+- name: Add explicit retirement execution confirmation with a safe default
+  ansible.builtin.set_fact:
+    __controller_vm_lifecycle_survey: >-
+      {{ __controller_vm_lifecycle_survey | combine({'spec':
+      __controller_vm_lifecycle_survey.spec + [__controller_vm_lifecycle_confirmation]}) }}
+  vars:
+    __controller_vm_lifecycle_confirmation:
+      question_name: Delete this VM and its exclusive disk?
+      question_description: false runs read-only preflight; true performs authorized retirement
+      required: true
+      type: multiplechoice
+      variable: retire_test_execute
+      choices: |-
+        false
+        true
+      default: 'false'
+      new_question: true
+  when: __controller_vm_lifecycle_template.teardown | default(false) | bool
+
+- name: Compare managed lifecycle template settings
+  ansible.builtin.set_fact:
+    __controller_vm_lifecycle_template_needs_update: true
+  loop: "{{ __controller_vm_lifecycle_template_fields | dict2items }}"
+  when:
+    - __controller_vm_lifecycle_existing_template.json.count | int > 0
+    - __controller_vm_lifecycle_existing_template.json.results[0][item.key] | default(none) != item.value
+
+- name: Reconcile lifecycle job template
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+      (__controller_vm_lifecycle_existing_template.json.results[0].id | string + '/')
+      if __controller_vm_lifecycle_existing_template.json.count else '' }}
+    method: "{{ 'PATCH' if __controller_vm_lifecycle_existing_template.json.count else 'POST' }}"
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    body_format: json
+    body: "{{ __controller_vm_lifecycle_template_fields | to_json }}"
+    status_code: [200, 201]
+  when: not __controller_vm_lifecycle_existing_template.json.count or __controller_vm_lifecycle_template_needs_update
+  register: __controller_vm_lifecycle_template_write
+  changed_when: true
+
+- name: Resolve lifecycle job template identity
+  ansible.builtin.set_fact:
+    __controller_vm_lifecycle_template_id: >-
+      {{ __controller_vm_lifecycle_existing_template.json.results[0].id if __controller_vm_lifecycle_existing_template.json.count
+      else __controller_vm_lifecycle_template_write.json.id }}
+
+- name: Read existing lifecycle survey
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+      __controller_vm_lifecycle_template_id }}/survey_spec/
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    return_content: true
+  register: __controller_vm_lifecycle_existing_survey
+
+- name: Reconcile required lifecycle target survey
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+      __controller_vm_lifecycle_template_id }}/survey_spec/
+    method: POST
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    body_format: json
+    body: "{{ __controller_vm_lifecycle_survey | to_json }}"
+    status_code: [200, 201]
+  when: __controller_vm_lifecycle_existing_survey.json != __controller_vm_lifecycle_survey
+  changed_when: true
+
+- name: Read existing lifecycle credential associations
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+      __controller_vm_lifecycle_template_id }}/credentials/?page_size=200
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    return_content: true
+  register: __controller_vm_lifecycle_associations
+
+- name: Attach required lifecycle credentials without removing unrelated associations
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/job_templates/{{
+      __controller_vm_lifecycle_template_id }}/credentials/
+    method: POST
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    body_format: json
+    body: "{{ {'id': item | int} | to_json }}"
+    status_code: [200, 201, 204]
+  loop: "{{ (controller_vm_lifecycle_credentials + [__controller_vm_lifecycle_credential_id]) | map('int') | unique | list }}"
+  when: item | int not in __controller_vm_lifecycle_associations.json.results | map(attribute='id') | list
+  changed_when: true

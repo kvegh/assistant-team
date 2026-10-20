@@ -1,0 +1,64 @@
+---
+- name: Require one exact live shutdown target
+  ansible.builtin.assert:
+    that:
+      - ansible_play_hosts_all | length == 1
+      - shutdown_vm_name | default('') is match('^[a-z][a-z0-9-]*-[0-9]+$')
+      - not ansible_check_mode
+      - hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
+    fail_msg: Shutdown requires a live, uniquely inventory-selected VM.
+    quiet: true
+  no_log: false
+
+- name: Capture all defined domains before shutdown
+  ansible.builtin.command:
+    argv: [virsh, list, --all, --name]
+  register: __linux_vm_shutdown_domains
+  changed_when: false
+
+- name: Require the selected domain to exist
+  ansible.builtin.assert:
+    that: shutdown_vm_name in __linux_vm_shutdown_domains.stdout_lines
+    fail_msg: The selected inventory VM is not defined on this hypervisor.
+    quiet: true
+  no_log: false
+
+- name: Read selected shutdown domain state
+  ansible.builtin.command:
+    argv: [virsh, domstate, "{{ shutdown_vm_name }}"]
+  environment:
+    LC_ALL: C
+  register: __linux_vm_shutdown_state
+  changed_when: false
+
+- name: Request graceful shutdown without deleting or forcing the VM
+  ansible.builtin.command:
+    argv: [virsh, shutdown, "{{ shutdown_vm_name }}"]
+  when: __linux_vm_shutdown_state.stdout | trim != 'shut off'
+  changed_when: true
+
+- name: Wait until the selected VM is shut off
+  ansible.builtin.command:
+    argv: [virsh, domstate, "{{ shutdown_vm_name }}"]
+  environment:
+    LC_ALL: C
+  register: __linux_vm_shutdown_final
+  changed_when: false
+  until: __linux_vm_shutdown_final.stdout | trim == 'shut off'
+  retries: 60
+  delay: 5
+
+- name: Inspect defined domains after shutdown
+  ansible.builtin.command:
+    argv: [virsh, list, --all, --name]
+  register: __linux_vm_shutdown_survivors
+  changed_when: false
+
+- name: Verify shutdown preserved every domain definition
+  ansible.builtin.assert:
+    that: >-
+      (__linux_vm_shutdown_survivors.stdout_lines | reject('equalto', '') | sort)
+      == (__linux_vm_shutdown_domains.stdout_lines | reject('equalto', '') | sort)
+    fail_msg: Defined domain names changed during the shutdown check.
+    quiet: true
+  no_log: false

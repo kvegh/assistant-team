@@ -3,13 +3,17 @@
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
-      - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-[2-9][0-9]*$')
-      - linux_vm_retire_definition.vm_name == linux_vm_retire_definition.retire_authorized_vm_name | default('')
+      - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-([2-9]|[1-9][0-9]+)$')
+      - hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
+      - "'prod' not in (hostvars.localhost.__inventory_vm_guard_groups | default(['prod']))"
+      - (hostvars.localhost.__inventory_vm_guard_matches[0].variables | from_yaml).assistant_vm_name == linux_vm_retire_definition.vm_name
       - linux_vm_retire_definition.vm_dir is match('^/')
       - linux_vm_retire_definition.golden_image_path is match('^/')
       - linux_vm_retire_disk != linux_vm_retire_definition.golden_image_path
       - not ansible_check_mode
-    fail_msg: Retirement requires an explicitly selected disposable test clone and a live safety preflight.
+    fail_msg: Retirement requires a uniquely inventory-selected nonproduction test clone and a live safety preflight.
+    quiet: true
+  no_log: false
 
 - name: Inspect all defined domains
   ansible.builtin.command:
@@ -96,6 +100,16 @@
       retries: 60
       delay: 5
 
+    - name: Recheck live inventory protection immediately before deleting the VM
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+        apply:
+          delegate_to: localhost
+          become: false
+      vars:
+        inventory_vm_guard_name: "{{ linux_vm_retire_definition.vm_name }}"
+        inventory_vm_guard_operation: retire
+
     - name: Undefine only the verified stopped domain
       ansible.builtin.command:
         argv: [virsh, undefine, "{{ linux_vm_retire_definition.vm_name }}", --nvram]
@@ -129,3 +143,18 @@
           - __linux_vm_retire_golden_after.stat.inode == __linux_vm_retire_golden_before.stat.inode
           - __linux_vm_retire_golden_after.stat.size == __linux_vm_retire_golden_before.stat.size
           - __linux_vm_retire_golden_after.stat.mtime == __linux_vm_retire_golden_before.stat.mtime
+
+    - name: Remove only the verified retired VM inventory binding
+      ansible.builtin.uri:
+        url: >-
+          {{ __inventory_vm_guard_controller_host }}/api/controller/v2/hosts/{{ __inventory_vm_guard_host.id }}/
+        method: DELETE
+        headers:
+          Authorization: "Bearer {{ __inventory_vm_guard_token }}"
+        ca_path: "{{ __inventory_vm_guard_ca_path or omit }}"
+        validate_certs: true
+        status_code: 204
+      delegate_to: localhost
+      become: false
+      changed_when: true
+      no_log: true

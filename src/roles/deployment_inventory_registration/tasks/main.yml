@@ -1,0 +1,75 @@
+---
+- name: Register the discovered guest without model credentials or inherited protection
+  no_log: true
+  block:
+    - name: Require a guest discovered by the successful provisioning role
+      ansible.builtin.assert:
+        that:
+          - __deployment_target_creates | bool
+          - __deployment_target_name in groups.get('provisioned_linux_guest', [])
+          - hostvars[__deployment_target_name].deployment_vm_name == __deployment_target_name
+          - hostvars[__deployment_target_name].deployment_vm_ip | length > 0
+        quiet: true
+
+    - name: Resolve the inventory managed group
+      ansible.builtin.uri:
+        url: "{{ __inventory_vm_guard_controller_host }}/api/controller/v2/inventories/{{ __inventory_vm_guard_inventory_id }}/groups/?name=assistant_team"
+        headers: {Authorization: "Bearer {{ __inventory_vm_guard_token }}"}
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        return_content: true
+      register: __deployment_inventory_groups
+
+    - name: Require an unambiguous managed group
+      ansible.builtin.assert:
+        that: __deployment_inventory_groups.json.count | int <= 1
+        quiet: true
+
+    - name: Create the managed group when absent
+      ansible.builtin.uri:
+        url: "{{ __inventory_vm_guard_controller_host }}/api/controller/v2/groups/"
+        method: POST
+        headers: {Authorization: "Bearer {{ __inventory_vm_guard_token }}"}
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        body_format: json
+        body:
+          name: assistant_team
+          inventory: "{{ __inventory_vm_guard_inventory_id | int }}"
+          description: Managed assistant team installations; production protection uses the separate prod group.
+        status_code: 201
+      register: __deployment_inventory_created_group
+      changed_when: true
+      when: __deployment_inventory_groups.json.count | int == 0
+
+    - name: Register the newly created VM with its exact domain and discovered address
+      ansible.builtin.uri:
+        url: "{{ __inventory_vm_guard_controller_host }}/api/controller/v2/hosts/"
+        method: POST
+        headers: {Authorization: "Bearer {{ __inventory_vm_guard_token }}"}
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        body_format: json
+        body:
+          name: "{{ __deployment_target_name }}"
+          inventory: "{{ __inventory_vm_guard_inventory_id | int }}"
+          enabled: true
+          description: Created by the complete assistant team deployment.
+          variables: >-
+            {{ {'assistant_vm_name': __deployment_target_name,
+                'ansible_host': hostvars[__deployment_target_name].deployment_vm_ip} | to_json }}
+        status_code: 201
+      register: __deployment_inventory_created_host
+      changed_when: true
+
+    - name: Associate only the managed group with the newly registered host
+      ansible.builtin.uri:
+        url: >-
+          {{ __inventory_vm_guard_controller_host }}/api/controller/v2/groups/{{
+             __deployment_inventory_groups.json.results[0].id if __deployment_inventory_groups.json.count | int
+             else __deployment_inventory_created_group.json.id }}/hosts/
+        method: POST
+        headers: {Authorization: "Bearer {{ __inventory_vm_guard_token }}"}
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        body_format: json
+        body:
+          id: "{{ __deployment_inventory_created_host.json.id | int }}"
+        status_code: [200, 201, 204]
+      changed_when: true

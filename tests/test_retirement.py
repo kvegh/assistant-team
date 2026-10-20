@@ -12,9 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 class RetirementSafetyTests(unittest.TestCase):
     def assert_rejected(self, name, disk="/example/vms/example-2.disk.qcow2", check=False):
         variables = {
+            "__inventory_vm_guard_matches": [{"id": 1, "variables": json.dumps({"assistant_vm_name": "example-3"})}],
+            "__inventory_vm_guard_groups": ["assistant_team"],
             "linux_vm_retire_definition": {
                 "vm_name": name,
-                "retire_authorized_vm_name": "example-3",
                 "vm_dir": "/example/vms",
                 "golden_image_path": "/example/golden.qcow2",
             },

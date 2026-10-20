@@ -1,0 +1,56 @@
+---
+- name: Resolve and validate the requested deployment name
+  no_log: true
+  block:
+    - name: Select the explicit deployment target or the encrypted default
+      ansible.builtin.set_fact:
+        __deployment_target_name: "{{ deployment_vm_name | default(fresh_definition.provisioning.vm_name, true) }}"
+        __deployment_target_creates: >-
+          {{ ('all' in ansible_run_tags or 'provision' in ansible_run_tags or 'offline_recovery' in ansible_run_tags)
+             and 'provision' not in ansible_skip_tags }}
+
+    - name: Reject invalid or conflicting target names
+      ansible.builtin.assert:
+        that:
+          - __deployment_target_name is match('^[a-z][a-z0-9-]*-[0-9]+$')
+          - vm_name is not defined or vm_name == __deployment_target_name
+        fail_msg: Use deployment_vm_name to select one valid VM; conflicting legacy vm_name is refused.
+        quiet: true
+
+    - name: Resolve target ownership and protection using live controller inventory
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+      vars:
+        inventory_vm_guard_name: "{{ __deployment_target_name }}"
+        inventory_vm_guard_require_existing: "{{ not (__deployment_target_creates | bool) }}"
+        inventory_vm_guard_operation: lookup
+
+    - name: Override only the name in the reusable encrypted deployment definition
+      ansible.builtin.set_fact:
+        deployment_target_definition: >-
+          {{ fresh_definition | combine({'provisioning': {'vm_name': __deployment_target_name},
+             'recovery': {'guest_ip': ''}}, recursive=true) }}
+
+    - name: Validate the inventory connection binding for configuration-only recovery
+      ansible.builtin.assert:
+        that:
+          - __inventory_vm_guard_host.decoded_variables.ansible_host | default('') | length > 0
+          - __inventory_vm_guard_host.decoded_variables.ansible_host is string
+        fail_msg: Configuration-only recovery requires an existing inventory host with ansible_host.
+        quiet: true
+      when: not (__deployment_target_creates | bool)
+
+    - name: Restore the guest group from live inventory for configuration-only recovery
+      ansible.builtin.add_host:
+        name: "{{ __deployment_target_name }}"
+        groups: provisioned_linux_guest
+        ansible_host: "{{ __inventory_vm_guard_host.decoded_variables.ansible_host }}"
+        ansible_user: "{{ fresh_definition.provisioning.guest_ssh_user }}"
+        ansible_password: "{{ fresh_definition.provisioning.guest_ssh_password }}"
+        ansible_become_password: "{{ fresh_definition.provisioning.guest_become_password }}"
+        deployment_vm_name: "{{ __deployment_target_name }}"
+        deployment_vm_ip: "{{ __inventory_vm_guard_host.decoded_variables.ansible_host }}"
+        deployment_vm_disk_gb: "{{ fresh_definition.provisioning.vm_disk_gb }}"
+        deployment_vm_vcpus: "{{ vm_vcpus | default(2) }}"
+        deployment_vm_memory_mb: "{{ vm_memory_mb | default(4096) }}"
+      when: not (__deployment_target_creates | bool)

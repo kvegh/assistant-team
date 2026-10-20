@@ -1,0 +1,101 @@
+---
+- name: Require a valid inventory-backed VM request and trusted controller connection
+  ansible.builtin.assert:
+    that:
+      - inventory_vm_guard_name | default('') is match('^[a-z][a-z0-9-]*-[0-9]+$')
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') is match('^https://')
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') | length > 0
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') is match('^[1-9][0-9]*$')
+    fail_msg: A valid VM name and trusted live AAP inventory credential are required.
+    quiet: true
+  no_log: false
+
+- name: Read authoritative inventory host bindings directly from AAP
+  ansible.builtin.uri:
+    url: >-
+      {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '')
+      }}/api/controller/v2/inventories/{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}/hosts/?page_size=200
+    headers:
+      Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+    ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') or omit }}"
+    validate_certs: true
+    return_content: true
+  register: __inventory_vm_guard_hosts
+  no_log: true
+
+- name: Require a complete inventory response
+  ansible.builtin.assert:
+    that:
+      - __inventory_vm_guard_hosts.json.count | int == __inventory_vm_guard_hosts.json.results | length
+      - __inventory_vm_guard_hosts.json.next == none
+    fail_msg: Inventory lookup was incomplete; refusing to select a VM.
+    quiet: true
+  no_log: false
+
+- name: Initialize authoritative matching hosts
+  ansible.builtin.set_fact:
+    __inventory_vm_guard_matches: []
+  no_log: true
+
+- name: Find explicit VM bindings without trusting launch-time host variables
+  ansible.builtin.set_fact:
+    __inventory_vm_guard_matches: "{{ __inventory_vm_guard_matches + [item] }}"
+  loop: "{{ __inventory_vm_guard_hosts.json.results }}"
+  when: (item.variables | from_yaml | default({}, true)).get('assistant_vm_name', '') == inventory_vm_guard_name
+  no_log: true
+
+- name: Require exactly one explicitly managed inventory host
+  ansible.builtin.assert:
+    that:
+      - >-
+        (__inventory_vm_guard_matches | length == 1) if (inventory_vm_guard_require_existing | default(true) | bool)
+        else (__inventory_vm_guard_matches | length == 0)
+      - >-
+        (inventory_vm_guard_require_existing | default(true) | bool) or
+        inventory_vm_guard_name not in (__inventory_vm_guard_hosts.json.results | map(attribute="name") | list)
+    fail_msg: VM selection must match exactly one explicit assistant_vm_name inventory binding.
+    quiet: true
+  no_log: false
+
+- name: Read authoritative direct and inherited host groups
+  ansible.builtin.uri:
+    url: >-
+      {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '')
+      }}/api/controller/v2/hosts/{{ __inventory_vm_guard_matches[0].id }}/all_groups/?page_size=200
+    headers:
+      Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+    ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') or omit }}"
+    validate_certs: true
+    return_content: true
+  register: __inventory_vm_guard_group_response
+  when: inventory_vm_guard_require_existing | default(true) | bool
+  no_log: true
+
+- name: Enforce managed inventory membership and production deletion protection
+  ansible.builtin.assert:
+    that:
+      - __inventory_vm_guard_group_response.json.count | int == __inventory_vm_guard_group_response.json.results | length
+      - __inventory_vm_guard_group_response.json.next == none
+      - "'assistant_team' in (__inventory_vm_guard_group_response.json.results | map(attribute='name') | list)"
+      - >-
+        inventory_vm_guard_operation | default('retire') in ['shutdown', 'lookup'] or
+        'prod' not in (__inventory_vm_guard_group_response.json.results | map(attribute='name') | list)
+    fail_msg: The selected host must be managed in assistant_team; production hosts cannot be deleted.
+    quiet: true
+  no_log: false
+  when: inventory_vm_guard_require_existing | default(true) | bool
+
+- name: Export trusted controller bindings and selected inventory metadata
+  ansible.builtin.set_fact:
+    __inventory_vm_guard_host: >-
+      {{ (__inventory_vm_guard_matches[0] | combine({'decoded_variables':
+      (__inventory_vm_guard_matches[0].variables | from_yaml | default({}, true))}))
+      if __inventory_vm_guard_matches | length == 1 else {} }}
+    __inventory_vm_guard_groups: >-
+      {{ (__inventory_vm_guard_group_response.json.results | map(attribute='name') | list)
+      if inventory_vm_guard_require_existing | default(true) | bool else [] }}
+    __inventory_vm_guard_inventory_id: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}"
+    __inventory_vm_guard_controller_host: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}"
+    __inventory_vm_guard_token: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+    __inventory_vm_guard_ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') }}"
+  no_log: true

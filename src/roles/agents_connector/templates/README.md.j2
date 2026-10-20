@@ -460,3 +460,13 @@ After re-login on the configured bootstrap source, launch AAP
 **Assistant Team Refresh Model Authentication** to update the encrypted companion
 vault and AAP snapshots. New complete deployments restore missing credentials
 automatically; revoked authorization still requires operator login.
+
+## VM lifecycle in AAP
+
+Deploy: **Assistant Team Fresh Deployment Test**, survey `deployment_vm_name`;
+leave tags empty for a fresh complete installation. New names need no Vault edits.
+Teardown: **Assistant Team Disposable Test Retirement**, `teardown_vm_name` plus
+explicit `retire_test_execute` confirmation. Live inventory `prod` membership
+blocks deletion. **Assistant Team Linux VM Shutdown** accepts `shutdown_vm_name`
+and preserves the VM and disks. Inventory `assistant_team` membership and exact
+VM binding are required; credentials and infrastructure stay encrypted.

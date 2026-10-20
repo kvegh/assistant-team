@@ -1,26 +1,30 @@
 ---
-- name: Load the isolated encrypted retirement definition
+- name: Resolve the requested disposable VM from live AAP inventory
   hosts: localhost
   gather_facts: false
   no_log: true
   pre_tasks:
-    - name: Read the explicitly selected test clone definition
+    - name: Validate inventory authority and production protection
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+      vars:
+        inventory_vm_guard_name: "{{ teardown_vm_name | default('') }}"
+        inventory_vm_guard_operation: retire
+    - name: Load shared encrypted infrastructure configuration
       ansible.builtin.include_role:
         name: secret_config
-        apply:
-          tags: [always]
       vars:
-        secret_config_name: retire_test
-        secret_config_namespace: retired_definition
-      tags: [always]
+        secret_config_name: fresh_test
+        secret_config_namespace: retirement_infrastructure
 
-- name: Safely retire only the selected disposable Linux test clone
+- name: Safely retire only the inventory-selected disposable Linux VM
   hosts: hypervisor
   gather_facts: false
   become: true
   no_log: true
   vars:
-    linux_vm_retire_definition: "{{ hostvars.localhost.retired_definition.provisioning }}"
+    linux_vm_retire_definition: >-
+      {{ hostvars.localhost.retirement_infrastructure.provisioning | combine({'vm_name': teardown_vm_name}) }}
     linux_vm_retire_disk: "{{ linux_vm_retire_definition.vm_dir }}/{{ linux_vm_retire_definition.vm_name }}.disk.qcow2"
     linux_vm_retire_execute: "{{ retire_test_execute | default(false) | bool }}"
   roles:

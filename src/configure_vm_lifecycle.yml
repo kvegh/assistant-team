@@ -1,0 +1,7 @@
+---
+- name: Configure inventory governed VM lifecycle jobs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - controller_vm_lifecycle

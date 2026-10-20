@@ -1,0 +1,42 @@
+---
+controller_vm_lifecycle_host: "{{ lookup('ansible.builtin.env', 'CONTROLLER_HOST') }}"
+controller_vm_lifecycle_token: "{{ lookup('ansible.builtin.env', 'CONTROLLER_OAUTH_TOKEN') }}"
+controller_vm_lifecycle_organization: "{{ lookup('ansible.builtin.env', 'CONTROLLER_ORGANIZATION') }}"
+controller_vm_lifecycle_project: ''
+controller_vm_lifecycle_inventory: ''
+controller_vm_lifecycle_execution_environment: ''
+controller_vm_lifecycle_credentials: []
+controller_vm_lifecycle_token_file: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_LIFECYCLE_TOKEN_FILE') }}"
+controller_vm_lifecycle_ca_file: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_LIFECYCLE_CA_FILE') }}"
+controller_vm_lifecycle_credential_name: Assistant Team inventory lifecycle access
+controller_vm_lifecycle_type_name: Assistant Team inventory lifecycle access
+controller_vm_lifecycle_inputs:
+  fields:
+    - {id: controller_host, type: string, label: Controller HTTPS URL}
+    - {id: inventory_id, type: string, label: Authoritative lifecycle inventory ID}
+    - {id: controller_token, type: string, label: Inventory scoped controller token, secret: true}
+    - {id: controller_ca, type: string, label: Trusted controller CA certificate bundle, multiline: true}
+    - {id: material_sha256, type: string, label: Lifecycle input checksum}
+  required: [controller_host, inventory_id, controller_token, controller_ca, material_sha256]
+controller_vm_lifecycle_injectors:
+  file:
+    template.controller_ca: !unsafe '{{ controller_ca }}'
+  env:
+    AC_AGENTS_CONTROLLER_HOST: !unsafe '{{ controller_host }}'
+    AC_AGENTS_CONTROLLER_TOKEN: !unsafe '{{ controller_token }}'
+    AC_AGENTS_CONTROLLER_INVENTORY_ID: !unsafe '{{ inventory_id }}'
+    AC_AGENTS_CONTROLLER_CA_BUNDLE: !unsafe '{{ tower.filename.controller_ca }}'
+controller_vm_lifecycle_templates:
+  - name: Assistant Team Fresh Deployment Test
+    playbook: src/deploy_complete_linux_vm.yml
+    variable: deployment_vm_name
+    description: New VM name; the inventory must not already contain this host
+  - name: Assistant Team Disposable Test Retirement
+    playbook: src/retire_test_linux_vm.yml
+    variable: teardown_vm_name
+    description: Exact registered VM name; inventory prod membership prevents deletion
+    teardown: true
+  - name: Assistant Team Linux VM Shutdown
+    playbook: src/shutdown_linux_vm.yml
+    variable: shutdown_vm_name
+    description: Exact registered VM name to shut down without deleting its disk

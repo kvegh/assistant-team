@@ -1,0 +1,31 @@
+---
+- name: Inspect lifecycle inventory group
+  ansible.builtin.uri:
+    url: >-
+      {{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/groups/?inventory={{
+      controller_vm_lifecycle_inventory }}&name={{ __controller_vm_lifecycle_group_name | urlencode }}
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    return_content: true
+  register: __controller_vm_lifecycle_group
+  no_log: true
+
+- name: Require an unambiguous lifecycle inventory group
+  ansible.builtin.assert:
+    that: __controller_vm_lifecycle_group.json.count | int <= 1
+    quiet: true
+
+- name: Create missing lifecycle inventory group
+  ansible.builtin.uri:
+    url: "{{ controller_vm_lifecycle_host | regex_replace('/$', '') }}/api/controller/v2/groups/"
+    method: POST
+    headers: {Authorization: "Bearer {{ controller_vm_lifecycle_token }}"}
+    ca_path: "{{ controller_vm_lifecycle_ca_file }}"
+    body_format: json
+    body:
+      name: "{{ __controller_vm_lifecycle_group_name }}"
+      inventory: "{{ controller_vm_lifecycle_inventory | int }}"
+    status_code: 201
+  when: __controller_vm_lifecycle_group.json.count | int == 0
+  changed_when: true
+  no_log: true

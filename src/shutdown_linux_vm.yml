@@ -1,0 +1,20 @@
+---
+- name: Resolve the requested shutdown target from live AAP inventory
+  hosts: localhost
+  gather_facts: false
+  no_log: true
+  tasks:
+    - name: Validate inventory authority before accessing the hypervisor
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+      vars:
+        inventory_vm_guard_name: "{{ shutdown_vm_name | default('') }}"
+        inventory_vm_guard_operation: shutdown
+
+- name: Gracefully shut down only the inventory-selected VM
+  hosts: hypervisor
+  gather_facts: false
+  become: true
+  no_log: true
+  roles:
+    - linux_vm_shutdown
