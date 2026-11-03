@@ -242,6 +242,12 @@ See `{{ assistant_install_root }}/README.TLDR.md` for condensed commands. Keep b
 
 ## VM storage
 
+The separate generic Linux VM playbook can provision AAP-free upstream-image
+guests on an explicitly pinned recovery hypervisor. It verifies both SSH hops,
+retains unique guest identity and checks the existing isolation policy. Minimal
+isolated guests can skip package updates through encrypted deployment settings;
+this does not install or change the assistant application on those guests.
+
 Fresh Linux VM provisioning expands the root filesystem to use its configured cloned disk capacity (20 GiB by default). The existing running VM retains its already-expanded capacity. Runtime team commands do not resize disks. Existing project and authentication data are preserved.
 
 For headless Vibe login, open its displayed sign-in link manually; the scoped browser handoff keeps native polling active. Wrapper-owned outcomes and next steps begin `[AC-Agents]:`.

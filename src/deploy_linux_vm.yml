@@ -35,4 +35,20 @@
   roles:
     - linux_guest
     - linux_root_growth
-    - linux_updates
+    - role: linux_updates
+      when: provisioning.update_packages | default(true) | bool
+  tasks:
+    - name: Publish verified generic guest provenance
+      ansible.builtin.set_stats:
+        data:
+          generic_linux_vm: >-
+            {{ deployment_vm_provenance | combine({
+              'machine_id': ansible_facts.machine_id,
+              'verified': true,
+              'vcpus': deployment_vm_vcpus | int,
+              'memory_mb': deployment_vm_memory_mb | int,
+              'disk_gb': deployment_vm_disk_gb | int,
+              'packages_updated': provisioning.update_packages | default(true) | bool}) }}
+        per_host: false
+        aggregate: false
+      tags: [guest_config, offline_recovery]

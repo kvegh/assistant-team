@@ -258,6 +258,32 @@ and hypervisor machine credentials. Its project can read this public code
 repository over HTTPS without a GitHub source-control credential. Access to the
 private companion repository still requires its own authorization.
 
+The same playbook supports a standalone upstream RHEL image on an explicitly
+pinned recovery hypervisor. Set encrypted `provisioning.generic_image: true`,
+`provisioning.hypervisor_pin`, `provisioning.isolation_policy`, and the requested
+guest SSH/bootstrap values. The pin includes the managed address/account/port,
+machine ID and verified public SSH keys. The inventory address and actual remote
+identity must match before a disk write, and the existing persistent isolation
+policy must pass without modification. Guest SSH crosses this hypervisor and
+verifies fresh guest host keys, protecting deployments with overlapping private networks.
+
+For this mode, the role creates the management account and host keys inside only
+the new clone, with customization networking disabled. The password is read from
+a protected temporary file, and temporary passwords/private host keys are removed
+on success or failure. The original upstream image is never customized. Recovery
+guests use q35, host-passthrough CPU, explicit core topology and virtio disk/network
+devices. The disk must be at least the upstream image's virtual size.
+
+Set `provisioning.update_packages: false` for deliberately isolated minimal demo
+guests. This skips RHSM registration and package updates; other deployments keep
+the existing update behavior. Root-filesystem growth and authenticated guest
+resource verification still run. The `generic_linux_vm` job artifact reports the
+verified VM UUID, disk, MAC/IP, public host keys, image hash and hypervisor identity
+for the caller's existing encrypted deployment record and exact decommissioning.
+It contains no password or private key. Reuse the same playbook with different
+saved resource inputs for different guests; the playbook does not allocate names
+or install AAP/the assistant application.
+
 Provisioning refuses an existing VM or disk and refuses shrinking the golden
 image. A failed deployment preserves resources for investigation; it does not
 automatically delete or overwrite them. Increase `vm_disk_gb` if the golden
@@ -272,7 +298,7 @@ in Vault; cleanup refuses to remove root, the automation account, or an account
 with an unexpected home directory. The shared source image is never customized.
 Guest verification checks that installer artifacts and the AAP account are absent.
 
-After boot, the job registers RHEL with the existing activation key if needed,
+With the default update policy, the job registers RHEL with the existing activation key if needed,
 enables BaseOS and AppStream, updates every installed package with DNF, and
 reboots if packages changed. It reconnects and requires `dnf --refresh check-update`
 to return no pending updates before publishing success. Subscription details are

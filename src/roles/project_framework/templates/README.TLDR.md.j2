@@ -6,6 +6,11 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team: commands
 
+The separate generic Linux VM playbook supports AAP-free upstream-image guests
+with an explicitly pinned recovery hypervisor and fresh guest SSH identity.
+Minimal isolated guests can skip updates through encrypted provisioning settings.
+This does not install the assistant application or change this running host.
+
 New projects have their own shared workspace, eight role homes/workspaces and
 eight containers when started. Claude/Gemini CLI setup defaults are prepared in
 those isolated homes; Codex trusts only its three verified generated broker hooks.

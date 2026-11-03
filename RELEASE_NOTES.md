@@ -1,5 +1,19 @@
 # Release notes
 
+## 1.6.0
+
+Reuse the generic Linux VM playbook for isolated upstream-image recovery guests.
+Verify hypervisor identity, SSH keys and the existing isolation policy before
+writes; provision unique guest keys and bootstrap access offline, and route guest
+SSH through the selected hypervisor. Preserve q35/virtio/host-passthrough device
+choices with explicit CPU cores. Minimal guests can explicitly skip RHSM and
+package updates. Publish verified UUID/disk/network/public-key provenance for
+exact decommissioning. Production template defaults remain unchanged.
+
+Validation: 38 focused tests, including real Ansible identity refusal, protected
+bootstrap success/failure and external configuration loading; playbook syntax and
+16-file production lint. Live guest deployment is a separate acceptance step.
+
 ## 1.5.3
 
 Normalize numeric controller resource IDs so unchanged lifecycle setup does not rewrite job templates. Add regression coverage.

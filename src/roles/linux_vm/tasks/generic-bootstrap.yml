@@ -1,0 +1,84 @@
+---
+- name: Allocate a private bootstrap workspace on the selected hypervisor
+  ansible.builtin.tempfile:
+    state: directory
+    path: /tmp
+    prefix: linux-vm-bootstrap-
+  register: __linux_vm_bootstrap
+  no_log: true
+
+- name: Prepare only the new clone's access and public identity
+  no_log: true
+  block:
+    - name: Generate unique guest host keys before its first boot
+      ansible.builtin.command:
+        argv: [ssh-keygen, -q, -t, "{{ item }}", -N, '', -f, "{{ __linux_vm_bootstrap.path }}/ssh_host_{{ item }}_key"]
+      loop: [ed25519, ecdsa, rsa]
+      changed_when: true
+
+    - name: Retain only the new guest's public SSH keys
+      ansible.builtin.slurp:
+        src: "{{ __linux_vm_bootstrap.path }}/ssh_host_{{ item }}_key.pub"
+      loop: [ed25519, ecdsa, rsa]
+      register: __linux_vm_guest_public_keys
+
+    - name: Preserve public host keys for strict guest trust and decommission metadata
+      ansible.builtin.set_fact:
+        __linux_vm_public_host_keys: >-
+          {{ __linux_vm_guest_public_keys.results | map(attribute='content') | map('b64decode') |
+             map('linux_vm_public_key') | list }}
+
+    - name: Write the bootstrap password only to a private temporary file
+      ansible.builtin.copy:
+        dest: "{{ __linux_vm_bootstrap.path }}/password"
+        content: "{{ provisioning.guest_ssh_password }}\n"
+        mode: '0600'
+      diff: false
+
+    - name: Preserve provisioned host keys and enable the requested SSH password login
+      ansible.builtin.copy:
+        dest: "{{ __linux_vm_bootstrap.path }}/cloud.cfg"
+        content: |
+          preserve_hostname: true
+          ssh_deletekeys: false
+          ssh_pwauth: true
+          disable_root: true
+        mode: '0600'
+
+    - name: Customize the new generic clone without network access
+      ansible.builtin.command:
+        argv:
+          - virt-customize
+          - -a
+          - "{{ linux_vm_deployment_disk }}"
+          - --no-network
+          - --hostname
+          - "{{ linux_vm_deployment_name }}.{{ provisioning.vm_domain }}"
+          - --run-command
+          - "{{ lookup('ansible.builtin.template', role_path + '/templates/bootstrap_generic_clone.sh.j2') }}"
+          - --password
+          - "{{ provisioning.guest_ssh_user }}:file:{{ __linux_vm_bootstrap.path }}/password"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/cloud.cfg:/etc/cloud/cloud.cfg.d/99-automation-bootstrap.cfg"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_ed25519_key.pub:/etc/ssh/ssh_host_ed25519_key.pub"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_ecdsa_key:/etc/ssh/ssh_host_ecdsa_key"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_ecdsa_key.pub:/etc/ssh/ssh_host_ecdsa_key.pub"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key"
+          - --upload
+          - "{{ __linux_vm_bootstrap.path }}/ssh_host_rsa_key.pub:/etc/ssh/ssh_host_rsa_key.pub"
+          - --selinux-relabel
+      changed_when: true
+
+  always:
+    - name: Remove only this new clone's private bootstrap workspace
+      ansible.builtin.file:
+        path: "{{ __linux_vm_bootstrap.path }}"
+        state: absent
+      when: __linux_vm_bootstrap.path is match('^/tmp/linux-vm-bootstrap-[A-Za-z0-9_-]+$')
+      no_log: true

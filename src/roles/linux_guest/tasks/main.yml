@@ -63,9 +63,10 @@
   register: __linux_guest_remaining_aap_account
   changed_when: false
   failed_when: __linux_guest_remaining_aap_account.rc not in [0, 2]
+  when: not (provisioning.generic_image | default(false) | bool)
 
 - name: Verify clone cleanup
   ansible.builtin.assert:
     that:
       - __linux_guest_remaining_installers.matched == 0
-      - __linux_guest_remaining_aap_account.rc == 2
+      - provisioning.generic_image | default(false) | bool or __linux_guest_remaining_aap_account.rc == 2

@@ -1,5 +1,9 @@
 # linux_guest
 
+Generic upstream recovery guests are checked without assuming an inherited AAP
+service account. The caller's fresh public host keys and selected hypervisor SSH
+route remain required; no unverified private-address fallback is used.
+
 Verify the selected guest identity, allocated resources and golden-image cleanup.
 
 ## Interface

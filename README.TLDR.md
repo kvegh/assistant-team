@@ -3,6 +3,14 @@
 Code is public; encrypted configuration and authentication snapshots remain in
 the private `assistant-team-secrets` companion repository.
 
+`src/deploy_linux_vm.yml` can create an AAP-free guest from a standalone upstream
+image on a pinned recovery hypervisor. Keep bootstrap credentials and hypervisor
+identity in encrypted `provisioning`, and set `update_packages: false` only for
+deliberately isolated minimal guests. Fresh host keys and an SSH hop through the
+selected hypervisor protect deployments with overlapping private networks. The same
+playbook accepts separate VM name/CPU/RAM/disk inputs; it allocates no counter.
+See the source README's Infrastructure section for required fields and artifacts.
+
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 
 Communication stays on agents-connector + tmux; alternatives await review and

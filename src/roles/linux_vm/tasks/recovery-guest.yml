@@ -1,0 +1,62 @@
+---
+- name: Read public native domain provenance when resuming guest configuration
+  ansible.builtin.command:
+    argv: [virsh, -c, 'qemu:///system', desc, "{{ linux_vm_deployment_name }}", --config]
+  register: __linux_vm_recovered_description
+  changed_when: false
+  when: __linux_vm_public_host_keys is not defined
+  no_log: true
+
+- name: Require the resumed domain UUID, hypervisor and source image to match
+  ansible.builtin.set_fact:
+    __linux_vm_public_host_keys: >-
+      {{ __linux_vm_recovered_description.stdout | from_json | linux_vm_recovery_saved_keys(
+        linux_vm_deployment_name, __linux_vm_domain_uuid.stdout | trim,
+        provisioning.hypervisor_pin.machine_id, __linux_vm_source_image.stat.checksum) }}
+  when: __linux_vm_public_host_keys is not defined
+  no_log: true
+
+- name: Require public keys provisioned into this exact generic clone
+  ansible.builtin.assert:
+    that: __linux_vm_public_host_keys | linux_vm_public_keys | length > 0
+    fail_msg: Recover the explicitly provisioned guest public host keys before guest configuration.
+  no_log: true
+
+- name: Add only this new guest's verified public keys to the private trust file
+  ansible.builtin.blockinfile:
+    path: "{{ __linux_vm_recovery_trust.path }}"
+    marker: '# {mark} new generic guest public keys'
+    block: |
+      {% for key in __linux_vm_public_host_keys %}
+      {{ linux_vm_deployment_name }} {{ key }}
+      {% endfor %}
+    mode: '0600'
+  delegate_to: localhost
+  become: false
+  no_log: true
+
+- name: Pin both SSH hops to this recovery hypervisor and newly created guest
+  ansible.builtin.set_fact:
+    __linux_vm_recovery_ssh_args: >-
+      {{ provisioning.hypervisor_pin | linux_vm_recovery_guest_ssh(__linux_vm_recovery_trust.path, linux_vm_deployment_name) }}
+  no_log: true
+
+- name: Save public recovery provenance in the native domain description
+  ansible.builtin.command:
+    argv:
+      - virsh
+      - -c
+      - qemu:///system
+      - desc
+      - "{{ linux_vm_deployment_name }}"
+      - --config
+      - >-
+        {{ {'schema_version': 1, 'deployment_type': 'generic-recovery',
+            'vm_name': linux_vm_deployment_name,
+            'uuid': __linux_vm_domain_uuid.stdout | trim,
+            'hypervisor_machine_id': provisioning.hypervisor_pin.machine_id,
+            'source_image_sha256': __linux_vm_source_image.stat.checksum,
+            'host_keys': __linux_vm_public_host_keys} | to_json }}
+  changed_when: true
+  no_log: true
+  when: __linux_vm_recovered_description is skipped

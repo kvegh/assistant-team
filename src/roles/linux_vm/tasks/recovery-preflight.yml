@@ -1,0 +1,93 @@
+---
+- name: Require the declared recovery target and isolated generic-image inputs
+  ansible.builtin.assert:
+    that:
+      - provisioning.hypervisor_pin | linux_vm_recovery_pin(ansible_host) is mapping
+      - provisioning.generic_image | default(false) | bool
+      - provisioning.isolation_policy is mapping
+      - provisioning.isolation_policy.bridges | length > 0
+      - provisioning.guest_ssh_user is match('^[a-z_][a-z0-9_-]*$')
+      - provisioning.guest_ssh_user != 'root'
+      - provisioning.guest_ssh_password is string or provisioning.guest_ssh_password is vault_encrypted
+      - provisioning.guest_ssh_password | length > 0
+      - provisioning.guest_become_password == provisioning.guest_ssh_password
+    fail_msg: Use the verified recovery inventory and explicit generic guest bootstrap inputs.
+  no_log: true
+
+- name: Allocate private controller-side hypervisor trust
+  ansible.builtin.tempfile:
+    state: file
+    prefix: linux-vm-recovery-known-hosts-
+  delegate_to: localhost
+  become: false
+  register: __linux_vm_recovery_trust
+  check_mode: false
+
+- name: Write only the pinned hypervisor public host keys
+  ansible.builtin.copy:
+    dest: "{{ __linux_vm_recovery_trust.path }}"
+    content: |
+      {% for key in provisioning.hypervisor_pin.host_keys %}
+      {{ provisioning.hypervisor_pin.address }} {{ key }}
+      [{{ provisioning.hypervisor_pin.address }}]:{{ provisioning.hypervisor_pin.port }} {{ key }}
+      {% endfor %}
+    mode: '0600'
+  delegate_to: localhost
+  become: false
+  check_mode: false
+  no_log: true
+
+- name: Bind remote actions to the pinned managed account and SSH keys
+  ansible.builtin.set_fact:
+    ansible_user: "{{ provisioning.hypervisor_pin.user }}"
+    ansible_port: "{{ provisioning.hypervisor_pin.port }}"
+    ansible_password: ''
+    ansible_become_password: ''
+    ansible_become_user: root
+    ansible_host_key_checking: true
+    ansible_ssh_host_key_checking: true
+    ansible_ssh_common_args: >-
+      -o StrictHostKeyChecking=yes -o UserKnownHostsFile={{ __linux_vm_recovery_trust.path | quote }}
+  no_log: true
+
+- name: Verify the actual recovery hypervisor identity before a disk write
+  ansible.builtin.command:
+    argv: [cat, /etc/machine-id]
+  changed_when: false
+  check_mode: false
+  register: __linux_vm_recovery_machine
+  failed_when: __linux_vm_recovery_machine.stdout | trim != provisioning.hypervisor_pin.machine_id
+  no_log: true
+
+- name: Require the existing persistent isolation policy without modifying it
+  ansible.builtin.command:
+    argv: [/usr/local/sbin/hactar-recovery-isolation, check]
+    stdin: "{{ provisioning.isolation_policy | to_json }}"
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Require recovery isolation to be active and enabled
+  ansible.builtin.command:
+    argv: [systemctl, "{{ item }}", hactar-recovery-isolation.service]
+  loop: [is-active, is-enabled]
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Inspect the generic source without following symlinks
+  ansible.builtin.stat:
+    path: "{{ provisioning.golden_image_path }}"
+    follow: false
+    checksum_algorithm: sha256
+  register: __linux_vm_source_image
+  no_log: true
+
+- name: Require a regular saved generic image
+  ansible.builtin.assert:
+    that:
+      - __linux_vm_source_image.stat.isreg | default(false)
+      - not (__linux_vm_source_image.stat.islnk | default(false))
+      - __linux_vm_source_image.stat.checksum | length == 64
+    fail_msg: Select the already verified regular upstream image on the recovery hypervisor.
+  no_log: true

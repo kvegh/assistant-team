@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+# Runs only inside a newly created upstream-image clone, with networking off.
+bootstrap_user={{ provisioning.guest_ssh_user | quote }}
+case "$bootstrap_user" in
+    ''|root|*[!a-z0-9_-]*) exit 1 ;;
+esac
+if ! id "$bootstrap_user" >/dev/null 2>&1; then
+    useradd --create-home --shell /bin/bash "$bootstrap_user"
+fi
+if [ "$(id -u "$bootstrap_user")" -eq 0 ]; then
+    exit 1
+fi
+printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$bootstrap_user" > /etc/sudoers.d/90-automation-bootstrap
+chmod 0440 /etc/sudoers.d/90-automation-bootstrap
+visudo -cf /etc/sudoers.d/90-automation-bootstrap
+mkdir -p /etc/cloud/cloud.cfg.d /etc/ssh/sshd_config.d
+printf 'PasswordAuthentication yes\nPermitRootLogin no\n' > /etc/ssh/sshd_config.d/00-automation-bootstrap.conf
+truncate -s 0 /etc/machine-id
+mkdir -p /var/lib/dbus
+rm -f /var/lib/dbus/machine-id
+ln -s /etc/machine-id /var/lib/dbus/machine-id
+rm -rf /var/lib/cloud/instance /var/lib/cloud/instances
+if command -v subscription-manager >/dev/null 2>&1; then
+    subscription-manager clean
+fi

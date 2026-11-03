@@ -1,6 +1,6 @@
 ---
 - name: Validate deployment inputs
-  tags: [offline_recovery]
+  tags: [always]
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
@@ -13,14 +13,25 @@
       - provisioning.vm_domain | length > 0
       - provisioning.vm_network | length > 0
       - provisioning.guest_ssh_user | length > 0
+      - not (provisioning.generic_image | default(false) | bool) or provisioning.hypervisor_pin is defined
+      - not (provisioning.generic_image | default(false) | bool) or 'offline_recovery' not in ansible_run_tags
     fail_msg: Invalid deployment inputs; check the Vault configuration and launch variables.
+
+- name: Verify a declared recovery hypervisor before any remote inspection
+  ansible.builtin.include_tasks:
+    file: recovery-preflight.yml
+    apply:
+      tags: [always]
+  when: provisioning.hypervisor_pin is defined
+  tags: [always]
 
 - name: Inspect existing VM names
   tags: [offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, list, --all, --name]
+    argv: [virsh, -c, 'qemu:///system', list, --all, --name]
   register: __linux_vm_existing_vms
   changed_when: false
+  check_mode: false
 
 - name: Inspect target disk
   tags: [offline_recovery]
@@ -49,12 +60,23 @@
     argv: [qemu-img, info, --output=json, "{{ provisioning.golden_image_path }}"]
   register: __linux_vm_golden_image
   changed_when: false
+  check_mode: false
 
 - name: Refuse disk sizes smaller than the golden image
   ansible.builtin.assert:
     that:
       - (linux_vm_disk_gb | int * 1073741824) >= ((__linux_vm_golden_image.stdout | from_json)['virtual-size'] | int)
     fail_msg: Requested disk size is smaller than the source image; increase linux_vm_disk_gb.
+
+- name: Require a standalone upstream generic image without an external backing chain
+  ansible.builtin.assert:
+    that: "'backing-filename' not in (__linux_vm_golden_image.stdout | from_json)"
+    fail_msg: Select a standalone upstream image before creating a recovery guest.
+  when: provisioning.generic_image | default(false) | bool
+
+- name: Stop a successful check-mode preflight before provisioning
+  ansible.builtin.meta: end_play
+  when: ansible_check_mode
 
 - name: Ensure VM directory exists
   ansible.builtin.file:
@@ -69,6 +91,12 @@
     remote_src: true
     force: false
     mode: "0600"
+  register: __linux_vm_new_clone
+
+- name: Refuse to customize a disk that this run did not create
+  ansible.builtin.assert:
+    that: __linux_vm_new_clone.changed
+    fail_msg: The destination appeared while cloning; preserve it and investigate before retrying.
 
 - name: Resize the cloned disk
   ansible.builtin.command:
@@ -76,6 +104,7 @@
   changed_when: true
 
 - name: Remove AAP installer artifacts and inherited clutter from the clone
+  when: not (provisioning.generic_image | default(false) | bool)
   ansible.builtin.command:
     argv:
       - virt-customize
@@ -88,6 +117,7 @@
 - name: Customize hostname and unique guest identity
   tags: [offline_recovery]
   no_log: "{{ not (vm_identity_diagnostics | default(false) | bool) }}"
+  when: not (provisioning.generic_image | default(false) | bool)
   ansible.builtin.command:
     argv:
       - virt-customize
@@ -100,33 +130,33 @@
       - --selinux-relabel
   changed_when: true
 
+- name: Bootstrap an upstream generic image without network or inherited access
+  ansible.builtin.include_tasks: generic-bootstrap.yml
+  when: provisioning.generic_image | default(false) | bool
+
 - name: Import and start the VM
   tags: [offline_recovery]
   ansible.builtin.command:
-    argv:
-      - virt-install
-      - --name
-      - "{{ linux_vm_deployment_name }}"
-      - --vcpus
-      - "{{ linux_vm_vcpus | int }}"
-      - --memory
-      - "{{ linux_vm_memory_mb | int }}"
-      - --import
-      - --graphics
-      - none
-      - --osinfo
-      - detect=on,require=off
-      - --disk
-      - "path={{ linux_vm_deployment_disk }},format=qcow2"
-      - --network
-      - "network={{ provisioning.vm_network }}"
-      - --noautoconsole
+    argv: >-
+      {{ ['virt-install', '--connect', 'qemu:///system',
+      '--name', linux_vm_deployment_name,
+      '--vcpus', (linux_vm_vcpus | string) ~
+        (',sockets=1,cores=' ~ (linux_vm_vcpus | string) ~ ',threads=1'
+         if provisioning.hypervisor_pin is defined else ''),
+      '--memory', linux_vm_memory_mb | string,
+      '--import', '--graphics', 'none', '--osinfo', 'detect=on,require=off',
+      '--disk', 'path=' ~ linux_vm_deployment_disk ~ ',format=qcow2' ~
+        (',bus=virtio' if provisioning.hypervisor_pin is defined else ''),
+      '--network', 'network=' ~ provisioning.vm_network ~
+        (',model=virtio' if provisioning.hypervisor_pin is defined else ''),
+      '--noautoconsole'] +
+      (['--cpu', 'host-passthrough', '--machine', 'q35'] if provisioning.hypervisor_pin is defined else []) }}
   changed_when: true
 
 - name: Read the VM network interface
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, domiflist, "{{ linux_vm_deployment_name }}"]
+    argv: [virsh, -c, 'qemu:///system', domiflist, "{{ linux_vm_deployment_name }}"]
   register: __linux_vm_vm_interfaces
   changed_when: false
 
@@ -138,7 +168,7 @@
 - name: Inspect the VM memory allocation in libvirt
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, dominfo, "{{ linux_vm_deployment_name }}"]
+    argv: [virsh, -c, 'qemu:///system', dominfo, "{{ linux_vm_deployment_name }}"]
   environment:
     LC_ALL: C
   register: __linux_vm_vm_allocation
@@ -161,7 +191,7 @@
 - name: Wait for a DHCP lease matching the VM MAC address
   tags: [guest_config, offline_recovery]
   ansible.builtin.command:
-    argv: [virsh, net-dhcp-leases, "{{ provisioning.vm_network }}", --mac, "{{ __linux_vm_deployment_mac }}"]
+    argv: [virsh, -c, 'qemu:///system', net-dhcp-leases, "{{ provisioning.vm_network }}", --mac, "{{ __linux_vm_deployment_mac }}"]
   register: __linux_vm_vm_lease
   changed_when: false
   until: __linux_vm_vm_lease.stdout is search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+')
@@ -173,6 +203,21 @@
   ansible.builtin.set_fact:
     __linux_vm_deployment_ip: "{{ __linux_vm_vm_lease.stdout | regex_search('(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?=/)') }}"
 
+- name: Read the new domain UUID for later exact decommissioning
+  ansible.builtin.command:
+    argv: [virsh, -c, 'qemu:///system', domuuid, "{{ linux_vm_deployment_name }}"]
+  register: __linux_vm_domain_uuid
+  changed_when: false
+  tags: [guest_config, offline_recovery]
+
+- name: Prepare pinned guest trust through the selected recovery hypervisor
+  ansible.builtin.include_tasks:
+    file: recovery-guest.yml
+    apply:
+      tags: [guest_config, offline_recovery]
+  when: provisioning.hypervisor_pin is defined
+  tags: [guest_config, offline_recovery]
+
 - name: Add the new guest for connection verification
   tags: [guest_config, offline_recovery]
   ansible.builtin.add_host:
@@ -183,8 +228,23 @@
     ansible_password: "{{ provisioning.guest_ssh_password }}"
     ansible_become: true
     ansible_become_password: "{{ provisioning.guest_become_password }}"
+    ansible_ssh_common_args: "{{ __linux_vm_recovery_ssh_args | default(omit) }}"
+    ansible_host_key_checking: "{{ true if provisioning.hypervisor_pin is defined else omit }}"
+    ansible_ssh_host_key_checking: "{{ true if provisioning.hypervisor_pin is defined else omit }}"
     deployment_vm_name: "{{ linux_vm_deployment_name }}"
     deployment_vm_ip: "{{ __linux_vm_deployment_ip }}"
     deployment_vm_disk_gb: "{{ linux_vm_disk_gb | int }}"
     deployment_vm_vcpus: "{{ linux_vm_vcpus | int }}"
     deployment_vm_memory_mb: "{{ linux_vm_memory_mb | int }}"
+    deployment_vm_provenance:
+      vm_name: "{{ linux_vm_deployment_name }}"
+      uuid: "{{ __linux_vm_domain_uuid.stdout | trim }}"
+      disk: "{{ linux_vm_deployment_disk }}"
+      network: "{{ provisioning.vm_network }}"
+      mac: "{{ __linux_vm_deployment_mac }}"
+      address: "{{ __linux_vm_deployment_ip }}"
+      user: "{{ provisioning.guest_ssh_user }}"
+      port: 22
+      host_keys: "{{ __linux_vm_public_host_keys | default([]) }}"
+      hypervisor_machine_id: "{{ provisioning.hypervisor_pin.machine_id | default('') }}"
+      source_image_sha256: "{{ __linux_vm_source_image.stat.checksum | default('') }}"
