@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.6.4
+
+Document the existing-environment guest credential source, nonsecret recovery
+input contract and implementation reference. Preserve ordinary deployment scope.
+
 ## 1.6.3
 
 Use the existing encrypted environment snapshot as the sole recovery guest login

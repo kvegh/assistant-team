@@ -1,5 +1,25 @@
 # Design decisions history
 
+## Read recovery guest login from the existing encrypted environment
+
+Implementation: `7646b0a`; companion configuration: `3281e04`.
+
+Recovery launches now carry only the complete nonsecret image/network/pin/policy
+mapping in `linux_vm_recovery`. The existing encrypted environment snapshot is
+the sole guest-login source. Both plays use the existing configuration loader's
+namespace support and explicitly merge the declared recovery fields after each
+load. Credential overrides and incomplete routing inputs fail before remote work.
+Ordinary generic deployments retain their previous interface and behavior.
+
+The optional source template keeps its ID and three existing credentials; saved
+empty recovery/name inputs replace the earlier provisioning override. No custom
+decryption adapter, credential type or additional job is required. Standalone
+upstream guests select the local datasource for predictable first boot.
+
+The updated contract passed 40 focused tests, including both actual encrypted
+configuration loads and credential-override refusal; 17-file production lint
+also passed. Live guest verification is recorded separately.
+
 ## Maintain recovery provisioning as optional source-side CaC
 
 Private configuration implementation: `db61f52` in the companion repository.
