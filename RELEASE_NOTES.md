@@ -1,5 +1,17 @@
 # Release notes
 
+## 1.6.3
+
+Use the existing encrypted environment snapshot as the sole recovery guest login
+source. Launch only nonsecret `linux_vm_recovery` image/network/pin/policy inputs,
+require the complete input set, and refuse credential overrides. Reapply the same
+merge after environment loading in both plays. Preserve ordinary generic template
+behavior and independent SSH/isolation checks. Standalone upstream guests select
+the local datasource without cloud metadata requests.
+
+Validation: 40 focused tests, including both real encrypted environment loads and
+credential-override refusal; playbook syntax and 17-file production lint.
+
 ## 1.6.2
 
 Document the optional source-side recovery Job Template, its external inventory

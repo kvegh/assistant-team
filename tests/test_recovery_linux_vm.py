@@ -29,6 +29,62 @@ def pin():
 
 
 class RecoveryConnectionTests(unittest.TestCase):
+    def test_recovery_launch_uses_encrypted_file_credentials_after_both_environment_loads(self):
+        self.recovery_inputs(False)
+
+    def test_recovery_launch_rejects_credential_overrides_before_using_them(self):
+        self.recovery_inputs(True)
+
+    def recovery_inputs(self, reject):
+        source = yaml.safe_load((ROOT / 'src/deploy_linux_vm.yml').read_text())
+        with tempfile.TemporaryDirectory(prefix='recovery-input-contract-') as directory:
+            root = Path(directory)
+            secret = VaultSecret(b'synthetic-vault-password')
+            configuration = {'provisioning': {'vm_name': 'legacy-placeholder',
+                'golden_image_path': '/legacy/image.qcow2', 'vm_dir': '/legacy/vms',
+                'vm_domain': 'example.invalid', 'vm_network': 'legacy-network',
+                'guest_ssh_user': 'fixture', 'guest_ssh_password': 'synthetic-protected-password',
+                'guest_become_password': 'synthetic-protected-password'}}
+            encrypted = root / 'environment_vault.yml'
+            encrypted.write_bytes(VaultLib([('default', secret)]).encrypt(yaml.safe_dump(configuration)))
+            key = root / 'vault-password'; key.write_text('synthetic-vault-password'); key.chmod(0o600)
+            recovery = {'vm_name': 'fixture-v07', 'golden_image_path': '/verified/upstream.qcow2',
+                'vm_dir': '/verified/vms', 'vm_domain': 'example.invalid', 'vm_network': 'isolated',
+                'generic_image': True, 'update_packages': False, 'hypervisor_pin': pin(),
+                'isolation_policy': {'bridges': ['fixture0']}}
+            if reject:
+                recovery['guest_ssh_password'] = 'rejected-plaintext-secret-canary'
+            variables = {'secret_config_file': str(encrypted), 'vm_name': 'fixture-v07',
+                         'linux_vm_recovery': recovery}
+            plays = []
+            for index, original in enumerate(source):
+                tasks = deepcopy(original['pre_tasks'])
+                for task in tasks:
+                    if 'ansible.builtin.include_tasks' in task:
+                        task['ansible.builtin.include_tasks']['file'] = str(ROOT / 'src/tasks/linux_vm_recovery_inputs.yml')
+                tasks.append({'name': 'Verify protected login and recovery inputs survive this load', 'no_log': True,
+                    'ansible.builtin.assert': {'that': [
+                        "provisioning.guest_ssh_user == 'fixture'",
+                        "provisioning.guest_ssh_password == 'synthetic-protected-password'",
+                        "provisioning.vm_name == 'fixture-v07'",
+                        "provisioning.golden_image_path == '/verified/upstream.qcow2'",
+                        'provisioning.generic_image', 'not provisioning.update_packages']}})
+                plays.append({'name': 'Exercise actual environment load ' + str(index), 'hosts': 'localhost',
+                    'connection': 'local', 'gather_facts': False, 'vars': variables, 'tasks': tasks})
+            play = root / 'fixture.yml'; play.write_text(yaml.safe_dump(plays, sort_keys=False))
+            environment = dict(os.environ, ANSIBLE_NOCOLOR='1', ANSIBLE_LOCAL_TEMP=str(root / 'local'),
+                               ANSIBLE_REMOTE_TEMP=str(root / 'remote'),
+                               ANSIBLE_ROLES_PATH=str(ROOT / 'src/roles'))
+            outcome = subprocess.run([sys.executable, '-m', 'ansible.cli.playbook', '-i', 'localhost,',
+                str(play), '--vault-password-file', str(key)], cwd=ROOT, env=environment,
+                text=True, capture_output=True, timeout=60)
+            self.assertEqual(outcome.returncode == 0, not reject, outcome.stdout + outcome.stderr)
+            self.assertIn('Require a complete nonsecret recovery override', outcome.stdout)
+            if reject:
+                self.assertNotIn('TASK [Merge declared recovery values', outcome.stdout)
+            self.assertNotIn('synthetic-protected-password', outcome.stdout + outcome.stderr)
+            self.assertNotIn('rejected-plaintext-secret-canary', outcome.stdout + outcome.stderr)
+
     def test_invalid_or_wrong_recovery_identity_is_rejected(self):
         original = pin()
         self.assertEqual(recovery.recovery_pin(original, "192.0.2.10"), original)

@@ -259,9 +259,10 @@ repository over HTTPS without a GitHub source-control credential. Access to the
 private companion repository still requires its own authorization.
 
 The same playbook supports a standalone upstream RHEL image on an explicitly
-pinned recovery hypervisor. Set encrypted `provisioning.generic_image: true`,
-`provisioning.hypervisor_pin`, `provisioning.isolation_policy`, and the requested
-guest SSH/bootstrap values. The pin includes the managed address/account/port,
+pinned recovery hypervisor. Supply the nonsecret `linux_vm_recovery` image,
+network and pin values. The existing encrypted environment snapshot remains the
+sole guest SSH/bootstrap credential source; the playbook merges the explicit
+recovery inputs after loading that file in both plays. The pin includes the managed address/account/port,
 machine ID and verified public SSH keys. The inventory address and actual remote
 identity must match before a disk write, and the existing persistent isolation
 policy must pass without modification. Guest SSH crosses this hypervisor and
@@ -274,7 +275,7 @@ on success or failure. The original upstream image is never customized. Recovery
 guests use q35, host-passthrough CPU, explicit core topology and virtio disk/network
 devices. The disk must be at least the upstream image's virtual size.
 
-Set `provisioning.update_packages: false` for deliberately isolated minimal demo
+Set `linux_vm_recovery.update_packages: false` for deliberately isolated minimal demo
 guests. This skips RHSM registration and package updates; other deployments keep
 the existing update behavior. Root-filesystem growth and authenticated guest
 resource verification still run. The `generic_linux_vm` job artifact reports the
@@ -290,23 +291,27 @@ source-side Job Template under
 recovery inventory/credentials and remains outside the seven ordinary Assistant
 imports. Apply its labels and template explicitly with the existing CoP roles
 after checking those external dependencies; no extra launcher is used.
-Its saved empty `provisioning` and `vm_name` reject missing launch inputs before
-legacy snapshot defaults can be used. Keep the Job Template limit empty so its
+Its saved empty `linux_vm_recovery` and `vm_name` reject missing launch inputs
+before legacy snapshot routing can be used. Guest credential overrides are
+rejected; the existing encrypted file is authoritative. Keep the Job Template limit empty so its
 second play can verify the newly added guest.
 
 For each recovery launch, provide concrete values for these keys:
 
 | Launch key | Required value |
 |---|---|
-| `vm_name`, `provisioning.vm_name` | The same already allocated guest name. |
+| `vm_name`, `linux_vm_recovery.vm_name` | The same already allocated guest name. |
 | `vm_vcpus`, `vm_memory_mb`, `vm_disk_gb` | Requested CPU cores, RAM in MiB and disk in GiB. |
-| `provisioning.golden_image_path`, `vm_dir`, `vm_domain`, `vm_network` | The saved upstream image and selected destination values; the latter three are also nested under `provisioning`. |
-| `provisioning.guest_ssh_user`, `guest_ssh_password`, `guest_become_password` | Nested guest bootstrap values, encrypted with the existing environment Vault. |
-| `provisioning.generic_image`, `provisioning.update_packages` | `true` and `false`, respectively, for these isolated minimal guests. |
-| `provisioning.hypervisor_pin` | The independently verified address, managed account/port, machine ID and public SSH keys. |
-| `provisioning.isolation_policy` | The complete current approved isolation-helper policy mapping. |
+| `linux_vm_recovery.golden_image_path`, `vm_dir`, `vm_domain`, `vm_network` | The saved upstream image and destination values; all four are nested under `linux_vm_recovery`. |
+| `linux_vm_recovery.generic_image`, `linux_vm_recovery.update_packages` | `true` and `false`, respectively, for these isolated minimal guests. |
+| `linux_vm_recovery.hypervisor_pin` | The independently verified address, managed account/port, machine ID and public SSH keys. |
+| `linux_vm_recovery.isolation_policy` | The complete current approved isolation-helper policy mapping. |
 
-The resulting disk path is `provisioning.vm_dir/<vm_name>.disk.qcow2`.
+The resulting disk path is `linux_vm_recovery.vm_dir/<vm_name>.disk.qcow2`. The
+existing `provisioning.guest_ssh_user`, `guest_ssh_password` and
+`guest_become_password` are read from the encrypted environment file, not from
+Controller launch variables. Ordinary generic deployments keep their existing
+configuration interface.
 
 Provisioning refuses an existing VM or disk and refuses shrinking the golden
 image. A failed deployment preserves resources for investigation; it does not

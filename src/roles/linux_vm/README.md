@@ -6,8 +6,11 @@ Provision a guarded fresh clone on one libvirt hypervisor.
 
 provisioning: encrypted image/network/guest bootstrap definition; linux_vm_vcpus, linux_vm_memory_mb and linux_vm_disk_gb are typed defaults. Legacy vm_* resource overrides remain accepted.
 
-For a standalone upstream image, set `provisioning.generic_image: true` and provide
-the explicit `hypervisor_pin`, `isolation_policy`, and guest SSH/bootstrap values.
+For a standalone upstream image, the shared playbook merges explicit nonsecret
+`linux_vm_recovery` inputs into the existing encrypted `provisioning` definition.
+Guest SSH/bootstrap values come only from that existing file; the override cannot
+contain credential fields. Set `generic_image: true` and supply `hypervisor_pin`
+and `isolation_policy` in the recovery dictionary.
 The pin declares `address`, `user`, `port`, `machine_id` and verified `host_keys`.
 The current isolation policy is checked without modifying it. This mode provisions
 fresh guest keys/account offline, uses q35/virtio/host-passthrough with one thread

@@ -8,7 +8,8 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 The separate generic Linux VM playbook supports AAP-free upstream-image guests
 with an explicitly pinned recovery hypervisor and fresh guest SSH identity.
-Minimal isolated guests can skip updates through encrypted provisioning settings.
+Minimal isolated guests use nonsecret recovery inputs and guest login from the
+existing encrypted environment snapshot.
 This does not install the assistant application or change this running host.
 The recovery provisioning Job Template is optional source-side CaC, outside
 ordinary Assistant imports and their credentials.

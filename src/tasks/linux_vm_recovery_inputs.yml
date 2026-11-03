@@ -1,0 +1,39 @@
+---
+- name: Require a complete nonsecret recovery override and the existing encrypted environment
+  ansible.builtin.assert:
+    that:
+      - linux_vm_recovery is mapping
+      - __linux_vm_environment is mapping
+      - __linux_vm_environment.provisioning is mapping
+      - vm_name is defined
+      - linux_vm_recovery.vm_name | default('') == vm_name
+      - >-
+        linux_vm_recovery.keys() | list | sort ==
+        ['generic_image', 'golden_image_path', 'hypervisor_pin', 'isolation_policy',
+         'update_packages', 'vm_dir', 'vm_domain', 'vm_name', 'vm_network'] | sort
+      - linux_vm_recovery.generic_image is boolean and linux_vm_recovery.generic_image
+      - linux_vm_recovery.update_packages is boolean and not linux_vm_recovery.update_packages
+      - linux_vm_recovery.hypervisor_pin is mapping
+      - linux_vm_recovery.isolation_policy is mapping
+      - __linux_vm_environment.provisioning.guest_ssh_user | length > 0
+      - __linux_vm_environment.provisioning.guest_ssh_password | length > 0
+    fail_msg: Provide only the declared recovery routing/image inputs; guest login comes from the existing encrypted environment.
+  no_log: true
+
+- name: Merge declared recovery values without replacing protected guest access
+  ansible.builtin.set_fact:
+    provisioning: "{{ __linux_vm_environment.provisioning | combine(linux_vm_recovery) }}"
+  no_log: true
+
+- name: Refuse conflicting higher-priority provisioning or credential overrides
+  ansible.builtin.assert:
+    that:
+      - provisioning.vm_name == vm_name
+      - provisioning.hypervisor_pin == linux_vm_recovery.hypervisor_pin
+      - provisioning.generic_image | bool
+      - not (provisioning.update_packages | bool)
+      - provisioning.guest_ssh_user == __linux_vm_environment.provisioning.guest_ssh_user
+      - provisioning.guest_ssh_password == __linux_vm_environment.provisioning.guest_ssh_password
+      - provisioning.guest_become_password == __linux_vm_environment.provisioning.guest_become_password
+    fail_msg: The recovery guest must retain the existing encrypted bootstrap login and explicit routing.
+  no_log: true

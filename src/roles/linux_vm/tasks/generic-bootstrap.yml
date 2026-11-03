@@ -43,6 +43,7 @@
           ssh_deletekeys: false
           ssh_pwauth: true
           disable_root: true
+          datasource_list: [None]
         mode: '0600'
 
     - name: Customize the new generic clone without network access
