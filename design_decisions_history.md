@@ -1,5 +1,17 @@
 # Design decisions history
 
+## Maintain recovery provisioning as optional source-side CaC
+
+Private configuration implementation: `db61f52` in the companion repository.
+
+The new recovery utility uses this project's existing generic Linux playbook but
+requires separately owned recovery inventory and credentials. Its desired
+configuration follows the companion's existing optional-maintenance data pattern,
+which preserves the seven ordinary Assistant templates and unrelated targets.
+Explicit application uses the existing CoP label/template roles. Empty saved
+provisioning/name values reject missing input before legacy snapshot defaults
+can apply; an empty Job Template limit keeps second-play guest verification.
+
 ## Reuse the generic provisioner for isolated upstream-image guests
 
 Implementation: `7a58966`.

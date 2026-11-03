@@ -284,6 +284,30 @@ It contains no password or private key. Reuse the same playbook with different
 saved resource inputs for different guests; the playbook does not allocate names
 or install AAP/the assistant application.
 
+The private companion maintains **Deploy AIOps Linux Demo VM** as an optional
+source-side Job Template under
+`assistant_team_recovery_vm_deployment.configuration`. It references existing
+recovery inventory/credentials and remains outside the seven ordinary Assistant
+imports. Apply its labels and template explicitly with the existing CoP roles
+after checking those external dependencies; no extra launcher is used.
+Its saved empty `provisioning` and `vm_name` reject missing launch inputs before
+legacy snapshot defaults can be used. Keep the Job Template limit empty so its
+second play can verify the newly added guest.
+
+For each recovery launch, provide concrete values for these keys:
+
+| Launch key | Required value |
+|---|---|
+| `vm_name`, `provisioning.vm_name` | The same already allocated guest name. |
+| `vm_vcpus`, `vm_memory_mb`, `vm_disk_gb` | Requested CPU cores, RAM in MiB and disk in GiB. |
+| `provisioning.golden_image_path`, `vm_dir`, `vm_domain`, `vm_network` | The saved upstream image and selected destination values; the latter three are also nested under `provisioning`. |
+| `provisioning.guest_ssh_user`, `guest_ssh_password`, `guest_become_password` | Nested guest bootstrap values, encrypted with the existing environment Vault. |
+| `provisioning.generic_image`, `provisioning.update_packages` | `true` and `false`, respectively, for these isolated minimal guests. |
+| `provisioning.hypervisor_pin` | The independently verified address, managed account/port, machine ID and public SSH keys. |
+| `provisioning.isolation_policy` | The complete current approved isolation-helper policy mapping. |
+
+The resulting disk path is `provisioning.vm_dir/<vm_name>.disk.qcow2`.
+
 Provisioning refuses an existing VM or disk and refuses shrinking the golden
 image. A failed deployment preserves resources for investigation; it does not
 automatically delete or overwrite them. Increase `vm_disk_gb` if the golden

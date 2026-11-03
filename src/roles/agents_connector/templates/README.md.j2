@@ -247,6 +247,8 @@ guests on an explicitly pinned recovery hypervisor. It verifies both SSH hops,
 retains unique guest identity and checks the existing isolation policy. Minimal
 isolated guests can skip package updates through encrypted deployment settings;
 this does not install or change the assistant application on those guests.
+The companion CaC keeps its recovery deployment utility optional on the source
+AAP; ordinary Assistant imports do not require recovery inventory or credentials.
 
 Fresh Linux VM provisioning expands the root filesystem to use its configured cloned disk capacity (20 GiB by default). The existing running VM retains its already-expanded capacity. Runtime team commands do not resize disks. Existing project and authentication data are preserved.
 

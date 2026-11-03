@@ -10,6 +10,9 @@ deliberately isolated minimal guests. Fresh host keys and an SSH hop through the
 selected hypervisor protect deployments with overlapping private networks. The same
 playbook accepts separate VM name/CPU/RAM/disk inputs; it allocates no counter.
 See the source README's Infrastructure section for required fields and artifacts.
+The private companion's optional **Deploy AIOps Linux Demo VM** definition applies
+only to a source AAP with existing recovery dependencies. Its saved empty inputs
+prevent legacy defaults, and its empty limit permits guest verification.
 
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 

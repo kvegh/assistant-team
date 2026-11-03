@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.6.2
+
+Document the optional source-side recovery Job Template, its external inventory
+and credential dependencies, concrete launch inputs, and safe empty defaults.
+Ordinary Assistant imports retain their seven templates and previous scope.
+
 ## 1.6.1
 
 Document the upstream-image recovery decision, source implementation reference,
