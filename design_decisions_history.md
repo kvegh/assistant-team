@@ -1,5 +1,30 @@
 # Design decisions history
 
+## Reuse the generic provisioner for isolated upstream-image guests
+
+Implementation: `7a58966`.
+
+The owner requested small AAP-free demo guests sharing an existing deployment
+number. The existing generic Linux playbook remains the provisioning entry point,
+with separate resource inputs for each guest. An optional recovery configuration
+now verifies the independently selected hypervisor and its existing isolation
+policy, prepares unique identity/access offline, and authenticates both SSH hops.
+This prevents overlapping private networks from selecting a different guest.
+
+The captured reference uses q35, host-passthrough CPU and virtio devices, which
+are retained for recovery guests with explicit core topology. Disk-size guards
+protect the upstream image. Minimal isolated guests explicitly skip RHSM/package
+updates; the existing default update behavior remains. Public provenance stays
+in the native domain description and job artifacts for the caller's encrypted
+allocation record and exact later decommissioning. No separate provisioner,
+credential type, allocation store or application installation was introduced.
+
+Validation covered 38 focused checks, including real Ansible identity refusal,
+inline-Vault passwords and private bootstrap-file cleanup on success/failure;
+playbook syntax and 16-file production lint passed. Live deployment is recorded
+separately after the newly allocated destination is available. Existing production
+Job Template credential assignments and the source VM were not changed.
+
 ## Check unfinished background work every ten minutes
 
 Documentation: `11c0367`.

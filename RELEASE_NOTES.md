@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.6.1
+
+Document the upstream-image recovery decision, source implementation reference,
+security boundaries and offline validation. Live guest acceptance remains separate.
+
 ## 1.6.0
 
 Reuse the generic Linux VM playbook for isolated upstream-image recovery guests.
