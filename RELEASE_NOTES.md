@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.6.5
+
+Document successful source-template deployment of both minimal upstream guest
+profiles, independent identity/resource verification and the separate container
+runtime/MCP prerequisite. Clarify that the guest root-growth role expands the
+cloned root filesystem, and distinguish AAP-derived image cleanup.
+
 ## 1.6.4
 
 Document the existing-environment guest credential source, nonsecret recovery

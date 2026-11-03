@@ -14,6 +14,9 @@ See the source README's Infrastructure section for required fields and artifacts
 The private companion's optional **Deploy AIOps Linux Demo VM** definition applies
 only to a source AAP with existing recovery dependencies. Its saved empty inputs
 prevent legacy defaults, and its empty limit permits guest verification.
+Live acceptance passed for separate 1 CPU/2 GiB/10 GiB and 4 core/4 GiB/20 GiB
+upstream guests, including strict SSH, sudo, root growth and independent identity
+checks. Minimal-image deployment alone does not install a container runtime or MCP.
 
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 

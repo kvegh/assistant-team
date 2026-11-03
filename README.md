@@ -313,13 +313,25 @@ existing `provisioning.guest_ssh_user`, `guest_ssh_password` and
 Controller launch variables. Ordinary generic deployments keep their existing
 configuration interface.
 
+Live acceptance verified two separate upstream-image guests through this source
+template: one with 1 CPU, 2 GiB RAM and a 10 GiB disk, and another with 4 CPU
+cores, 4 GiB RAM and a 20 GiB disk. Both passed authenticated SSH/sudo, hostname,
+resource and root-filesystem checks. Independent hypervisor readback confirmed
+their running state, exact disk ownership and distinct machine IDs and SSH keys.
+The existing isolation policy and source image remained unchanged. The caller
+keeps actual guest identities and provenance in its encrypted allocation record.
+These minimal guests do not include a container runtime; MCP and application
+services require their separately configured prerequisites.
+
 Provisioning refuses an existing VM or disk and refuses shrinking the golden
 image. A failed deployment preserves resources for investigation; it does not
 automatically delete or overwrite them. Increase `vm_disk_gb` if the golden
 image is larger than the requested disk. Disk resizing changes the virtual disk
-capacity; guest partition and filesystem growth are not performed by this playbook.
+capacity; the guest root-growth role then expands the root partition and
+filesystem.
 
-Before booting, provisioning removes AAP installer artifacts under `/opt/sources`,
+For the existing AAP-derived golden-image mode, provisioning removes AAP installer
+artifacts under `/opt/sources`,
 the unused AAP service account and its home, associated lingering and sudo entry,
 package caches, inherited shell histories, and logs from the cloned disk. The
 automation access account is preserved. Configure `provisioning.aap_service_user`

@@ -1,5 +1,20 @@
 # Design decisions history
 
+## Verify both minimal upstream guest profiles through the source template
+
+Public implementation: `7646b0a`; live-verified source revision: `32c7f9e`;
+companion configuration: `3281e04`.
+
+The existing source recovery template successfully provisioned and verified both
+requested profiles: 1 CPU/2 GiB/10 GiB and 4 cores/4 GiB/20 GiB. Native hypervisor
+readback independently confirmed running state, exact resource allocation and
+distinct guest identities. Both authenticated SSH hops, sudo and root-filesystem
+checks passed. Package updates remained disabled for these isolated minimal
+guests; neither the source image nor the existing isolation policy was changed.
+Protected artifacts supply public provenance to the caller's existing encrypted
+allocation record rather than introducing another resource store. Container
+runtime and MCP setup remain separate from this verified Linux provisioning.
+
 ## Read recovery guest login from the existing encrypted environment
 
 Implementation: `7646b0a`; companion configuration: `3281e04`.
