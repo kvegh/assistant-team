@@ -2046,3 +2046,22 @@ working public connectivity and blocked production access. Saved API tokens,
 allocation history and existing literal template tags were preserved. No
 provisioning or package-update stage ran. This verifies the generic guest hook;
 other guest restrictions and complete recovery acceptance remain separate.
+
+
+## Keep the shared release dependency compatible with portable source AAPs
+
+Implementation `9c7b87d` updates the existing exact-revision dependency to
+AutoDeploy `a522e7b9c2e0af4bd5049682ce00dde356c5a32f` (0.37.0). Shared publication
+now preserves an AAP inventory display alias through its existing verified
+physical VM ownership and can run on a fresh source without an optional Hactar
+inventory. Missing optional inventory is accepted only after authenticated
+source API superuser visibility is proved; required inventories, exact guest
+identity, trusted TLS and production destination blocks remain mandatory.
+
+This changes the existing pin rather than adding a job, credential interface,
+wrapper, service or configuration store. Source and home operator guides explain
+the resulting behavior. Nine focused recovery tests, the generic deployment
+syntax check and scoped production lint passed. No Assistant deployment, model
+call or guest/firewall action was performed for this dependency update. The
+recorded normal-job acceptance for the earlier shared revision remains separate
+from verification of the new pin.

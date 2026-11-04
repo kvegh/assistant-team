@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.7.6
+
+Document implementation `9c7b87d`, the portable shared release dependency and its
+focused validation, preserving the scope of earlier normal-job acceptance.
+
 ## 1.7.5
 
 Pin AutoDeploy implementation `a522e7b` (0.37.0) for recovery guest release.
