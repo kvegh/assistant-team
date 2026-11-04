@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.7.1
+
+Document implementation `f1836fb`, its shared AutoDeploy revision and the
+existing-job release, rollback and validation behavior.
+
 ## 1.7.0
 
 Release a verified recovery guest from additional IPv4 quarantine after its

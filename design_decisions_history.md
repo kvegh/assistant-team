@@ -2003,3 +2003,21 @@ inventory action after acceptance, never libvirt metadata.
 The operator authorized keeping the original installation shut down, retiring
 only the current disposable clone, deploying its successor independently of the
 original, testing it and then marking that successor production in inventory.
+
+## Release exact recovery guests after normal configuration succeeds
+
+The operator approved automatic removal of the additional IPv4 recovery
+quarantine after verified generic guest setup, with production destinations
+remaining blocked. Implementation `f1836fb` derives the actual libvirt bridge and
+uses authenticated guest facts before invoking a shared, exact-revision-pinned
+AutoDeploy role in the same job. Existing source API, CA, Git writer and Vault
+credentials save the release in existing policy captures and source inventory.
+No separate job, service, credential type, model call or new secret store is
+introduced. Configuration-only retry remains available for existing guests;
+ordinary non-recovery deployments retain their prior behavior.
+
+The shared role is pinned to AutoDeploy implementation `183d3ce`. Nine focused
+generic guest tests, syntax checks and production lint passed; shared runtime
+and native-role tests cover exact identity, publication failure rollback and
+retention after durable publication. Live acceptance is verified through the
+existing source-side generic VM template rather than recloning a guest.
