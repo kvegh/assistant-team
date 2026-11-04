@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.7.8
+
+Document implementation `002e0ff`, the shared native-rule durability correction
+and the focused validation without extending earlier live acceptance claims.
+
 ## 1.7.7
 
 Pin shared AutoDeploy correction `1e89880` (0.37.2). It persists exact approved

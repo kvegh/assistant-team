@@ -2065,3 +2065,20 @@ syntax check and scoped production lint passed. No Assistant deployment, model
 call or guest/firewall action was performed for this dependency update. The
 recorded normal-job acceptance for the earlier shared revision remains separate
 from verification of the new pin.
+
+
+## Pin the durable native-rule correction
+
+Implementation `002e0ff` advances the existing shared dependency to AutoDeploy
+`1e8988040990c168d4ae17567cae0dc71e1480cf` (0.37.2). The shared correction saves
+only the exact approved installation or management native firewalld grant with
+its policy aliases, preserving previous declarations and refusing conflicting
+selected-rule states. This keeps later host firewall reconciliation consistent
+with approved live grants. The same upstream revision fixes absent group
+variables at the collection boundary without changing explicit values.
+
+Inventory alias handling, verified optional-Hactar absence, production protection
+and the existing job/credential interfaces remain unchanged. Nine focused generic
+recovery tests, deployment syntax and scoped production lint passed. No live
+Assistant deployment or model/provider call ran; the earlier normal-job evidence
+continues to describe its original recorded revision rather than this new pin.
