@@ -491,3 +491,9 @@ remain protected. The existing deployment job saves the change in encrypted CaC
 and source inventory using its source API/writer/Vault credentials. Failed setup
 keeps isolation; incomplete publication fails the job. To verify an existing
 generic guest without recloning it, use the same deployment with `guest_config`.
+
+The shared guest-release dependency is revision-pinned. It preserves renamed AAP
+inventory entries using their existing verified physical VM identity. A fresh
+source without the optional Hactar inventory is supported only after its absence
+and source API superuser access are verified. Required inventories, exact guest
+ownership, production exclusions and trusted HTTPS remain mandatory.

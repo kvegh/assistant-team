@@ -218,3 +218,9 @@ successful authenticated setup. Production destinations remain blocked. The same
 job saves the policy in encrypted CaC and source inventory; other guests, normal
 firewalld and private MCP stay protected. Use `guest_config` to verify an existing
 generic guest without recloning it.
+
+The shared guest-release dependency is revision-pinned. It preserves renamed AAP
+inventory entries using their existing verified physical VM identity. A fresh
+source without the optional Hactar inventory is supported only after its absence
+and source API superuser access are verified. Required inventories, exact guest
+ownership, production exclusions and trusted HTTPS remain mandatory.

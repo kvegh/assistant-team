@@ -1,5 +1,14 @@
 # Release notes
 
+## 1.7.5
+
+Pin AutoDeploy implementation `a522e7b` (0.37.0) for recovery guest release.
+Preserve AAP inventory aliases and support a verified absent optional Hactar
+inventory on a fresh source, retaining required inventory, identity, production
+and trusted-TLS checks. Existing job and credential interfaces are unchanged.
+The earlier normal-job acceptance remains evidence for its recorded revision;
+this pin update does not claim a new live deployment.
+
 ## 1.7.4
 
 Document normal configuration-only job acceptance of the pinned automatic guest

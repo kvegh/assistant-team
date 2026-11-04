@@ -313,6 +313,15 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
+The current dependency pin selects AutoDeploy implementation `a522e7b`
+(version 0.37.0). It preserves renamed AAP inventory entries through their existing
+verified physical VM identity. A fresh source AAP can save guest release without
+having the optional Hactar inventory installed: absence is accepted only after
+an authenticated source API superuser check. Required shared and recovery
+inventories, guest ownership, production exclusions and trusted HTTPS remain
+mandatory. This dependency update does not create another job or change the
+existing credential interface.
+
 Normal source job 3282 passed this configuration-only path on one existing test
 guest using revision `6098490` and pinned AutoDeploy implementation `d2d7254`.
 Independent inspection confirmed the exact selected release, unchanged VM
