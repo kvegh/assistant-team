@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.8.3
+
+Document trust correction `ca0c08c`, the credential-free runtime diagnosis and
+native TLS/ownership validation. Live installation remains independently verified
+after updating the reviewed deployment-test project pin.
+
 ## 1.8.2
 
 Preserve runtime default trust when adding the lifecycle API CA. Use a protected

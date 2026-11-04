@@ -1,5 +1,26 @@
 # Design decisions history
 
+## Preserve installed trust when a lifecycle CA is supplied
+
+Implementation: `ca0c08c` (1.8.2).
+
+A supplied public CA bundle replaced the execution environment's installed trust
+when the inventory guard called its selected AAP internally. A read-only probe
+of the actual runtime reproduced the failure without sending HTTP credentials:
+default internal trust worked, the supplemental bundle alone failed, and combined
+trust worked. The guard now preserves default trust and appends the declared CA
+in a private job-local PEM, reusing it for existing inventory operations.
+Certificate verification, protected logging, token handling and global defaults
+remain unchanged. This follows the existing AutoDeploy trust approach rather than
+adding credentials or an authentication fallback.
+
+Fourteen focused tests passed, including eight real native TLS cases in both
+template modes and existing ownership/production guards. Untrusted or malformed
+CA input still fails before HTTP, and supplemental trust stays scoped. Three
+entry-point syntax checks and offline production lint passed. The failed live
+attempt stopped before any VM was created; successful live installation requires
+the reviewed project pin and a new normal job.
+
 ## Verify complete recovery-host installations before full isolation release
 
 Implementation: `e9fe7a0` (1.8.0); shared dependency: AutoDeploy `2795c13` (0.38.0).
