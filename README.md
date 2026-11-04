@@ -159,6 +159,13 @@ validator can then be checked without restoring saved provider credentials,
 logging in or invoking a model. Authentication and provider entitlement remain
 separate acceptance work.
 
+Inventory API access preserves the execution environment's active default trust
+and appends the declared lifecycle CA in a private job-local PEM file. This
+supports an AAP hostname that resolves to its trusted internal endpoint inside the
+runtime as well as externally issued certificates. URI calls and later inventory
+registration share that combined file; certificate verification stays enabled,
+malformed CA input fails closed, and global trust and token handling are unchanged.
+
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
 Ansible Vault-encrypted files. Plaintext documentation and examples must use

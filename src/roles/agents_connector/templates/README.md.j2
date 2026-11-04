@@ -6,6 +6,10 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team operator guide
 
+Lifecycle API requests combine the runtime's default TLS trust and its declared
+supplemental CA in a private job-local file. Certificate verification remains
+enabled; internal and external routing do not change authentication or global trust.
+
 Complete installation acceptance can deliberately defer saved provider
 authentication with `native_auth_vault_restore_enabled: false`. CLI versions and
 disposable dummy-harness project checks do not prove provider entitlement and do

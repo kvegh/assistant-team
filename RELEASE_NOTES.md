@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.8.2
+
+Preserve runtime default trust when adding the lifecycle API CA. Use a protected
+combined PEM for existing URI calls and exported inventory operations, retaining
+certificate verification, protected logging and unchanged token/credential handling.
+Cover actual private-TLS requests in both native modes, additive trust, unchanged
+global defaults and rejection of untrusted or malformed CA material.
+
 ## 1.8.1
 
 Document implementation `e9fe7a0`, verified bootstrap/final-release ordering,

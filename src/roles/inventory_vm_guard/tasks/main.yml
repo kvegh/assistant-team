@@ -10,6 +10,59 @@
     quiet: true
   no_log: false
 
+- name: Keep runtime default trust when supplementing the inventory API CA
+  delegate_to: localhost
+  connection: local
+  become: false
+  no_log: true
+  block:
+    - name: Start with the execution environment's default API trust
+      ansible.builtin.set_fact:
+        __inventory_vm_guard_ca_path: ''
+
+    - name: Supplement rather than replace default API trust
+      when: lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') | length > 0
+      block:
+        - name: Validate the supplemental CA and locate the active default PEM bundle
+          ansible.builtin.command:
+            argv:
+              - "{{ ansible_playbook_python }}"
+              - -c
+              - >-
+                import ssl, sys; context = ssl.create_default_context();
+                context.load_verify_locations(cafile=sys.argv[1]);
+                print(ssl.get_default_verify_paths().cafile or '')
+              - "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') }}"
+          register: __inventory_vm_guard_default_ca
+          changed_when: false
+
+        - name: Require the supported execution environment's default PEM bundle
+          ansible.builtin.assert:
+            that: __inventory_vm_guard_default_ca.stdout | trim | length > 0
+            fail_msg: Inventory API access requires the runtime default PEM trust bundle.
+            quiet: true
+
+        - name: Allocate a private job-local combined CA file
+          ansible.builtin.tempfile:
+            state: file
+            prefix: assistant-inventory-ca-
+          register: __inventory_vm_guard_combined_ca
+          check_mode: false
+
+        - name: Preserve runtime trust and append only the declared inventory CA
+          ansible.builtin.copy:
+            dest: "{{ __inventory_vm_guard_combined_ca.path }}"
+            mode: '0600'
+            content: |
+              {{ lookup('ansible.builtin.file', __inventory_vm_guard_default_ca.stdout | trim, rstrip=false) }}
+              {{ lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE'), rstrip=false) }}
+          diff: false
+          check_mode: false
+
+        - name: Use the combined file only for inventory API operations
+          ansible.builtin.set_fact:
+            __inventory_vm_guard_ca_path: "{{ __inventory_vm_guard_combined_ca.path }}"
+
 - name: Read authoritative inventory host bindings directly from AAP
   ansible.builtin.uri:
     url: >-
@@ -17,7 +70,7 @@
       }}/api/controller/v2/inventories/{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}/hosts/?page_size=200
     headers:
       Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
-    ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') or omit }}"
+    ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
     validate_certs: true
     return_content: true
   register: __inventory_vm_guard_hosts
@@ -64,7 +117,7 @@
       }}/api/controller/v2/hosts/{{ __inventory_vm_guard_matches[0].id }}/all_groups/?page_size=200
     headers:
       Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
-    ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') or omit }}"
+    ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
     validate_certs: true
     return_content: true
   register: __inventory_vm_guard_group_response
@@ -97,5 +150,4 @@
     __inventory_vm_guard_inventory_id: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}"
     __inventory_vm_guard_controller_host: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}"
     __inventory_vm_guard_token: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
-    __inventory_vm_guard_ca_path: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_CA_BUNDLE') }}"
   no_log: true

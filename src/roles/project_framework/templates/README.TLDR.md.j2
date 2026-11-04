@@ -6,6 +6,9 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team: commands
 
+Lifecycle APIs preserve runtime TLS trust and add the declared supplemental CA
+only for their requests. Certificate verification and token handling stay enabled.
+
 Complete installation tests can defer provider credentials with the existing
 `native_auth_vault_restore_enabled: false` setting. CLI/project validation then
 uses model-free checks. A pinned generic guest receives full recovery isolation

@@ -3,6 +3,10 @@
 Code is public; encrypted configuration and authentication snapshots remain in
 the private `assistant-team-secrets` companion repository.
 
+Lifecycle API calls preserve runtime default TLS trust and append the declared
+CA only for those calls. They never disable certificate verification or replace
+the runtime's internal trust with a public-only bundle.
+
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;
 version checks and disposable project tests make no model requests. Canonical
