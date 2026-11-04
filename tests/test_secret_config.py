@@ -171,6 +171,17 @@ class ExternalConfigurationAnsibleTests(unittest.TestCase):
             'that': ["fixture_marker == 'credential'"]}}], env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_retirement_consumes_its_selected_encrypted_profile_instead_of_fresh_defaults(self):
+        self.encrypt('fresh_test_vault.yml', 'fresh-profile-must-not-win')
+        self.encrypt('retire_test_vault.yml', 'selected-retirement-profile')
+        play = yaml.safe_load((ROOT / 'src/retire_test_linux_vm.yml').read_text())[0]
+        loader = next(task for task in play['pre_tasks']
+                      if task.get('ansible.builtin.include_role', {}).get('name') == 'secret_config')
+        result = self.run_play([loader, {'ansible.builtin.assert': {'that': [
+            "retirement_infrastructure.fixture_marker == 'selected-retirement-profile'",
+            'fixture_marker is undefined']}}])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_explicit_relative_override_wins_over_credential_and_default(self):
         self.encrypt('environment_vault.yml', 'companion')
         injected = self.encrypt('injected_vault.yml', 'credential')

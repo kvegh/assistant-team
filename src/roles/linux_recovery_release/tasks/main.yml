@@ -10,6 +10,7 @@
       - deployment_vm_trust_file is match('^/tmp/linux-vm-recovery-known-hosts-[A-Za-z0-9_]+$')
       - linux_recovery_release_revision is match('^[a-f0-9]{40}$')
       - linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+      - linux_recovery_release_operation in ['release_guest', 'guest_bootstrap_https']
     fail_msg: Finish authenticated guest verification and select the reviewed release implementation before changing isolation.
   no_log: true
 
@@ -44,6 +45,7 @@
         recovery_release_guest: "{{ deployment_vm_verified_provenance }}"
         recovery_release_hypervisor: "{{ deployment_vm_hypervisor_pin }}"
         recovery_release_trust_file: "{{ deployment_vm_trust_file }}"
+        recovery_release_operation: "{{ linux_recovery_release_operation }}"
 
   always:
     - name: Remove this job's implementation checkout

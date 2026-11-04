@@ -1,5 +1,21 @@
 # Release notes
 
+## 1.8.0
+
+Support canonical versioned Assistant VM names alongside legacy numeric names,
+retaining live inventory ownership and production retirement protection. Reuse
+the generic guest publication/release tasks only after complete software
+installation and model-free validation succeed. Keep generic deployment ordering,
+truthful update provenance, disabled-auth acceptance and configuration-only
+retries. Native fixtures cover both template modes, refused base/bootstrap paths,
+failed software and successful retries without creating VMs or calling providers.
+Bootstrap package access and exact shared decommission cleanup remain explicit
+prerequisites for live recovery-host acceptance.
+Pin reviewed AutoDeploy `2795c13` (0.38.0) and reuse its exact public-HTTPS bootstrap
+operation after base/root verification, retaining full release at final success.
+Current retries require the selected encrypted policy snapshot to be refreshed
+after a prior grant; strict policy checks and provider-auth deferral remain.
+
 ## 1.7.8
 
 Document implementation `002e0ff`, the shared native-rule durability correction

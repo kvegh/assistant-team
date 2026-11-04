@@ -3,6 +3,17 @@
 Code is public; encrypted configuration and authentication snapshots remain in
 the private `assistant-team-secrets` companion repository.
 
+Complete software tests use a separate VM and the selected encrypted test profile.
+Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;
+version checks and disposable project tests make no model requests. Canonical
+`example-v07` names retain the existing exact inventory and retirement guards.
+Approved bootstrap grants only public IPv4 HTTPS after base verification. Full recovery isolation is released
+only after the complete software installation and validation succeed. Retry a
+failed installation with Job Tags `guest_config`, preserving the registered VM.
+Refresh the selected encrypted policy snapshot before retry if a prior grant
+changed canonical policy; its exact preflight is deliberately retained.
+Released guests also require exact shared policy/inventory cleanup at disposal.
+
 `src/deploy_linux_vm.yml` can create an AAP-free guest from a standalone upstream
 image on a pinned recovery hypervisor. Guest bootstrap credentials come from the
 existing encrypted environment; pass routing/image pins through
@@ -24,7 +35,8 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `1e89880` (0.37.2), preserving AAP
+The current shared pin selects AutoDeploy `2795c13` (0.38.0), adding exact public
+HTTPS bootstrap while preserving AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
 The shared correction also saves native firewall declarations alongside approved

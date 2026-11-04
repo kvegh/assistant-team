@@ -6,6 +6,16 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team: commands
 
+Complete installation tests can defer provider credentials with the existing
+`native_auth_vault_restore_enabled: false` setting. CLI/project validation then
+uses model-free checks. A pinned generic guest receives full recovery isolation
+release only after successful software validation; approved bootstrap allows only
+public IPv4 HTTPS after authenticated base/root checks. Configuration-only retries use Job Tags `guest_config`
+and the same exact inventory-owned VM name. Canonical `example-v07` and legacy
+numeric names retain ownership and production protection.
+Refresh the selected encrypted policy snapshot before retry when a prior grant
+changed canonical policy; automatic cross-inventory refresh is not implemented.
+
 The separate generic Linux VM playbook supports AAP-free upstream-image guests
 with an explicitly pinned recovery hypervisor and fresh guest SSH identity.
 Minimal isolated guests use nonsecret recovery inputs and guest login from the

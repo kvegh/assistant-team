@@ -11,10 +11,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class VmShutdownTests(unittest.TestCase):
     def test_shutdown_changes_only_selected_domain_state(self):
+        self.shutdown('example-1')
+
+    def test_versioned_shutdown_changes_only_selected_domain_state(self):
+        self.shutdown('example-v16')
+
+    def shutdown(self, selected):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             fixture = root / "state.json"
-            fixture.write_text(json.dumps({"example-1": "running", "example-5": "running"}))
+            fixture.write_text(json.dumps({selected: "running", "example-5": "running"}))
             calls = root / "calls.jsonl"
             virsh = root / "virsh"
             virsh.write_text("""#!/usr/bin/env python3
@@ -29,8 +35,8 @@ if args == ['list', '--all', '--name']:
     print('\\n'.join(state))
 elif args[0] == 'domstate':
     print(state[args[1]])
-elif args == ['shutdown', 'example-1']:
-    state['example-1'] = 'shut off'
+elif args == ['shutdown', os.environ['SHUTDOWN_TEST_SELECTED']]:
+    state[args[1]] = 'shut off'
     statefile.write_text(json.dumps(state))
 else:
     raise SystemExit('Forbidden virsh operation')
@@ -40,17 +46,17 @@ else:
             play.write_text("- hosts: localhost\n  gather_facts: false\n  roles: [linux_vm_shutdown]\n")
             result = subprocess.run(
                 ["ansible-playbook", "-i", "localhost,", "-c", "local", str(play), "-e", json.dumps({
-                    "shutdown_vm_name": "example-1", "__inventory_vm_guard_matches": [{"id": 1}],
+                    "shutdown_vm_name": selected, "__inventory_vm_guard_matches": [{"id": 1}],
                 })], cwd=ROOT, text=True, capture_output=True, check=False,
                 env=dict(os.environ, PATH=directory + os.pathsep + os.environ["PATH"],
                          ANSIBLE_LOCAL_TEMP=str(root / "tmp"), ANSIBLE_REMOTE_TEMP=str(root / "remote"), ANSIBLE_NOCOLOR="1",
                          ANSIBLE_ROLES_PATH=str(ROOT / "src/roles"), SHUTDOWN_TEST_STATE=str(fixture),
-                         SHUTDOWN_TEST_CALLS=str(calls)),
+                         SHUTDOWN_TEST_CALLS=str(calls), SHUTDOWN_TEST_SELECTED=selected),
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual(json.loads(fixture.read_text()), {"example-1": "shut off", "example-5": "running"})
+            self.assertEqual(json.loads(fixture.read_text()), {selected: "shut off", "example-5": "running"})
             commands = [json.loads(line) for line in calls.read_text().splitlines()]
-            self.assertEqual([args for args in commands if args[0] == "shutdown"], [["shutdown", "example-1"]])
+            self.assertEqual([args for args in commands if args[0] == "shutdown"], [["shutdown", selected]])
             self.assertTrue(all(args[0] in {"list", "domstate", "shutdown"} for args in commands))
 
 

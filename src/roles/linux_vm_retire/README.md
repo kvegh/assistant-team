@@ -11,6 +11,13 @@ file edit is needed. `linux_vm_retire_execute` defaults false for read-only
 preflight. Requires existing libvirt CLI tools and the inventory lifecycle
 credential described by `inventory_vm_guard`.
 
+The entry point consumes its existing injected `retire_test` ciphertext, allowing
+a selected recovery-host retirement profile while preserving the original fresh
+deployment configuration. Canonical version names such as `example-v07` retain
+the exact live ownership and production checks. A released recovery guest also
+needs exact shared inventory/policy cleanup; domain/disk deletion by itself is
+not complete recovery-host decommissioning.
+
 ## Safety and validation
 
 Requires a unique explicit `assistant_vm_name` binding in the `assistant_team`

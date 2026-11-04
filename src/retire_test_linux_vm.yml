@@ -17,7 +17,7 @@
           tags: [always]
       tags: [always]
       vars:
-        secret_config_name: fresh_test
+        secret_config_name: retire_test
         secret_config_namespace: retirement_infrastructure
 
 - name: Safely retire only the inventory-selected disposable Linux VM

@@ -1,4 +1,5 @@
 ---
 # Public implementation dependency; credentials and environment data stay in Vault.
 linux_recovery_release_repository: https://github.com/kvegh/aap_autodeploy_configascode.git
-linux_recovery_release_revision: '1e8988040990c168d4ae17567cae0dc71e1480cf'
+linux_recovery_release_revision: '2795c133507ee5affdaf8e420807496cd2299899'
+linux_recovery_release_operation: release_guest

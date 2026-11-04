@@ -1,0 +1,28 @@
+---
+- name: Retain the successfully verified generic guest identity
+  ansible.builtin.set_fact:
+    deployment_vm_verified_provenance: >-
+      {{ deployment_vm_provenance | combine({
+        'machine_id': ansible_facts.machine_id,
+        'verified': true,
+        'vcpus': deployment_vm_vcpus | int,
+        'memory_mb': deployment_vm_memory_mb | int,
+        'disk_gb': deployment_vm_disk_gb | int,
+        'packages_updated': linux_updates_remaining_updates.rc | default(-1) | int == 0}) }}
+
+- name: Publish verified generic guest provenance
+  ansible.builtin.set_stats:
+    data:
+      generic_linux_vm: "{{ deployment_vm_verified_provenance }}"
+    per_host: false
+    aggregate: false
+
+- name: Apply the selected verified guest permission while retaining the production block
+  ansible.builtin.include_role:
+    name: linux_recovery_release
+    apply:
+      tags: [guest_config]
+  when:
+    - provisioning.generic_image | default(false) | bool
+    - deployment_vm_hypervisor_pin | length > 0
+  tags: [guest_config]

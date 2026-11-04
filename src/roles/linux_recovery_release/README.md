@@ -16,7 +16,16 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `1e89880` (0.37.2). It preserves
+The current pin selects AutoDeploy implementation `2795c13` (0.38.0). Its existing
+shared role accepts `linux_recovery_release_operation: guest_bootstrap_https`
+through this caller to grant only approved public IPv4 TCP 443 access. The
+complete-deployment playbook invokes that permission only after authenticated
+base/root verification, then requests default `release_guest` only after all
+updates, software and model-free installation validation succeed. The generic
+Linux playbook keeps its existing default full-release order. Update provenance
+is false before the update role's final check and true only after that check.
+
+The implementation preserves
 AAP inventory display aliases through existing verified physical VM ownership.
 It also supports a fresh source that has not installed the optional Hactar
 inventory, accepting its absence only after an authenticated source API
@@ -30,3 +39,7 @@ template with `guest_config` tags to repeat authenticated verification without
 cloning or replacing its disk. Keep its saved image and complete current isolation
 policy consistent with the maintained encrypted configuration. The temporary
 public-code checkout is removed on success and failure.
+For the current serialized test, refresh only the selected encrypted profile and
+its injected ciphertext to canonical policy before a retry following bootstrap or
+release. The strict policy check is not relaxed and no automatic cross-inventory
+policy lookup is introduced.

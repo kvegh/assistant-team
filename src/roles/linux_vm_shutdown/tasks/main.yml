@@ -3,7 +3,7 @@
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
-      - shutdown_vm_name | default('') is match('^[a-z][a-z0-9-]*-[0-9]+$')
+      - shutdown_vm_name | default('') is match('^[a-z][a-z0-9-]*-(?:[0-9]+|v(?:0[1-9]|[1-9][0-9]+))$')
       - not ansible_check_mode
       - hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
     fail_msg: Shutdown requires a live, uniquely inventory-selected VM.

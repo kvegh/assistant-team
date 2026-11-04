@@ -153,6 +153,12 @@ The private metadata-only restore report is
 without model authentication intentionally, set
 `native_auth_vault_restore_enabled: false`.
 
+For an installation-only acceptance test, save that supported flag on the
+complete-deployment Job Template. Native CLI versions and the disposable project
+validator can then be checked without restoring saved provider credentials,
+logging in or invoking a model. Authentication and provider entitlement remain
+separate acceptance work.
+
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
 Ansible Vault-encrypted files. Plaintext documentation and examples must use
@@ -285,6 +291,40 @@ It contains no password or private key. Reuse the same playbook with different
 saved resource inputs for different guests; the playbook does not allocate names
 or install AAP/the assistant application.
 
+The complete-deployment playbook also accepts a selected encrypted fresh-test
+profile containing the existing generic-image inputs and hypervisor pin. Use a
+separate guest for this test. Canonical names such as `example-v07` and existing
+numeric names remain supported; live inventory ownership and production
+retirement protection still apply. The existing encrypted-file credential can
+inject a selected profile without replacing the original companion files. When
+synchronizing it directly, provide the complete existing
+`controller_secret_configs_files` mapping with the selected fresh and retirement
+files; the default mapping continues to use the original profiles.
+
+Package downloads require separately reviewed bootstrap network access. Complete
+deployment requests only the approved public IPv4 TCP 443 permission after
+authenticated base and root-capacity verification; private/reserved and production
+destinations stay blocked. It never enables full guest access merely to install
+software. Only after
+authenticated guest checks, root growth, updates, all software roles and model-free
+installation validation succeed does it invoke the same pinned release tasks as
+generic Linux deployment. The existing quarantine's production destination block
+and normal host firewall remain. Package-update provenance is true only after the
+update role's final check has completed. Generic Linux deployment keeps its
+existing verification/update/release order.
+
+A failed software installation remains a failed job. Retry the complete template
+with its existing Job Tags prompt set to `guest_config` and the same explicit
+deployment name; it resolves the registered guest rather than creating a second
+VM. If an earlier permission changed the isolation policy, refresh only the
+selected encrypted profile and its stored ciphertext from the canonical policy
+before retrying. The exact native policy preflight remains enforced; automatic
+cross-inventory policy refresh is not implemented. Do not rerun provisioning over
+an existing disk. Decommissioning a released
+recovery guest also needs its exact shared policy and inventory cleanup; a
+domain-and-disk removal alone is insufficient. That shared cleanup must be ready
+before running the disposal test.
+
 The private companion maintains **Deploy AIOps Linux Demo VM** as an optional
 source-side Job Template under
 `assistant_team_recovery_vm_deployment.configuration`. It references existing
@@ -313,8 +353,9 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `1e89880`
-(version 0.37.2). It preserves renamed AAP inventory entries through their existing
+The current dependency pin selects AutoDeploy implementation `2795c13`
+(version 0.38.0). It adds bounded generic-guest HTTPS bootstrap and preserves
+renamed AAP inventory entries through their existing
 verified physical VM identity. A fresh source AAP can save guest release without
 having the optional Hactar inventory installed: absence is accepted only after
 an authenticated source API superuser check. Required shared and recovery

@@ -65,6 +65,12 @@ class InventoryVmGuardTests(unittest.TestCase):
     def test_unprotected_managed_host_can_be_selected(self):
         self.assert_allowed(self.run_guard([self.host()], ["assistant_team"]))
 
+    def test_versioned_guest_requires_the_same_exact_live_binding_and_production_protection(self):
+        arguments = {'inventory_vm_guard_name': 'example-v16'}
+        self.assert_allowed(self.run_guard([self.host(binding='example-v16')], ['assistant_team'], overrides=arguments))
+        self.assert_refused(self.run_guard([self.host(binding='example-v15')], ['assistant_team'], overrides=arguments))
+        self.assert_refused(self.run_guard([self.host(binding='example-v16')], ['assistant_team', 'prod'], overrides=arguments))
+
     def test_production_membership_blocks_retirement(self):
         self.assert_refused(self.run_guard([self.host()], ["assistant_team", "prod"]))
 

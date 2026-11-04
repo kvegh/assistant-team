@@ -6,10 +6,32 @@ import subprocess
 import tempfile
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class RetirementSafetyTests(unittest.TestCase):
+    def test_versioned_retirement_still_requires_exact_nonproduction_binding(self):
+        task = yaml.safe_load((ROOT / 'src/roles/linux_vm_retire/tasks/main.yml').read_text())[0]
+        for protected in (False, True):
+            with self.subTest(protected=protected), tempfile.TemporaryDirectory() as directory:
+                selected = 'example-v16'
+                variables = {
+                    '__inventory_vm_guard_matches': [{'id': 1, 'variables': json.dumps({'assistant_vm_name': selected})}],
+                    '__inventory_vm_guard_groups': ['assistant_team'] + (['prod'] if protected else []),
+                    'linux_vm_retire_definition': {'vm_name': selected, 'vm_dir': '/example/vms',
+                        'golden_image_path': '/example/upstream.qcow2'},
+                    'linux_vm_retire_disk': '/example/vms/' + selected + '.disk.qcow2',
+                }
+                path = Path(directory) / 'selection.yml'
+                path.write_text(yaml.safe_dump([{'hosts': 'localhost', 'connection': 'local',
+                    'gather_facts': False, 'vars': variables, 'tasks': [task]}]))
+                result = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(path), '-e', json.dumps(variables)],
+                    cwd=ROOT, text=True, capture_output=True, timeout=30,
+                    env=dict(os.environ, ANSIBLE_LOCAL_TEMP=str(Path(directory) / 'local')))
+                self.assertEqual(result.returncode == 0, not protected, result.stdout + result.stderr)
+
     def assert_rejected(self, name, disk="/example/vms/example-2.disk.qcow2", check=False):
         variables = {
             "__inventory_vm_guard_matches": [{"id": 1, "variables": json.dumps({"assistant_vm_name": "example-3"})}],
