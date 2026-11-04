@@ -313,6 +313,15 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
+Normal source job 3282 passed this configuration-only path on one existing test
+guest using revision `6098490` and pinned AutoDeploy implementation `d2d7254`.
+Independent inspection confirmed the exact selected release, unchanged VM
+definitions and ordinary host services, working public connectivity and blocked
+production access. The encrypted policy and source inventory match the intended
+transition, preserving instance tokens, allocation history and existing literal
+template tags. No provisioning or package updates ran. Other guests remain
+restricted; this does not prove every guest type or the complete recovery cycle.
+
 For each recovery launch, provide concrete values for these keys:
 
 | Launch key | Required value |

@@ -2034,3 +2034,15 @@ The shared role also checks failed command results before parsing JSON or
 considering rollback. Sixteen focused shared runtime/publication checks and
 production lint passed, including an actual read-only target check. No new
 credential, job, authentication fallback or permission scope is introduced.
+
+## Verify normal-job release without reprovisioning
+
+The existing source template's configuration-only job 3282 passed using revision
+`6098490` and shared verifier implementation `d2d7254`. It verified the existing
+guest, applied its exact release, published the encrypted transition and updated
+source inventory in the same job. Independent checks confirmed unchanged VM
+definitions and normal services, production denial before broader allowances,
+working public connectivity and blocked production access. Saved API tokens,
+allocation history and existing literal template tags were preserved. No
+provisioning or package-update stage ran. This verifies the generic guest hook;
+other guest restrictions and complete recovery acceptance remain separate.

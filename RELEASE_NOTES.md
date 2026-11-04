@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.7.4
+
+Document normal configuration-only job acceptance of the pinned automatic guest
+release, independent network and preservation checks, and the remaining scope.
+
 ## 1.7.3
 
 Document shared verifier pin `93719c7` and the native provenance fix it selects.

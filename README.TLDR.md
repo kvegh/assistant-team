@@ -24,6 +24,9 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
+Normal source job 3282 passed this path for one existing test guest, including
+independent live/saved-policy, guest connectivity and production-denial checks.
+Its encrypted/source updates were verified; the other guests remain restricted.
 
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 
