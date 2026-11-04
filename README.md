@@ -296,6 +296,19 @@ before legacy snapshot routing can be used. Guest credential overrides are
 rejected; the existing encrypted file is authoritative. Keep the Job Template limit empty so its
 second play can verify the newly added guest.
 
+After authenticated guest verification and configuration succeed, recovery-mode
+deployments call `linux_recovery_release` in the same job. The role checks out a
+pinned public AutoDeploy revision and includes its shared release role. That role
+preflights the running source job and saved policy, verifies actual VM ownership,
+then releases only that guest from extra recovery isolation. Declared production
+destinations remain blocked; normal firewalld, other guests, private MCP policy
+and IPv6 quarantine remain in place. The existing source API, Git writer, CaC
+Vault and source CA credentials must be attached to this same template so the
+transition is saved in encrypted CaC and source inventory. Failed guest setup
+does not release isolation, and incomplete policy publication fails the job.
+For an existing generic guest, rerun with `guest_config` tags to verify and release
+it without cloning or replacing its disk. Check mode validates without releasing.
+
 For each recovery launch, provide concrete values for these keys:
 
 | Launch key | Required value |
@@ -318,8 +331,10 @@ template: one with 1 CPU, 2 GiB RAM and a 10 GiB disk, and another with 4 CPU
 cores, 4 GiB RAM and a 20 GiB disk. Both passed authenticated SSH/sudo, hostname,
 resource and root-filesystem checks. Independent hypervisor readback confirmed
 their running state, exact disk ownership and distinct machine IDs and SSH keys.
-The existing isolation policy and source image remained unchanged. The caller
-keeps actual guest identities and provenance in its encrypted allocation record.
+Those original guest acceptance runs left isolation and the source image unchanged.
+Current recovery deployments additionally publish the verified per-guest release
+in the existing encrypted inventory and policy; guest application data does not
+belong in the AAP allocation record.
 These minimal guests do not include a container runtime; MCP and application
 services require their separately configured prerequisites.
 

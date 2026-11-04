@@ -18,6 +18,13 @@ Live acceptance passed for separate 1 CPU/2 GiB/10 GiB and 4 core/4 GiB/20 GiB
 upstream guests, including strict SSH, sudo, root growth and independent identity
 checks. Minimal-image deployment alone does not install a container runtime or MCP.
 
+Successful recovery guest setup now calls the pinned shared AutoDeploy release
+role in the same job. Only that verified guest returns to normal IPv4 firewall
+handling; production destinations stay blocked. The existing source API, Git
+writer, CaC Vault and source CA credentials save the transition in encrypted CaC
+and source inventory. Failed setup keeps isolation; failed publication fails the
+job. Use `guest_config` tags to verify an existing guest without recloning it.
+
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 
 Communication stays on agents-connector + tmux; alternatives await review and

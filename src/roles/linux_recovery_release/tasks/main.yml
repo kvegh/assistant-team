@@ -1,0 +1,56 @@
+---
+- name: Require a completed verified recovery guest and a pinned implementation
+  ansible.builtin.assert:
+    that:
+      - deployment_vm_verified_provenance.verified is sameas true
+      - deployment_vm_verified_provenance.hypervisor_machine_id == deployment_vm_hypervisor_pin.machine_id
+      - deployment_vm_verified_provenance.machine_id != deployment_vm_hypervisor_pin.machine_id
+      - deployment_vm_verified_provenance.bridge | length > 0
+      - linux_recovery_release_repository == 'https://github.com/kvegh/aap_autodeploy_configascode.git'
+      - deployment_vm_trust_file is match('^/tmp/linux-vm-recovery-known-hosts-[A-Za-z0-9_]+$')
+      - linux_recovery_release_revision is match('^[a-f0-9]{40}$')
+      - linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+    fail_msg: Finish authenticated guest verification and select the reviewed release implementation before changing isolation.
+  no_log: true
+
+- name: Allocate a private execution-environment checkout
+  ansible.builtin.tempfile:
+    state: directory
+    path: /tmp
+    prefix: linux-recovery-release-code-
+  delegate_to: localhost
+  become: false
+  check_mode: false
+  register: __linux_recovery_release_checkout
+
+- name: Run the pinned existing AutoDeploy role in this same deployment job
+  block:
+    - name: Fetch the public implementation at its exact reviewed revision
+      ansible.builtin.git:
+        repo: "{{ linux_recovery_release_repository }}"
+        dest: "{{ __linux_recovery_release_checkout.path }}/source"
+        version: "{{ linux_recovery_release_revision }}"
+        update: false
+        recursive: false
+      delegate_to: localhost
+      become: false
+      check_mode: false
+
+    # Native role inclusion uses the fixed, revision-pinned temporary checkout.
+    - name: Reconcile the selected guest through the shared AutoDeploy role # noqa: role-name[path]
+      ansible.builtin.include_role:
+        name: "{{ __linux_recovery_release_checkout.path }}/source/roles/recovery_guest_release"
+      vars:
+        recovery_release_guest: "{{ deployment_vm_verified_provenance }}"
+        recovery_release_hypervisor: "{{ deployment_vm_hypervisor_pin }}"
+        recovery_release_trust_file: "{{ deployment_vm_trust_file }}"
+
+  always:
+    - name: Remove this job's implementation checkout
+      ansible.builtin.file:
+        path: "{{ __linux_recovery_release_checkout.path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      check_mode: false
+      when: __linux_recovery_release_checkout.path is match('^/tmp/linux-recovery-release-code-[A-Za-z0-9_]+$')

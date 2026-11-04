@@ -94,6 +94,15 @@ class RecoveryConnectionTests(unittest.TestCase):
             with self.assertRaises(AnsibleFilterError):
                 recovery.recovery_pin(dict(original, **changes), address)
 
+    def test_release_bridge_comes_from_the_actual_selected_network(self):
+        xml = '<network><name>isolated</name><bridge name="fixture0"/></network>'
+        self.assertEqual(recovery.network_bridge(xml, 'isolated', ['fixture0']), 'fixture0')
+        for candidate, network, bridges in ((xml, 'foreign', ['fixture0']),
+                (xml, 'isolated', ['foreign0']), ('<invalid', 'isolated', ['fixture0']),
+                ('<network><name>isolated</name></network>', 'isolated', ['fixture0'])):
+            with self.assertRaises(AnsibleFilterError):
+                recovery.network_bridge(candidate, network, bridges)
+
     def test_guest_private_address_always_crosses_pinned_hypervisor_with_two_key_checks(self):
         args = recovery.guest_ssh(pin(), "/tmp/synthetic trust", "fixture-v07")
         self.assertIn("ProxyCommand=", args)

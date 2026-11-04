@@ -1,5 +1,14 @@
 # Release notes
 
+## 1.7.0
+
+Release a verified recovery guest from additional IPv4 quarantine after its
+normal configuration succeeds. Reuse the exact revision-pinned AutoDeploy role
+within the same deployment job to preserve production denial and save the policy
+in the existing encrypted captures and source inventory. Retain the normal
+firewall and restrictions on other guests; use existing source API, CA, Git
+writer and Vault credentials without creating another job or credential type.
+
 ## 1.6.5
 
 Document successful source-template deployment of both minimal upstream guest

@@ -210,6 +210,22 @@
   changed_when: false
   tags: [guest_config, offline_recovery]
 
+- name: Read the selected network bridge for exact recovery isolation ownership
+  ansible.builtin.command:
+    argv: [virsh, -c, 'qemu:///system', net-dumpxml, "{{ provisioning.vm_network }}"]
+  register: __linux_vm_network_xml
+  changed_when: false
+  when: provisioning.hypervisor_pin is defined
+  tags: [guest_config, offline_recovery]
+
+- name: Bind the actual network bridge to the recovery guest
+  ansible.builtin.set_fact:
+    __linux_vm_deployment_bridge: >-
+      {{ __linux_vm_network_xml.stdout | linux_vm_recovery_bridge(
+           provisioning.vm_network, provisioning.isolation_policy.bridges) }}
+  when: provisioning.hypervisor_pin is defined
+  tags: [guest_config, offline_recovery]
+
 - name: Prepare pinned guest trust through the selected recovery hypervisor
   ansible.builtin.include_tasks:
     file: recovery-guest.yml
@@ -236,11 +252,14 @@
     deployment_vm_disk_gb: "{{ linux_vm_disk_gb | int }}"
     deployment_vm_vcpus: "{{ linux_vm_vcpus | int }}"
     deployment_vm_memory_mb: "{{ linux_vm_memory_mb | int }}"
+    deployment_vm_hypervisor_pin: "{{ provisioning.hypervisor_pin | default({}) }}"
+    deployment_vm_trust_file: "{{ __linux_vm_recovery_trust.path | default('') }}"
     deployment_vm_provenance:
       vm_name: "{{ linux_vm_deployment_name }}"
       uuid: "{{ __linux_vm_domain_uuid.stdout | trim }}"
       disk: "{{ linux_vm_deployment_disk }}"
       network: "{{ provisioning.vm_network }}"
+      bridge: "{{ __linux_vm_deployment_bridge | default('') }}"
       mac: "{{ __linux_vm_deployment_mac }}"
       address: "{{ __linux_vm_deployment_ip }}"
       user: "{{ provisioning.guest_ssh_user }}"

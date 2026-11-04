@@ -3,6 +3,7 @@
 from ipaddress import IPv4Address
 import re
 import shlex
+import xml.etree.ElementTree as ET
 
 from ansible.errors import AnsibleFilterError
 
@@ -64,8 +65,20 @@ def saved_keys(data, name, identity, hypervisor_id, source_hash):
     return public_keys(data.get("host_keys"))
 
 
+def network_bridge(xml, network, bridges):
+    try:
+        root = ET.fromstring(xml)
+        bridge = root.find('bridge')
+        require(root.tag == 'network' and root.findtext('name') == network and bridge is not None
+                and bridge.get('name') in bridges, 'The selected network must use a declared recovery bridge.')
+        return bridge.get('name')
+    except ET.ParseError:
+        raise AnsibleFilterError('Read the actual selected libvirt network before releasing a guest.') from None
+
+
 class FilterModule:
     def filters(self):
         return {"linux_vm_recovery_pin": recovery_pin, "linux_vm_public_key": public_key,
                 "linux_vm_public_keys": public_keys, "linux_vm_recovery_guest_ssh": guest_ssh,
-                "linux_vm_recovery_saved_keys": saved_keys}
+                "linux_vm_recovery_saved_keys": saved_keys,
+                "linux_vm_recovery_bridge": network_bridge}

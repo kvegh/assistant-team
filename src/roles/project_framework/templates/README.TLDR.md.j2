@@ -212,3 +212,9 @@ explicit `retire_test_execute` confirmation. Live inventory `prod` membership
 blocks deletion. **Assistant Team Linux VM Shutdown** accepts `shutdown_vm_name`
 and preserves the VM and disks. Inventory `assistant_team` membership and exact
 VM binding are required; credentials and infrastructure stay encrypted.
+
+Pinned generic recovery guests are released from extra isolation only after
+successful authenticated setup. Production destinations remain blocked. The same
+job saves the policy in encrypted CaC and source inventory; other guests, normal
+firewalld and private MCP stay protected. Use `guest_config` to verify an existing
+generic guest without recloning it.
