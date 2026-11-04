@@ -16,12 +16,14 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `a522e7b` (0.37.0). It preserves
+The current pin selects AutoDeploy implementation `1e89880` (0.37.2). It preserves
 AAP inventory display aliases through existing verified physical VM ownership.
 It also supports a fresh source that has not installed the optional Hactar
 inventory, accepting its absence only after an authenticated source API
 superuser check. Shared/recovery inventory requirements, exact guest ownership,
 production protection and trusted TLS remain enforced.
+The same reviewed code persists approved native firewalld grants in saved policy
+metadata, so later host firewall reconciliation retains the declared permissions.
 
 For an existing successfully provisioned generic guest, use the same deployment
 template with `guest_config` tags to repeat authenticated verification without

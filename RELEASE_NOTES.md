@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.7.7
+
+Pin shared AutoDeploy correction `1e89880` (0.37.2). It persists exact approved
+native firewalld rules with policy updates and preserves empty group-variable
+mappings at the collection boundary. Keep inventory-alias/fresh-source support,
+existing job/credential interfaces and prior revision-specific live evidence.
+
 ## 1.7.6
 
 Document implementation `9c7b87d`, the portable shared release dependency and its

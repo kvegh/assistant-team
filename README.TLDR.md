@@ -24,9 +24,11 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `a522e7b` (0.37.0), preserving AAP
+The current shared pin selects AutoDeploy `1e89880` (0.37.2), preserving AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
+The shared correction also saves native firewall declarations alongside approved
+policy grants and preserves empty group-variable mappings during CaC import.
 Normal source job 3282 passed this path for one existing test guest, including
 independent live/saved-policy, guest connectivity and production-denial checks.
 Its encrypted/source updates were verified; the other guests remain restricted.
