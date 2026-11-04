@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.7.2
+
+Pin the corrected shared release helper for persistent-only libvirt bootstrap
+provenance, retaining exact running guest ownership checks and safe failed-output
+handling. The deployment and credential interfaces remain unchanged.
+
 ## 1.7.1
 
 Document implementation `f1836fb`, its shared AutoDeploy revision and the

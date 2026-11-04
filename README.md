@@ -308,6 +308,10 @@ transition is saved in encrypted CaC and source inventory. Failed guest setup
 does not release isolation, and incomplete policy publication fails the job.
 For an existing generic guest, rerun with `guest_config` tags to verify and release
 it without cloning or replacing its disk. Check mode validates without releasing.
+The pinned helper requires bootstrap provenance in persistent libvirt XML and
+independently checks the running guest's devices. A description saved with
+`virsh desc --config` after startup need not appear in running XML; any live copy
+must still match. Failed helper output is checked before JSON parsing or rollback.
 
 For each recovery launch, provide concrete values for these keys:
 
