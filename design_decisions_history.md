@@ -1,5 +1,34 @@
 # Design decisions history
 
+## Verify complete recovery-host installations before full isolation release
+
+Implementation: `e9fe7a0` (1.8.0); shared dependency: AutoDeploy `2795c13` (0.38.0).
+
+The complete deployment reuses the existing verified generic-guest publication
+and permission tasks. It first proves authenticated base identity and root
+capacity, then requests only the separately approved public IPv4 HTTPS bootstrap
+permission. Full release follows successful updates, software installation and
+model-free project validation, retaining production protection and normal host
+firewall rules. A failed base, bootstrap or installation cannot enable early full
+release. The generic Linux playbook keeps its previous ordering; package-update
+metadata follows the actual final update check.
+
+Canonical versioned guest names are accepted alongside legacy numeric names
+without weakening exact inventory ownership or production retirement protection.
+Retirement reads its existing dedicated encrypted retirement input instead of
+the fresh-deployment input. Existing profile and provider-authentication files
+remain separate from selected recovery-host profiles; the supported restore flag
+can defer provider credentials during software-only acceptance.
+
+All 56 focused tests passed, including actual Ansible flow fixtures in both native
+modes, configuration-only retry without reprovisioning, refused unsafe requests,
+authentication deferral and versioned shutdown/retirement selection. Four syntax
+checks and offline production lint passed with the existing certified collection;
+no dependency requirement changed. These checks do not claim live complete
+installation or provider access. Current retries require an explicit selected
+profile refresh when canonical policy changed, and complete disposal also needs
+the shared exact-guest policy/inventory cleanup before its live test.
+
 ## Verify both minimal upstream guest profiles through the source template
 
 Public implementation: `7646b0a`; live-verified source revision: `32c7f9e`;

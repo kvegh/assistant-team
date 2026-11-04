@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.8.1
+
+Document implementation `e9fe7a0`, verified bootstrap/final-release ordering,
+canonical lifecycle names, dedicated retirement input and the 56 focused checks.
+Keep selected policy refresh and shared decommission acceptance explicit; no
+live installation, provider login or model proof is claimed.
+
 ## 1.8.0
 
 Support canonical versioned Assistant VM names alongside legacy numeric names,
