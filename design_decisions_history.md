@@ -2021,3 +2021,16 @@ generic guest tests, syntax checks and production lint passed; shared runtime
 and native-role tests cover exact identity, publication failure rollback and
 retention after durable publication. Live acceptance is verified through the
 existing source-side generic VM template rather than recloning a guest.
+
+## Pin the corrected native guest provenance verifier
+
+Implementation `93719c7` pins shared AutoDeploy fix `d2d7254`. Generic bootstrap
+saves provenance in persistent libvirt XML after startup; the verifier now
+requires that saved metadata and independently checks exact running guest
+ownership. A present live description must also match. This preserves the
+existing bootstrap interface and release policy without restarting the VM.
+
+The shared role also checks failed command results before parsing JSON or
+considering rollback. Sixteen focused shared runtime/publication checks and
+production lint passed, including an actual read-only target check. No new
+credential, job, authentication fallback or permission scope is introduced.

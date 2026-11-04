@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.7.3
+
+Document shared verifier pin `93719c7` and the native provenance fix it selects.
+
 ## 1.7.2
 
 Pin the corrected shared release helper for persistent-only libvirt bootstrap
