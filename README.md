@@ -390,6 +390,10 @@ makes no further permission change. Dynamic DHCP lease cache is reported
 separately; unrelated guests, source images and normal firewall rules remain.
 Unsupported guest-to-host grants refuse planning before deletion. Legacy test
 profiles retain their stricter existing retirement behavior.
+When the VM and its shared ownership record are already gone, the shared plan
+retains a real null guest value in both Ansible templating modes. A normal retry
+can finish the remaining application inventory deletion without inventing an
+identity or repeating physical deletion; native domain/disk absence is still required.
 
 The private companion maintains **Deploy AIOps Linux Demo VM** as an optional
 source-side Job Template under
@@ -419,8 +423,8 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `eb806b7`
-(version 0.45.0). It adds bounded public HTTP bootstrap for an already owned
+The current dependency pin selects AutoDeploy implementation `41c77d2`
+(version 0.45.3). It adds bounded public HTTP bootstrap for an already owned
 verified generic guest, including exact retirement of that permission. It retains
 exact generic-guest retirement, bounded HTTPS bootstrap and
 renamed AAP inventory entries through their existing

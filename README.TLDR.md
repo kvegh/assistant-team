@@ -51,6 +51,8 @@ ownership first, then removes only its domain, clone, static DHCP reservation,
 policy permissions and inventory records. Shared publication precedes deleting
 its Assistant row. Interrupted publication can retry after the VM is gone;
 complete absence is a verified no-op. Dynamic lease cache is reported separately.
+The pinned helper preserves an absent guest as null in both Ansible modes, so a
+normal retry can finish its remaining inventory deletion after physical cleanup.
 Retirement uses the existing hypervisor-only execution inventory while its
 lifecycle credential still targets the separate managed Assistant inventory.
 Controller blocks host deletion from an inventory used by a running job;
@@ -79,7 +81,7 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `eb806b7` (0.45.0), adding bounded HTTP
+The current shared pin selects AutoDeploy `41c77d2` (0.45.3), adding bounded HTTP
 bootstrap and its exact retirement while retaining HTTPS bootstrap and AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.

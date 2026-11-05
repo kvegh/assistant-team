@@ -16,7 +16,7 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared implementation `eb806b7` (0.45.0) is pinned.
+guest's own HTTP permission. Shared implementation `41c77d2` (0.45.3) is pinned.
 
 Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;
@@ -32,6 +32,9 @@ from the managed inventory in its lifecycle API credential. Controller blocks
 deleting hosts from an inventory used by a running job, including retirement
 itself. The prerequisite check refuses this before physical changes; no new
 inventory or credential grant is needed.
+The shared helper preserves a missing guest as null in both Ansible modes;
+normal retries can finish remaining inventory cleanup only after verified
+domain/disk absence, without inventing guest ownership.
 
 Failed CLI image builds remain failed. Unique private diagnostics in
 `environment-logs/image-build` use `0700` directories and `0600` files; only

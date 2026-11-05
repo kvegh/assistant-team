@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.11.8
+
+Pin shared AutoDeploy `41c77d2` (0.45.3), preserving a true null guest during
+already-absent retirement retries in both Ansible modes. Reuse the published
+correction, retain native absence/ownership guards and per-call cleanup, and
+keep the separate retirement execution inventory and scoped API target unchanged.
+
 ## 1.11.7
 
 Document implementation `137e198`, Controller's active-inventory deletion guard,
