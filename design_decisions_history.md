@@ -1,5 +1,15 @@
 # Design decisions history
 
+## Prepare ephemeral TLS trust during repair preview — 2026-11-05
+
+Implementation `de5bc80` includes the existing inventory TLS preparation with
+Check disabled only for those EE-local tasks. Otherwise Ansible would skip its
+read-only trust discovery command and prevent a genuine Check preview. The
+association POST still skips Check; verified API/native reads and all ownership
+checks remain required. A real HTTPS regression exercises this exact inclusion
+under Check in both native modes. Production lint passes. No live preview or
+association was launched before publishing the correction.
+
 ## Continue only an interrupted fresh inventory association — 2026-11-05
 
 Implementation `85f3f4e` adds the explicitly approved repair tag to the existing

@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.3
+
+Document implementation `de5bc80` and its actual verified HTTPS Check-preview
+regression; retain read-only preview and separate live association approval.
+
 ## 1.10.2
 
 Run the existing job-local TLS preparation during association-only Check preview,
