@@ -27,6 +27,12 @@ and final release, but its generic `packages_updated` flag incorrectly stayed
 false. Future results use the actual update-check register; skipped checks stay
 false and pending updates refuse publication. Historical flags remain unchanged.
 
+Run retirement from the existing hypervisor-only execution inventory, separate
+from the managed inventory in its lifecycle API credential. Controller blocks
+deleting hosts from an inventory used by a running job, including retirement
+itself. The prerequisite check refuses this before physical changes; no new
+inventory or credential grant is needed.
+
 Failed CLI image builds remain failed. Unique private diagnostics in
 `environment-logs/image-build` use `0700` directories and `0600` files; only
 message, stdout, stderr and return code are saved. Invocation/environment/credential

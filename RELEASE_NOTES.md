@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.11.6
+
+Refuse same-inventory AAP retirement before physical changes. Reuse the existing
+hypervisor execution inventory while the unchanged scoped lifecycle credential
+targets the managed Assistant inventory. A focused verified-HTTPS native test
+reproduces Controller's 409 conflict, verifies early refusal and proves deletion
+from a separate execution inventory. No extra inventory, credential or job is added.
+
 ## 1.11.5
 
 Document implementation `7172d77`, the actual completed DNF-check reference,

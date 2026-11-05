@@ -4,6 +4,19 @@
   gather_facts: false
   no_log: true
   pre_tasks:
+    - name: Require a separate execution inventory before retiring a managed VM
+      ansible.builtin.assert:
+        that:
+          - awx_inventory_id | default('') | string is match('^[1-9][0-9]*$')
+          - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') is match('^[1-9][0-9]*$')
+          - awx_inventory_id | int != lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') | int
+        fail_msg: >-
+          Run retirement from the hypervisor execution inventory, separate from the
+          managed VM inventory. Controller cannot delete a host from an inventory
+          while this job is using that inventory.
+        quiet: true
+      when: awx_job_id is defined
+      tags: [always]
     - name: Load shared encrypted infrastructure configuration
       ansible.builtin.include_role:
         name: secret_config

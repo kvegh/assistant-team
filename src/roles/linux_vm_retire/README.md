@@ -1,5 +1,11 @@
 # linux_vm_retire
 
+The AAP execution inventory must differ from the managed inventory identified by
+the existing lifecycle API credential. Reuse the existing hypervisor-only
+execution inventory with the same pinned host and Machine credential. Controller
+refuses to delete a host while any job runs against its inventory; the entry-point
+prerequisite check rejects that configuration before physical retirement.
+
 Retire one disposable VM selected by a launch-time name, through a normal AAP job.
 
 ## Interface and dependencies

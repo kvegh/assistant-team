@@ -373,6 +373,13 @@ an existing disk.
 The normal retirement template also handles this pinned generic guest. Its
 read-only plan resolves saved ownership from existing encrypted CaC and source
 inventory before deletion. Execute only after the installation test succeeds.
+Run this template from the existing hypervisor-only execution inventory, separate
+from the managed Assistant inventory named by its lifecycle API credential.
+Controller blocks host deletion while any job uses that host's inventory,
+including the retirement job itself; an execution limit does not avoid the block.
+An early AAP prerequisite check refuses that configuration before physical changes.
+The private capture selects the compatible existing inventory and keeps the same
+API target and scoped credential; no additional inventory, job or grant is created.
 It gracefully stops the exact VM, rechecks its UUID and exclusive clone, removes
 that domain and disk, then removes its static DHCP reservation and own
 bootstrap/full-release policy entries. Shared publication completes before its

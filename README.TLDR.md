@@ -51,6 +51,10 @@ ownership first, then removes only its domain, clone, static DHCP reservation,
 policy permissions and inventory records. Shared publication precedes deleting
 its Assistant row. Interrupted publication can retry after the VM is gone;
 complete absence is a verified no-op. Dynamic lease cache is reported separately.
+Retirement uses the existing hypervisor-only execution inventory while its
+lifecycle credential still targets the separate managed Assistant inventory.
+Controller blocks host deletion from an inventory used by a running job;
+the early prerequisite check refuses that configuration before physical changes.
 Unsupported host-service grants refuse preflight. Other guests and source images
 remain unchanged; legacy retirement profiles keep their existing strict behavior.
 
