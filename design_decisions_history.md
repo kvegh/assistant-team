@@ -1,5 +1,22 @@
 # Design decisions history
 
+## Keep Debian builds and defer UBI evaluation — 2026-11-05
+
+Documentation implementation `4dc7103` adds a reference to deferred Beads
+`bead-wd-b3j`, which remains authoritative. The owner chose the current pinned
+Debian bases and HTTP package downloads for present acceptance. The unapproved
+Node CA-export/HTTPS preparation is not part of that choice and is removed
+from the working proposal; protected build diagnostics remain a separate
+approved change.
+
+Future Node-image evaluation will compare UBI 10 Node.js 22 minimal/full,
+verify the actual RHEL 9 guest's x86-64-v3 CPU and unprivileged workload
+compatibility, and use corresponding UBI 9 images if needed. Red Hat's policy
+describes workload-specific support rather than blanket compatibility.
+Python/Vibe requires its own base choice. This deferred work is not a current
+deployment prerequisite and authorizes no base change, pull, rebuild or live
+firewall action. Documentation/privacy and whitespace checks pass.
+
 ## Retain exact SSH pins across Controller port representations — 2026-11-05
 
 Implementation `e1f0cce` repins the existing shared lifecycle dependency to

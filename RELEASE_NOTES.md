@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.11
+
+Document decision `4dc7103` to retain current Debian/HTTP builds and defer UBI
+evaluation under Beads; no deployment or image change is included.
+
 ## 1.10.10
 
 Document deferred Beads task `bead-wd-b3j` for a later UBI evaluation. Retain
