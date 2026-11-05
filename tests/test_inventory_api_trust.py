@@ -109,6 +109,30 @@ class InventoryApiTrustTests(unittest.TestCase):
             self.assertNotIn('Bearer synthetic-inventory-token', result.stdout + result.stderr)
             return result
 
+    def test_actual_repair_prepares_verified_tls_in_check_preview(self):
+        repair = yaml.safe_load((ROOT / 'src/roles/deployment_inventory_registration/tasks/repair.yml').read_text())
+        block = next(task['block'] for task in repair if 'block' in task)
+        trust = next(task for task in block if task.get('ansible.builtin.include_role', {}).get('tasks_from') == 'trust')
+        for native in [False, True]:
+            with self.subTest(native=native), tempfile.TemporaryDirectory(prefix='assistant-repair-tls-check-') as directory:
+                root = Path(directory)
+                play = root / 'check.yml'
+                play.write_text(yaml.safe_dump([{'hosts': 'localhost', 'connection': 'local', 'gather_facts': False,
+                    'tasks': [{'block': [trust, {'name': 'Read the synthetic API with prepared verified trust',
+                        'ansible.builtin.uri': {'url': 'https://127.0.0.1:%s/api/controller/v2/inventories/7/hosts/?page_size=200' % self.server.server_port,
+                            'headers': {'Authorization': 'Bearer synthetic-inventory-token'},
+                            'ca_path': '{{ __inventory_vm_guard_ca_path }}', 'validate_certs': True},
+                        'check_mode': False, 'no_log': True}], 'always': [
+                        {'ansible.builtin.file': {'path': '{{ __inventory_vm_guard_combined_ca.path }}', 'state': 'absent'},
+                         'check_mode': False, 'when': '__inventory_vm_guard_combined_ca.path is defined'}]}]}], sort_keys=False))
+                result = subprocess.run(['ansible-playbook', '-i', 'localhost,', str(play), '--check'],
+                    cwd=ROOT, text=True, capture_output=True, timeout=45,
+                    env=dict(os.environ, ANSIBLE_LOCAL_TEMP=str(root/'local'), ANSIBLE_REMOTE_TEMP=str(root/'remote'),
+                        ANSIBLE_ROLES_PATH=str(ROOT/'src/roles'), ANSIBLE_JINJA2_NATIVE=str(native).lower(),
+                        SSL_CERT_FILE=str(self.ca), AC_AGENTS_CONTROLLER_CA_BUNDLE=str(self.other)))
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn('synthetic-inventory-token', result.stdout + result.stderr)
+
     def test_existing_runtime_ca_survives_an_unrelated_supplemental_bundle(self):
         for native in [False, True]:
             with self.subTest(native=native):

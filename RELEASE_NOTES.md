@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.10.2
+
+Run the existing job-local TLS preparation during association-only Check preview,
+while retaining its read-only API/native checks and skipped association POST.
+A real verified HTTPS regression exercises the actual repair trust inclusion
+with Check in both Ansible native modes. No normal deployment behavior changes.
+
 ## 1.10.1
 
 Document implementation `85f3f4e`, its restricted interrupted-association

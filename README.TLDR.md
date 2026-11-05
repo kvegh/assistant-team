@@ -15,6 +15,8 @@ Preview an interrupted fresh generic registration with only Job Tags
 adds only its missing managed group after pinned native/inventory checks and
 ends; no VM/software/isolation changes run. Existing memberships are refused.
 Then use `guest_config`; the ordinary managed/production guard is unchanged.
+Check preview prepares only job-local TLS trust and read-only checks; it skips
+the association POST.
 
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;

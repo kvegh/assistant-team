@@ -181,6 +181,8 @@ verifies the association and ends that invocation. It does not provision, update
 install software or change isolation. Existing grouped or production hosts are
 refused. Then resume the same VM with `guest_config`; the normal ownership guard
 is unchanged. The same restricted injected lifecycle bearer performs the repair.
+Check preview prepares its private EE-local TLS bundle and performs verified
+read-only API/native checks; it still skips the group-association POST.
 
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in

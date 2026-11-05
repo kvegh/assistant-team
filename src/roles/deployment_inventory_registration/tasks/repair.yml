@@ -25,6 +25,8 @@
       ansible.builtin.include_role:
         name: inventory_vm_guard
         tasks_from: trust
+        apply:
+          check_mode: false
 
     - name: Read current hosts and managed groups using only the injected lifecycle bearer
       ansible.builtin.uri:
