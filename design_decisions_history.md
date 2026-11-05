@@ -1,5 +1,20 @@
 # Design decisions history
 
+## Preserve a genuinely absent retirement guest — 2026-11-05
+
+Implementation `73a74ac` pins the existing published AutoDeploy correction
+`41c77d2` (0.45.3). The earlier dependency expanded a missing guest into empty
+text inside a nested Ansible mapping, so a normal retry failed after physical
+and shared cleanup. Its shared plan now builds one complete mapping and retains
+the true null guest in both templating modes. A read-only native plan with that
+actual absent value succeeds; no guest identity is guessed or fabricated.
+
+Reuse the published fix rather than introducing a second implementation or a
+manual inventory deletion. The separate execution inventory, scoped lifecycle
+credential, domain/disk absence checks, production exclusions and cleanup remain
+unchanged. The prior failed preview remains historical evidence, and normal
+preview/apply must verify completion after the metadata import.
+
 ## Separate retirement execution from the managed inventory — 2026-11-05
 
 Implementation `137e198` adds an early AAP prerequisite check: retirement must

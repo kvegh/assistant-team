@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.9
+
+Document implementation `73a74ac` and reuse of the published null-preserving
+source plan without changing identity, absence or authorization checks.
+
 ## 1.11.8
 
 Pin shared AutoDeploy `41c77d2` (0.45.3), preserving a true null guest during
