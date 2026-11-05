@@ -402,8 +402,8 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `85ee77d`
-(version 0.43.0). It adds bounded public HTTP bootstrap for an already owned
+The current dependency pin selects AutoDeploy implementation `eb806b7`
+(version 0.45.0). It adds bounded public HTTP bootstrap for an already owned
 verified generic guest, including exact retirement of that permission. It retains
 exact generic-guest retirement, bounded HTTPS bootstrap and
 renamed AAP inventory entries through their existing
@@ -417,6 +417,13 @@ firewalld rule declarations with approved management/installation policy changes
 so a later host firewall run can preserve those grants. It treats absent group
 variables as a mapping at the collection boundary without changing explicit
 values or literal templates.
+
+The publisher reads encrypted repository settings from the current native action
+plugin path on each invocation. Repeated HTTPS, HTTP, final-release or retirement
+steps therefore work after an earlier temporary checkout has been cleaned up.
+A missing or invalid current plugin path refuses publication; it never falls
+back to a deleted checkout or changes authentication, identity or policy checks.
+Each invocation retains its existing temporary-checkout cleanup.
 
 Normal source job 3282 passed this configuration-only path on one existing test
 guest using revision `6098490` and pinned AutoDeploy implementation `d2d7254`.

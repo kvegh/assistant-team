@@ -16,7 +16,7 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `85ee77d` (0.43.0). Its existing
+The current pin selects AutoDeploy implementation `eb806b7` (0.45.0). Its existing
 shared role accepts `linux_recovery_release_operation: guest_bootstrap_https`
 through this caller to grant only approved public IPv4 TCP 443 access. The
 complete-deployment playbook invokes that permission only after authenticated
@@ -33,6 +33,13 @@ That approval is bound to the profile's exact VM name and reviewed pin; it
 defaults off for every other profile. Private/reserved and production blocks,
 host-service restrictions and full-release ordering remain unchanged. Exact
 guest retirement removes its own HTTP permission as well.
+
+Each shared publisher invocation resolves encrypted repository settings through
+its current native action-plugin path. Ansible may retain an imported plugin
+after the previous checkout is removed; the current path prevents that cached
+module from reading the deleted directory. Missing or invalid native paths refuse
+publication. Authentication, identity and policy checks and per-call cleanup
+remain unchanged.
 
 The implementation preserves
 AAP inventory display aliases through existing verified physical VM ownership.

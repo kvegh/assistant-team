@@ -16,7 +16,11 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared implementation `85ee77d` (0.43.0) is pinned.
+guest's own HTTP permission. Shared implementation `eb806b7` (0.45.0) is pinned.
+
+Repeated lifecycle steps read encrypted settings from the current native plugin
+path after earlier checkouts are removed. Missing paths refuse publication;
+authentication, identity, policy guards and per-call cleanup remain unchanged.
 
 Failed CLI image builds remain failed. Unique private diagnostics in
 `environment-logs/image-build` use `0700` directories and `0600` files; only

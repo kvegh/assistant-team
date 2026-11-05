@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.11.2
+
+Pin shared AutoDeploy `eb806b7` (0.45.0). Each publisher invocation reads encrypted
+settings from its current native plugin path after earlier checkouts are removed.
+Retain all authentication, identity, policy and cleanup checks. No profile,
+credential, grant or live deployment changes as a result of this pin publication.
+
 ## 1.11.1
 
 Document implementation `14a5aaa`, exact-profile HTTP approval, private failed-build
