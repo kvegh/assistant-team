@@ -351,6 +351,16 @@ and normal host firewall remain. Package-update provenance is true only after th
 update role's final check has completed. Generic Linux deployment keeps its
 existing verification/update/release order.
 
+The completed configuration-only acceptance at public `4b7c096` (1.11.2)
+passed DNF verification, all four CLI image/version checks, model-free project
+validation and the normal final isolation release. Its generic guest artifact
+incorrectly kept `packages_updated: false` while `linux_vm_dnf_updated` was true:
+the caller read a name missing the producer register's two leading underscores.
+Future provenance now reads the actual completed check; skipped checks stay
+false and pending updates fail before publication. Historical artifacts and the
+existing saved false value are not rewritten. This metadata correction does not
+rerun the successful installation or claim provider authentication/model access.
+
 A failed software installation remains a failed job. Retry the complete template
 with its existing Job Tags prompt set to `guest_config` and the same explicit
 deployment name; it resolves the registered guest rather than creating a second

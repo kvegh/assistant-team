@@ -42,6 +42,10 @@ only after the complete software installation and validation succeed. Retry a
 failed installation with Job Tags `guest_config`, preserving the registered VM.
 Refresh the selected encrypted policy snapshot before retry if a prior grant
 changed canonical policy; its exact preflight is deliberately retained.
+Acceptance at public `4b7c096` passed updates, CLI checks, model-free validation
+and final release, but its generic `packages_updated` flag incorrectly stayed
+false. The caller now uses the actual update-check register for future results:
+skipped stays false; pending updates refuse publication. Historical flags remain unchanged.
 For a pinned generic guest, the existing retirement template plans saved exact
 ownership first, then removes only its domain, clone, static DHCP reservation,
 policy permissions and inventory records. Shared publication precedes deleting

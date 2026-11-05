@@ -22,6 +22,11 @@ Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;
 authentication, identity, policy guards and per-call cleanup remain unchanged.
 
+Acceptance at public `4b7c096` passed updates, CLI checks, model-free validation
+and final release, but its generic `packages_updated` flag incorrectly stayed
+false. Future results use the actual update-check register; skipped checks stay
+false and pending updates refuse publication. Historical flags remain unchanged.
+
 Failed CLI image builds remain failed. Unique private diagnostics in
 `environment-logs/image-build` use `0700` directories and `0600` files; only
 message, stdout, stderr and return code are saved. Invocation/environment/credential

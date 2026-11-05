@@ -8,7 +8,7 @@
         'vcpus': deployment_vm_vcpus | int,
         'memory_mb': deployment_vm_memory_mb | int,
         'disk_gb': deployment_vm_disk_gb | int,
-        'packages_updated': linux_updates_remaining_updates.rc | default(-1) | int == 0}) }}
+        'packages_updated': __linux_updates_remaining_updates.rc | default(-1) | int == 0}) }}
 
 - name: Publish verified generic guest provenance
   ansible.builtin.set_stats:

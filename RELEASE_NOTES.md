@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.11.4
+
+Use the update role's actual `__linux_updates_remaining_updates` register for
+generic guest provenance. Skipped checks stay false and pending updates fail
+before publication. Native producer/consumer and complete-flow checks pass.
+Document successful model-free acceptance at `4b7c096` separately from its old
+inaccurate false flag; no historical/canonical flag or live deployment is changed.
+
 ## 1.11.3
 
 Document implementation `4b7c096` and the native repeated-checkout regression,

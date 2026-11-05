@@ -20,6 +20,9 @@ class CompleteRecoveryTests(unittest.TestCase):
     def fixture(self, root, generic=True, http=False):
         roles = root / 'roles'
         roles.mkdir()
+        update_tasks = yaml.safe_load((ROOT/'src/roles/linux_updates/tasks/main.yml').read_text())
+        update_register = next(task['register'] for task in update_tasks
+                               if task.get('ansible.builtin.command', {}).get('argv') == ['dnf', '--refresh', 'check-update'])
 
         def role(name, tasks):
             directory = roles / name / 'tasks'
@@ -131,11 +134,11 @@ class CompleteRecoveryTests(unittest.TestCase):
                 'not (hostvars.localhost.fresh_definition.container_build_http_bootstrap | default(false) | bool) or fixture_http_verified | default(false) | bool',
                 'fixture_released is not defined']}},
             record('updated'),
-            {'name': 'Publish completed update check', 'ansible.builtin.set_fact': {'linux_updates_remaining_updates': {'rc': 0}}}])
+            {'name': 'Publish completed update check', 'ansible.builtin.set_fact': {update_register: {'rc': 0}}}])
         for name in ['podman_host', 'codex_sandbox', 'agent_images', 'agents_connector', 'native_auth',
                      'antigravity_team', 'project_framework', 'project_workspace', 'vertex_auth']:
             role(name, [{'name': 'Require update stage for fixture software', 'ansible.builtin.assert': {
-                'that': ['linux_updates_remaining_updates.rc == 0']}}, record('software_' + name)])
+                'that': [update_register + '.rc == 0']}}, record('software_' + name)])
         role('environment_validation', [
             {'name': 'Simulate a later installation validation failure', 'ansible.builtin.assert': {
                 'that': ['not (fail_software | default(false) | bool)']}}, record('installation_verified'),
