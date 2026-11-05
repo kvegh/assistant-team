@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.7
+
+Document implementation `c457dfa`, its tested boundaries before all normal
+roles and the separate successful-preview requirement before association.
+
 ## 1.10.6
 
 End every following normal deployment play during explicit association-only

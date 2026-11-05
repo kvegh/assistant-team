@@ -1,5 +1,18 @@
 # Design decisions history
 
+## Stop association-only repair before all normal plays — 2026-11-05
+
+Implementation `c457dfa` ends every following normal deployment play during
+explicit repair before Ansible can insert automatic role argument validation or
+run always-tagged tasks. The live Check had passed all intended inventory and
+native guest checks and correctly skipped its POST, then failed in the following
+provisioning role validator. Whole-entrypoint fixtures now include actual or
+representative argument specifications, explicit always-task sentinels and an
+already existing provisioned guest group. The old boundary fails that fixture;
+the correction passes both native modes. Six complete/failure/retry tests and
+production lint pass. Normal deployment guards and behavior remain unchanged.
+Association apply still requires a successful live preview and explicit review.
+
 ## Select one repair hypervisor by its existing host pattern — 2026-11-05
 
 Implementation `1f1fbf1` uses the existing normal deployment condition of one
