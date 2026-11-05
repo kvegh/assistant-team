@@ -7,7 +7,7 @@
       - deployment_vm_name is defined
       - deployment_vm_name == provisioning.vm_name
       - provisioning.generic_image is sameas true
-      - groups.hypervisor | length == 1
+      - ansible_play_hosts_all | length == 1
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') is match('^https://')
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') | length > 0
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') is match('^[1-9][0-9]*$')

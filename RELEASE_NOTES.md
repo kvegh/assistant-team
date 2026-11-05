@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.10.4
+
+Match the existing one-host deployment guard when selecting the repair
+hypervisor. A host alias need not also exist as an inventory group. Preserve
+exact encrypted profile, SSH/machine, native ownership and zero-membership
+checks. Whole-playbook native fixtures cover the receiving host-alias shape.
+
 ## 1.10.3
 
 Document implementation `de5bc80` and its actual verified HTTPS Check-preview

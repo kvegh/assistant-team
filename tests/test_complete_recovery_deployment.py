@@ -160,6 +160,8 @@ class CompleteRecoveryTests(unittest.TestCase):
             with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 self.fixture(root)
+                # Match the real receiving inventory: one host alias, no hypervisor group.
+                (root / 'inventory').write_text('hypervisor ansible_connection=local\n')
                 (root / 'roles/deployment_inventory_registration/tasks/repair.yml').write_text(
                     yaml.safe_dump([{'ansible.builtin.file': {'path': str(root / 'repair_only'), 'state': 'touch', 'mode': '0600'}}]))
                 result = self.run_fixture(root, native, repair=True)

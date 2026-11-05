@@ -181,6 +181,9 @@ verifies the association and ends that invocation. It does not provision, update
 install software or change isolation. Existing grouped or production hosts are
 refused. Then resume the same VM with `guest_config`; the normal ownership guard
 is unchanged. The same restricted injected lifecycle bearer performs the repair.
+Repair accepts one matched hypervisor host, whether selected by host alias or
+group; the same exact SSH/machine/profile checks still apply.
+
 Check preview prepares its private EE-local TLS bundle and performs verified
 read-only API/native checks; it still skips the group-association POST.
 

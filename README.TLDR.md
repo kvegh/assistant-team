@@ -15,6 +15,8 @@ Preview an interrupted fresh generic registration with only Job Tags
 adds only its missing managed group after pinned native/inventory checks and
 ends; no VM/software/isolation changes run. Existing memberships are refused.
 Then use `guest_config`; the ordinary managed/production guard is unchanged.
+One matched hypervisor host may be selected by alias or group; exact pin checks
+still apply.
 Check preview prepares only job-local TLS trust and read-only checks; it skips
 the association POST.
 
