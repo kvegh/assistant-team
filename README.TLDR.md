@@ -1,8 +1,9 @@
 # Assistant team: commands
 
 Current CLI container builds retain Debian and HTTP downloads. Beads
-`bead-wd-b3j` defers UBI evaluation; it is not a deployment prerequisite. Future
-UBI 10 use requires actual RHEL 9 CPU/workload checks, with UBI 9 as fallback.
+`bead-wd-b3j` defers a rebuild targeting UBI 10; it is not a current deployment
+prerequisite. Verify actual RHEL 9 CPU/workload compatibility; UBI 9 is only a
+fallback for demonstrated compatibility problems. Python/Vibe needs a separate base choice.
 
 Code is public; encrypted configuration and authentication snapshots remain in
 the private `assistant-team-secrets` companion repository.

@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.10.12
+
+Document UBI 10 as the explicit deferred rebuild target. Keep current Debian/HTTP
+builds, require actual workload validation, and reserve UBI 9 for demonstrated
+compatibility problems; Python/Vibe retains a separate base choice.
+
 ## 1.10.11
 
 Document decision `4dc7103` to retain current Debian/HTTP builds and defer UBI

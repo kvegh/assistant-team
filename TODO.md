@@ -7,12 +7,13 @@ the task ID for its current status and acceptance criteria.
 
 | Task | Status | Reference |
 | --- | --- | --- |
-| `bead-wd-b3j` | Deferred, P2 | Evaluate Red Hat UBI for the Node-based CLI images. |
+| `bead-wd-b3j` | Deferred, P2 | Rebuild the Node-based CLI images on Red Hat UBI 10. |
 
 Current builds retain their pinned Debian bases and HTTP package downloads.
-Future evaluation will compare `ubi10/nodejs-22-minimal` and `ubi10/nodejs-22`,
-verify x86-64-v3, matching architecture and actual unprivileged workload behavior
-on RHEL 9, and use the corresponding UBI 9 base if needed. A Node-image choice
+The deferred rebuild targets UBI 10, comparing `ubi10/nodejs-22-minimal` and `ubi10/nodejs-22`.
+Verify x86-64-v3, matching architecture and actual unprivileged workload behavior
+on RHEL 9. A corresponding UBI 9 base is only a fallback for demonstrated
+compatibility problems. A Node-image choice
 does not select the Python/Vibe base. This deferred task does not block current
 Debian deployment acceptance. See the [Red Hat compatibility policy](https://access.redhat.com/support/policy/rhel-container-compatibility);
 newer images on older hosts require workload-specific validation.
