@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.7
+
+Document implementation `137e198`, Controller's active-inventory deletion guard,
+the existing-inventory CaC correction and the focused native regression.
+
 ## 1.11.6
 
 Refuse same-inventory AAP retirement before physical changes. Reuse the existing

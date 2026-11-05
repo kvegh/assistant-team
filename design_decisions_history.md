@@ -1,5 +1,23 @@
 # Design decisions history
 
+## Separate retirement execution from the managed inventory — 2026-11-05
+
+Implementation `137e198` adds an early AAP prerequisite check: retirement must
+run from a different inventory than the managed Assistant inventory named by
+its existing lifecycle credential. Controller rejects host deletion with HTTP
+409 while any job uses the host's inventory, including retirement itself; an
+execution limit does not avoid that conflict. The observed run completed native
+and shared cleanup but correctly remained failed when its final host deletion
+was refused. That historical failure is not rewritten or replaced by a manual
+API deletion.
+
+The private capture reuses an existing compatible hypervisor-only execution
+inventory and retains the same managed inventory, credential, token scope and
+identity/production checks. No inventory, job, credential type or grant is added.
+The focused native verified-HTTPS regression reproduces the original conflict,
+refuses it before any physical stage and succeeds with separate inventories in
+both templating modes. Production lint and whitespace/privacy checks pass.
+
 ## Use the actual completed DNF check for guest provenance — 2026-11-05
 
 Implementation `7172d77` corrects the caller's update-result reference to
