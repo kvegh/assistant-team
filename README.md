@@ -186,6 +186,8 @@ group; the same exact SSH/machine/profile checks still apply.
 
 Check preview prepares its private EE-local TLS bundle and performs verified
 read-only API/native checks; it still skips the group-association POST.
+Explicit repair also ends each following normal play before role argument
+validation or always-tagged tasks, including when a guest group already exists.
 
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in

@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.10.6
+
+End every following normal deployment play during explicit association-only
+repair, before automatic role argument validation or always-tagged tasks. Native
+whole-entrypoint fixtures include real/representative role argument specifications,
+always-task sentinels and an existing provisioned guest group. Normal full and
+configuration-only deployments retain their existing behavior.
+
 ## 1.10.5
 
 Document implementation `1f1fbf1` and the actual host-alias preview correction,

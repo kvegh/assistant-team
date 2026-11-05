@@ -160,8 +160,20 @@ class CompleteRecoveryTests(unittest.TestCase):
             with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 self.fixture(root)
-                # Match the real receiving inventory: one host alias, no hypervisor group.
-                (root / 'inventory').write_text('hypervisor ansible_connection=local\n')
+                # Match the real host alias and prove an existing guest group cannot
+                # let later plays enter automatic validation or always-tagged tasks.
+                (root / 'inventory').write_text('hypervisor ansible_connection=local\n'
+                    '[provisioned_linux_guest]\nexample-v16 ansible_connection=local\n')
+                for name in ['linux_vm', 'deployment_inventory_registration', 'linux_guest']:
+                    tasks = root / ('roles/' + name + '/tasks/main.yml')
+                    tasks.write_text(yaml.safe_dump([{'ansible.builtin.fail': {
+                        'msg': 'repair reached normal role ' + name}, 'tags': ['always']}]
+                        + yaml.safe_load(tasks.read_text()), sort_keys=False))
+                    meta = root / ('roles/' + name + '/meta')
+                    meta.mkdir()
+                    actual = ROOT / ('src/roles/' + name + '/meta/argument_specs.yml')
+                    (meta / 'argument_specs.yml').write_text(actual.read_text() if actual.exists() else
+                        yaml.safe_dump({'argument_specs': {'main': {'short_description': 'Always validation boundary fixture.', 'options': {}}}}))
                 (root / 'roles/deployment_inventory_registration/tasks/repair.yml').write_text(
                     yaml.safe_dump([{'ansible.builtin.file': {'path': str(root / 'repair_only'), 'state': 'touch', 'mode': '0600'}}]))
                 result = self.run_fixture(root, native, repair=True)

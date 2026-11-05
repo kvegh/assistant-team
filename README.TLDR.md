@@ -19,6 +19,8 @@ One matched hypervisor host may be selected by alias or group; exact pin checks
 still apply.
 Check preview prepares only job-local TLS trust and read-only checks; it skips
 the association POST.
+Repair stops all following normal plays before automatic role validation, even
+when a provisioned guest group already exists.
 
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;

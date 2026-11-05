@@ -22,6 +22,8 @@ One matched hypervisor host may be selected by alias or group; exact pin checks
 still apply.
 Check preview prepares only job-local TLS trust and read-only checks; it skips
 the association POST.
+Repair stops all following normal plays before automatic role validation, even
+when a provisioned guest group already exists.
 
 For a pinned generic guest, the existing retirement job plans persisted exact
 ownership before graceful shutdown and clone deletion. It then removes only that

@@ -56,6 +56,11 @@
   vars:
     provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
     linux_vm_deployment_name: "{{ hostvars.localhost.__deployment_target_name }}"
+  pre_tasks:
+    - name: End association-only repair before provisioning role argument validation
+      ansible.builtin.meta: end_play
+      when: "'repair_inventory_registration' in ansible_run_tags"
+      tags: [always]
   roles:
     - linux_vm
 
@@ -64,6 +69,11 @@
   gather_facts: false
   no_log: true
   tags: [provision, offline_recovery]
+  pre_tasks:
+    - name: End association-only repair before normal inventory registration
+      ansible.builtin.meta: end_play
+      when: "'repair_inventory_registration' in ansible_run_tags"
+      tags: [always]
   roles:
     - deployment_inventory_registration
 
@@ -82,6 +92,10 @@
     assistant_source_user: "{{ containers.runtime_user }}"
     vertex_auth_install_sdk: "{{ hostvars.localhost.fresh_definition.install_google_cloud_sdk | default(false) }}"
   pre_tasks:
+    - name: End association-only repair before guest configuration role validation
+      ansible.builtin.meta: end_play
+      when: "'repair_inventory_registration' in ansible_run_tags"
+      tags: [always]
     - name: Verify the authenticated guest before requesting bootstrap access
       ansible.builtin.include_role:
         name: linux_guest
