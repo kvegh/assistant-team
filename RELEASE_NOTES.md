@@ -1,5 +1,20 @@
 # Release notes
 
+## 1.9.0
+
+Integrate the existing retirement template with pinned AutoDeploy implementation
+`1976a5a` (0.39.0) for exact generic-guest cleanup. Plan saved ownership before
+deletion, recheck UUID and clone inode/device after graceful shutdown, then remove
+only the selected domain, clone, static DHCP reservation, policy entries and
+shared inventory. Delete the Assistant row only after durable shared publication.
+Support interrupted-publication retries without guest SSH and verified absent
+repeats; preserve legacy retirement guards and all other guests/images. Refuse
+unsupported selected host-service grants and report dynamic lease cache without
+editing shared dnsmasq state. Twenty-eight focused tests pass, including actual
+two-mode retirement/retry flows, seventeen inventory/legacy safety guards and
+nine recovery connection checks; scoped production lint and three playbook
+syntax checks pass. No live decommission is claimed by these code checks.
+
 ## 1.8.3
 
 Document trust correction `ca0c08c`, the credential-free runtime diagnosis and

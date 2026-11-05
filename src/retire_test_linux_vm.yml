@@ -4,12 +4,6 @@
   gather_facts: false
   no_log: true
   pre_tasks:
-    - name: Validate inventory authority and production protection
-      ansible.builtin.include_role:
-        name: inventory_vm_guard
-      vars:
-        inventory_vm_guard_name: "{{ teardown_vm_name | default('') }}"
-        inventory_vm_guard_operation: retire
     - name: Load shared encrypted infrastructure configuration
       ansible.builtin.include_role:
         name: secret_config
@@ -19,6 +13,15 @@
       vars:
         secret_config_name: retire_test
         secret_config_namespace: retirement_infrastructure
+    - name: Validate inventory authority and production protection
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+      vars:
+        inventory_vm_guard_name: "{{ teardown_vm_name | default('') }}"
+        inventory_vm_guard_operation: retire
+        inventory_vm_guard_allow_absent: >-
+          {{ retirement_infrastructure.provisioning.generic_image | default(false) | bool
+             and retirement_infrastructure.provisioning.hypervisor_pin is defined }}
 
 - name: Safely retire only the inventory-selected disposable Linux VM
   hosts: hypervisor
@@ -30,5 +33,17 @@
       {{ hostvars.localhost.retirement_infrastructure.provisioning | combine({'vm_name': teardown_vm_name}) }}
     linux_vm_retire_disk: "{{ linux_vm_retire_definition.vm_dir }}/{{ linux_vm_retire_definition.vm_name }}.disk.qcow2"
     linux_vm_retire_execute: "{{ retire_test_execute | default(false) | bool }}"
+  pre_tasks:
+    - name: Plan exact generic retirement from saved canonical ownership before deleting anything
+      ansible.builtin.include_role:
+        name: linux_recovery_release
+      vars:
+        linux_recovery_release_operation: retire_guest
+        linux_recovery_release_retire_phase: plan
+        linux_recovery_release_retire_guest_name: "{{ linux_vm_retire_definition.vm_name }}"
+        linux_recovery_release_retire_hypervisor: "{{ linux_vm_retire_definition.hypervisor_pin }}"
+      when:
+        - linux_vm_retire_definition.generic_image | default(false) | bool
+        - linux_vm_retire_definition.hypervisor_pin is defined
   roles:
     - linux_vm_retire

@@ -13,6 +13,20 @@
       - linux_recovery_release_operation in ['release_guest', 'guest_bootstrap_https']
     fail_msg: Finish authenticated guest verification and select the reviewed release implementation before changing isolation.
   no_log: true
+  when: linux_recovery_release_operation != 'retire_guest'
+
+- name: Require the exact persisted generic guest retirement inputs
+  ansible.builtin.assert:
+    that:
+      - linux_recovery_release_retire_phase in ['plan', 'publish']
+      - linux_recovery_release_retire_guest_name is match('^[a-z][a-z0-9-]*-v[0-9]{2,}$')
+      - linux_recovery_release_retire_hypervisor is mapping
+      - linux_recovery_release_repository == 'https://github.com/kvegh/aap_autodeploy_configascode.git'
+      - linux_recovery_release_revision is match('^[a-f0-9]{40}$')
+      - linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+    fail_msg: Plan or publish only the exact persisted generic guest on its independently pinned hypervisor.
+  when: linux_recovery_release_operation == 'retire_guest'
+  no_log: true
 
 - name: Allocate a private execution-environment checkout
   ansible.builtin.tempfile:
@@ -46,6 +60,16 @@
         recovery_release_hypervisor: "{{ deployment_vm_hypervisor_pin }}"
         recovery_release_trust_file: "{{ deployment_vm_trust_file }}"
         recovery_release_operation: "{{ linux_recovery_release_operation }}"
+      when: linux_recovery_release_operation != 'retire_guest'
+
+    - name: Plan or publish this guest through the shared exact retirement role # noqa: role-name[path]
+      ansible.builtin.include_role:
+        name: "{{ __linux_recovery_release_checkout.path }}/source/roles/recovery_guest_retire"
+      vars:
+        recovery_retire_phase: "{{ linux_recovery_release_retire_phase }}"
+        recovery_retire_guest_name: "{{ linux_recovery_release_retire_guest_name }}"
+        recovery_retire_hypervisor: "{{ linux_recovery_release_retire_hypervisor }}"
+      when: linux_recovery_release_operation == 'retire_guest'
 
   always:
     - name: Remove this job's implementation checkout

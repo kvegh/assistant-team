@@ -86,6 +86,13 @@ class InventoryVmGuardTests(unittest.TestCase):
     def test_missing_target_refused(self):
         self.assert_refused(self.run_guard([], ["assistant_team"]))
 
+    def test_optional_absence_is_retirement_only_and_still_checks_existing_production_hosts(self):
+        options = {'inventory_vm_guard_allow_absent': True}
+        self.assert_allowed(self.run_guard([], [], overrides=options))
+        self.assert_refused(self.run_guard([], [], operation='lookup', overrides=options))
+        self.assert_refused(self.run_guard([self.host()], ['assistant_team', 'prod'], overrides=options))
+        self.assert_refused(self.run_guard([{'id': 1, 'name': 'example-5', 'variables': '{}'}], [], overrides=options))
+
     def test_ambiguous_explicit_bindings_refused(self):
         self.assert_refused(self.run_guard([self.host(), self.host(2)], ["assistant_team"]))
 

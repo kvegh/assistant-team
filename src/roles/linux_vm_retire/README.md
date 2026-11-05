@@ -15,8 +15,11 @@ The entry point consumes its existing injected `retire_test` ciphertext, allowin
 a selected recovery-host retirement profile while preserving the original fresh
 deployment configuration. Canonical version names such as `example-v07` retain
 the exact live ownership and production checks. A released recovery guest also
-needs exact shared inventory/policy cleanup; domain/disk deletion by itself is
-not complete recovery-host decommissioning.
+uses the same pinned shared AutoDeploy tasks to clean up exact shared inventory
+and policy, in addition to its domain and disk. It needs the existing source API,
+Git writer, CaC Vault and source CA credentials already used by guest release.
+The shared plan resolves persisted `vm_resource` before deleting anything. After
+graceful shutdown, the UUID and clone inode/device must still match that plan.
 
 ## Safety and validation
 
@@ -27,7 +30,16 @@ The original clone (numeric suffix one) remains ineligible even without a prod
 label. Refuses shared, extra, symbolic or source-image disks. Checks every defined
 domain's disk references and confirms all other domain names and source-image
 file identity remain intact. No wildcard deletion or forced stop. Check mode is
-refused because live preflight is mandatory. A completed removal is deliberately
-not repeated. After successful removal and preservation checks, only the matched retired VM
-inventory host is deleted, allowing its name to be reused. Other inventory hosts,
-groups and controller resources are preserved.
+refused because live preflight is mandatory. Legacy profiles continue to require
+the exact existing domain and inventory row. Generic retirement also removes only
+matching static DHCP reservations and this guest's HTTPS/full-release entries,
+publishing to the existing three encrypted captures and source inventory before
+deleting its Assistant row. Selected host-service grants refuse planning until
+supported exact cleanup exists. Dynamic DHCP lease cache is reported and is not
+edited.
+
+If publication is interrupted, the surviving canonical/API resource record
+allows a safe retry with no connection to the deleted guest. If both ownership
+records are gone, only native absence of the domain and both canonical disk paths
+permits a no-op. Remaining disks, unknown DHCP ownership or changed policy stop
+the job. Other inventory hosts, groups, images and controller resources remain.

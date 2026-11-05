@@ -1,12 +1,39 @@
 ---
+- name: Retain the independently planned generic retirement mode
+  ansible.builtin.set_fact:
+    __linux_vm_retire_generic: >-
+      {{ linux_vm_retire_definition.generic_image | default(false) | bool
+         and linux_vm_retire_definition.hypervisor_pin is defined }}
+    __linux_vm_retire_completed_absence: >-
+      {{ linux_vm_retire_definition.generic_image | default(false) | bool
+         and linux_vm_retire_definition.hypervisor_pin is defined
+         and recovery_guest_retire_plan.records_absent | default(false) | bool
+         and recovery_guest_retire_plan.native.already_absent | default(false) | bool
+         and recovery_guest_retire_plan.native.disks_absent | default(false) | bool
+         and not (recovery_guest_retire_plan.native.domain_present | default(true) | bool) }}
+    __linux_vm_retire_initial_guest: "{{ recovery_guest_retire_plan.guest | default({}) }}"
+  no_log: true
+
 - name: Validate exact retirement request
   ansible.builtin.assert:
     that:
       - ansible_play_hosts_all | length == 1
       - linux_vm_retire_definition.vm_name is match('^[a-z][a-z0-9-]*-(?:[2-9]|[1-9][0-9]+|v(?:0[1-9]|[1-9][0-9]+))$')
-      - hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
+      - >-
+        hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
+        or __linux_vm_retire_completed_absence | default(false) | bool
       - "'prod' not in (hostvars.localhost.__inventory_vm_guard_groups | default(['prod']))"
-      - (hostvars.localhost.__inventory_vm_guard_matches[0].variables | from_yaml).assistant_vm_name == linux_vm_retire_definition.vm_name
+      - >-
+        ((hostvars.localhost.__inventory_vm_guard_matches[0].variables | from_yaml).assistant_vm_name
+        == linux_vm_retire_definition.vm_name)
+        if hostvars.localhost.__inventory_vm_guard_matches | default([]) | length == 1
+        else __linux_vm_retire_completed_absence | default(false) | bool
+      - not (linux_vm_retire_definition.generic_image | default(false) | bool) or linux_vm_retire_definition.hypervisor_pin is defined
+      - >-
+        not (__linux_vm_retire_generic | default(false) | bool) or
+        (recovery_guest_retire_plan.guest_name == linux_vm_retire_definition.vm_name
+         and recovery_guest_retire_plan.hypervisor == linux_vm_retire_definition.hypervisor_pin
+         and recovery_guest_retire_plan.native.retirement_verified | bool)
       - linux_vm_retire_definition.vm_dir is match('^/')
       - linux_vm_retire_definition.golden_image_path is match('^/')
       - linux_vm_retire_disk != linux_vm_retire_definition.golden_image_path
@@ -24,7 +51,11 @@
 - name: Require the exact selected test domain
   ansible.builtin.assert:
     that:
-      - linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
+      - >-
+        (linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines)
+        == (recovery_guest_retire_plan.native.domain_present | bool)
+        if __linux_vm_retire_generic | bool else
+        linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
 - name: Inspect every domain disk reference
   ansible.builtin.command:
@@ -67,10 +98,22 @@
       - not (__linux_vm_retire_disk_stat.stat.islnk | default(false))
       - __linux_vm_retire_golden_before.stat.isreg | default(false)
       - __linux_vm_retire_disk_stat.stat.inode != __linux_vm_retire_golden_before.stat.inode
+  when: linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
+
+- name: Require complete canonical disk absence for an already deleted generic guest
+  ansible.builtin.assert:
+    that:
+      - __linux_vm_retire_generic | bool
+      - not (__linux_vm_retire_disk_stat.stat.exists | bool)
+      - recovery_guest_retire_plan.native.disks_absent | bool
+      - __linux_vm_retire_golden_before.stat.isreg | default(false)
+      - not (__linux_vm_retire_golden_before.stat.islnk | default(false))
+    fail_msg: An absent guest permits only native-verified complete disk absence and a preserved source image.
+  when: linux_vm_retire_definition.vm_name not in __linux_vm_retire_domains.stdout_lines
 
 - name: Complete read-only retirement preflight
   ansible.builtin.debug:
-    msg: Exact test domain and exclusive clone disk verified; other domains and the golden image are protected.
+    msg: Exact owned guest storage or verified completed absence checked; other domains and the source image are protected.
 
 - name: Retire the explicitly selected test clone
   when: linux_vm_retire_execute | bool
@@ -82,11 +125,14 @@
         LC_ALL: C
       register: __linux_vm_retire_state
       changed_when: false
+      when: linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
     - name: Request graceful shutdown of only the selected domain
       ansible.builtin.command:
         argv: [virsh, shutdown, "{{ linux_vm_retire_definition.vm_name }}"]
-      when: __linux_vm_retire_state.stdout | trim != 'shut off'
+      when:
+        - linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
+        - __linux_vm_retire_state.stdout | trim != 'shut off'
       changed_when: true
 
     - name: Wait for graceful shutdown without a forced stop
@@ -99,6 +145,7 @@
       until: __linux_vm_retire_shutdown.stdout | trim == 'shut off'
       retries: 60
       delay: 5
+      when: linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
     - name: Recheck live inventory protection immediately before deleting the VM
       ansible.builtin.include_role:
@@ -109,16 +156,43 @@
       vars:
         inventory_vm_guard_name: "{{ linux_vm_retire_definition.vm_name }}"
         inventory_vm_guard_operation: retire
+        inventory_vm_guard_allow_absent: "{{ __linux_vm_retire_generic | bool }}"
+
+    - name: Recheck the same saved generic UUID and native ownership immediately before deletion
+      ansible.builtin.include_role:
+        name: linux_recovery_release
+      vars:
+        linux_recovery_release_operation: retire_guest
+        linux_recovery_release_retire_phase: plan
+        linux_recovery_release_retire_guest_name: "{{ linux_vm_retire_definition.vm_name }}"
+        linux_recovery_release_retire_hypervisor: "{{ linux_vm_retire_definition.hypervisor_pin }}"
+      when:
+        - __linux_vm_retire_generic | bool
+        - linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
+
+    - name: Refuse a changed generic guest or replaced clone after shutdown
+      ansible.builtin.assert:
+        that:
+          - recovery_guest_retire_plan.guest == __linux_vm_retire_initial_guest
+          - recovery_guest_retire_plan.native.domain_present | bool
+          - recovery_guest_retire_plan.native.disk_identity.inode == __linux_vm_retire_disk_stat.stat.inode
+          - recovery_guest_retire_plan.native.disk_identity.device == __linux_vm_retire_disk_stat.stat.dev
+        fail_msg: The generic guest identity or clone changed after retirement preflight.
+      when:
+        - __linux_vm_retire_generic | bool
+        - linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
     - name: Undefine only the verified stopped domain
       ansible.builtin.command:
         argv: [virsh, undefine, "{{ linux_vm_retire_definition.vm_name }}", --nvram]
       changed_when: true
+      when: linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
     - name: Delete only the exclusively owned regular clone disk
       ansible.builtin.file:
         path: "{{ linux_vm_retire_disk }}"
         state: absent
+      when: linux_vm_retire_definition.vm_name in __linux_vm_retire_domains.stdout_lines
 
     - name: Inspect surviving domain names
       ansible.builtin.command:
@@ -144,6 +218,16 @@
           - __linux_vm_retire_golden_after.stat.size == __linux_vm_retire_golden_before.stat.size
           - __linux_vm_retire_golden_after.stat.mtime == __linux_vm_retire_golden_before.stat.mtime
 
+    - name: Publish exact native absence and remove only this generic guest's shared policy and inventory
+      ansible.builtin.include_role:
+        name: linux_recovery_release
+      vars:
+        linux_recovery_release_operation: retire_guest
+        linux_recovery_release_retire_phase: publish
+        linux_recovery_release_retire_guest_name: "{{ linux_vm_retire_definition.vm_name }}"
+        linux_recovery_release_retire_hypervisor: "{{ linux_vm_retire_definition.hypervisor_pin }}"
+      when: __linux_vm_retire_generic | bool
+
     - name: Remove only the verified retired VM inventory binding
       ansible.builtin.uri:
         url: >-
@@ -158,3 +242,15 @@
       become: false
       changed_when: true
       no_log: true
+      when: __inventory_vm_guard_matches | default([]) | length == 1
+
+    - name: Publish complete exact generic retirement without claiming dynamic lease cache removal
+      ansible.builtin.set_stats:
+        data:
+          generic_guest_retired:
+            vm_name: "{{ linux_vm_retire_definition.vm_name }}"
+            verified: true
+            shared_policy_and_inventory_published: true
+            dynamic_lease_cache: "{{ recovery_guest_retire_plan.native.dynamic_lease_cache }}"
+        aggregate: false
+      when: __linux_vm_retire_generic | bool

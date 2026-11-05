@@ -10,6 +10,15 @@ Lifecycle API requests combine the runtime's default TLS trust and its declared
 supplemental CA in a private job-local file. Certificate verification remains
 enabled; internal and external routing do not change authentication or global trust.
 
+For a pinned generic guest, the existing retirement job plans persisted exact
+ownership before graceful shutdown and clone deletion. It then removes only that
+guest's static DHCP reservation, bootstrap/full-release policy entries and shared
+inventory records, publishing before its Assistant row is deleted. Interrupted
+publication can retry with the VM gone; a fully absent repeat requires both
+canonical disk paths absent. Dynamic lease cache is reported separately.
+Unsupported guest-to-host grants refuse planning. Other guests and source images
+remain unchanged, and legacy profiles retain their existing stricter behavior.
+
 Complete installation acceptance can deliberately defer saved provider
 authentication with `native_auth_vault_restore_enabled: false`. CLI versions and
 disposable dummy-harness project checks do not prove provider entitlement and do

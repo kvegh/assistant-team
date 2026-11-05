@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class RetirementSafetyTests(unittest.TestCase):
     def test_versioned_retirement_still_requires_exact_nonproduction_binding(self):
-        task = yaml.safe_load((ROOT / 'src/roles/linux_vm_retire/tasks/main.yml').read_text())[0]
+        task = next(task for task in yaml.safe_load((ROOT / 'src/roles/linux_vm_retire/tasks/main.yml').read_text())
+                    if task['name'] == 'Validate exact retirement request')
         for protected in (False, True):
             with self.subTest(protected=protected), tempfile.TemporaryDirectory() as directory:
                 selected = 'example-v16'

@@ -6,6 +6,10 @@
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') is match('^https://')
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') | length > 0
       - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') is match('^[1-9][0-9]*$')
+      - >-
+        not (inventory_vm_guard_allow_absent | default(false) | bool) or
+        (inventory_vm_guard_operation | default('retire') == 'retire'
+         and inventory_vm_guard_require_existing | default(true) | bool)
     fail_msg: A valid VM name and trusted live AAP inventory credential are required.
     quiet: true
   no_log: false
@@ -101,10 +105,15 @@
   ansible.builtin.assert:
     that:
       - >-
-        (__inventory_vm_guard_matches | length == 1) if (inventory_vm_guard_require_existing | default(true) | bool)
-        else (__inventory_vm_guard_matches | length == 0)
+        (__inventory_vm_guard_matches | length <= 1) if (inventory_vm_guard_allow_absent | default(false) | bool)
+        else ((__inventory_vm_guard_matches | length == 1) if (inventory_vm_guard_require_existing | default(true) | bool)
+        else (__inventory_vm_guard_matches | length == 0))
       - >-
         (inventory_vm_guard_require_existing | default(true) | bool) or
+        inventory_vm_guard_name not in (__inventory_vm_guard_hosts.json.results | map(attribute="name") | list)
+      - >-
+        not (inventory_vm_guard_allow_absent | default(false) | bool) or
+        __inventory_vm_guard_matches | length == 1 or
         inventory_vm_guard_name not in (__inventory_vm_guard_hosts.json.results | map(attribute="name") | list)
     fail_msg: VM selection must match exactly one explicit assistant_vm_name inventory binding.
     quiet: true
@@ -121,7 +130,7 @@
     validate_certs: true
     return_content: true
   register: __inventory_vm_guard_group_response
-  when: inventory_vm_guard_require_existing | default(true) | bool
+  when: __inventory_vm_guard_matches | length == 1
   no_log: true
 
 - name: Enforce managed inventory membership and production deletion protection
@@ -136,7 +145,7 @@
     fail_msg: The selected host must be managed in assistant_team; production hosts cannot be deleted.
     quiet: true
   no_log: false
-  when: inventory_vm_guard_require_existing | default(true) | bool
+  when: __inventory_vm_guard_matches | length == 1
 
 - name: Export trusted controller bindings and selected inventory metadata
   ansible.builtin.set_fact:
@@ -146,7 +155,7 @@
       if __inventory_vm_guard_matches | length == 1 else {} }}
     __inventory_vm_guard_groups: >-
       {{ (__inventory_vm_guard_group_response.json.results | map(attribute='name') | list)
-      if inventory_vm_guard_require_existing | default(true) | bool else [] }}
+      if __inventory_vm_guard_matches | length == 1 else [] }}
     __inventory_vm_guard_inventory_id: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}"
     __inventory_vm_guard_controller_host: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}"
     __inventory_vm_guard_token: "{{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"

@@ -327,10 +327,21 @@ VM. If an earlier permission changed the isolation policy, refresh only the
 selected encrypted profile and its stored ciphertext from the canonical policy
 before retrying. The exact native policy preflight remains enforced; automatic
 cross-inventory policy refresh is not implemented. Do not rerun provisioning over
-an existing disk. Decommissioning a released
-recovery guest also needs its exact shared policy and inventory cleanup; a
-domain-and-disk removal alone is insufficient. That shared cleanup must be ready
-before running the disposal test.
+an existing disk.
+
+The normal retirement template also handles this pinned generic guest. Its
+read-only plan resolves saved ownership from existing encrypted CaC and source
+inventory before deletion. Execute only after the installation test succeeds.
+It gracefully stops the exact VM, rechecks its UUID and exclusive clone, removes
+that domain and disk, then removes its static DHCP reservation and own
+bootstrap/full-release policy entries. Shared publication completes before its
+Assistant inventory row is deleted. A failed publication can retry using saved
+ownership without connecting to the deleted guest. Once both records are gone,
+a repeat requires the domain and both canonical disk paths to be absent and
+makes no further permission change. Dynamic DHCP lease cache is reported
+separately; unrelated guests, source images and normal firewall rules remain.
+Unsupported guest-to-host grants refuse planning before deletion. Legacy test
+profiles retain their stricter existing retirement behavior.
 
 The private companion maintains **Deploy AIOps Linux Demo VM** as an optional
 source-side Job Template under
@@ -360,8 +371,8 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `2795c13`
-(version 0.38.0). It adds bounded generic-guest HTTPS bootstrap and preserves
+The current dependency pin selects AutoDeploy implementation `1976a5a`
+(version 0.39.0). It adds exact generic-guest retirement and retains bounded HTTPS bootstrap and
 renamed AAP inventory entries through their existing
 verified physical VM identity. A fresh source AAP can save guest release without
 having the optional Hactar inventory installed: absence is accepted only after

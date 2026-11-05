@@ -16,7 +16,13 @@ only after the complete software installation and validation succeed. Retry a
 failed installation with Job Tags `guest_config`, preserving the registered VM.
 Refresh the selected encrypted policy snapshot before retry if a prior grant
 changed canonical policy; its exact preflight is deliberately retained.
-Released guests also require exact shared policy/inventory cleanup at disposal.
+For a pinned generic guest, the existing retirement template plans saved exact
+ownership first, then removes only its domain, clone, static DHCP reservation,
+policy permissions and inventory records. Shared publication precedes deleting
+its Assistant row. Interrupted publication can retry after the VM is gone;
+complete absence is a verified no-op. Dynamic lease cache is reported separately.
+Unsupported host-service grants refuse preflight. Other guests and source images
+remain unchanged; legacy retirement profiles keep their existing strict behavior.
 
 `src/deploy_linux_vm.yml` can create an AAP-free guest from a standalone upstream
 image on a pinned recovery hypervisor. Guest bootstrap credentials come from the
@@ -39,7 +45,7 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `2795c13` (0.38.0), adding exact public
+The current shared pin selects AutoDeploy `1976a5a` (0.39.0), adding exact retirement and retaining public
 HTTPS bootstrap while preserving AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
