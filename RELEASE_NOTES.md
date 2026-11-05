@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.5
+
+Document implementation `1f1fbf1` and the actual host-alias preview correction,
+preserving exact profile binding and separate live association approval.
+
 ## 1.10.4
 
 Match the existing one-host deployment guard when selecting the repair

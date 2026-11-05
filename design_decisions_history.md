@@ -1,5 +1,17 @@
 # Design decisions history
 
+## Select one repair hypervisor by its existing host pattern — 2026-11-05
+
+Implementation `1f1fbf1` uses the existing normal deployment condition of one
+matched hypervisor host, followed by the same exact SSH/machine/profile checks.
+The receiving inventory exposes a host alias rather than an identically named
+group; the first live Check preview refused that shape before any remote/API
+repair operation. Both native-mode role and whole-entrypoint fixtures now cover
+a host alias without that group. The strict encrypted profile-name binding and
+normal managed/production guards are unchanged. Five focused repair tests and
+the two-mode alias entrypoint check pass; production lint passes. Actual Check
+preview and any later association remain separately reviewed live work.
+
 ## Prepare ephemeral TLS trust during repair preview — 2026-11-05
 
 Implementation `de5bc80` includes the existing inventory TLS preparation with
