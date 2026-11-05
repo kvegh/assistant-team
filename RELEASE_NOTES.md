@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.1
+
+Document implementation `85f3f4e`, its restricted interrupted-association
+continuation, checked native ownership and separate live preview/acceptance.
+
 ## 1.10.0
 
 Add opt-in interrupted inventory-association continuation inside the existing

@@ -1,5 +1,26 @@
 # Design decisions history
 
+## Continue only an interrupted fresh inventory association — 2026-11-05
+
+Implementation `85f3f4e` adds the explicitly approved repair tag to the existing
+complete-deployment job. Fresh provisioning had created one clone and inventory
+host before its group request failed. Recreating the VM would overwrite useful
+state, while using an administrator credential would widen the established
+inventory-only access. The continuation reuses the original injected lifecycle
+bearer, validates the exact encrypted versioned profile, pinned hypervisor,
+current/saved native clone identity and address, and requires no current direct
+or inherited memberships. Check previews without API writes; apply adds only
+the existing managed group, verifies it and ends before provisioning/software.
+Normal managed/production guards are unchanged; their existing TLS preparation
+is reused without changing its content.
+
+Five new focused checks include actual Ansible apply/check in both native modes
+and pre-write refusal cases. Twelve existing inventory guards, three native TLS
+checks, five complete-deployment/failure/retry tests and the additional two-mode
+repair-only scheduling test pass. Real read-only native checks also passed for
+the already created test clone. Production lint and syntax pass. Publication
+is not live group-repair, software or retirement acceptance.
+
 ## Preserve typed inventory group association requests — 2026-11-05
 
 Implementation `2d6ce1d` builds the host-association body as one mapping so
