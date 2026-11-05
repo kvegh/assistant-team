@@ -10,6 +10,10 @@ Lifecycle API requests combine the runtime's default TLS trust and its declared
 supplemental CA in a private job-local file. Certificate verification remains
 enabled; internal and external routing do not change authentication or global trust.
 
+Inventory group registration preserves an integer host ID in both Ansible modes.
+A failed association leaves the deployment failed; preserve the VM and repair
+only its exact inventory association before retrying configuration.
+
 For a pinned generic guest, the existing retirement job plans persisted exact
 ownership before graceful shutdown and clone deletion. It then removes only that
 guest's static DHCP reservation, bootstrap/full-release policy entries and shared

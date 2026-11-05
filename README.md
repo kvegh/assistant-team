@@ -166,6 +166,11 @@ runtime as well as externally issued certificates. URI calls and later inventory
 registration share that combined file; certificate verification stays enabled,
 malformed CA input fails closed, and global trust and token handling are unchanged.
 
+Fresh inventory registration sends the group association as one typed JSON mapping,
+so its host identifier remains an integer in both Ansible templating modes. A
+registration failure remains a failed deployment; preserve the created VM and
+repair its exact inventory association before a configuration-only retry.
+
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
 Ansible Vault-encrypted files. Plaintext documentation and examples must use

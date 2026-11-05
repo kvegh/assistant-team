@@ -7,6 +7,10 @@ Lifecycle API calls preserve runtime default TLS trust and append the declared
 CA only for those calls. They never disable certificate verification or replace
 the runtime's internal trust with a public-only bundle.
 
+Inventory group registration preserves an integer host ID in both Ansible modes.
+A failed association leaves the deployment failed; preserve the VM and repair
+only its exact inventory association before retrying configuration.
+
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;
 version checks and disposable project tests make no model requests. Canonical

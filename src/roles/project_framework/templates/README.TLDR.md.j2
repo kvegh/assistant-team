@@ -9,6 +9,10 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 Lifecycle APIs preserve runtime TLS trust and add the declared supplemental CA
 only for their requests. Certificate verification and token handling stay enabled.
 
+Inventory group registration preserves an integer host ID in both Ansible modes.
+A failed association leaves the deployment failed; preserve the VM and repair
+only its exact inventory association before retrying configuration.
+
 Pinned generic retirement plans exact saved ownership before deleting the VM,
 then removes its clone, static DHCP reservation, policy entries and shared
 inventory. Shared publication finishes before its Assistant row is deleted.

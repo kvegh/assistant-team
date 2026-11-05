@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.9.2
+
+Preserve the integer host ID in the actual inventory group-association JSON
+request with both native templating modes. Real URI tests reproduce the old
+non-native string/HTTP400 failure and verify the corrected request in both modes.
+Keep lifecycle permissions, TLS verification, ownership checks and failed-job
+behavior unchanged. Live configuration recovery remains a separate acceptance.
+
 ## 1.9.1
 
 Document implementation `618464d`, its pinned shared retirement transaction,

@@ -69,7 +69,6 @@
         headers: {Authorization: "Bearer {{ __inventory_vm_guard_token }}"}
         ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
         body_format: json
-        body:
-          id: "{{ __deployment_inventory_created_host.json.id | int }}"
+        body: "{{ {'id': __deployment_inventory_created_host.json.id | int} }}"
         status_code: [200, 201, 204]
       changed_when: true
