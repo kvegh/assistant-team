@@ -1,5 +1,18 @@
 # Design decisions history
 
+## Make UBI 10 the deferred rebuild target — 2026-11-05
+
+Documentation implementation `a19f81d` clarifies the owner's chosen target:
+rebuild the Node-based CLI images on UBI 10, comparing its Node.js 22
+minimal/full candidates. UBI 9 is only a fallback for demonstrated compatibility
+problems. Actual unprivileged workload checks on RHEL 9 are still required;
+Python/Vibe needs a separate base choice.
+
+Beads `bead-wd-b3j` remains deferred and authoritative. Current pinned Debian
+images and HTTP downloads remain the present deployment choice. This wording
+clarification changes no image, build, deployment or isolation policy.
+Documentation scope, privacy and whitespace checks pass.
+
 ## Keep Debian builds and defer UBI evaluation — 2026-11-05
 
 Documentation implementation `4dc7103` adds a reference to deferred Beads

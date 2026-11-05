@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.13
+
+Document clarification `a19f81d`: UBI 10 is the deferred rebuild target, with UBI 9
+reserved for demonstrated compatibility problems. Runtime behavior is unchanged.
+
 ## 1.10.12
 
 Document UBI 10 as the explicit deferred rebuild target. Keep current Debian/HTTP
