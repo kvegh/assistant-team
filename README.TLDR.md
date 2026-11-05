@@ -1,5 +1,9 @@
 # Assistant team: commands
 
+Current CLI container builds retain Debian and HTTP downloads. Beads
+`bead-wd-b3j` defers UBI evaluation; it is not a deployment prerequisite. Future
+UBI 10 use requires actual RHEL 9 CPU/workload checks, with UBI 9 as fallback.
+
 Code is public; encrypted configuration and authentication snapshots remain in
 the private `assistant-team-secrets` companion repository.
 

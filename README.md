@@ -562,6 +562,14 @@ delegates CPU, memory, and process controllers so container limits are enforced;
 no model agents run as background services. Each image contains the
 provider's native harness, rather than a custom replacement for its agent loop.
 
+Current container builds retain their pinned Debian bases and HTTP package
+downloads. UBI migration is deferred in Beads `bead-wd-b3j` ([reference](TODO.md#beads-task-references)).
+Evaluate the UBI 10 Node.js 22 minimal/full images only after checking the actual
+RHEL 9 guest's x86-64-v3 CPU, architecture and workload compatibility; use UBI 9
+if those conditions are not met. The [Red Hat policy](https://access.redhat.com/support/policy/rhel-container-compatibility)
+describes workload-specific support, not blanket compatibility. No base change
+or rebuild is authorized by that future task; Python/Vibe needs its own choice.
+
 A dedicated password-locked runtime account, configured in Vault as
 `containers.runtime_user`, has no sudo access. Each instance has a separate
 workspace and persistent home directory, which includes its native authentication

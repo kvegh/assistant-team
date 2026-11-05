@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.10.10
+
+Document deferred Beads task `bead-wd-b3j` for a later UBI evaluation. Retain
+the current Debian bases and HTTP downloads; require actual CPU/workload checks
+before UBI 10 on RHEL 9, with a UBI 9 fallback. This documentation changes no
+image, build, deployment or firewall behavior.
+
 ## 1.10.9
 
 Document implementation `e1f0cce`, its existing shared lifecycle repin and

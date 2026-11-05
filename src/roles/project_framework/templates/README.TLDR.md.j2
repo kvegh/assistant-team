@@ -6,6 +6,10 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team: commands
 
+Current CLI container builds retain Debian and HTTP downloads. Beads
+`bead-wd-b3j` defers UBI evaluation; it is not a deployment prerequisite. Future
+UBI 10 use requires actual RHEL 9 CPU/workload checks, with UBI 9 as fallback.
+
 Lifecycle APIs preserve runtime TLS trust and add the declared supplemental CA
 only for their requests. Certificate verification and token handling stay enabled.
 

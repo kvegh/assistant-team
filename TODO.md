@@ -1,5 +1,22 @@
 # Future work
 
+## Beads task references
+
+Beads is authoritative; this table is a reference snapshot. Use `bd show` with
+the task ID for its current status and acceptance criteria.
+
+| Task | Status | Reference |
+| --- | --- | --- |
+| `bead-wd-b3j` | Deferred, P2 | Evaluate Red Hat UBI for the Node-based CLI images. |
+
+Current builds retain their pinned Debian bases and HTTP package downloads.
+Future evaluation will compare `ubi10/nodejs-22-minimal` and `ubi10/nodejs-22`,
+verify x86-64-v3, matching architecture and actual unprivileged workload behavior
+on RHEL 9, and use the corresponding UBI 9 base if needed. A Node-image choice
+does not select the Python/Vibe base. This deferred task does not block current
+Debian deployment acceptance. See the [Red Hat compatibility policy](https://access.redhat.com/support/policy/rhel-container-compatibility);
+newer images on older hosts require workload-specific validation.
+
 ## Team source review — review only, not approved fixes
 
 The team reviewed snapshot `12ac41f` (version `0.28.1`). These are reviewer claims
