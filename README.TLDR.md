@@ -34,7 +34,10 @@ Complete software tests use a separate VM and the selected encrypted test profil
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;
 version checks and disposable project tests make no model requests. Canonical
 `example-v07` names retain the existing exact inventory and retirement guards.
-Approved bootstrap grants only public IPv4 HTTPS after base verification. Full recovery isolation is released
+Approved bootstrap grants public IPv4 HTTPS after base verification. Only the
+exact selected encrypted generic profile may enable `container_build_http_bootstrap: true`
+for public IPv4 HTTP after HTTPS ownership publication; other profiles default off.
+Private/reserved and production destinations remain blocked. Full recovery isolation is released
 only after the complete software installation and validation succeed. Retry a
 failed installation with Job Tags `guest_config`, preserving the registered VM.
 Refresh the selected encrypted policy snapshot before retry if a prior grant
@@ -68,8 +71,8 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `6de45e0` (0.42.2), retaining exact retirement and public
-HTTPS bootstrap while preserving AAP
+The current shared pin selects AutoDeploy `85ee77d` (0.43.0), adding bounded HTTP
+bootstrap and its exact retirement while retaining HTTPS bootstrap and AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
 The shared correction also saves native firewall declarations alongside approved
@@ -77,6 +80,10 @@ policy grants and preserves empty group-variable mappings during CaC import.
 Normal source job 3282 passed this path for one existing test guest, including
 independent live/saved-policy, guest connectivity and production-denial checks.
 Its encrypted/source updates were verified; the other guests remain restricted.
+
+Failed image builds stay failed. Private diagnostics under
+`environment-logs/image-build` use unique `0600` files in `0700` directories,
+containing only message/output/status; build payloads stay out of Controller logs.
 
 Release 1.0.0 consolidates the current source; fresh deployment and native team acceptance are verified separately.
 

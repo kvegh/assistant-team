@@ -1,5 +1,15 @@
 # Release notes
 
+## 1.11.0
+
+Pin shared AutoDeploy `85ee77d` (0.43.0) and reuse its bounded HTTP bootstrap
+after HTTPS ownership publication. Only the exact selected encrypted generic
+profile can opt in; other profiles remain off. Preserve destination protection,
+final-success-only full release and exact retirement. Save failed CLI build
+output in private whitelisted diagnostic files while keeping the job failed.
+Native flow/diagnostic tests and production lint pass; publication alone performs
+no installation or grant, and the full current application acceptance remains pending.
+
 ## 1.10.13
 
 Document clarification `a19f81d`: UBI 10 is the deferred rebuild target, with UBI 9

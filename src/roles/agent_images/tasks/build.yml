@@ -26,30 +26,70 @@
     fail_msg: Review container storage capacity before starting another image build.
   when: __agent_images_available_harness_image.rc == 1 or agent_images_rebuild_images | bool
 
-- name: Build the pinned native CLI image using certified Podman content
-  become: true
-  become_user: "{{ containers.runtime_user }}"
-  environment:
-    HOME: "{{ podman_host_runtime_home }}"
-    XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
-  redhat.rhel_system_roles.podman_image:
-    name: "localhost/assistant-team-{{ harness.flavour }}"
-    tag: "{{ harness.version }}"
-    state: build
-    force: "{{ agent_images_rebuild_images | bool }}"
-    path: "{{ assistant_connector_root }}/build/native"
-    validate_certs: true
-    build:
-      file: "{{ assistant_connector_root }}/build/native/{{ harness.containerfile }}"
-      cache: true
-      extra_args: >-
-        --build-arg BASE_IMAGE={{ harness.base }}
-        --build-arg PACKAGE={{ harness.package }}
-        --build-arg PACKAGE_VERSION={{ harness.version }}
+- name: Build the container image for the selected CLI client
+  no_log: true
   when: __agent_images_available_harness_image.rc == 1 or agent_images_rebuild_images | bool
-  async: 1800
-  poll: 20
+  block:
+    - name: Run the certified container build for the selected CLI client
+      become: true
+      become_user: "{{ containers.runtime_user }}"
+      environment:
+        HOME: "{{ podman_host_runtime_home }}"
+        XDG_RUNTIME_DIR: "/run/user/{{ podman_host_runtime_uid }}"
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ podman_host_runtime_uid }}/bus"
+      redhat.rhel_system_roles.podman_image:
+        name: "localhost/assistant-team-{{ harness.flavour }}"
+        tag: "{{ harness.version }}"
+        state: build
+        force: "{{ agent_images_rebuild_images | bool }}"
+        path: "{{ assistant_connector_root }}/build/native"
+        validate_certs: true
+        build:
+          file: "{{ assistant_connector_root }}/build/native/{{ harness.containerfile }}"
+          cache: true
+          extra_args: >-
+            --build-arg BASE_IMAGE={{ harness.base }}
+            --build-arg PACKAGE={{ harness.package }}
+            --build-arg PACKAGE_VERSION={{ harness.version }}
+      async: 1800
+      poll: 20
+
+  rescue:
+    - name: Keep build diagnostics in the existing private environment log area
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+        mode: '0700'
+      loop:
+        - "{{ assistant_install_root }}/environment-logs"
+        - "{{ assistant_install_root }}/environment-logs/image-build"
+
+    - name: Allocate a unique private container build failure file
+      ansible.builtin.tempfile:
+        state: file
+        path: "{{ assistant_install_root }}/environment-logs/image-build"
+        prefix: image-build-failure-
+        suffix: .json
+      register: __agent_images_build_failure_file
+
+    - name: Save only build output and status without invocation environment or credentials
+      ansible.builtin.copy:
+        dest: "{{ __agent_images_build_failure_file.path }}"
+        owner: "{{ containers.runtime_user }}"
+        group: "{{ containers.runtime_user }}"
+        mode: '0600'
+        content: >-
+          {{ {'msg': ansible_failed_result.msg | default(''),
+              'stdout': ansible_failed_result.stdout | default(''),
+              'stderr': ansible_failed_result.stderr | default(''),
+              'rc': ansible_failed_result.rc | default(-1)} | to_nice_json }}
+      diff: false
+
+    - name: Keep the deployment failed after saving its private build diagnostic
+      ansible.builtin.fail:
+        msg: Container image build failed; review the private environment-logs/image-build diagnostic file.
 
 - name: Smoke-test native CLI without credentials or inference
   become: true

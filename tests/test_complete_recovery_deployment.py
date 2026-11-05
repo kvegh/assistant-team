@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(shutil.which('ansible-playbook'), 'Existing Ansible is required')
 class CompleteRecoveryTests(unittest.TestCase):
-    def fixture(self, root, generic=True):
+    def fixture(self, root, generic=True, http=False):
         roles = root / 'roles'
         roles.mkdir()
 
@@ -42,6 +42,8 @@ class CompleteRecoveryTests(unittest.TestCase):
             'runtime_user': 'fixture', 'enabled_profiles': [], 'validate_projects': True}
         if generic:
             definition['provisioning']['hypervisor_pin'] = pin
+        if http is not False:
+            definition['container_build_http_bootstrap'] = http
         (root / 'vpf').write_text('synthetic-vault-password')
         (root / 'vpf').chmod(0o600)
         vault = VaultLib([('default', VaultSecret(b'synthetic-vault-password'))])
@@ -103,6 +105,16 @@ class CompleteRecoveryTests(unittest.TestCase):
                      'fixture_released is not defined']}},
                  record('bootstrap_https'),
                  {'name': 'Retain fixture bootstrap state', 'ansible.builtin.set_fact': {'fixture_bootstrap_verified': True}}]},
+            {'name': 'Apply HTTP only for the selected explicit fixture profile',
+             'when': 'linux_recovery_release_operation | default("release_guest") == "guest_bootstrap_http"',
+             'block': [
+                 {'name': 'Require separate explicit HTTP approval before software', 'ansible.builtin.assert': {'that': [
+                     'hostvars.localhost.fresh_definition.container_build_http_bootstrap is sameas true',
+                     'fixture_bootstrap_verified is sameas true',
+                     'not (fail_http_bootstrap | default(false) | bool)',
+                     'fixture_released is not defined']}},
+                 record('bootstrap_http'),
+                 {'name': 'Retain fixture HTTP state', 'ansible.builtin.set_fact': {'fixture_http_verified': True}}]},
             {'name': 'Apply full release only after complete installation',
              'when': 'linux_recovery_release_operation | default("release_guest") == "release_guest"',
              'block': [
@@ -116,6 +128,7 @@ class CompleteRecoveryTests(unittest.TestCase):
         role('linux_updates', [
             {'name': 'Require separately reviewed bootstrap access without full release', 'ansible.builtin.assert': {'that': [
                 'not (provisioning.generic_image | bool) or fixture_bootstrap_verified | default(false) | bool',
+                'not (hostvars.localhost.fresh_definition.container_build_http_bootstrap | default(false) | bool) or fixture_http_verified | default(false) | bool',
                 'fixture_released is not defined']}},
             record('updated'),
             {'name': 'Publish completed update check', 'ansible.builtin.set_fact': {'linux_updates_remaining_updates': {'rc': 0}}}])
@@ -191,6 +204,52 @@ class CompleteRecoveryTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertTrue((root / 'released').exists())
                 self.assertTrue((root / 'installation_verified').exists())
+                self.assertFalse((root / 'bootstrap_http').exists())
+
+    def test_http_requires_explicit_selected_profile_and_keeps_final_release_after_validation(self):
+        for native in [False, True]:
+            with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.fixture(root, http=True)
+                result = self.run_fixture(root, native)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue((root / 'bootstrap_http').exists())
+                self.assertTrue((root / 'installation_verified').exists())
+                self.assertTrue((root / 'released').exists())
+
+    def test_http_approval_cannot_follow_a_different_launch_name_before_inventory_or_provisioning(self):
+        for native in [False, True]:
+            with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.fixture(root, http=True)
+                result = self.run_fixture(root, native, deployment_vm_name='different-v16')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Constrain explicit HTTP approval', result.stdout)
+                self.assertNotIn('Inspect fixture inventory registration', result.stdout)
+                for marker in ['provisioned', 'bootstrap_https', 'bootstrap_http', 'updated', 'released']:
+                    self.assertFalse((root / marker).exists(), marker)
+
+    def test_failed_http_permission_stops_before_updates_software_and_full_release(self):
+        for native in [False, True]:
+            with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.fixture(root, http=True)
+                result = self.run_fixture(root, native, fail_http_bootstrap=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertTrue((root / 'bootstrap_https').exists())
+                for marker in ['bootstrap_http', 'updated', 'installation_verified', 'released']:
+                    self.assertFalse((root / marker).exists(), marker)
+
+    def test_invalid_http_approval_or_unpinned_legacy_profile_refuses_before_either_grant(self):
+        for generic, value in [(True, 'true'), (False, True)]:
+            for native in [False, True]:
+                with self.subTest(generic=generic, value=value, native=native), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    self.fixture(root, generic=generic, http=value)
+                    result = self.run_fixture(root, native)
+                    self.assertNotEqual(result.returncode, 0)
+                    for marker in ['bootstrap_https', 'bootstrap_http', 'updated', 'released']:
+                        self.assertFalse((root / marker).exists(), marker)
 
     def test_failed_base_never_releases_or_starts_updates(self):
         for native in [False, True]:

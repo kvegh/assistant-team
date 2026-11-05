@@ -15,6 +15,21 @@
         secret_config_namespace: fresh_definition
         secret_config_file: "{{ assistant_vm_configuration | default('') }}"
       tags: [always]
+    - name: Constrain explicit HTTP approval to this encrypted generic guest definition
+      ansible.builtin.assert:
+        that:
+          - fresh_definition.container_build_http_bootstrap | default(false) is boolean
+          - >-
+            not (fresh_definition.container_build_http_bootstrap | default(false)) or
+            (fresh_definition.provisioning.generic_image | default(false) is sameas true
+             and fresh_definition.provisioning.hypervisor_pin | default({}) | length > 0)
+          - >-
+            not (fresh_definition.container_build_http_bootstrap | default(false)) or
+            (deployment_vm_name | default(fresh_definition.provisioning.vm_name, true)
+             == fresh_definition.provisioning.vm_name)
+        fail_msg: HTTP approval applies only to the exact selected encrypted generic guest and its reviewed pin.
+        quiet: true
+      tags: [always]
     - name: Resolve the explicit target against the authoritative inventory
       when: "'repair_inventory_registration' not in ansible_run_tags"
       ansible.builtin.include_role:
@@ -102,11 +117,29 @@
     - name: Verify the requested root capacity before requesting bootstrap access
       ansible.builtin.include_role:
         name: linux_root_growth
+    - name: Validate explicit HTTP bootstrap approval in the selected encrypted profile
+      ansible.builtin.assert:
+        that:
+          - hostvars.localhost.fresh_definition.container_build_http_bootstrap | default(false) is boolean
+          - >-
+            not (hostvars.localhost.fresh_definition.container_build_http_bootstrap | default(false)) or
+            (provisioning.generic_image | default(false) | bool
+             and deployment_vm_hypervisor_pin | default({}) | length > 0)
+        fail_msg: HTTP bootstrap requires an explicit boolean in the selected pinned generic test profile.
+        quiet: true
     - name: Grant only approved public HTTPS bootstrap for the verified pinned generic guest
       ansible.builtin.import_tasks: tasks/verified_generic_guest.yml
       vars:
         linux_recovery_release_operation: guest_bootstrap_https
       when:
+        - provisioning.generic_image | default(false) | bool
+        - deployment_vm_hypervisor_pin | default({}) | length > 0
+    - name: Grant approved public HTTP bootstrap only for the selected verified test profile
+      ansible.builtin.import_tasks: tasks/verified_generic_guest.yml
+      vars:
+        linux_recovery_release_operation: guest_bootstrap_http
+      when:
+        - hostvars.localhost.fresh_definition.container_build_http_bootstrap | default(false) is sameas true
         - provisioning.generic_image | default(false) | bool
         - deployment_vm_hypervisor_pin | default({}) | length > 0
   roles:

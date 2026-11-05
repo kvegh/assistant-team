@@ -14,6 +14,11 @@ podman_host runtime outputs and the certified podman_image module.
 
 Retains existing images unless rebuild is selected. Building/testing requires a live rootless engine; no model calls.
 
+Failed builds remain failed. Only message, stdout, stderr and return code are
+saved in unique `0600` files below the existing private
+`environment-logs/image-build` directory (`0700`). Invocation, environment and
+credential fields are excluded; build output remains hidden from Controller logs.
+
 ## Validation
 
 Run the repository production lint and tests. Fresh installation and configuration recovery are verified through the normal AAP deployment template; authenticated model tests are separate operator actions.

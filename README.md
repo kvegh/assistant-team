@@ -335,9 +335,14 @@ synchronizing it directly, provide the complete existing
 files; the default mapping continues to use the original profiles.
 
 Package downloads require separately reviewed bootstrap network access. Complete
-deployment requests only the approved public IPv4 TCP 443 permission after
+deployment requests the approved public IPv4 TCP 443 permission after
 authenticated base and root-capacity verification; private/reserved and production
-destinations stay blocked. It never enables full guest access merely to install
+destinations stay blocked. A selected encrypted generic-guest profile may explicitly
+set `container_build_http_bootstrap: true` to request public IPv4 TCP 80 after
+that HTTPS ownership publication and before software installation. The flag
+defaults to false and applies only to that profile's exact VM name and reviewed
+hypervisor pin; a different launch name cannot inherit it. HTTP grants no access
+to host services or other guests. It never enables full guest access merely to install
 software. Only after
 authenticated guest checks, root growth, updates, all software roles and model-free
 installation validation succeed does it invoke the same pinned release tasks as
@@ -397,8 +402,10 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `6de45e0`
-(version 0.42.2). It retains exact generic-guest retirement, bounded HTTPS bootstrap and
+The current dependency pin selects AutoDeploy implementation `85ee77d`
+(version 0.43.0). It adds bounded public HTTP bootstrap for an already owned
+verified generic guest, including exact retirement of that permission. It retains
+exact generic-guest retirement, bounded HTTPS bootstrap and
 renamed AAP inventory entries through their existing
 verified physical VM identity. A fresh source AAP can save guest release without
 having the optional Hactar inventory installed: absence is accepted only after
@@ -571,6 +578,12 @@ demonstrated compatibility problems. The [Red Hat policy](https://access.redhat.
 describes workload-specific support, not blanket compatibility. The rebuild
 remains deferred and does not change current deployment prerequisites.
 Python/Vibe needs its own base choice.
+
+Failed CLI image builds remain failed deployments. Diagnostics are saved only
+below the existing private `environment-logs/image-build` directory with unique
+filenames, directory mode `0700` and file mode `0600`. Files contain only the
+build message, stdout, stderr and return code; invocation, environment and
+credential fields are excluded. Build output remains hidden from Controller logs.
 
 A dedicated password-locked runtime account, configured in Vault as
 `containers.runtime_user`, has no sudo access. Each instance has a separate

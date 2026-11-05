@@ -11,6 +11,18 @@ Current CLI container builds retain Debian and HTTP downloads. Beads
 prerequisite. Verify actual RHEL 9 CPU/workload compatibility; UBI 9 is only a
 fallback for demonstrated compatibility problems. Python/Vibe needs a separate base choice.
 
+Complete deployment keeps HTTPS bootstrap first. Only the exact selected
+encrypted generic profile may enable `container_build_http_bootstrap: true`
+for public IPv4 HTTP after verified ownership publication; other profiles default
+off. Private/reserved and production destinations remain blocked. Full release
+waits for all software and model-free validation; exact retirement removes the
+guest's own HTTP permission. Shared implementation `85ee77d` (0.43.0) is pinned.
+
+Failed CLI image builds remain failed. Unique private diagnostics in
+`environment-logs/image-build` use `0700` directories and `0600` files; only
+message, stdout, stderr and return code are saved. Invocation/environment/credential
+fields are excluded and build output stays hidden from Controller logs.
+
 Lifecycle API requests combine the runtime's default TLS trust and its declared
 supplemental CA in a private job-local file. Certificate verification remains
 enabled; internal and external routing do not change authentication or global trust.
