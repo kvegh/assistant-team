@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.9.1
+
+Document implementation `618464d`, its pinned shared retirement transaction,
+ownership/retry boundaries, focused validation and separate live acceptance.
+
 ## 1.9.0
 
 Integrate the existing retirement template with pinned AutoDeploy implementation

@@ -1,5 +1,31 @@
 # Design decisions history
 
+## Complete exact recovery-guest retirement through shared lifecycle tasks — 2026-11-05
+
+Implementation `618464ddefad2bbfe11bd0292d65f65fe3b2a383` integrates the existing
+retirement template with reviewed AutoDeploy `1976a5a` (0.39.0). The owner wants
+the separate disposable Assistant guest decommissioned after its successful
+software test, including shared inventory and network policy. The existing
+shared publication transaction supplies this cleanup; no new job, credential
+type, state store or independent publisher is added.
+
+The plan resolves exact saved ownership before physical deletion. After graceful
+shutdown, the same UUID and clone inode/device must still match. The selected
+domain and disk are removed before shared tasks verify both canonical disk paths
+absent, remove exact static DHCP and bootstrap/full-release entries, and publish
+the existing encrypted captures/source inventory. The Assistant row remains until
+shared publication succeeds. Saved canonical/API ownership permits interrupted
+retries without guest SSH; with both records absent, a repeat requires verified
+physical absence and makes no further permission change. Dynamic lease cache is
+reported, not edited. Unsupported host-service grants stop preflight; source
+images, other guests, normal firewall policy and legacy retirement guards remain.
+
+Twenty-eight focused checks pass, including actual two-mode complete retirement
+and interrupted-publication flows, seventeen inventory/legacy guards and nine
+recovery connection checks. Scoped production lint and three syntax checks pass.
+The real shared dependency revision was published and independently verified;
+these code checks do not claim successful live deployment or decommissioning.
+
 ## Preserve installed trust when a lifecycle CA is supplied
 
 Implementation: `ca0c08c` (1.8.2).
