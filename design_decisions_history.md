@@ -1,5 +1,17 @@
 # Design decisions history
 
+## Preserve typed inventory group association requests — 2026-11-05
+
+Implementation `2d6ce1d` builds the host-association body as one mapping so
+Ansible preserves its integer ID even with non-native templating. The previous
+field template produced a JSON string. A deployment created its VM and inventory
+host, then received HTTP400 when linking the managed group; the failed job did
+not start guest software or isolation-policy changes. A real URI regression
+reproduces the old string/400 behavior and verifies integer requests with both
+native modes. Production lint passes. TLS verification, scoped lifecycle access
+and inventory ownership guards remain unchanged. Repairing the exact orphaned
+association and resuming configuration are separately verified live work.
+
 ## Complete exact recovery-guest retirement through shared lifecycle tasks — 2026-11-05
 
 Implementation `618464ddefad2bbfe11bd0292d65f65fe3b2a383` integrates the existing

@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.9.3
+
+Document implementation `2d6ce1d`, the actual URI integer-boundary regression
+and the separate live recovery requirement after failed group registration.
+
 ## 1.9.2
 
 Preserve the integer host ID in the actual inventory group-association JSON
