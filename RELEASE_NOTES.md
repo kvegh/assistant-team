@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.11.3
+
+Document implementation `4b7c096` and the native repeated-checkout regression,
+preserving per-invocation cleanup and all publication guards. Live acceptance
+remains separate from this pin update.
+
 ## 1.11.2
 
 Pin shared AutoDeploy `eb806b7` (0.45.0). Each publisher invocation reads encrypted

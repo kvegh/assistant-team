@@ -1,5 +1,23 @@
 # Design decisions history
 
+## Read publisher settings from each current checkout — 2026-11-05
+
+Implementation `4b7c096` pins reviewed AutoDeploy `eb806b7` (0.45.0).
+Ansible caches action modules by name, so a later lifecycle call could retain
+the first checkout's module after normal cleanup removed that directory.
+The shared publisher now resolves both runtime encrypted-settings reads from
+the current native action-plugin path. Missing or invalid paths refuse the
+operation without falling back to a cached directory.
+
+Per-invocation cleanup, authentication, guest ownership, saved-policy checks,
+HTTP approval and final-release ordering are unchanged. The correction adds
+no job, credential or retained checkout. Four native cases covering both
+templating modes and both publisher paths reproduced the original failure
+after deleting the first root and passed with the correction. The shared
+combined checks, pin lint, version policy and staged privacy checks pass.
+Publishing this dependency update runs no deployment and claims no successful
+current application retry or retirement.
+
 ## Add explicit HTTP bootstrap for the selected generic test guest — 2026-11-05
 
 Implementation `14a5aaa` reuses the existing pinned AutoDeploy role at
