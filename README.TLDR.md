@@ -21,6 +21,9 @@ Check preview prepares only job-local TLS trust and read-only checks; it skips
 the association POST.
 Repair stops all following normal plays before automatic role validation, even
 when a provisioned guest group already exists.
+The pinned shared lifecycle accepts a canonical Controller SSH port string only
+when it matches the exact integer pin. Connection settings and all other
+identity, source-job, TLS and saved-policy checks stay unchanged.
 
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;
@@ -60,7 +63,7 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `1976a5a` (0.39.0), adding exact retirement and retaining public
+The current shared pin selects AutoDeploy `6de45e0` (0.42.2), retaining exact retirement and public
 HTTPS bootstrap while preserving AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.

@@ -1,5 +1,12 @@
 # Release notes
 
+## 1.10.8
+
+Repin the existing shared lifecycle role to AutoDeploy `6de45e0` (0.42.2), retaining
+exact generic bootstrap/release/retirement and accepting Controller canonical
+decimal SSH-port strings only when they match the integer pin. No live port,
+credential, VM or isolation change occurs from this pin update.
+
 ## 1.10.7
 
 Document implementation `c457dfa`, its tested boundaries before all normal

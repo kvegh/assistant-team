@@ -23,6 +23,9 @@ Check preview prepares only job-local TLS trust and read-only checks; it skips
 the association POST.
 Repair stops all following normal plays before automatic role validation, even
 when a provisioned guest group already exists.
+The pinned shared lifecycle accepts a canonical Controller SSH port string only
+when it matches the exact integer pin. Connection settings and all other
+identity, source-job, TLS and saved-policy checks stay unchanged.
 
 Pinned generic retirement plans exact saved ownership before deleting the VM,
 then removes its clone, static DHCP reservation, policy entries and shared

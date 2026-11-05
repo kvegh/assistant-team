@@ -16,7 +16,7 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `1976a5a` (0.39.0). Its existing
+The current pin selects AutoDeploy implementation `6de45e0` (0.42.2). Its existing
 shared role accepts `linux_recovery_release_operation: guest_bootstrap_https`
 through this caller to grant only approved public IPv4 TCP 443 access. The
 complete-deployment playbook invokes that permission only after authenticated
@@ -52,3 +52,7 @@ tasks in the existing job. Plan before physical deletion; publish after verified
 domain/disk absence and before removing this application's inventory row. Saved
 canonical/API ownership supports interrupted retries without guest SSH. Temporary
 code and trust files are cleaned after each phase.
+
+The current source reader also accepts canonical decimal Controller SSH-port
+strings only when they equal the exact integer pin. Malformed, out-of-range or
+different values are refused; no live port or credential is rewritten.

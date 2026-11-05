@@ -188,6 +188,9 @@ Check preview prepares its private EE-local TLS bundle and performs verified
 read-only API/native checks; it still skips the group-association POST.
 Explicit repair also ends each following normal play before role argument
 validation or always-tagged tasks, including when a guest group already exists.
+The pinned shared lifecycle accepts a canonical Controller SSH port string only
+when it matches the exact integer pin. Connection settings and all other
+identity, source-job, TLS and saved-policy checks stay unchanged.
 
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
@@ -394,8 +397,8 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `1976a5a`
-(version 0.39.0). It adds exact generic-guest retirement and retains bounded HTTPS bootstrap and
+The current dependency pin selects AutoDeploy implementation `6de45e0`
+(version 0.42.2). It retains exact generic-guest retirement, bounded HTTPS bootstrap and
 renamed AAP inventory entries through their existing
 verified physical VM identity. A fresh source AAP can save guest release without
 having the optional Hactar inventory installed: absence is accepted only after
