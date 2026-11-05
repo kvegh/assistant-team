@@ -138,7 +138,7 @@ class CompleteRecoveryTests(unittest.TestCase):
         (root / 'plays.yml').write_text(yaml.safe_dump(plays, sort_keys=False))
         (root / 'inventory').write_text('[hypervisor]\nhypervisor ansible_connection=local\n')
 
-    def run_fixture(self, root, native, *, retry=False, **values):
+    def run_fixture(self, root, native, *, retry=False, repair=False, **values):
         extra = {'assistant_vm_configuration': str(root / 'fresh_vault.yml'),
                  'deployment_vm_name': 'example-v16', 'native_auth_vault_restore_enabled': False,
                  'vm_vcpus': 2, 'vm_memory_mb': 4096, 'vm_disk_gb': 20, **values}
@@ -146,12 +146,27 @@ class CompleteRecoveryTests(unittest.TestCase):
                    str(root / 'plays.yml'), '--vault-password-file', str(root / 'vpf'), '-e', json.dumps(extra)]
         if retry:
             command += ['--tags', 'guest_config']
+        if repair:
+            command += ['--tags', 'repair_inventory_registration']
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=90,
             env=dict(os.environ, ANSIBLE_LOCAL_TEMP=str(root / 'local'), ANSIBLE_REMOTE_TEMP=str(root / 'remote'),
                      ANSIBLE_ROLES_PATH=str(root / 'roles') + ':' + str(ROOT / 'src/roles'),
                      ANSIBLE_JINJA2_NATIVE=str(native).lower(), ANSIBLE_NOCOLOR='1'))
         self.assertNotIn('synthetic-bootstrap-canary', result.stdout + result.stderr)
         return result
+
+    def test_explicit_association_repair_never_runs_provision_updates_or_software(self):
+        for native in [False, True]:
+            with self.subTest(native=native), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.fixture(root)
+                (root / 'roles/deployment_inventory_registration/tasks/repair.yml').write_text(
+                    yaml.safe_dump([{'ansible.builtin.file': {'path': str(root / 'repair_only'), 'state': 'touch', 'mode': '0600'}}]))
+                result = self.run_fixture(root, native, repair=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue((root / 'repair_only').exists())
+                for marker in ['provisioned', 'registered', 'updated', 'installation_verified', 'released', 'bootstrap_https']:
+                    self.assertFalse((root / marker).exists(), marker)
 
     def test_complete_pinned_guest_releases_only_after_software_validation_without_auth_restore(self):
         for native in [False, True]:

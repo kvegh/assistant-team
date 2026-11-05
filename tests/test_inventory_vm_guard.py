@@ -31,6 +31,7 @@ class InventoryVmGuardTests(unittest.TestCase):
             roles.mkdir(parents=True)
             source = ROOT / "src/roles/inventory_vm_guard/tasks/main.yml"
             (roles / "main.yml").write_text(source.read_text().replace("ansible.builtin.uri:", "uri:"))
+            (roles / "trust.yml").write_text(source.with_name("trust.yml").read_text())
             play = root / "check.yml"
             play.write_text("- hosts: localhost\n  gather_facts: false\n  roles: [inventory_vm_guard]\n")
             variables = {

@@ -10,6 +10,11 @@ the runtime's internal trust with a public-only bundle.
 Inventory group registration preserves an integer host ID in both Ansible modes.
 A failed association leaves the deployment failed; preserve the VM and repair
 only its exact inventory association before retrying configuration.
+Preview an interrupted fresh generic registration with only Job Tags
+`repair_inventory_registration`, Check, and the same explicit VM name. Apply
+adds only its missing managed group after pinned native/inventory checks and
+ends; no VM/software/isolation changes run. Existing memberships are refused.
+Then use `guest_config`; the ordinary managed/production guard is unchanged.
 
 Complete software tests use a separate VM and the selected encrypted test profile.
 Set `native_auth_vault_restore_enabled: false` to defer saved provider credentials;

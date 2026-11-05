@@ -1,0 +1,156 @@
+---
+- name: Require an explicit association-only repair invocation
+  ansible.builtin.assert:
+    that:
+      - ansible_run_tags == ['repair_inventory_registration']
+      - ansible_skip_tags | length == 0
+      - deployment_vm_name is defined
+      - deployment_vm_name == provisioning.vm_name
+      - provisioning.generic_image is sameas true
+      - groups.hypervisor | length == 1
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') is match('^https://')
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') | length > 0
+      - lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') is match('^[1-9][0-9]*$')
+    fail_msg: Repair requires the exact versioned generic profile, one pinned hypervisor and its normal scoped inventory credential.
+    quiet: true
+
+- name: Repair only the missing association and always clean up controller trust
+  block:
+    - name: Verify the existing pinned hypervisor and unchanged isolation policy
+      ansible.builtin.include_role:
+        name: linux_vm
+        tasks_from: recovery-preflight
+
+    - name: Prepare the normal additive inventory API trust
+      ansible.builtin.include_role:
+        name: inventory_vm_guard
+        tasks_from: trust
+
+    - name: Read current hosts and managed groups using only the injected lifecycle bearer
+      ansible.builtin.uri:
+        url: >-
+          {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}/api/controller/v2/inventories/{{
+             lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') }}/{{ item }}
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        validate_certs: true
+        return_content: true
+      loop: ['hosts/?page_size=200', 'groups/?name=assistant_team']
+      delegate_to: localhost
+      become: false
+      check_mode: false
+      register: __registration_repair_inventory
+
+    - name: Require the unique explicitly owned host and exact managed group
+      ansible.builtin.set_fact:
+        __registration_repair_binding: >-
+          {{ __registration_repair_inventory.results[0].json | assistant_registration_repair_binding(
+               __registration_repair_inventory.results[1].json,
+               lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID'), deployment_vm_name) }}
+
+    - name: Read both direct and inherited memberships before any association write
+      ansible.builtin.uri:
+        url: >-
+          {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}/api/controller/v2/hosts/{{
+             __registration_repair_binding.host_id }}/{{ item }}/?page_size=200
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        validate_certs: true
+        return_content: true
+      loop: [groups, all_groups]
+      delegate_to: localhost
+      become: false
+      check_mode: false
+      register: __registration_repair_memberships
+
+    - name: Refuse any existing group membership or inherited production protection
+      ansible.builtin.assert:
+        that:
+          - __registration_repair_memberships.results[0].json | assistant_registration_repair_ungrouped
+          - __registration_repair_memberships.results[1].json | assistant_registration_repair_ungrouped
+        quiet: true
+
+    - name: Verify the live clone descriptor disk resources network and DHCP address without modifying them
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - "{{ lookup('ansible.builtin.file', role_path + '/files/verify_interrupted_registration.py') }}"
+        stdin: >-
+          {{ {'name': deployment_vm_name, 'address': __registration_repair_binding.address,
+              'provisioning': {'vm_name': provisioning.vm_name, 'generic_image': provisioning.generic_image,
+                'vm_dir': provisioning.vm_dir, 'golden_image_path': provisioning.golden_image_path,
+                'vm_network': provisioning.vm_network, 'vm_disk_gb': provisioning.vm_disk_gb,
+                'vm_vcpus': vm_vcpus | default(2) | int, 'vm_memory_mb': vm_memory_mb | default(4096) | int,
+                'hypervisor_pin': provisioning.hypervisor_pin,
+                'isolation_policy': provisioning.isolation_policy}} | to_json }}
+      changed_when: false
+      check_mode: false
+      register: __registration_repair_native
+
+    - name: Require successful exact native ownership proof before any API mutation
+      ansible.builtin.assert:
+        that:
+          - (__registration_repair_native.stdout | from_json).verified is sameas true
+          - (__registration_repair_native.stdout | from_json).vm_name == deployment_vm_name
+          - (__registration_repair_native.stdout | from_json).address == __registration_repair_binding.address
+        quiet: true
+
+    - name: Associate only the verified ungrouped host with its existing managed group
+      ansible.builtin.uri:
+        url: >-
+          {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}/api/controller/v2/groups/{{
+             __registration_repair_binding.group_id }}/hosts/
+        method: POST
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        validate_certs: true
+        body_format: json
+        body: "{{ {'id': __registration_repair_binding.host_id | int} }}"
+        status_code: [200, 201, 204]
+      delegate_to: localhost
+      become: false
+      changed_when: true
+      when: not ansible_check_mode
+
+    - name: Read back the exact resulting inherited membership
+      ansible.builtin.uri:
+        url: >-
+          {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_HOST') | regex_replace('/$', '') }}/api/controller/v2/hosts/{{
+             __registration_repair_binding.host_id }}/all_groups/?page_size=200
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_TOKEN') }}"
+        ca_path: "{{ __inventory_vm_guard_ca_path | default(omit, true) }}"
+        validate_certs: true
+        return_content: true
+      delegate_to: localhost
+      become: false
+      register: __registration_repair_readback
+      when: not ansible_check_mode
+
+    - name: Require exactly the intended managed membership after the one association
+      ansible.builtin.assert:
+        that:
+          - __registration_repair_readback.json.next is none
+          - __registration_repair_readback.json.count | int == 1
+          - __registration_repair_readback.json.results[0].id == __registration_repair_binding.group_id
+          - __registration_repair_readback.json.results[0].name == 'assistant_team'
+          - __registration_repair_readback.json.results[0].inventory | int == lookup('ansible.builtin.env', 'AC_AGENTS_CONTROLLER_INVENTORY_ID') | int
+        quiet: true
+      when: not ansible_check_mode
+
+  always:
+    - name: Remove this repair invocation's private controller trust files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ __linux_vm_recovery_trust.path | default('') }}"
+        - "{{ __inventory_vm_guard_combined_ca.path | default('') }}"
+      when: item is match('^/tmp/(linux-vm-recovery-known-hosts-|assistant-inventory-ca-)[A-Za-z0-9_]+$')
+      delegate_to: localhost
+      become: false
+      check_mode: false

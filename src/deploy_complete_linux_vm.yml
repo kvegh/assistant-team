@@ -16,15 +16,36 @@
         secret_config_file: "{{ assistant_vm_configuration | default('') }}"
       tags: [always]
     - name: Resolve the explicit target against the authoritative inventory
+      when: "'repair_inventory_registration' not in ansible_run_tags"
       ansible.builtin.include_role:
         name: deployment_target
         apply:
           tags: [always]
       tags: [always]
     - name: Publish the resolved deployment definition for the remaining plays
+      when: "'repair_inventory_registration' not in ansible_run_tags"
       ansible.builtin.set_fact:
         fresh_definition: "{{ deployment_target_definition }}"
       tags: [always]
+
+- name: Complete only an interrupted inventory group association
+  hosts: hypervisor
+  gather_facts: false
+  become: true
+  no_log: true
+  tags: [never, repair_inventory_registration]
+  vars:
+    provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+  tasks:
+    - name: Repair only the verified ungrouped generic guest registration
+      ansible.builtin.include_role:
+        name: deployment_inventory_registration
+        tasks_from: repair
+        apply:
+          tags: [repair_inventory_registration]
+      when: "'repair_inventory_registration' in ansible_run_tags"
+    - name: End the association-only repair invocation
+      ansible.builtin.meta: end_play
 
 - name: Provision the isolated fresh Linux VM
   hosts: hypervisor

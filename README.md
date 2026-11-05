@@ -171,6 +171,17 @@ so its host identifier remains an integer in both Ansible templating modes. A
 registration failure remains a failed deployment; preserve the created VM and
 repair its exact inventory association before a configuration-only retry.
 
+For an interrupted fresh generic registration that created the host but failed its
+group association, use the same complete-deployment template with only Job Tags
+`repair_inventory_registration` and the original `deployment_vm_name`. Preview
+with Check first. It requires the exact selected encrypted profile, pinned
+hypervisor and native clone, plus one explicitly bound inventory host with zero
+direct or inherited groups. Apply adds only the existing `assistant_team` group,
+verifies the association and ends that invocation. It does not provision, update,
+install software or change isolation. Existing grouped or production hosts are
+refused. Then resume the same VM with `guest_config`; the normal ownership guard
+is unchanged. The same restricted injected lifecycle bearer performs the repair.
+
 Repository privacy does not replace encryption. Store all environment-specific
 data, including usernames, hostnames, addresses, credentials, and tokens, in
 Ansible Vault-encrypted files. Plaintext documentation and examples must use

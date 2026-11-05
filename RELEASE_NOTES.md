@@ -1,5 +1,15 @@
 # Release notes
 
+## 1.10.0
+
+Add opt-in interrupted inventory-association continuation inside the existing
+complete-deployment job. Check mode previews exact inventory and pinned native
+clone ownership; apply associates only the ungrouped host with its existing
+managed group and ends. Reuse the injected restricted lifecycle bearer and TLS
+trust. Refuse conflicting inventory/groups, production membership and native
+identity mismatches before any API write. Preserve all normal ownership guards,
+VMs, images, software and isolation policy.
+
 ## 1.9.3
 
 Document implementation `2d6ce1d`, the actual URI integer-boundary regression
