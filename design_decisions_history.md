@@ -1,5 +1,18 @@
 # Design decisions history
 
+## Retain exact SSH pins across Controller port representations — 2026-11-05
+
+Implementation `e1f0cce` repins the existing shared lifecycle dependency to
+AutoDeploy `6de45e0` (0.42.2). During configuration recovery, guest SSH/root
+verification succeeded before bootstrap planning rejected a live inventory port
+returned as a canonical decimal string rather than its equal integer pin. The
+reviewed shared correction normalizes only that field for exact comparison,
+refusing malformed/different values and preserving every source-job, machine/key,
+TLS and saved-policy guard. No live port or credential is changed. Thirteen
+focused recovery/native retirement/version checks and scoped production lint
+pass; the shared implementation has sixty-one focused/native checks. Actual
+configuration-only bootstrap/software acceptance remains separately verified.
+
 ## Stop association-only repair before all normal plays — 2026-11-05
 
 Implementation `c457dfa` ends every following normal deployment play during

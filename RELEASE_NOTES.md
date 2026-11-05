@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.10.9
+
+Document implementation `e1f0cce`, its existing shared lifecycle repin and
+strict live Controller port-type correction; retain separate live acceptance.
+
 ## 1.10.8
 
 Repin the existing shared lifecycle role to AutoDeploy `6de45e0` (0.42.2), retaining
