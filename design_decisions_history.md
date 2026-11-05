@@ -1,5 +1,28 @@
 # Design decisions history
 
+## Add explicit HTTP bootstrap for the selected generic test guest — 2026-11-05
+
+Implementation `14a5aaa` reuses the existing pinned AutoDeploy role at
+`85ee77d` (0.43.0). Complete deployment publishes verified HTTPS ownership
+first, then requests public IPv4 TCP 80 only when the selected encrypted
+generic profile explicitly sets `container_build_http_bootstrap: true`.
+The flag defaults off, requires its reviewed hypervisor pin and cannot be
+borrowed by a different launch name. Private/reserved and production blocks
+remain; full release still follows complete software and model-free validation.
+Exact retirement removes only the guest's own permissions.
+
+The owner retained current Debian images and HTTP downloads while the separate
+UBI 10 rebuild remains deferred. This needs no additional job, credential type
+or store. Failed CLI image builds retain their failure and write only message,
+stdout, stderr and return code to unique private diagnostic files, with `0700`
+directories and `0600` files. Controller output remains protected; invocation,
+environment and credential fields are excluded.
+
+Ten native deployment-flow checks, two native retirement checks, the both-mode
+failed-build/secret-canary test, version checks and production lint pass.
+The dependency is published and pinned, but this publication grants no access
+and claims no completed current application deployment or retirement.
+
 ## Make UBI 10 the deferred rebuild target — 2026-11-05
 
 Documentation implementation `a19f81d` clarifies the owner's chosen target:

@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.1
+
+Document implementation `14a5aaa`, exact-profile HTTP approval, private failed-build
+diagnostics and validation scope. Live deployment, grants and retirement remain separate.
+
 ## 1.11.0
 
 Pin shared AutoDeploy `85ee77d` (0.43.0) and reuse its bounded HTTP bootstrap
