@@ -1,5 +1,25 @@
 # Design decisions history
 
+## Use the actual completed DNF check for guest provenance — 2026-11-05
+
+Implementation `7172d77` corrects the caller's update-result reference to
+`__linux_updates_remaining_updates`, the register produced by the real update
+role. A completed model-free deployment at `4b7c096` passed DNF verification,
+all four CLI builds/checks, project isolation validation and normal final release,
+yet its generic artifact retained `packages_updated: false` because the caller
+read a name missing two leading underscores. The independently reported
+`linux_vm_dnf_updated: true` and that inaccurate generic flag remain distinct
+historical evidence; no saved flag or old artifact is fabricated or rewritten.
+
+Future provenance is true only after the actual successful check. Skipped
+checks remain false, and pending updates stop the task sequence before successful
+provenance can be published. The complete-flow fixture now derives the register
+from the real producer rather than copying the caller's former typo. Six native
+producer/consumer cases, ten complete-flow regressions, production lint, Python
+compilation and privacy/whitespace checks pass. The shared `eb806b7` dependency,
+credentials, provider settings, current live Project pin and all isolation guards
+remain unchanged. No heavy software rerun is needed for this metadata correction.
+
 ## Read publisher settings from each current checkout — 2026-11-05
 
 Implementation `4b7c096` pins reviewed AutoDeploy `eb806b7` (0.45.0).

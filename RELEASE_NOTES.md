@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.5
+
+Document implementation `7172d77`, the actual completed DNF-check reference,
+native regression results and the preserved historical false-flag discrepancy.
+
 ## 1.11.4
 
 Use the update role's actual `__linux_updates_remaining_updates` register for
