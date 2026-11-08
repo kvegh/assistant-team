@@ -395,12 +395,11 @@ retains a real null guest value in both Ansible templating modes. A normal retry
 can finish the remaining application inventory deletion without inventing an
 identity or repeating physical deletion; native domain/disk absence is still required.
 
-The private companion maintains **Deploy AIOps Linux Demo VM** as an optional
-source-side Job Template under
-`assistant_team_recovery_vm_deployment.configuration`. It references existing
-recovery inventory/credentials and remains outside the seven ordinary Assistant
-imports. Apply its labels and template explicitly with the existing CoP roles
-after checking those external dependencies; no extra launcher is used.
+The private companion includes **Deploy AIOps Linux Demo VM** as the eighth
+ordinary Assistant template. Its existing optional-section mapping is referenced
+once through a native YAML alias, preserving the other seven definitions. It
+uses the receiving AAP's existing recovery inventory and seven credentials;
+normal CaC import installs the definition without launching a guest.
 Its saved empty `linux_vm_recovery` and `vm_name` reject missing launch inputs
 before legacy snapshot routing can be used. Guest credential overrides are
 rejected; the existing encrypted file is authoritative. Keep the Job Template limit empty so its
@@ -423,17 +422,27 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `41c77d2`
-(version 0.45.3). It adds bounded public HTTP bootstrap for an already owned
-verified generic guest, including exact retirement of that permission. It retains
-exact generic-guest retirement, bounded HTTPS bootstrap and
-renamed AAP inventory entries through their existing
-verified physical VM identity. A fresh source AAP can save guest release without
+The current dependency pin selects AutoDeploy implementation `785e613`
+(version 0.48.13). Linux guest publication now retains the verified guest's
+`ansible_user` and `ansible_port` alongside the same values in `vm_resource`,
+so AIOps can consume the newly published host without manual inventory edits.
+It changes no account, key, port or credential interface. It retains bounded
+public HTTP/HTTPS bootstrap for an already owned verified generic guest, exact
+generic-guest retirement including those permissions, and renamed AAP inventory
+entries through their existing verified physical VM identity. A fresh source AAP can save guest release without
 having the optional Hactar inventory installed: absence is accepted only after
 an authenticated source API superuser check. Required shared and recovery
 inventories, guest ownership, production exclusions and trusted HTTPS remain
 mandatory. This dependency update does not create another job or change the
-existing credential interface. The reviewed shared code also saves exact native
+existing credential interface.
+
+A selected-successor full software test and normal retirement passed at pinned
+`73a74ac` (1.11.8): real package verification, CLI checks, disposable project
+isolation and complete owned-guest cleanup, preserving the other guests and
+source image. The generic package-update flag was true. No provider credentials
+were restored and no model inference ran. The new helper pin has focused caller
+checks; its next normal minimal-guest consumption remains separate.
+The reviewed shared code also saves exact native
 firewalld rule declarations with approved management/installation policy changes,
 so a later host firewall run can preserve those grants. It treats absent group
 variables as a mapping at the collection boundary without changing explicit

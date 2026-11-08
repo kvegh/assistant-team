@@ -16,7 +16,7 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared implementation `41c77d2` (0.45.3) is pinned.
+guest's own HTTP permission. Shared implementation `785e613` (0.48.13) is pinned.
 
 Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;
@@ -84,8 +84,9 @@ with an explicitly pinned recovery hypervisor and fresh guest SSH identity.
 Minimal isolated guests use nonsecret recovery inputs and guest login from the
 existing encrypted environment snapshot.
 This does not install the assistant application or change this running host.
-The recovery provisioning Job Template is optional source-side CaC, outside
-ordinary Assistant imports and their credentials.
+The existing guarded recovery provisioning template is included in ordinary
+CaC using the receiving AAP's existing recovery inventory and seven credentials.
+Importing it creates no guest.
 Live acceptance passed for both small and four-core upstream guests, including
 strict SSH, sudo, root growth and independent identity checks. Container runtime
 and MCP setup require their separate prerequisites.
@@ -292,10 +293,18 @@ job saves the policy in encrypted CaC and source inventory; other guests, normal
 firewalld and private MCP stay protected. Use `guest_config` to verify an existing
 generic guest without recloning it.
 
-The shared guest-release dependency is revision-pinned. It preserves renamed AAP
+The shared guest-release dependency also publishes verified guest connection
+user/port as `ansible_user`/`ansible_port` for downstream AIOps. Credentials and
+routing stay unchanged. It preserves renamed AAP
 inventory entries using their existing verified physical VM identity. A fresh
 source without the optional Hactar inventory is supported only after its absence
 and source API superuser access are verified. Required inventories, exact guest
 ownership, production exclusions and trusted HTTPS remain mandatory.
 The pinned shared correction also keeps native firewall declarations consistent
 with approved policy grants, so later host firewall reconciliation preserves them.
+
+
+The selected-successor software/normal-retirement test passed at pinned
+`73a74ac` (1.11.8), including model-free validation and cleanup with other guests
+and the source image preserved. This does not verify provider entitlement or
+live consumption of the newer `785e613` helper pin.

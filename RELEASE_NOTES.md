@@ -1,5 +1,15 @@
 # Release notes
 
+## 1.11.10
+
+Pin the existing shared AutoDeploy helper to reviewed `785e613` (0.48.13).
+Verified Linux guest connection user/port are also published as ordinary Ansible
+host variables, so downstream AIOps accepts the new host without manual edits.
+The same guest identity, credentials, TLS, policy and retirement guards remain.
+Align operator guides with the private capture's already installed eighth utility.
+The completed model-free software/retirement run tested pinned `73a74ac` (1.11.8);
+consumption of this new helper pin remains a separate normal minimal-guest test.
+
 ## 1.11.9
 
 Document implementation `73a74ac` and reuse of the published null-preserving

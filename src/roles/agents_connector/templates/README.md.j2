@@ -327,8 +327,9 @@ retains unique guest identity and checks the existing isolation policy. Minimal
 isolated guests pass nonsecret routing/image values through `linux_vm_recovery`,
 while their guest login comes from the existing encrypted environment snapshot;
 this does not install or change the assistant application on those guests.
-The companion CaC keeps its recovery deployment utility optional on the source
-AAP; ordinary Assistant imports do not require recovery inventory or credentials.
+The companion CaC includes its existing guarded recovery deployment utility
+as the eighth ordinary template, using the receiving AAP's existing recovery
+inventory and seven credential references. Import does not launch that utility.
 Live acceptance passed for separate 1 CPU/2 GiB/10 GiB and 4 core/4 GiB/20 GiB
 upstream guests, including strict SSH/sudo, root growth and independently checked
 identity. The minimal image does not include a container runtime; MCP and
@@ -571,10 +572,19 @@ and source inventory using its source API/writer/Vault credentials. Failed setup
 keeps isolation; incomplete publication fails the job. To verify an existing
 generic guest without recloning it, use the same deployment with `guest_config`.
 
-The shared guest-release dependency is revision-pinned. It preserves renamed AAP
+The shared guest-release dependency is pinned to reviewed AutoDeploy `785e613`.
+It publishes the verified guest user/port both inside `vm_resource` and as
+`ansible_user`/`ansible_port`, allowing AIOps to consume the same host directly.
+No login, key or port is changed. It preserves renamed AAP
 inventory entries using their existing verified physical VM identity. A fresh
 source without the optional Hactar inventory is supported only after its absence
 and source API superuser access are verified. Required inventories, exact guest
 ownership, production exclusions and trusted HTTPS remain mandatory.
 The pinned shared correction also keeps native firewall declarations consistent
 with approved policy grants, so later host firewall reconciliation preserves them.
+
+
+The selected-successor software/normal-retirement test passed at pinned
+`73a74ac` (1.11.8), including model-free validation and cleanup with other guests
+and the source image preserved. This does not verify provider entitlement or
+live consumption of the newer `785e613` helper pin.

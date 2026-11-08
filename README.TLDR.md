@@ -68,8 +68,8 @@ deliberately isolated minimal guests. Fresh host keys and an SSH hop through the
 selected hypervisor protect deployments with overlapping private networks. The same
 playbook accepts separate VM name/CPU/RAM/disk inputs; it allocates no counter.
 See the source README's Infrastructure section for required fields and artifacts.
-The private companion's optional **Deploy AIOps Linux Demo VM** definition applies
-only to a source AAP with existing recovery dependencies. Its saved empty inputs
+The private companion includes **Deploy AIOps Linux Demo VM** in ordinary CaC,
+reusing its one maintained definition and the receiving AAP's existing recovery dependencies. Its saved empty inputs
 prevent legacy defaults, and its empty limit permits guest verification.
 Live acceptance passed for separate 1 CPU/2 GiB/10 GiB and 4 core/4 GiB/20 GiB
 upstream guests, including strict SSH, sudo, root growth and independent identity
@@ -81,8 +81,10 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `41c77d2` (0.45.3), adding bounded HTTP
-bootstrap and its exact retirement while retaining HTTPS bootstrap and AAP
+The current shared pin selects AutoDeploy `785e613` (0.48.13). It publishes the
+verified guest user/port as top-level Ansible connection variables for AIOps,
+without changing credentials or routing. It retains bounded HTTP bootstrap and
+its exact retirement, HTTPS bootstrap and AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
 The shared correction also saves native firewall declarations alongside approved
@@ -338,3 +340,9 @@ Mark a verified deployment as production by placing its host in inventory group
 is never inferred from a VM name or stored in libvirt metadata.
 
 Lifecycle setup is repeatable without rewriting unchanged AAP templates.
+
+
+The selected-successor software/normal-retirement test passed at pinned
+`73a74ac` (1.11.8), including model-free validation and cleanup with other guests
+and the source image preserved. This does not verify provider entitlement or
+live consumption of the newer `785e613` helper pin.
