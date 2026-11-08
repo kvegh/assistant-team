@@ -1,5 +1,30 @@
 # Design decisions history
 
+## Publish verified Linux connection variables for downstream consumers — 2026-11-08
+
+Implementation `1ee9e4b` advances the existing public helper default from
+AutoDeploy `41c77d2` to reviewed `785e613` (0.48.13). The producer already verified
+and saved the guest user/port inside `vm_resource`, but omitted the ordinary
+Ansible host variables needed by AIOps. The published shared correction retains
+that same verified material as `ansible_user` and `ansible_port`; it changes no
+credential, login, routing or policy interface. Reuse the existing dependency
+pin rather than adding a private profile field, wrapper or inventory repair.
+
+The current companion capture also references its maintained guarded Linux
+utility as the eighth ordinary template. Source and home guides now describe
+that already approved inclusion; the original seven definitions stay intact.
+No private ciphertext or pinned test-project reference was changed by this
+public caller update.
+
+Twenty-three existing recovery, complete-flow, retirement and version-policy
+checks pass, as do three deployment/retirement syntax checks and scoped strict
+production lint. The selected-successor full software/normal-retirement test
+passed on the earlier pinned `73a74ac` (1.11.8), with corrected package provenance,
+CLI and model-free project validation, preserved other guests/source image and
+complete owned cleanup. Provider authentication and model requests were excluded.
+That acceptance is not rewritten as a runtime test of the new helper pin; its
+normal minimal-guest consumption remains the next separately authorized step.
+
 ## Preserve a genuinely absent retirement guest — 2026-11-05
 
 Implementation `73a74ac` pins the existing published AutoDeploy correction

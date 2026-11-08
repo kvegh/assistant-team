@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.11.11
+
+Document implementation `1ee9e4b`, the verified connection-variable producer,
+focused caller checks and the separate scope of the completed model-free
+software/retirement acceptance. No further runtime or private settings change.
+
 ## 1.11.10
 
 Pin the existing shared AutoDeploy helper to reviewed `785e613` (0.48.13).
