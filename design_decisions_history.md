@@ -2414,3 +2414,20 @@ and the existing job/credential interfaces remain unchanged. Nine focused generi
 recovery tests, deployment syntax and scoped production lint passed. No live
 Assistant deployment or model/provider call ran; the earlier normal-job evidence
 continues to describe its original recorded revision rather than this new pin.
+
+## Authenticate private firewall source through existing encrypted files — 2026-11-09
+
+Implementation: `65a11ce93b2d24867e02b57ee4b063007fc76a82` (1.11.14).
+
+The existing environment and fresh/retire configuration files carry the approved
+source-only reader. Explicit playbook/task bindings expose that one setting to
+the shared native checkout on the required hypervisor and guest plays. Strict
+recovery routing/VM metadata and the allocation writer credential remain intact.
+The shared dependency selects AutoDeploy `b1587dc` (0.49.10), retaining the fixed
+repository, exact commit, verified TLS, redirect refusal and temporary checkout.
+
+Fourteen protected loader tests and eleven recovery tests pass; the affected
+loader/recovery cases were rerun after final binding changes. Strict production
+lint of the 75-file dependency closure and three normal playbook syntax checks
+pass. No live import, authentication or guest deployment was run by this change;
+full AAP acceptance remains separate.

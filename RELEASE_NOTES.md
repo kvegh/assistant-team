@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.15
+
+Document source-authentication implementation `65a11ce93b2d24867e02b57ee4b063007fc76a82`,
+its existing encrypted-file bindings, focused checks and unverified live migration.
+
 ## 1.11.14
 
 Bind private Hactar source authentication from existing encrypted deployment
