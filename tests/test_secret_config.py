@@ -121,9 +121,9 @@ class ExternalConfigurationAnsibleTests(unittest.TestCase):
             'ANSIBLE_NOCOLOR': '1',
         })
 
-    def encrypt(self, name, marker):
+    def encrypt(self, name, marker, **settings):
         path = self.config / name
-        path.write_text(yaml.safe_dump({'fixture_marker': marker}))
+        path.write_text(yaml.safe_dump({'fixture_marker': marker, **settings}))
         result = subprocess.run(['ansible-vault', 'encrypt', str(path)],
                                 env=self.env, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -162,6 +162,19 @@ class ExternalConfigurationAnsibleTests(unittest.TestCase):
             {'ansible.builtin.assert': {'that': ["fixture_marker == 'companion'"]}},
         ])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_selected_deployment_namespaces_preserve_the_encrypted_source_reader(self):
+        token = 'synthetic-source-reader-canary'
+        for name, namespace in [('environment', '__linux_vm_environment'),
+                                ('fresh_test', 'fresh_definition'),
+                                ('retire_test', 'retirement_infrastructure')]:
+            self.encrypt(name + '_vault.yml', 'unchanged-marker', hactar_source_git_token=token)
+            result = self.run_play([self.loader(namespace, name=name),
+                                   {'name': 'Verify protected source reader binding', 'ansible.builtin.assert': {
+                                       'that': [namespace + ".hactar_source_git_token == 'synthetic-source-reader-canary'",
+                                                namespace + ".fixture_marker == 'unchanged-marker'"]}, 'no_log': True}])
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn(token, result.stdout + result.stderr)
 
     def test_credential_environment_overrides_companion_default(self):
         self.encrypt('environment_vault.yml', 'companion')

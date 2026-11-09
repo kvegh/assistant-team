@@ -1,5 +1,14 @@
 # Release notes
 
+## 1.11.14
+
+Bind private Hactar source authentication from existing encrypted deployment
+definitions at the normal playbook boundary. The shared dependency selects
+AutoDeploy `b1587dc` (0.49.10), retaining fixed source/revision, TLS, protected
+output and the independent allocation writer token. No credential type or
+strict provenance field is added. Focused native loader/recovery checks pass;
+live migration remains separate.
+
 ## 1.11.13
 
 Document implementation `259078c` and the verified native-firewall consumer

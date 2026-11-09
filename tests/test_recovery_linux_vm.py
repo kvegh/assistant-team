@@ -65,7 +65,8 @@ class RecoveryConnectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='recovery-input-contract-') as directory:
             root = Path(directory)
             secret = VaultSecret(b'synthetic-vault-password')
-            configuration = {'provisioning': {'vm_name': 'legacy-placeholder',
+            configuration = {'hactar_source_git_token': 'synthetic-source-reader-canary',
+                'provisioning': {'vm_name': 'legacy-placeholder',
                 'golden_image_path': '/legacy/image.qcow2', 'vm_dir': '/legacy/vms',
                 'vm_domain': 'example.invalid', 'vm_network': 'legacy-network',
                 'guest_ssh_user': 'fixture', 'guest_ssh_password': 'synthetic-protected-password',
@@ -93,6 +94,7 @@ class RecoveryConnectionTests(unittest.TestCase):
                         "provisioning.guest_ssh_password == 'synthetic-protected-password'",
                         "provisioning.vm_name == 'fixture-v07'",
                         "provisioning.golden_image_path == '/verified/upstream.qcow2'",
+                        "hactar_source_git_token == 'synthetic-source-reader-canary'",
                         'provisioning.generic_image', 'not provisioning.update_packages']}})
                 plays.append({'name': 'Exercise actual environment load ' + str(index), 'hosts': 'localhost',
                     'connection': 'local', 'gather_facts': False, 'vars': variables, 'tasks': tasks})
@@ -108,6 +110,7 @@ class RecoveryConnectionTests(unittest.TestCase):
             if reject:
                 self.assertNotIn('TASK [Merge declared recovery values', outcome.stdout)
             self.assertNotIn('synthetic-protected-password', outcome.stdout + outcome.stderr)
+            self.assertNotIn('synthetic-source-reader-canary', outcome.stdout + outcome.stderr)
             self.assertNotIn('rejected-plaintext-secret-canary', outcome.stdout + outcome.stderr)
 
     def test_invalid_or_wrong_recovery_identity_is_rejected(self):

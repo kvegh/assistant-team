@@ -81,7 +81,7 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `785e613` (0.48.13). It publishes the
+The current shared pin selects AutoDeploy `b1587dc` (0.49.10). It publishes the
 verified guest user/port as top-level Ansible connection variables for AIOps,
 without changing credentials or routing. It retains bounded HTTP bootstrap and
 its exact retirement, HTTPS bootstrap and AAP
@@ -92,6 +92,9 @@ policy grants and preserves empty group-variable mappings during CaC import.
 Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;
 authentication, identity, policy guards and per-call cleanup remain unchanged.
+The private task source requires `hactar_source_git_token` in the existing
+encrypted environment/fresh/retire definition. It is bound separately from VM
+provenance and uses no additional credential type or writer-token replacement.
 Normal source job 3282 passed this path for one existing test guest, including
 independent live/saved-policy, guest connectivity and production-denial checks.
 Its encrypted/source updates were verified; the other guests remain restricted.

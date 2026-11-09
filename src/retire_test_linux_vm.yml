@@ -42,6 +42,7 @@
   become: true
   no_log: true
   vars:
+    hactar_source_git_token: "{{ hostvars.localhost.retirement_infrastructure.hactar_source_git_token }}"
     linux_vm_retire_definition: >-
       {{ hostvars.localhost.retirement_infrastructure.provisioning | combine({'vm_name': teardown_vm_name}) }}
     linux_vm_retire_disk: "{{ linux_vm_retire_definition.vm_dir }}/{{ linux_vm_retire_definition.vm_name }}.disk.qcow2"

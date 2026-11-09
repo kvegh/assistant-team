@@ -422,8 +422,8 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `90edda0`
-(version 0.49.0). Recovery preflight and lifecycle policy changes use the native
+The current dependency pin selects AutoDeploy implementation `b1587dc`
+(version 0.49.10). Recovery preflight and lifecycle policy changes use the native
 Ansible firewall path; no installed host helper or host JSON is used. An explicit
 saved override must match the maintained dependency pin. Linux guest publication retains the verified guest's
 `ansible_user` and `ansible_port` alongside the same values in `vm_resource`,
@@ -1543,4 +1543,10 @@ implementation compares native firewall state with current CaC under its
 temporary transaction lock. This preflight is read-only and stops on drift;
 it does not invoke the retired host helper or reapply policy implicitly.
 Release and retirement retain their existing provenance and credential checks.
+The private task checkout receives `hactar_source_git_token` only from the
+existing encrypted environment/fresh/retire definition. The playbook binds that
+leaf separately from strict VM and recovery provenance; existing Vault and
+ciphertext-file credentials remain unchanged. The fixed-repository Git header
+is process-local, and the allocation writer's `CAC_GIT_TOKEN` is preserved.
+Never save this reader in plaintext Job Template variables.
 Offline consumer checks do not establish a live migration or fresh AAP run.

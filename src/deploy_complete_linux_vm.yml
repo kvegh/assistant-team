@@ -51,6 +51,7 @@
   tags: [never, repair_inventory_registration]
   vars:
     provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+    hactar_source_git_token: "{{ hostvars.localhost.fresh_definition.hactar_source_git_token }}"
   tasks:
     - name: Repair only the verified ungrouped generic guest registration
       ansible.builtin.include_role:
@@ -70,6 +71,7 @@
   tags: [provision]
   vars:
     provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+    hactar_source_git_token: "{{ hostvars.localhost.fresh_definition.hactar_source_git_token }}"
     linux_vm_deployment_name: "{{ hostvars.localhost.__deployment_target_name }}"
   pre_tasks:
     - name: End association-only repair before provisioning role argument validation
@@ -100,6 +102,7 @@
   tags: [guest_config]
   vars:
     provisioning: "{{ hostvars.localhost.fresh_definition.provisioning }}"
+    hactar_source_git_token: "{{ hostvars.localhost.fresh_definition.hactar_source_git_token }}"
     assistant_install_prefix: "{{ hostvars.localhost.fresh_definition.install_prefix | default('') }}"
     containers:
       runtime_user: "{{ hostvars.localhost.fresh_definition.runtime_user }}"

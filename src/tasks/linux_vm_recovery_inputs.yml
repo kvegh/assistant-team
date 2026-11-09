@@ -25,6 +25,11 @@
     provisioning: "{{ __linux_vm_environment.provisioning | combine(linux_vm_recovery) }}"
   no_log: true
 
+- name: Bind the source reader from the existing encrypted environment
+  ansible.builtin.set_fact:
+    hactar_source_git_token: '{{ __linux_vm_environment.hactar_source_git_token }}'
+  no_log: true
+
 - name: Refuse conflicting higher-priority provisioning or credential overrides
   ansible.builtin.assert:
     that:
