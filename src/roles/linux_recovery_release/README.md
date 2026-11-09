@@ -16,8 +16,12 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `41c77d2` (0.45.3). Its existing
-shared role accepts `linux_recovery_release_operation: guest_bootstrap_https`
+The current pin selects AutoDeploy implementation `bdda318` (0.50.0).
+This shared source reads instance Zabbix firewall settings from
+`zabbix.configuration.firewall`. Update its encrypted CaC layout and caller pin
+together; a stale explicit dependency override is refused.
+
+Its existing shared role accepts `linux_recovery_release_operation: guest_bootstrap_https`
 through this caller to grant only approved public IPv4 TCP 443 access. The
 complete-deployment playbook invokes that permission only after authenticated
 base/root verification, then requests default `release_guest` only after all

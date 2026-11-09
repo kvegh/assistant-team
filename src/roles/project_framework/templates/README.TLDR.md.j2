@@ -16,8 +16,11 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared native-firewall implementation `90edda0`
-(0.49.0) is pinned; a saved override must match the maintained default.
+guest's own HTTP permission. Shared native-firewall implementation `bdda318` is
+pinned; a saved override must match the maintained default.
+This shared source reads instance Zabbix firewall settings from
+`zabbix.configuration.firewall`. Update its encrypted CaC layout and caller pin
+together; a stale explicit dependency override is refused.
 
 Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;

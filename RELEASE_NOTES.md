@@ -1,5 +1,18 @@
 # Release notes
 
+## 1.11.16
+
+Pin the existing shared native firewall dependency to reviewed AutoDeploy
+`bdda318620ae30ebea455376442dc509ec7fb583` (0.50.0), which reads per-instance
+Zabbix permissions from `zabbix.configuration.firewall`. Keep guest/bootstrap/
+retirement entrypoints, encrypted source authentication, native firewall checks,
+production exclusions and exact revision guards unchanged. Update the source
+and installed operator-guide templates together. Coordinate this caller's
+publication/import with the matching private layout; an old explicit common
+revision is refused. Twenty-five focused checks, scoped strict role lint and
+three deployment/retirement syntax checks passed. Live deployment and private
+layout migration remain separate.
+
 ## 1.11.15
 
 Document source-authentication implementation `65a11ce93b2d24867e02b57ee4b063007fc76a82`,

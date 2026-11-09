@@ -33,11 +33,12 @@ class RecoveryConnectionTests(unittest.TestCase):
         role = ROOT / 'src/roles/linux_recovery_release'
         defaults = yaml.safe_load((role / 'defaults/main.yml').read_text())
         tasks = yaml.safe_load((role / 'tasks/main.yml').read_text())
-        for operation in ['release_guest', 'retire_guest']:
+        for operation in ['release_guest', 'guest_bootstrap_https', 'guest_bootstrap_http', 'retire_guest']:
             guard = next(task for task in tasks if task['name'].startswith(
-                'Require a completed verified' if operation == 'release_guest' else
+                'Require a completed verified' if operation != 'retire_guest' else
                 'Require the exact persisted'))
             for revision, accepted in [(defaults['linux_recovery_release_revision'], True),
+                    ('b1587dc7e76df7320815fc8199be1a98144e2fe5', False),
                     ('785e613f53036fae61bf3a63b994a83fbe68fcaf', False), ('b' * 40, False)]:
                 with self.subTest(operation=operation, accepted=accepted), tempfile.TemporaryDirectory() as temporary:
                     root = Path(temporary)

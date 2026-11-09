@@ -81,9 +81,13 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `b1587dc` (0.49.10). It publishes the
-verified guest user/port as top-level Ansible connection variables for AIOps,
-without changing credentials or routing. It retains bounded HTTP bootstrap and
+The current shared pin selects AutoDeploy `bdda318` (0.50.0). It reads each
+instance's Zabbix firewall settings from its `zabbix.configuration.firewall`
+section. Publish and synchronize this caller with the matching encrypted CaC
+layout before running lifecycle jobs; old callers and stale explicit dependency
+overrides must not run against that layout.
+It publishes the verified guest user/port as top-level Ansible connection
+variables for AIOps, without changing credentials or routing. It retains bounded HTTP bootstrap and
 its exact retirement, HTTPS bootstrap and AAP
 inventory aliases and permitting verified absence of an optional Hactar inventory
 on a fresh source. Required inventory, identity and production checks still apply.
