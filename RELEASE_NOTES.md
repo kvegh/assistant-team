@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.11.13
+
+Document implementation `259078c` and the verified native-firewall consumer
+checks. No additional runtime change or live migration is included.
+
 ## 1.11.12
 
 Use the reviewed native Ansible firewall path for recovery preflight, guest

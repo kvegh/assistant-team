@@ -1,5 +1,31 @@
 # Design decisions history
 
+## Use shared native firewall readback for recovery consumers — 2026-11-09
+
+Implementation `259078c22d5786cd3756293ed8e56cb922987509` (1.11.12) pins the
+existing release/retirement role to AutoDeploy functional source
+`90edda0546fe149d317846d8d257fefe7abf6319` (0.49.0). This documentation checkpoint
+is 1.11.13. A saved revision override must match that maintained default, so an
+older value cannot silently restore the retired firewall helper path.
+
+Before storage inspection, the recovery preflight uses the same shared native
+prepare/readback/finish tasks and current encrypted policy. Exact mismatch stops
+without applying policy. Existing Machine/Vault/source credentials, host/guest
+identity and VM checks remain. The required Hactar source revision and independent
+production identity are supplied through existing protected launch variables;
+they are not inserted into the strict VM-resource schema or a new store. The
+certified firewall collection was already declared. Public/home operator guides
+describe the same prerequisites and remaining live-verification boundary.
+
+Eleven focused recovery tests passed, including native Ansible drift refusal
+before storage, cleanup and wrong-hypervisor protection. Final-pin checks also
+proved refusal of stale saved values for release and retirement. Scoped strict
+production lint, deployment/retirement syntax, Python compilation and whitespace
+checks passed. Syntax-only empty-inventory notices remain. No private data,
+production project pin, AAP configuration, VM or firewall changed. A fresh AAP
+software/lifecycle run of this source remains unverified; earlier staged
+acceptance belongs to its recorded revision.
+
 ## Publish verified Linux connection variables for downstream consumers — 2026-11-08
 
 Implementation `1ee9e4b` advances the existing public helper default from

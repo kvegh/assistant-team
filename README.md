@@ -1531,6 +1531,9 @@ Lifecycle controller reconciliation normalizes numeric AAP resource identifiers,
 so an unchanged repeat setup does not rewrite job templates.
 ## Native recovery firewall prerequisites
 
+Source version 1.11.13 documents implementation `259078c` (1.11.12); saved AAP
+configuration and live execution still require their normal integration checks.
+
 Recovery deployment and retirement require `aap_hactar_source_revision` and
 `hactar_source_public_ip` from the existing protected configuration. The latter
 is the independent production/source identity, never derived from the recovery
