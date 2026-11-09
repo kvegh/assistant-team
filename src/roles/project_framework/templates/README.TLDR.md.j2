@@ -16,7 +16,8 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared implementation `785e613` (0.48.13) is pinned.
+guest's own HTTP permission. Shared native-firewall implementation `90edda0`
+(0.49.0) is pinned; a saved override must match the maintained default.
 
 Repeated lifecycle steps read encrypted settings from the current native plugin
 path after earlier checkouts are removed. Missing paths refuse publication;
@@ -307,4 +308,10 @@ with approved policy grants, so later host firewall reconciliation preserves the
 The selected-successor software/normal-retirement test passed at pinned
 `73a74ac` (1.11.8), including model-free validation and cleanup with other guests
 and the source image preserved. This does not verify provider entitlement or
-live consumption of the newer `785e613` helper pin.
+live consumption of the native-firewall consumer path.
+## Native recovery firewall prerequisites
+
+The existing protected deployment CaC supplies `aap_hactar_source_revision` and
+independent `hactar_source_public_ip`. The EE must have the declared certified
+firewall collection. Read-only native preflight stops on policy drift before
+storage changes, without the retired isolation helper.

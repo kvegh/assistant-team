@@ -1,4 +1,15 @@
 ---
+- name: Require the reviewed native firewall source and independent production identity
+  ansible.builtin.assert:
+    that:
+      - aap_hactar_source_revision is defined
+      - aap_hactar_source_revision is match('^[0-9a-f]{40}$')
+      - hactar_source_public_ip is defined
+      - hactar_source_public_ip is string
+    fail_msg: Supply the reviewed Hactar revision and existing protected source identity before changing guest access.
+    quiet: true
+  no_log: true
+
 - name: Require a completed verified recovery guest and a pinned implementation
   ansible.builtin.assert:
     that:
@@ -10,6 +21,9 @@
       - deployment_vm_trust_file is match('^/tmp/linux-vm-recovery-known-hosts-[A-Za-z0-9_]+$')
       - linux_recovery_release_revision is match('^[a-f0-9]{40}$')
       - linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+      - >-
+        linux_recovery_release_revision ==
+        (lookup('ansible.builtin.file', role_path ~ '/defaults/main.yml') | from_yaml).linux_recovery_release_revision
       - linux_recovery_release_operation in ['release_guest', 'guest_bootstrap_https', 'guest_bootstrap_http']
     fail_msg: Finish authenticated guest verification and select the reviewed release implementation before changing isolation.
   no_log: true
@@ -24,6 +38,9 @@
       - linux_recovery_release_repository == 'https://github.com/kvegh/aap_autodeploy_configascode.git'
       - linux_recovery_release_revision is match('^[a-f0-9]{40}$')
       - linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+      - >-
+        linux_recovery_release_revision ==
+        (lookup('ansible.builtin.file', role_path ~ '/defaults/main.yml') | from_yaml).linux_recovery_release_revision
     fail_msg: Plan or publish only the exact persisted generic guest on its independently pinned hypervisor.
   when: linux_recovery_release_operation == 'retire_guest'
   no_log: true

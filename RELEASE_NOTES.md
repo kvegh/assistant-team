@@ -1,5 +1,14 @@
 # Release notes
 
+## 1.11.12
+
+Use the reviewed native Ansible firewall path for recovery preflight, guest
+release and retirement. Replace legacy host-helper checks with exact readback
+before storage changes, retaining VM identity and production protections.
+Use AutoDeploy `90edda0` (0.49.0); refuse stale dependency overrides. Required
+Hactar revision and independent source identity remain protected launch inputs.
+Focused offline consumer checks passed; live migration remains unverified.
+
 ## 1.11.11
 
 Document implementation `1ee9e4b`, the verified connection-variable producer,

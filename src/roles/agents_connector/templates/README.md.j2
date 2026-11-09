@@ -572,7 +572,9 @@ and source inventory using its source API/writer/Vault credentials. Failed setup
 keeps isolation; incomplete publication fails the job. To verify an existing
 generic guest without recloning it, use the same deployment with `guest_config`.
 
-The shared guest-release dependency is pinned to reviewed AutoDeploy `785e613`.
+The shared guest-release dependency is pinned to reviewed AutoDeploy `90edda0`
+(0.49.0), using native Ansible firewall tasks and existing encrypted CaC. An
+explicit saved override must match that maintained pin.
 It publishes the verified guest user/port both inside `vm_resource` and as
 `ansible_user`/`ansible_port`, allowing AIOps to consume the same host directly.
 No login, key or port is changed. It preserves renamed AAP
@@ -587,4 +589,11 @@ with approved policy grants, so later host firewall reconciliation preserves the
 The selected-successor software/normal-retirement test passed at pinned
 `73a74ac` (1.11.8), including model-free validation and cleanup with other guests
 and the source image preserved. This does not verify provider entitlement or
-live consumption of the newer `785e613` helper pin.
+live consumption of the native-firewall consumer path.
+## Native recovery firewall prerequisites
+
+Recovery jobs use the reviewed `aap_hactar_source_revision`, independent
+`hactar_source_public_ip` and existing certified firewall collection. Their
+preflight compares native state with CaC and stops on drift before storage
+changes; it never reapplies policy implicitly or uses the retired isolation helper.
+These inputs belong to protected deployment CaC, not the agent workspace.

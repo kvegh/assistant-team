@@ -346,3 +346,10 @@ The selected-successor software/normal-retirement test passed at pinned
 `73a74ac` (1.11.8), including model-free validation and cleanup with other guests
 and the source image preserved. This does not verify provider entitlement or
 live consumption of the newer `785e613` helper pin.
+## Native recovery firewall prerequisites
+
+Use the existing protected CaC to supply the reviewed
+`aap_hactar_source_revision` and independent `hactar_source_public_ip` on each
+execution host. The EE needs `redhat.rhel_system_roles:1.120.5`. Native firewall
+preflight is read-only: drift stops before storage changes. Do not reinstall
+the retired isolation helper. Live acceptance follows source-pin/input integration.

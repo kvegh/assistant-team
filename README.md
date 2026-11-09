@@ -417,13 +417,15 @@ transition is saved in encrypted CaC and source inventory. Failed guest setup
 does not release isolation, and incomplete policy publication fails the job.
 For an existing generic guest, rerun with `guest_config` tags to verify and release
 it without cloning or replacing its disk. Check mode validates without releasing.
-The pinned helper requires bootstrap provenance in persistent libvirt XML and
+The retained VM verifier requires bootstrap provenance in persistent libvirt XML and
 independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `785e613`
-(version 0.48.13). Linux guest publication now retains the verified guest's
+The current dependency pin selects AutoDeploy implementation `90edda0`
+(version 0.49.0). Recovery preflight and lifecycle policy changes use the native
+Ansible firewall path; no installed host helper or host JSON is used. An explicit
+saved override must match the maintained dependency pin. Linux guest publication retains the verified guest's
 `ansible_user` and `ansible_port` alongside the same values in `vm_resource`,
 so AIOps can consume the newly published host without manual inventory edits.
 It changes no account, key, port or credential interface. It retains bounded
@@ -440,8 +442,8 @@ A selected-successor full software test and normal retirement passed at pinned
 `73a74ac` (1.11.8): real package verification, CLI checks, disposable project
 isolation and complete owned-guest cleanup, preserving the other guests and
 source image. The generic package-update flag was true. No provider credentials
-were restored and no model inference ran. The new helper pin has focused caller
-checks; its next normal minimal-guest consumption remains separate.
+were restored and no model inference ran. The native-firewall consumer has focused
+caller checks; its next normal minimal-guest consumption remains separate.
 The reviewed shared code also saves exact native
 firewalld rule declarations with approved management/installation policy changes,
 so a later host firewall run can preserve those grants. It treats absent group
@@ -473,7 +475,7 @@ For each recovery launch, provide concrete values for these keys:
 | `linux_vm_recovery.golden_image_path`, `vm_dir`, `vm_domain`, `vm_network` | The saved upstream image and destination values; all four are nested under `linux_vm_recovery`. |
 | `linux_vm_recovery.generic_image`, `linux_vm_recovery.update_packages` | `true` and `false`, respectively, for these isolated minimal guests. |
 | `linux_vm_recovery.hypervisor_pin` | The independently verified address, managed account/port, machine ID and public SSH keys. |
-| `linux_vm_recovery.isolation_policy` | The complete current approved isolation-helper policy mapping. |
+| `linux_vm_recovery.isolation_policy` | The complete current approved base isolation CaC mapping. |
 
 The resulting disk path is `linux_vm_recovery.vm_dir/<vm_name>.disk.qcow2`. The
 existing `provisioning.guest_ssh_user`, `guest_ssh_password` and
@@ -1527,3 +1529,15 @@ is never inferred from a VM name or stored in libvirt metadata.
 
 Lifecycle controller reconciliation normalizes numeric AAP resource identifiers,
 so an unchanged repeat setup does not rewrite job templates.
+## Native recovery firewall prerequisites
+
+Recovery deployment and retirement require `aap_hactar_source_revision` and
+`hactar_source_public_ip` from the existing protected configuration. The latter
+is the independent production/source identity, never derived from the recovery
+target. Prepare the existing `redhat.rhel_system_roles:1.120.5` dependency in the
+calling EE through PAH. Before storage operations, the same pinned shared
+implementation compares native firewall state with current CaC under its
+temporary transaction lock. This preflight is read-only and stops on drift;
+it does not invoke the retired host helper or reapply policy implicitly.
+Release and retirement retain their existing provenance and credential checks.
+Offline consumer checks do not establish a live migration or fresh AAP run.

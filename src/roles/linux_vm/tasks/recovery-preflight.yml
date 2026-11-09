@@ -11,6 +11,10 @@
       - provisioning.guest_ssh_password is string or provisioning.guest_ssh_password is vault_encrypted
       - provisioning.guest_ssh_password | length > 0
       - provisioning.guest_become_password == provisioning.guest_ssh_password
+      - aap_hactar_source_revision is defined
+      - aap_hactar_source_revision is match('^[0-9a-f]{40}$')
+      - hactar_source_public_ip is defined
+      - hactar_source_public_ip is string
     fail_msg: Use the verified recovery inventory and explicit generic guest bootstrap inputs.
   no_log: true
 
@@ -59,21 +63,72 @@
   failed_when: __linux_vm_recovery_machine.stdout | trim != provisioning.hypervisor_pin.machine_id
   no_log: true
 
-- name: Require the existing persistent isolation policy without modifying it
-  ansible.builtin.command:
-    argv: [/usr/local/sbin/hactar-recovery-isolation, check]
-    stdin: "{{ provisioning.isolation_policy | to_json }}"
-  changed_when: false
-  check_mode: false
+- name: Read the same public lifecycle dependency used for final guest release
+  ansible.builtin.include_vars:
+    file: '{{ role_path }}/../linux_recovery_release/defaults/main.yml'
+    name: __linux_vm_firewall_dependency
+
+- name: Require the reviewed immutable public implementation before native readback
+  ansible.builtin.assert:
+    that:
+      - __linux_vm_firewall_dependency.linux_recovery_release_repository == 'https://github.com/kvegh/aap_autodeploy_configascode.git'
+      - __linux_vm_firewall_dependency.linux_recovery_release_revision is match('^[0-9a-f]{40}$')
+      - __linux_vm_firewall_dependency.linux_recovery_release_revision != '0000000000000000000000000000000000000000'
+    quiet: true
   no_log: true
 
-- name: Require recovery isolation to be active and enabled
-  ansible.builtin.command:
-    argv: [systemctl, "{{ item }}", hactar-recovery-isolation.service]
-  loop: [is-active, is-enabled]
-  changed_when: false
+- name: Allocate this preflight's public source workspace in the execution environment
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: linux-vm-firewall-source-
+  delegate_to: localhost
+  become: false
   check_mode: false
-  no_log: true
+  register: __linux_vm_firewall_source
+
+- name: Verify current native firewall state before any image or disk operation
+  vars:
+    aap_isolation_autodeploy_root: '{{ __linux_vm_firewall_source.path }}/source'
+    aap_isolation_hypervisor: '{{ provisioning.hypervisor_pin }}'
+    aap_isolation_trust_file: '{{ __linux_vm_recovery_trust.path }}'
+  block:
+    - name: Fetch the same exact public implementation as final release
+      ansible.builtin.git:
+        repo: '{{ __linux_vm_firewall_dependency.linux_recovery_release_repository }}'
+        version: '{{ __linux_vm_firewall_dependency.linux_recovery_release_revision }}'
+        dest: '{{ __linux_vm_firewall_source.path }}/source'
+        update: false
+        recursive: false
+      delegate_to: localhost
+      become: false
+      check_mode: false
+
+    - name: Prepare only a native readback transaction on the pinned hypervisor
+      ansible.builtin.include_tasks: '{{ __linux_vm_firewall_source.path }}/source/tasks/aap-isolation-prepare.yml'
+      vars:
+        aap_isolation_autodeploy_root: '{{ __linux_vm_firewall_source.path }}/source'
+      register: __linux_vm_firewall_prepare
+
+    - name: Require complete native agreement with existing source CaC without applying it
+      ansible.builtin.include_tasks: '{{ __linux_vm_firewall_source.path }}/source/tasks/aap-isolation-observe.yml'
+      vars:
+        aap_isolation_previous_policy: '{{ provisioning.isolation_policy }}'
+        aap_isolation_desired_policy: '{{ provisioning.isolation_policy }}'
+        aap_isolation_require_match: true
+
+  always:
+    - name: Release this preflight's native lock and temporary Hactar source
+      ansible.builtin.include_tasks: '{{ __linux_vm_firewall_source.path }}/source/tasks/aap-isolation-finish.yml'
+      when: __linux_vm_firewall_prepare is defined
+
+    - name: Remove only this preflight's public implementation workspace
+      ansible.builtin.file:
+        path: '{{ __linux_vm_firewall_source.path }}'
+        state: absent
+      delegate_to: localhost
+      become: false
+      check_mode: false
+      when: __linux_vm_firewall_source.path is match('^/tmp/linux-vm-firewall-source-[A-Za-z0-9_]+$')
 
 - name: Inspect the generic source without following symlinks
   ansible.builtin.stat:

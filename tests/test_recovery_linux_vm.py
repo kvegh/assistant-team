@@ -29,6 +29,31 @@ def pin():
 
 
 class RecoveryConnectionTests(unittest.TestCase):
+    def test_shared_release_and_retirement_refuse_a_different_saved_source_pin(self):
+        role = ROOT / 'src/roles/linux_recovery_release'
+        defaults = yaml.safe_load((role / 'defaults/main.yml').read_text())
+        tasks = yaml.safe_load((role / 'tasks/main.yml').read_text())
+        for operation in ['release_guest', 'retire_guest']:
+            guard = next(task for task in tasks if task['name'].startswith(
+                'Require a completed verified' if operation == 'release_guest' else
+                'Require the exact persisted'))
+            for revision, accepted in [(defaults['linux_recovery_release_revision'], True),
+                    ('785e613f53036fae61bf3a63b994a83fbe68fcaf', False), ('b' * 40, False)]:
+                with self.subTest(operation=operation, accepted=accepted), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    variables = dict(defaults, role_path=str(role),
+                        aap_hactar_source_revision='a' * 40, hactar_source_public_ip='198.51.100.10',
+                        linux_recovery_release_revision=revision, linux_recovery_release_operation=operation,
+                        linux_recovery_release_retire_phase='plan',
+                        linux_recovery_release_retire_guest_name='example-v16',
+                        linux_recovery_release_retire_hypervisor=pin(),
+                        deployment_vm_verified_provenance={'verified': True,
+                            'hypervisor_machine_id': pin()['machine_id'], 'machine_id': '2' * 32, 'bridge': 'fixture0'},
+                        deployment_vm_hypervisor_pin=pin(),
+                        deployment_vm_trust_file='/tmp/linux-vm-recovery-known-hosts-fixture')
+                    result = self.run_play([guard], variables, root)
+                    self.assertEqual(result.returncode == 0, accepted, result.stdout + result.stderr)
+
     def test_recovery_launch_uses_encrypted_file_credentials_after_both_environment_loads(self):
         self.recovery_inputs(False)
 
@@ -147,7 +172,9 @@ class RecoveryConnectionTests(unittest.TestCase):
                     task["ansible.builtin.command"]["argv"] = [sys.executable, "-c", "print('2' * 32)"]
                 if task["name"].startswith("Require the existing persistent"):
                     task["ansible.builtin.command"]["argv"] = [sys.executable, "-c", "raise SystemExit(99)"]
-            variables = {"ansible_host": "192.0.2.10", "provisioning": {
+            variables = {"ansible_host": "192.0.2.10",
+                "aap_hactar_source_revision": "a" * 40,
+                "hactar_source_public_ip": "198.51.100.10", "provisioning": {
                 "hypervisor_pin": pin(), "generic_image": True,
                 "isolation_policy": {"bridges": ["fixture0"]}, "guest_ssh_user": "fixture",
                 "guest_ssh_password": password, "guest_become_password": password}}
@@ -156,6 +183,51 @@ class RecoveryConnectionTests(unittest.TestCase):
             self.assertIn("Verify the actual recovery hypervisor identity", outcome.stdout)
             self.assertNotIn("TASK [Require the existing persistent isolation", outcome.stdout)
             self.assertNotIn("synthetic-bootstrap-canary", outcome.stdout + outcome.stderr)
+
+    def test_native_policy_readback_is_read_only_and_blocks_storage_on_drift(self):
+        source = yaml.safe_load((ROLE / "tasks/recovery-preflight.yml").read_text())
+        boundary = next(i for i, task in enumerate(source)
+                        if task["name"] == "Inspect the generic source without following symlinks")
+        for matches in [True, False]:
+            with self.subTest(matches=matches), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                shared = root / 'shared/tasks'
+                shared.mkdir(parents=True)
+                (shared / 'aap-isolation-prepare.yml').write_text(yaml.safe_dump([
+                    {'name': 'Fixture native transaction', 'ansible.builtin.set_fact': {
+                        'fixture_lock': True, 'aap_isolation_autodeploy_root': '/wrong-caller-project'}},
+                    {'name': 'Fixture uses the actual common source inside prepare', 'ansible.builtin.assert': {'that': [
+                        "aap_isolation_autodeploy_root == __linux_vm_firewall_source.path ~ '/source'"]}}]))
+                (shared / 'aap-isolation-observe.yml').write_text(yaml.safe_dump([
+                    {'name': 'Fixture native readback', 'ansible.builtin.assert': {'that': [
+                        'fixture_lock', 'aap_isolation_require_match', 'fixture_native_matches']}}]))
+                (shared / 'aap-isolation-finish.yml').write_text(yaml.safe_dump([
+                    {'name': 'Fixture cleanup', 'ansible.builtin.file': {
+                        'path': str(root / 'cleaned'), 'state': 'touch'}}]))
+                tasks = deepcopy(source[:boundary])
+                for task in tasks:
+                    if task['name'].startswith('Verify the actual'):
+                        task['ansible.builtin.command']['argv'] = [sys.executable, '-c', "print('1' * 32)"]
+                    if task['name'].startswith('Verify current native firewall'):
+                        fetch = task['block'][0]
+                        fetch.pop('ansible.builtin.git')
+                        fetch['ansible.builtin.copy'] = {
+                            'src': str(root / 'shared') + '/',
+                            'dest': '{{ __linux_vm_firewall_source.path }}/source/'}
+                tasks.append({'name': 'Fixture first storage operation', 'ansible.builtin.file': {
+                    'path': str(root / 'storage'), 'state': 'touch'}})
+                variables = {'role_path': str(ROLE), 'ansible_host': '192.0.2.10',
+                    'aap_hactar_source_revision': 'a' * 40,
+                    'hactar_source_public_ip': '198.51.100.10', 'fixture_native_matches': matches,
+                    'provisioning': {'hypervisor_pin': pin(), 'generic_image': True,
+                        'isolation_policy': {'bridges': ['fixture0']}, 'guest_ssh_user': 'fixture',
+                        'guest_ssh_password': 'synthetic-secret-canary',
+                        'guest_become_password': 'synthetic-secret-canary'}}
+                result = self.run_play(tasks, variables, root)
+                self.assertEqual(result.returncode == 0, matches, result.stdout + result.stderr)
+                self.assertEqual((root / 'storage').exists(), matches)
+                self.assertTrue((root / 'cleaned').exists())
+                self.assertNotIn('synthetic-secret-canary', result.stdout + result.stderr)
 
     def bootstrap(self, reject):
         tasks = deepcopy(yaml.safe_load((ROLE / "tasks/generic-bootstrap.yml").read_text()))
