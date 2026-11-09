@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.11.17
+
+Document implementation `0c4ef80efbfd36b0194beb4675d32731bb6fcff4`, its exact
+common-source pin, coordinated encrypted-layout rollout requirement and focused
+local verification. No additional runtime or live change.
+
 ## 1.11.16
 
 Pin the existing shared native firewall dependency to reviewed AutoDeploy

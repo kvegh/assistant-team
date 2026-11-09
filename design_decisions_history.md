@@ -1,5 +1,36 @@
 # Design decisions history
 
+## Read Zabbix permissions from their VM configuration section — 2026-11-09
+
+Implementation `0c4ef80efbfd36b0194beb4675d32731bb6fcff4` (1.11.16) advances the
+existing shared lifecycle source from AutoDeploy
+`b1587dc7e76df7320815fc8199be1a98144e2fe5` (0.49.10) to
+`bdda318620ae30ebea455376442dc509ec7fb583` (0.50.0). This documentation
+checkpoint is 1.11.17.
+
+The reviewed producer places each instance's Zabbix permissions under
+`zabbix.configuration.firewall`, keeping configuration with that VM. Its shared
+native reader rejects the former parallel top-level firewall section. Assistant
+preflight reads the maintained public dependency directly; release, HTTP/HTTPS
+bootstrap and retirement also require overrides to match that default. Updating
+only a private setting cannot substitute for this source change.
+
+All caller entrypoints and source-authentication bindings remain unchanged, as
+do native firewall readback, pinned targets, guest verification, production
+exclusions and job-local cleanup. Source and installed operator-guide templates
+now describe the same pin and rollout constraint. Publish and synchronize the
+coordinated consumers and matching encrypted CaC layout before running lifecycle
+jobs. Old callers cannot safely consume the nested layout; new callers refuse
+the former layout. No compatibility fallback or alternative store was added.
+
+Eleven recovery tests, ten complete-flow tests, two retirement tests and two
+version-policy checks passed. The native guard test accepts only the maintained
+pin and refuses the former or unrelated pins for all four operations. Scoped
+strict production role lint and three deployment/retirement syntax checks passed;
+syntax retained only the expected unmatched-host notices for an empty test
+inventory. These checks use local fixtures. No live VM, firewall, AAP object or
+private configuration changed, and live consumption remains to be verified.
+
 ## Use shared native firewall readback for recovery consumers — 2026-11-09
 
 Implementation `259078c22d5786cd3756293ed8e56cb922987509` (1.11.12) pins the
