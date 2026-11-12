@@ -24,7 +24,10 @@ def recovery_pin(pin, address):
             "Pin the recovery hypervisor machine identity.")
     require(isinstance(pin.get("user"), str) and pin["user"] != "root"
             and re.fullmatch(r"[a-z_][a-z0-9_-]*", pin["user"]), "Use the pinned managed hypervisor account.")
-    require(type(pin.get("port")) is int and 1 <= pin["port"] <= 65535, "Pin the managed SSH port.")
+    # Native Ansible loaders attach metadata through int subclasses; bool is
+    # also an int subclass and must never qualify as a protected SSH port.
+    require(isinstance(pin.get("port"), int) and not isinstance(pin["port"], bool)
+            and 1 <= pin["port"] <= 65535, "Pin the managed SSH port.")
     public_keys(pin.get("host_keys"))
     return pin
 

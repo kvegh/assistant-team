@@ -30,7 +30,9 @@ def repair_binding(hosts, groups, inventory, name):
             selected.append((row, variables))
     require(len(selected) == 1, 'Repair requires exactly one current name and explicit ownership binding.')
     host, variables = selected[0]
-    require(type(host.get('id')) is int and host['id'] > 0 and host.get('inventory') == int(inventory)
+    # Accept metadata-tagged native Ansible integers without accepting bool IDs.
+    require(isinstance(host.get('id'), int) and not isinstance(host['id'], bool)
+            and host['id'] > 0 and host.get('inventory') == int(inventory)
             and host.get('name') == name and variables.get('assistant_vm_name') == name
             and host.get('enabled') is True, 'Selected host identity or inventory differs.')
     address = variables.get('ansible_host')
@@ -43,7 +45,8 @@ def repair_binding(hosts, groups, inventory, name):
     managed = complete(groups)
     require(len(managed) == 1 and managed[0].get('name') == 'assistant_team'
             and managed[0].get('inventory') == int(inventory)
-            and type(managed[0].get('id')) is int and managed[0]['id'] > 0,
+            and isinstance(managed[0].get('id'), int) and not isinstance(managed[0]['id'], bool)
+            and managed[0]['id'] > 0,
             'Repair requires exactly the managed group in the credential-owned inventory.')
     return {'host_id': host['id'], 'group_id': managed[0]['id'], 'address': address, 'name': name}
 

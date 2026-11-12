@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.11.18
+
+Accept native Ansible metadata-tagged integer SSH ports and inventory repair
+IDs for Core 2.20 execution environments. Keep Boolean rejection, numeric
+ranges, exact target/ownership and production protections unchanged. Regression
+tests use the actual Ansible data loader; no image customization or Python
+dependency installation is introduced.
+
 ## 1.11.17
 
 Document implementation `0c4ef80efbfd36b0194beb4675d32731bb6fcff4`, its exact

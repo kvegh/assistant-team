@@ -184,6 +184,11 @@ is unchanged. The same restricted injected lifecycle bearer performs the repair.
 Repair accepts one matched hypervisor host, whether selected by host alias or
 group; the same exact SSH/machine/profile checks still apply.
 
+Recovery SSH ports and interrupted-registration host/group IDs accept the
+metadata-tagged integers produced by native Ansible loaders, including Core 2.20.
+Booleans, numeric strings, floats and invalid ranges remain refused; the exact
+target, inventory ownership, host keys and production guards still apply.
+
 Check preview prepares its private EE-local TLS bundle and performs verified
 read-only API/native checks; it still skips the group-association POST.
 Explicit repair also ends each following normal play before role argument
