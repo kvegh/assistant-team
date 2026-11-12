@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.11.19
+
+Record implementation `7af610b` and actual stock Core 2.20 guard-test evidence.
+
 ## 1.11.18
 
 Accept native Ansible metadata-tagged integer SSH ports and inventory repair

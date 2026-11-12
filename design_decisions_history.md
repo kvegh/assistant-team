@@ -2462,3 +2462,15 @@ loader/recovery cases were rerun after final binding changes. Strict production
 lint of the 75-file dependency closure and three normal playbook syntax checks
 pass. No live import, authentication or guest deployment was run by this change;
 full AAP acceptance remains separate.
+
+## 2026-11-12 — Accept native integer metadata in protected recovery inputs
+
+Implementation `7af610b` (1.11.18) accepts Ansible's metadata-tagged integers for
+managed SSH ports and inventory repair IDs. Exact type equality rejected those
+valid native loader values under Core 2.20. Explicit Boolean rejection, numeric
+bounds, target identity, inventory ownership and production safeguards remain.
+
+Four focused native-loader tests passed in the actual unmodified Core 2.20.10
+EE; local current-Ansible and legacy-Core checks also passed. No EE was modified
+and no Python dependency was added. Fresh AAP deployment acceptance is separate.
+Version 1.11.19 records this implementation decision.
