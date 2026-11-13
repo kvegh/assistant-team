@@ -38,6 +38,7 @@ class RecoveryConnectionTests(unittest.TestCase):
                 'Require a completed verified' if operation != 'retire_guest' else
                 'Require the exact persisted'))
             for revision, accepted in [(defaults['linux_recovery_release_revision'], True),
+                    ('bdda318620ae30ebea455376442dc509ec7fb583', False),
                     ('b1587dc7e76df7320815fc8199be1a98144e2fe5', False),
                     ('785e613f53036fae61bf3a63b994a83fbe68fcaf', False), ('b' * 40, False)]:
                 with self.subTest(operation=operation, accepted=accepted), tempfile.TemporaryDirectory() as temporary:

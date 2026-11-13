@@ -85,7 +85,9 @@ handling; production destinations stay blocked. The existing source API, Git
 writer, CaC Vault and source CA credentials save the transition in encrypted CaC
 and source inventory. Failed setup keeps isolation; failed publication fails the
 job. Use `guest_config` tags to verify an existing guest without recloning it.
-The current shared pin selects AutoDeploy `bdda318` (0.50.0). It reads each
+The current shared pin selects AutoDeploy `f22171b8` (0.62.3), including its
+Core 2.20-compatible YAML serializer. Resume an already verified guest with
+`guest_config` after synchronizing the caller; do not recreate its disk. It reads each
 instance's Zabbix firewall settings from its `zabbix.configuration.firewall`
 section. Publish and synchronize this caller with the matching encrypted CaC
 layout before running lifecycle jobs; old callers and stale explicit dependency

@@ -16,7 +16,12 @@ IPv6 quarantine are retained. Runtime identity checks, atomic apply, readback,
 durable publication and bounded rollback are implemented in the shared AutoDeploy
 role. Failed publication must be resolved before the deployment reports success.
 
-The current pin selects AutoDeploy implementation `bdda318` (0.50.0).
+The current pin selects AutoDeploy implementation `f22171b8` (0.62.3).
+This includes the native YAML serializer compatible with Core 2.20's dumper
+factory. The old dependency could fail while loading publication code after
+the guest had passed verification. Synchronize the caller and use `guest_config`
+to continue on that same guest; local compatibility checks are not live
+publication acceptance.
 This shared source reads instance Zabbix firewall settings from
 `zabbix.configuration.firewall`. Update its encrypted CaC layout and caller pin
 together; a stale explicit dependency override is refused.

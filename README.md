@@ -430,14 +430,21 @@ independently checks the running guest's devices. A description saved with
 `virsh desc --config` after startup need not appear in running XML; any live copy
 must still match. Failed helper output is checked before JSON parsing or rollback.
 
-The current dependency pin selects AutoDeploy implementation `bdda318` (0.50.0).
+The current dependency pin selects AutoDeploy implementation `f22171b8` (0.62.3).
+Its native YAML serializer supports Core 2.20's dumper factory. The previous
+dependency could abort after guest verification, before publication; resume that
+existing guest with `guest_config` after synchronizing this caller. Local
+compatibility checks do not establish successful native guest publication.
 It reads each instance's Zabbix firewall settings from its
 `zabbix.configuration.firewall` section. Publish and synchronize this caller with
 the matching encrypted CaC layout before running lifecycle jobs; old callers and
 stale explicit dependency overrides must not run against that layout.
-Twenty-five focused recovery, complete-flow, retirement and version-policy
-checks passed, along with scoped strict role lint and deployment/retirement
-syntax. These local checks do not establish live consumption of the new layout.
+The existing eleven-case recovery suite passed under cached Core 2.20.10,
+including fixed-pin refusal, protected input loading and strict SSH checks.
+A separate native YAML check reproduced the old dependency failure and verified
+the fixed serializer's value and literal-tag preservation. Scoped production
+role lint and deployment/retirement syntax passed. These checks do not establish
+live guest publication; the normal configuration continuation remains required.
 Recovery preflight and lifecycle policy changes use the native
 Ansible firewall path; no installed host helper or host JSON is used. An explicit
 saved override must match the maintained dependency pin. Linux guest publication retains the verified guest's

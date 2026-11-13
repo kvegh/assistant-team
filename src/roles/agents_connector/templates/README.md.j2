@@ -20,7 +20,9 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared implementation `bdda318` is pinned.
+guest's own HTTP permission. Shared implementation `f22171b8` (0.62.3) is pinned
+and includes its Core 2.20-compatible YAML serializer. After synchronizing the
+caller, continue an already verified guest with `guest_config`; do not recreate it.
 This shared source reads instance Zabbix firewall settings from
 `zabbix.configuration.firewall`. Update its encrypted CaC layout and caller pin
 together; a stale explicit dependency override is refused.
@@ -579,7 +581,7 @@ and source inventory using its source API/writer/Vault credentials. Failed setup
 keeps isolation; incomplete publication fails the job. To verify an existing
 generic guest without recloning it, use the same deployment with `guest_config`.
 
-The shared guest-release dependency is pinned to reviewed AutoDeploy `bdda318`,
+The shared guest-release dependency is pinned to reviewed AutoDeploy `f22171b8`,
 using native Ansible firewall tasks and existing encrypted CaC. An
 explicit saved override must match that maintained pin.
 It publishes the verified guest user/port both inside `vm_resource` and as

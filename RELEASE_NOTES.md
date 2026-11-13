@@ -1,5 +1,15 @@
 # Release notes
 
+## 1.11.22
+
+Select the existing Core 2.20-compatible AutoDeploy dependency
+`f22171b8ea6635888d280eb317d24863341197af` (0.62.3) for generic guest
+publication and retirement. The old dependency's YAML dumper subclass could
+abort after successful guest verification. Keep the same roles, immutable-pin
+guard, native policy checks, credentials and publication order. Update both
+installed operator guides and document `guest_config` continuation on the
+existing guest. No cloning or live operation is performed by this publication.
+
 ## 1.11.19
 
 Record implementation `7af610b` and actual stock Core 2.20 guard-test evidence.

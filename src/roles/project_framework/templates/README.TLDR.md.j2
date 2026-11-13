@@ -20,8 +20,10 @@ encrypted generic profile may enable `container_build_http_bootstrap: true`
 for public IPv4 HTTP after verified ownership publication; other profiles default
 off. Private/reserved and production destinations remain blocked. Full release
 waits for all software and model-free validation; exact retirement removes the
-guest's own HTTP permission. Shared native-firewall implementation `bdda318` is
-pinned; a saved override must match the maintained default.
+guest's own HTTP permission. Shared native-firewall implementation `f22171b8`
+(0.62.3) is pinned and supports the Core 2.20 YAML dumper factory; a saved
+override must match the maintained default. After synchronizing this caller,
+continue an already verified guest with `guest_config` rather than recreating it.
 This shared source reads instance Zabbix firewall settings from
 `zabbix.configuration.firewall`. Update its encrypted CaC layout and caller pin
 together; a stale explicit dependency override is refused.
