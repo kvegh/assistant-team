@@ -1,5 +1,32 @@
 # Design decisions history
 
+## Select the existing Core 2.20-compatible publication dependency — 2026-11-13
+
+Implementation `536b51f6ae9dd562e279a84466a6d668649ca402` (1.11.22) advances
+the existing shared AutoDeploy dependency from `bdda318` (0.50.0) to
+`f22171b8ea6635888d280eb317d24863341197af` (0.62.3). The old YAML serializer
+subclassed AnsibleDumper, which Core 2.20 exposes as a factory. Loading that
+dependency could therefore abort publication after guest verification. Select
+the already published compatible source instead of adding another serializer
+or changing the caller's roles. The immutable-pin guard also refuses the former
+pin; native policy, identity, credentials and publication ordering stay intact.
+
+The old import failure was reproduced in cached Core 2.20.10. The selected
+serializer passed a real native YAML roundtrip with value and literal-tag
+preservation, and the existing eleven recovery tests passed in that runtime.
+The ten complete-flow, two retirement and two version-policy fixture tests,
+scoped production role lint and affected deployment/retirement syntax checks
+also passed. Broader complete-deployment
+syntax remains limited by the locally unavailable RHEL system-role
+`local_semodule` module; no dependency was installed for this repair.
+
+Source and installed operator-guide templates now agree on the pin and the
+existing `guest_config` continuation for an already verified guest. Local
+checks and source publication do not establish native guest publication; that
+continuation remains the live acceptance gate. No VM, AAP object, private
+configuration or firewall was changed by this implementation. This documentation
+checkpoint is 1.11.23.
+
 ## Preserve strict VM memory verification with native Ansible conditions — 2026-11-13
 
 Implementation `4a66ad8e86731ce5d9431c42a8c7e76d96f8d0ca` (1.11.20) makes the existing libvirt memory

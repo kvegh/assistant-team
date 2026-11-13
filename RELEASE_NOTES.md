@@ -1,5 +1,11 @@
 # Release notes
 
+## 1.11.23
+
+Document implementation `536b51f6ae9dd562e279a84466a6d668649ca402`, its
+Core 2.20 compatibility proof and the remaining native guest-publication
+acceptance gate. Keep the existing configuration-only continuation path.
+
 ## 1.11.22
 
 Select the existing Core 2.20-compatible AutoDeploy dependency
