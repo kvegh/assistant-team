@@ -1,5 +1,22 @@
 # Design decisions history
 
+## Preserve strict VM memory verification with native Ansible conditions — 2026-11-13
+
+Implementation `4a66ad8e86731ce5d9431c42a8c7e76d96f8d0ca` (1.11.20) makes the existing libvirt memory
+assertion a YAML folded string. The colon inside its regular expression caused
+the former unquoted value to parse as a mapping; native Ansible refused it with
+"Conditional expressions must be strings" before comparing the allocation.
+The equality, resource inputs, protected output and existing credentials are
+unchanged. No broken-conditional allowance or relaxed memory check is added.
+
+The actual corrected task passed with exactly 20 GiB and refused both 4 GiB
+and 24 GiB in the existing Ansible Core 2.20.10 execution environment. Focused
+production lint passed for the VM role, and deployment syntax and whitespace
+checks passed. These checks used local fixtures; live guest completion remains
+a separate configuration-only operation through `guest_config`, preserving an
+already created VM. Source and installed operator-guide templates describe that
+recovery path. This documentation checkpoint is 1.11.21.
+
 ## Read Zabbix permissions from their VM configuration section — 2026-11-09
 
 Implementation `0c4ef80efbfd36b0194beb4675d32731bb6fcff4` (1.11.16) advances the
