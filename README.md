@@ -293,6 +293,9 @@ Ansible access, Linux, the hostname, CPUs, and available memory. It does not ins
 Memory verification checks the exact allocation in libvirt and accounts for the
 guest kernel's crash-recovery reservation when checking usable RAM. Controller
 artifacts report allocated RAM, guest-visible RAM, and the crash reservation separately.
+The libvirt assertion uses a YAML string, including its colon-containing match,
+so native Ansible evaluates the strict comparison. Resume an existing guest with
+`guest_config` after an interrupted verification; preserve the same resource inputs.
 
 Launch variables are `vm_name`, `vm_vcpus`, `vm_memory_mb`, and `vm_disk_gb`.
 Defaults are 2 vCPUs, 4096 MiB RAM, and a 20 GiB disk. The VM name defaults to

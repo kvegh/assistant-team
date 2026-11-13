@@ -6,6 +6,10 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team operator guide
 
+Linux VM memory verification retains an exact libvirt allocation comparison as
+a YAML string for native Ansible. Resume an existing guest with `guest_config`
+and the same resource inputs after interrupted verification; do not recreate it.
+
 Current CLI container builds retain Debian and HTTP downloads. Beads
 `bead-wd-b3j` defers a rebuild targeting UBI 10; it is not a current deployment
 prerequisite. Verify actual RHEL 9 CPU/workload compatibility; UBI 9 is only a

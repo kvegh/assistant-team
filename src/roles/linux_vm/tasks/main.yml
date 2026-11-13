@@ -178,7 +178,8 @@
   tags: [guest_config, offline_recovery]
   ansible.builtin.assert:
     that:
-      - (__linux_vm_vm_allocation.stdout | regex_findall('Used memory: +([0-9]+) +KiB') | first | int) == (linux_vm_memory_mb | int * 1024)
+      - >-
+        (__linux_vm_vm_allocation.stdout | regex_findall('Used memory: +([0-9]+) +KiB') | first | int) == (linux_vm_memory_mb | int * 1024)
     fail_msg: Libvirt memory allocation does not match the requested VM memory.
 
 - name: Validate the VM MAC address
