@@ -1,0 +1,46 @@
+---
+- name: Require one explicit normal upstream image route without credential overrides
+  ansible.builtin.assert:
+    that:
+      - linux_vm_recovery is not defined
+      - linux_vm_upstream is mapping
+      - __linux_vm_environment is mapping
+      - __linux_vm_environment.provisioning is mapping
+      - vm_name is defined
+      - linux_vm_upstream.vm_name | default('') == vm_name
+      - >-
+        linux_vm_upstream.keys() | list | sort ==
+        ['generic_image', 'golden_image_path', 'hypervisor_pin', 'network_bridge',
+         'source_image_sha256', 'update_packages', 'vm_dir', 'vm_domain', 'vm_name', 'vm_network'] | sort
+      - linux_vm_upstream.generic_image is boolean and linux_vm_upstream.generic_image
+      - linux_vm_upstream.update_packages is boolean and not linux_vm_upstream.update_packages
+      - linux_vm_upstream.source_image_sha256 is match('^[0-9a-f]{64}$')
+      - linux_vm_upstream.network_bridge is match('^[A-Za-z0-9_.-]{1,15}$')
+      - __linux_vm_environment.provisioning.guest_ssh_user | length > 0
+      - __linux_vm_environment.provisioning.guest_ssh_password | length > 0
+    fail_msg: Provide the normal upstream image, exact hash and routing pins; guest login stays in the existing encrypted environment.
+  no_log: true
+
+- name: Merge normal image routing without replacing protected guest access
+  ansible.builtin.set_fact:
+    provisioning: "{{ __linux_vm_environment.provisioning | combine(linux_vm_upstream) }}"
+  no_log: true
+
+- name: Refuse conflicting higher priority normal image or credential inputs
+  ansible.builtin.assert:
+    that:
+      - provisioning.vm_name == vm_name
+      - provisioning.hypervisor_pin == linux_vm_upstream.hypervisor_pin
+      - provisioning.golden_image_path == linux_vm_upstream.golden_image_path
+      - provisioning.source_image_sha256 == linux_vm_upstream.source_image_sha256
+      - provisioning.network_bridge == linux_vm_upstream.network_bridge
+      - provisioning.vm_dir == linux_vm_upstream.vm_dir
+      - provisioning.vm_domain == linux_vm_upstream.vm_domain
+      - provisioning.vm_network == linux_vm_upstream.vm_network
+      - provisioning.generic_image is boolean and provisioning.generic_image
+      - provisioning.update_packages is boolean and not provisioning.update_packages
+      - provisioning.guest_ssh_user == __linux_vm_environment.provisioning.guest_ssh_user
+      - provisioning.guest_ssh_password == __linux_vm_environment.provisioning.guest_ssh_password
+      - provisioning.guest_become_password == __linux_vm_environment.provisioning.guest_become_password
+    fail_msg: Preserve the complete selected normal image route and the existing encrypted bootstrap login.
+  no_log: true

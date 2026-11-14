@@ -13,7 +13,7 @@
           tags: [always]
       vars:
         secret_config_name: environment
-        secret_config_namespace: "{{ '__linux_vm_environment' if linux_vm_recovery is defined else '' }}"
+        secret_config_namespace: "{{ '__linux_vm_environment' if (linux_vm_recovery is defined or linux_vm_upstream is defined) else '' }}"
       tags: [always]
     - name: Bind nonsecret recovery inputs to the existing encrypted guest login
       ansible.builtin.include_tasks:
@@ -21,6 +21,13 @@
         apply:
           tags: [always]
       when: linux_vm_recovery is defined
+      tags: [always]
+    - name: Bind normal upstream image inputs to the existing encrypted guest login
+      ansible.builtin.include_tasks:
+        file: tasks/linux_vm_upstream_inputs.yml
+        apply:
+          tags: [always]
+      when: linux_vm_upstream is defined
       tags: [always]
   roles:
     - linux_vm
@@ -39,7 +46,7 @@
           tags: [always]
       vars:
         secret_config_name: environment
-        secret_config_namespace: "{{ '__linux_vm_environment' if linux_vm_recovery is defined else '' }}"
+        secret_config_namespace: "{{ '__linux_vm_environment' if (linux_vm_recovery is defined or linux_vm_upstream is defined) else '' }}"
       tags: [always]
     - name: Restore the same recovery inputs after the guest's encrypted environment load
       ansible.builtin.include_tasks:
@@ -47,6 +54,13 @@
         apply:
           tags: [always]
       when: linux_vm_recovery is defined
+      tags: [always]
+    - name: Bind normal upstream image inputs to the existing encrypted guest login
+      ansible.builtin.include_tasks:
+        file: tasks/linux_vm_upstream_inputs.yml
+        apply:
+          tags: [always]
+      when: linux_vm_upstream is defined
       tags: [always]
   roles:
     - linux_guest

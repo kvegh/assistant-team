@@ -1,5 +1,15 @@
 # Assistant team: commands
 
+## Unpublished normal-image client proposal
+
+An explicit `linux_vm_upstream` mapping proposes ordinary raw RHEL-image clients
+without recovery policy changes. It requires exact image SHA-256, hypervisor
+SSH/machine identity and network-bridge pins, preserves the existing encrypted
+bootstrap login, and hard-disables deployment and cloud-init package updates.
+The recovery route remains separate and unchanged. This proposal needs operator
+review before publication or live execution; it has not deployed any client.
+
+
 Linux VM memory verification retains an exact libvirt allocation comparison as
 a YAML string for native Ansible. Resume an existing guest with `guest_config`
 and the same resource inputs after interrupted verification; do not recreate it.

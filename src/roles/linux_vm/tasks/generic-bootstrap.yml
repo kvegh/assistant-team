@@ -44,6 +44,10 @@
           ssh_pwauth: true
           disable_root: true
           datasource_list: [None]
+          {% if linux_vm_upstream is defined %}
+          package_update: false
+          package_upgrade: false
+          {% endif %}
         mode: '0600'
 
     - name: Customize the new generic clone without network access

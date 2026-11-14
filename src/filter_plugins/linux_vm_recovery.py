@@ -58,9 +58,10 @@ def guest_ssh(pin, trust_file, alias):
         shlex.quote(trust_file), shlex.quote(alias), shlex.quote(proxy))
 
 
-def saved_keys(data, name, identity, hypervisor_id, source_hash):
-    require(isinstance(data, dict) and data.get("schema_version") == 1
-            and data.get("deployment_type") == "generic-recovery"
+def saved_keys(data, name, identity, hypervisor_id, source_hash, deployment_type="generic-recovery"):
+    require(deployment_type in ("generic-recovery", "generic-upstream")
+            and isinstance(data, dict) and data.get("schema_version") == 1
+            and data.get("deployment_type") == deployment_type
             and data.get("vm_name") == name and data.get("uuid") == identity
             and data.get("hypervisor_machine_id") == hypervisor_id
             and data.get("source_image_sha256") == source_hash,

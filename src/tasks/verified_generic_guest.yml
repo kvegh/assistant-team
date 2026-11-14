@@ -25,4 +25,15 @@
   when:
     - provisioning.generic_image | default(false) | bool
     - deployment_vm_hypervisor_pin | length > 0
+    - linux_vm_upstream is not defined
+  tags: [guest_config]
+
+- name: Remove the normal upstream guest public SSH trust after verification
+  ansible.builtin.file:
+    path: "{{ deployment_vm_trust_file }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  no_log: true
+  when: linux_vm_upstream is defined
   tags: [guest_config]

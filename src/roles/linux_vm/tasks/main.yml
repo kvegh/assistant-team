@@ -22,7 +22,17 @@
     file: recovery-preflight.yml
     apply:
       tags: [always]
-  when: provisioning.hypervisor_pin is defined
+  when:
+    - provisioning.hypervisor_pin is defined
+    - linux_vm_upstream is not defined
+  tags: [always]
+
+- name: Verify a declared normal upstream image target before remote inspection
+  ansible.builtin.include_tasks:
+    file: upstream-preflight.yml
+    apply:
+      tags: [always]
+  when: linux_vm_upstream is defined
   tags: [always]
 
 - name: Inspect existing VM names
@@ -97,6 +107,25 @@
   ansible.builtin.assert:
     that: __linux_vm_new_clone.changed
     fail_msg: The destination appeared while cloning; preserve it and investigate before retrying.
+
+- name: Hash the newly copied normal upstream clone before customization
+  ansible.builtin.stat:
+    path: "{{ linux_vm_deployment_disk }}"
+    follow: false
+    checksum_algorithm: sha256
+  register: __linux_vm_upstream_clone
+  when: linux_vm_upstream is defined
+  no_log: true
+
+- name: Require the new normal clone to retain the selected source image hash
+  ansible.builtin.assert:
+    that:
+      - __linux_vm_upstream_clone.stat.isreg | default(false)
+      - not (__linux_vm_upstream_clone.stat.islnk | default(false))
+      - __linux_vm_upstream_clone.stat.checksum == provisioning.source_image_sha256
+    fail_msg: Preserve the new clone and investigate the image mismatch before resizing or customization.
+  when: linux_vm_upstream is defined
+  no_log: true
 
 - name: Resize the cloned disk
   ansible.builtin.command:
@@ -223,7 +252,8 @@
   ansible.builtin.set_fact:
     __linux_vm_deployment_bridge: >-
       {{ __linux_vm_network_xml.stdout | linux_vm_recovery_bridge(
-           provisioning.vm_network, provisioning.isolation_policy.bridges) }}
+           provisioning.vm_network,
+           [provisioning.network_bridge] if linux_vm_upstream is defined else provisioning.isolation_policy.bridges) }}
   when: provisioning.hypervisor_pin is defined
   tags: [guest_config, offline_recovery]
 

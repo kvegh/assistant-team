@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.12.0 — unpublished normal upstream-image proposal
+
+Adds an explicit normal-client input path with pinned image/network/SSH identity
+and deployment/cloud-init updates disabled. Existing recovery isolation and
+release behavior remain separate. This branch is review-only: no publication,
+merge, live VM creation or deployment acceptance is established.
+
+
 ## 1.11.23
 
 Document implementation `536b51f6ae9dd562e279a84466a6d668649ca402`, its

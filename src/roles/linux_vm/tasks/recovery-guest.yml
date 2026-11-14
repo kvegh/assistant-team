@@ -12,7 +12,8 @@
     __linux_vm_public_host_keys: >-
       {{ __linux_vm_recovered_description.stdout | from_json | linux_vm_recovery_saved_keys(
         linux_vm_deployment_name, __linux_vm_domain_uuid.stdout | trim,
-        provisioning.hypervisor_pin.machine_id, __linux_vm_source_image.stat.checksum) }}
+        provisioning.hypervisor_pin.machine_id, __linux_vm_source_image.stat.checksum,
+        'generic-upstream' if linux_vm_upstream is defined else 'generic-recovery') }}
   when: __linux_vm_public_host_keys is not defined
   no_log: true
 
@@ -51,7 +52,7 @@
       - "{{ linux_vm_deployment_name }}"
       - --config
       - >-
-        {{ {'schema_version': 1, 'deployment_type': 'generic-recovery',
+        {{ {'schema_version': 1, 'deployment_type': ('generic-upstream' if linux_vm_upstream is defined else 'generic-recovery'),
             'vm_name': linux_vm_deployment_name,
             'uuid': __linux_vm_domain_uuid.stdout | trim,
             'hypervisor_machine_id': provisioning.hypervisor_pin.machine_id,
