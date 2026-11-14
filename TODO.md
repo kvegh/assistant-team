@@ -8,6 +8,7 @@ the task ID for its current status and acceptance criteria.
 | Task | Status | Reference |
 | --- | --- | --- |
 | `bead-wd-b3j` | Deferred, P2 | Rebuild the Node-based CLI images on Red Hat UBI 10. |
+| `bead-wd-87w5.12.1` | Open, P2 | Clarify the two Linux deployment playbooks and use shared umbrella code for basic VM creation. |
 
 Current builds retain their pinned Debian bases and HTTP package downloads.
 The deferred rebuild targets UBI 10, comparing `ubi10/nodejs-22-minimal` and `ubi10/nodejs-22`.
@@ -17,6 +18,24 @@ compatibility problems. A Node-image choice
 does not select the Python/Vibe base. This deferred task does not block current
 Debian deployment acceptance. See the [Red Hat compatibility policy](https://access.redhat.com/support/policy/rhel-container-compatibility);
 newer images on older hosts require workload-specific validation.
+
+## Linux VM deployment boundaries and shared code
+
+Tracked in `bead-wd-87w5.12.1`, linked to shared-VM migration
+`bead-wd-87w5.12`. These are required follow-ups, not completed changes.
+
+- [ ] Clarify and document the intended distinction between
+  `src/deploy_linux_vm.yml` (basic Linux VM provisioning, verification and optional
+  updates) and `src/deploy_complete_linux_vm.yml` (VM provisioning plus inventory
+  registration and the complete Assistant software environment).
+- [ ] Use `AAP-advanced-features/playbooks/deploy_generic_linux_vm.yml` and its
+  shared AAP base generic VM job for basic RHEL VM deployment. Keep Assistant
+  application setup in this project and make the shared provisioning handoff
+  explicit before removing duplicated VM-creation code.
+
+Preserve complete-deployment and inventory-registration/repair dependencies until
+that handoff is implemented and verified. This TODO changes no deployment
+behavior, existing hold, playbook or role.
 
 ## Team source review — review only, not approved fixes
 

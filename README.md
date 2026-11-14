@@ -286,6 +286,10 @@ toolchain has been selected yet.
 
 ## Infrastructure
 
+[Linux deployment follow-up](TODO.md#linux-vm-deployment-boundaries-and-shared-code) tracks clarification of the basic and complete Linux
+playbooks and reuse of the umbrella generic RHEL VM deployment for basic VM
+creation. This remains planned work; current deployment behavior is unchanged.
+
 ### Ordinary upstream-image clients
 
 Normal client deployments use explicit `linux_vm_upstream` inputs

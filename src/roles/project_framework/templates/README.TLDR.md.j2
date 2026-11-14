@@ -16,6 +16,10 @@ AC_AGENTS_ROOT={{ assistant_install_root | quote }}
 
 # Assistant team: commands
 
+[Linux deployment follow-up](https://github.com/kvegh/assistant-team/blob/main/TODO.md#linux-vm-deployment-boundaries-and-shared-code) tracks clarification of the basic and complete Linux
+playbooks and reuse of the umbrella generic RHEL VM deployment for basic VM
+creation. This remains planned work; current deployment behavior is unchanged.
+
 Linux VM memory verification retains an exact libvirt allocation comparison as
 a YAML string for native Ansible. Resume an existing guest with `guest_config`
 and the same resource inputs after interrupted verification; do not recreate it.

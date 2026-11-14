@@ -1,5 +1,9 @@
 # Assistant team: commands
 
+[Linux deployment follow-up](TODO.md#linux-vm-deployment-boundaries-and-shared-code) tracks clarification of the basic and complete Linux
+playbooks and reuse of the umbrella generic RHEL VM deployment for basic VM
+creation. This remains planned work; current deployment behavior is unchanged.
+
 ## Normal upstream-image clients
 
 An explicit `linux_vm_upstream` mapping deploys ordinary raw RHEL-image clients
