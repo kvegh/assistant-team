@@ -1,11 +1,11 @@
 # Release notes
 
-## 1.12.0 — unpublished normal upstream-image proposal
+## 1.12.0 — normal upstream-image clients
 
 Adds an explicit normal-client input path with pinned image/network/SSH identity
 and deployment/cloud-init updates disabled. Existing recovery isolation and
-release behavior remain separate. This branch is review-only: no publication,
-merge, live VM creation or deployment acceptance is established.
+release behavior remain separate. Core 2.20 fixtures, native syntax and production
+lint pass; live VM creation and baseline acceptance remain separate checks.
 
 
 ## 1.11.23

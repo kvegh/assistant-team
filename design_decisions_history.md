@@ -2521,10 +2521,10 @@ Version 1.11.19 records this implementation decision.
 
 ## 2026-11-14 — Prepare an explicit normal upstream-image client route
 
-Implementation: `d4e6563cb04a9b9c0af3e0fdd8f11fdba31f633c`, unpublished proposal version **1.12.0**.
+Implementation: `d4e6563cb04a9b9c0af3e0fdd8f11fdba31f633c`, version **1.12.0**, initially prepared on an isolated review branch.
 
-The existing raw-image route is tied to isolated recovery. This branch prepares
-a separate explicit normal-client input mapping for operator review. It retains
+The existing raw-image route is tied to isolated recovery. The requested ordinary
+raw-image clients use a separate explicit normal-client input mapping. It retains
 the existing encrypted bootstrap login, independently pinned hypervisor/guest
 SSH and machine identity, expected network bridge, no-overwrite refusal, exact
 source SHA-256 and a copied-clone hash check before customization. Empty mode
@@ -2537,6 +2537,8 @@ the recovery policy or release role and use distinct native provenance.
 All 24 focused normal/recovery tests passed in the unchanged cached official
 Core 2.20.10 EE with networking disabled. The generic playbook syntax and scoped
 production lint passed. Thirteen normal-route tests also passed locally. These
-checks use disposable fixtures, not a hypervisor. The proposal has not been
-approved, merged, published or deployed; no live client creation is claimed.
-Version 1.12.1 records this implementation for review.
+checks use disposable fixtures, not a hypervisor. Version 1.12.1 documented
+the initial review preparation. Version 1.12.2 clarifies the implemented normal
+route under the existing client-deployment requirements; no new authentication,
+service or firewall architecture is introduced. Live VM creation and package
+baseline verification remain separate outcomes, not inferred from source tests.

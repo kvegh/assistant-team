@@ -34,9 +34,9 @@ public provenance, including fresh host keys, source image hash and hypervisor I
 
 Run the repository production lint and tests. Fresh installation and configuration recovery are verified through the normal AAP deployment template; authenticated model tests are separate operator actions.
 
-### Review-only proposal: ordinary upstream-image clients
+### Ordinary upstream-image clients
 
-The unpublished normal-client proposal uses explicit `linux_vm_upstream` inputs
+Normal client deployments use explicit `linux_vm_upstream` inputs
 with the existing Generic Linux VM Deployment playbook. It is mutually exclusive
 with `linux_vm_recovery` and preserves the existing encrypted guest login. The
 mapping requires the selected VM/image/network/destination fields, independently
@@ -53,7 +53,7 @@ Native provenance uses a distinct `generic-upstream` type so a normal client
 cannot be silently treated as an isolated-recovery guest. Recovery retirement
 and application inventory registration are not added for normal clients.
 
-This is an isolated proposal awaiting operator review. It has not been merged,
-published or executed on a hypervisor. Source tests do not prove live deployment.
+The normal route is implemented and validated by focused Core 2.20 fixtures.
+Source tests do not establish live client deployment or application acceptance.
 Keep populated image, network and pin settings in the existing encrypted project
 configuration. No new credential source, service or job template is proposed.
