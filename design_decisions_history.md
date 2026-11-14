@@ -2518,3 +2518,25 @@ Four focused native-loader tests passed in the actual unmodified Core 2.20.10
 EE; local current-Ansible and legacy-Core checks also passed. No EE was modified
 and no Python dependency was added. Fresh AAP deployment acceptance is separate.
 Version 1.11.19 records this implementation decision.
+
+## 2026-11-14 — Prepare an explicit normal upstream-image client route
+
+Implementation: `d4e6563cb04a9b9c0af3e0fdd8f11fdba31f633c`, unpublished proposal version **1.12.0**.
+
+The existing raw-image route is tied to isolated recovery. This branch prepares
+a separate explicit normal-client input mapping for operator review. It retains
+the existing encrypted bootstrap login, independently pinned hypervisor/guest
+SSH and machine identity, expected network bridge, no-overwrite refusal, exact
+source SHA-256 and a copied-clone hash check before customization. Empty mode
+flags and unbound credential namespaces fail closed. Deployment updates are
+hard-disabled and the normal clone explicitly disables cloud-init package
+updates and upgrades. Existing recovery preflight, encrypted recovery binding
+and release implementation files remain unchanged; normal clients never invoke
+the recovery policy or release role and use distinct native provenance.
+
+All 24 focused normal/recovery tests passed in the unchanged cached official
+Core 2.20.10 EE with networking disabled. The generic playbook syntax and scoped
+production lint passed. Thirteen normal-route tests also passed locally. These
+checks use disposable fixtures, not a hypervisor. The proposal has not been
+approved, merged, published or deployed; no live client creation is claimed.
+Version 1.12.1 records this implementation for review.
