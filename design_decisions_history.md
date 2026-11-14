@@ -2542,3 +2542,17 @@ the initial review preparation. Version 1.12.2 clarifies the implemented normal
 route under the existing client-deployment requirements; no new authentication,
 service or firewall architecture is introduced. Live VM creation and package
 baseline verification remain separate outcomes, not inferred from source tests.
+
+## 2026-11-14 — Document planned Linux deployment boundaries and shared reuse
+
+Documentation implementation: `e75f40f8a9be3d26d9b70a46a33b5092b8b347a3` (1.12.3).
+
+The user requested two TODO points: clarify the basic and complete Linux
+playbook responsibilities, and use the umbrella generic RHEL VM deployment
+playbook/shared AAP base job for basic VM creation. TODO.md links the open
+Beads follow-up and its shared-migration parent; both README guides and both
+operator-guide templates link that same plan. Complete-deployment and inventory
+registration/repair dependencies remain until a verified handoff replaces them.
+This documents future work and changes no deployment behavior, existing hold,
+credentials or VM state. Documentation references, exact requested checkbox
+count, whitespace and unchanged deployment/repair sources were checked.
